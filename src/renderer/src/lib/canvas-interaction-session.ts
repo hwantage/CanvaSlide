@@ -67,6 +67,10 @@ function distance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y)
 }
 
+function moveModifiers(info: PointerInfo) {
+  return { disableSnap: info.primaryKey, constrainAxis: info.shiftKey }
+}
+
 /** ⌥-drag (standard) or ⇧⌘-drag duplicates the selection instead of moving it. */
 function wantsDuplicate(info: PointerInfo): boolean {
   return info.altKey || (info.shiftKey && info.primaryKey)
@@ -249,13 +253,13 @@ export function createCanvasInteraction(): CanvasInteraction {
               session.start,
               wantsDuplicate(session.start)
             )
+            // Why: the event that crosses the threshold is part of the drag; without applying it
+            // here a short drag (threshold-sized) would end before ever moving anything.
+            applyMoveSession(session, info.world, moveModifiers(info))
           }
           break
         case 'move':
-          applyMoveSession(session, info.world, {
-            disableSnap: info.primaryKey,
-            constrainAxis: info.shiftKey
-          })
+          applyMoveSession(session, info.world, moveModifiers(info))
           break
         case 'box': {
           const box = rectFromPoints(session.startWorld, info.world)

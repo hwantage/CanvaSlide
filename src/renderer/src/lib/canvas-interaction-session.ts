@@ -24,7 +24,13 @@ import {
   type ConnectorEndSession
 } from './canvas-connector-session'
 import { openContextMenu } from './canvas-context-menu'
-import { applyMoveSession, beginMoveSession, type MoveSession } from './canvas-move-session'
+import {
+  applyMoveSession,
+  beginMoveSession,
+  moveModifiers,
+  wantsDuplicate,
+  type MoveSession
+} from './canvas-move-session'
 import { applyResizeSession, beginResizeSession, type ResizeSession } from './canvas-resize-session'
 import { createElementForTool, isCreateTool, type CreateTool } from './create-element-for-tool'
 import { DRAG_THRESHOLD_PX, frameHitChromeAt } from './frame-chrome'
@@ -65,15 +71,6 @@ export type CanvasInteraction = {
 
 function distance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y)
-}
-
-function moveModifiers(info: PointerInfo) {
-  return { disableSnap: info.primaryKey, constrainAxis: info.shiftKey }
-}
-
-/** ⌥-drag (standard) or ⇧⌘-drag duplicates the selection instead of moving it. */
-function wantsDuplicate(info: PointerInfo): boolean {
-  return info.altKey || (info.shiftKey && info.primaryKey)
 }
 
 export function createCanvasInteraction(): CanvasInteraction {

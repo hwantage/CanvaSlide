@@ -70,6 +70,18 @@ export function beginMoveSession(
   }
 }
 
+/** Pointer modifier state that a move session reads on every event. */
+export type PointerModifiers = { shiftKey: boolean; altKey: boolean; primaryKey: boolean }
+
+export function moveModifiers(info: PointerModifiers): MoveModifiers {
+  return { disableSnap: info.primaryKey, constrainAxis: info.shiftKey }
+}
+
+/** ⌥-drag (standard) or ⇧⌘-drag duplicates the selection instead of moving it. */
+export function wantsDuplicate(info: PointerModifiers): boolean {
+  return info.altKey || (info.shiftKey && info.primaryKey)
+}
+
 export type MoveModifiers = {
   /** Primary modifier: disables smart-guide snapping. */
   disableSnap: boolean

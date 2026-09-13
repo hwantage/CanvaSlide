@@ -1,0 +1,15 @@
+{
+  "extends": "../config/tsconfig.base.json",
+  "include": ["src", "scripts", "vite.config.ts", "tests", "playwright.config.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@app/*": ["../src/renderer/src/*"],
+      "@shared/*": ["../src/shared/*"]
+    }
+  }
+}

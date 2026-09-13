@@ -1,0 +1,76 @@
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - 'src/renderer/src/i18n/**'
+      - 'src/renderer/src/assets/*.css'
+      - 'src/renderer/src/lib/platform-keys.ts'
+      - 'src/shared/canvas/zoom-pan-interpolation.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'config/tsconfig.base.json'
+      - '.github/workflows/deploy-website.yml'
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'src/renderer/src/i18n/**'
+      - 'src/renderer/src/assets/*.css'
+      - 'src/renderer/src/lib/platform-keys.ts'
+      - 'src/shared/canvas/zoom-pan-interpolation.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'config/tsconfig.base.json'
+      - '.github/workflows/deploy-website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec oxlint website
+      - run: pnpm exec oxfmt --check website
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: website-test-results
+          path: test-results/website/
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4

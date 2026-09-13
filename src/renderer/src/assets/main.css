@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './brand.css';
 
 /* Design tokens: surface/foreground pairs, neutral chrome, colour reserved for state. */
 :root {

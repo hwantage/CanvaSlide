@@ -1,0 +1,101 @@
+.home-page {
+  position: relative;
+  isolation: isolate;
+}
+.home-page #main,
+.home-page .site-footer {
+  position: relative;
+  z-index: 1;
+}
+.home-page .scroll-story {
+  background: color-mix(in srgb, var(--muted) 76%, transparent);
+}
+.ray-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ray-flight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  aspect-ratio: 1.5;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.ray-flight img,
+.ray-flight canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+.ray-flight canvas {
+  visibility: hidden;
+}
+.ray-flight[data-renderer='webgl'] canvas {
+  visibility: visible;
+}
+.ray-flight[data-renderer='webgl'] img {
+  visibility: hidden;
+}
+.home-page[data-ray-ready='true'] .hero-ray,
+.home-page[data-ray-ready='true'] .ray-dock img {
+  opacity: 0;
+}
+.home-page[data-ray-ready='true'] .hero-illustration::before,
+.home-page[data-ray-ready='true'] .hero-frame {
+  opacity: 0;
+}
+.ray-dock {
+  grid-column: 1 / -1;
+  width: min(320px, 78vw);
+  margin: 0 auto;
+  padding: 0;
+}
+.ray-dock img {
+  width: 100%;
+  height: auto;
+}
+.ray-motion-toggle.icon-button {
+  position: fixed;
+  z-index: 25;
+  bottom: 19px;
+  right: 19px;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  background: var(--card);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  box-shadow: 0 3px 12px var(--site-shadow);
+}
+.ray-motion-toggle.icon-button:hover {
+  color: var(--site-blue);
+}
+@media (max-width: 560px) {
+  .ray-motion-toggle {
+    bottom: 12px;
+    right: 12px;
+  }
+  .ray-dock {
+    width: min(260px, 74vw);
+    margin-top: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ray-layer,
+  .ray-motion-toggle {
+    display: none;
+  }
+  .home-page[data-ray-ready='true'] .hero-ray,
+  .home-page[data-ray-ready='true'] .ray-dock img {
+    opacity: 1;
+  }
+}

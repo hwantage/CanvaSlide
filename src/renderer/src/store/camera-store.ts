@@ -10,7 +10,11 @@ import {
 } from '@shared/canvas/camera-transform'
 import { createCameraAnimator } from '@shared/canvas/camera-animator'
 import type { Camera, Point, Rect, Size } from '@shared/canvas/element-types'
-import { fitContentToViewport, fitRectToViewport } from '@shared/canvas/frame-fit'
+import {
+  fitContentToViewport,
+  fitRectToViewport,
+  fitSelectionToViewport
+} from '@shared/canvas/frame-fit'
 
 export const ZOOM_STEP = 1.25
 const UI_ANIMATION_MS = 350
@@ -31,6 +35,7 @@ export type CameraActions = {
   animateTo: (camera: Camera, durationMs: number, onDone?: () => void) => void
   fitRect: (rect: Rect, durationMs?: number) => void
   fitContent: (rect: Rect) => void
+  fitSelection: (rect: Rect) => void
   cancelAnimation: () => void
   isAnimating: () => boolean
 }
@@ -72,6 +77,8 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
       animator.animateTo(fitRectToViewport(rect, get().viewport), durationMs),
     fitContent: (rect) =>
       animator.animateTo(fitContentToViewport(rect, get().viewport), UI_ANIMATION_MS),
+    fitSelection: (rect) =>
+      animator.animateTo(fitSelectionToViewport(rect, get().viewport), UI_ANIMATION_MS),
     cancelAnimation: () => animator.cancel(),
     isAnimating: () => animator.isAnimating()
   }

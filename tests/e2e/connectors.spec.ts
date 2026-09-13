@@ -73,7 +73,7 @@ test('route and arrowheads can be changed from the panel; label edits inline', a
   await expect(path).toHaveAttribute('marker-start', /url/)
   await page.locator('aside').getByRole('button', { name: 'Elbow' }).click()
   await expect(path).toHaveAttribute('d', 'M 250 150 L 375 150 L 375 350 L 500 350')
-  await page.locator('aside').getByRole('button', { name: 'Line' }).click()
+  await page.locator('aside').getByRole('button', { name: 'Line', exact: true }).click()
   await expect(path).not.toHaveAttribute('marker-end', /url/)
   await page.getByTestId('canvas-viewport').dblclick({ position: { x: 375, y: 250 } })
   await page.keyboard.type('yes')

@@ -5,6 +5,7 @@ import {
   rectFromPoints,
   selectionBounds
 } from '@shared/canvas/element-bounds'
+import { constrainToSquare } from '@shared/canvas/drag-constraints'
 import type { ElementId, Point } from '@shared/canvas/element-types'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
 import { useCameraStore } from '@/store/camera-store'
@@ -22,15 +23,11 @@ import {
   type ConnectorCreateSession,
   type ConnectorEndSession
 } from './canvas-connector-session'
+import { openContextMenu } from './canvas-context-menu'
 import { applyMoveSession, beginMoveSession, type MoveSession } from './canvas-move-session'
 import { applyResizeSession, beginResizeSession, type ResizeSession } from './canvas-resize-session'
 import { createElementForTool, isCreateTool, type CreateTool } from './create-element-for-tool'
-import {
-  DRAG_THRESHOLD_PX,
-  FRAME_BORDER_HIT_PX,
-  FRAME_TITLE_HEIGHT_PX,
-  LINE_HIT_PX
-} from './frame-chrome'
+import { DRAG_THRESHOLD_PX, frameHitChromeAt } from './frame-chrome'
 
 export type PointerInfo = {
   screen: Point
@@ -58,6 +55,8 @@ export type CanvasInteraction = {
   pointerMove: (info: PointerInfo) => void
   pointerUp: (info: PointerInfo) => void
   doubleClick: (info: PointerInfo) => void
+  /** Right-click: selects what is under the cursor (keeping a multi-selection) and opens the menu. */
+  contextMenu: (info: PointerInfo) => void
   startResize: (handle: HandlePosition, info: PointerInfo) => void
   startConnectorEnd: (id: ElementId, which: 'start' | 'end') => void
   cancel: () => void
@@ -78,14 +77,7 @@ export function createCanvasInteraction(): CanvasInteraction {
   const docStore = useDocumentStore
   const overlay = useInteractionOverlayStore
 
-  const frameChrome = () => {
-    const { zoom } = useCameraStore.getState().camera
-    return {
-      titleHeight: FRAME_TITLE_HEIGHT_PX / zoom,
-      borderWidth: FRAME_BORDER_HIT_PX / zoom,
-      lineWidth: LINE_HIT_PX / zoom
-    }
-  }
+  const frameChrome = () => frameHitChromeAt(useCameraStore.getState().camera.zoom)
 
   const pressOn = (info: PointerInfo, targetId: ElementId) => {
     const { selectedIds, setSelection } = docStore.getState()
@@ -121,8 +113,15 @@ export function createCanvasInteraction(): CanvasInteraction {
     session = { kind: 'box', startWorld: info.world, additive: info.shiftKey, baseSelection }
   }
 
-  const finishCreate = (tool: CreateTool, startWorld: Point, endWorld: Point) => {
-    const dragged = rectFromPoints(startWorld, endWorld)
+  /** Shift squares every box-like tool; text only takes a width, so it stays free. */
+  const createRect = (tool: CreateTool, startWorld: Point, info: PointerInfo) =>
+    rectFromPoints(
+      startWorld,
+      info.shiftKey && tool !== 'text' ? constrainToSquare(startWorld, info.world) : info.world
+    )
+
+  const finishCreate = (tool: CreateTool, startWorld: Point, info: PointerInfo) => {
+    const dragged = createRect(tool, startWorld, info)
     const tiny = dragged.width < 4 && dragged.height < 4
     const { document, insertElement } = docStore.getState()
     const element = createElementForTool(tool, document, tiny ? null : dragged, startWorld)
@@ -163,7 +162,7 @@ export function createCanvasInteraction(): CanvasInteraction {
         doc.endEdit()
         break
       case 'create':
-        finishCreate(current.tool, current.startWorld, info.world)
+        finishCreate(current.tool, current.startWorld, info)
         break
       case 'connector-create':
         finishConnectorCreate(current, info.world)
@@ -177,22 +176,24 @@ export function createCanvasInteraction(): CanvasInteraction {
     }
   }
 
+  const cancel = () => {
+    if (
+      session?.kind === 'move' ||
+      session?.kind === 'resize' ||
+      session?.kind === 'connector-end'
+    ) {
+      docStore.getState().endEdit()
+    } else if (session?.kind === 'connector-create') {
+      docStore.getState().cancelEdit()
+    }
+    overlay.getState().setAnchorPreview(null)
+    session = null
+    clearOverlays()
+  }
+
   return {
     isActive: () => session !== null,
-    cancel: () => {
-      if (
-        session?.kind === 'move' ||
-        session?.kind === 'resize' ||
-        session?.kind === 'connector-end'
-      ) {
-        docStore.getState().endEdit()
-      } else if (session?.kind === 'connector-create') {
-        docStore.getState().cancelEdit()
-      }
-      overlay.getState().setAnchorPreview(null)
-      session = null
-      clearOverlays()
-    },
+    cancel,
 
     pointerDown: (info) => {
       if (usePresentationStore.getState().active || session) {
@@ -251,7 +252,10 @@ export function createCanvasInteraction(): CanvasInteraction {
           }
           break
         case 'move':
-          applyMoveSession(session, info.world, info.primaryKey)
+          applyMoveSession(session, info.world, {
+            disableSnap: info.primaryKey,
+            constrainAxis: info.shiftKey
+          })
           break
         case 'box': {
           const box = rectFromPoints(session.startWorld, info.world)
@@ -265,7 +269,7 @@ export function createCanvasInteraction(): CanvasInteraction {
         case 'create':
           overlay.getState().setCreatePreview({
             tool: session.tool,
-            rect: rectFromPoints(session.startWorld, info.world)
+            rect: createRect(session.tool, session.startWorld, info)
           })
           break
         case 'resize':
@@ -292,6 +296,18 @@ export function createCanvasInteraction(): CanvasInteraction {
         docStore.getState().setSelection([hit.id])
         useToolStore.getState().setEditingTextId(hit.id)
       }
+    },
+
+    contextMenu: (info) => {
+      if (usePresentationStore.getState().active) {
+        return
+      }
+      // Why: Ctrl+click on macOS also fires `contextmenu` while the left button is down; a gesture
+      // in progress (Ctrl-drag, ⌃-duplicate in tests) must keep going rather than open the menu.
+      if (session) {
+        return
+      }
+      openContextMenu(info.screen, info.world)
     },
 
     startResize: (handle, info) => {

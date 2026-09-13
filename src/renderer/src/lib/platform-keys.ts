@@ -15,8 +15,19 @@ export function shiftLabel(): string {
   return isMacPlatform() ? '⇧' : 'Shift+'
 }
 
-export function shortcutLabel(key: string, options: { shift?: boolean } = {}): string {
-  return `${primaryModifierLabel()}${options.shift ? shiftLabel() : ''}${key}`
+export function altLabel(): string {
+  return isMacPlatform() ? '⌥' : 'Alt+'
+}
+
+export type ShortcutOptions = { shift?: boolean; alt?: boolean }
+
+/** `⌘⇧K` on macOS, `Ctrl+Shift+K` elsewhere; the modifier order follows each platform's HIG. */
+export function shortcutLabel(key: string, options: ShortcutOptions = {}): string {
+  const alt = options.alt ? altLabel() : ''
+  const shift = options.shift ? shiftLabel() : ''
+  return isMacPlatform()
+    ? `${alt}${shift}${primaryModifierLabel()}${key}`
+    : `${primaryModifierLabel()}${alt}${shift}${key}`
 }
 
 export function isEditableTarget(target: EventTarget | null): boolean {

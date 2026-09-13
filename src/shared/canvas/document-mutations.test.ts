@@ -51,6 +51,20 @@ describe('document-mutations', () => {
     expect(document.elements.dup2).toMatchObject({ x: 124, y: 24, text: 'b' })
   })
 
+  it('steps z one position, keeping selected runs together and stopping at the edges', () => {
+    let doc = createEmptyDocument()
+    for (const id of ['a', 'b', 'c', 'd']) {
+      doc = insertElement(doc, text(id))
+    }
+    expect(reorderZ(doc, ['a'], 'forward').order).toEqual(['b', 'a', 'c', 'd'])
+    expect(reorderZ(doc, ['d'], 'backward').order).toEqual(['a', 'b', 'd', 'c'])
+    expect(reorderZ(doc, ['b', 'c'], 'forward').order).toEqual(['a', 'd', 'b', 'c'])
+    expect(reorderZ(doc, ['b', 'c'], 'backward').order).toEqual(['b', 'c', 'a', 'd'])
+    expect(reorderZ(doc, ['d'], 'forward')).toBe(doc)
+    expect(reorderZ(doc, ['a', 'b'], 'backward')).toBe(doc)
+    expect(reorderZ(doc, ['a', 'c'], 'forward').order).toEqual(['b', 'a', 'd', 'c'])
+  })
+
   it('reorders z and applies frame orders', () => {
     let doc = insertElement(createEmptyDocument(), text('a'))
     doc = insertElement(doc, text('b'))

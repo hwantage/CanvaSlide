@@ -1,46 +1,22 @@
 import { useEffect } from 'react'
-import { visibleWorldRect } from '@shared/canvas/camera-transform'
-import { createImageAsset } from '@shared/canvas/document-assets'
-import { cascadeRect } from '@shared/canvas/paste-placement'
-import { decodeImageFile, findImageFile } from '@/lib/clipboard-image'
-import { createImageElement, placeImageRect } from '@/lib/element-factory'
+import { findImageFile } from '@/lib/clipboard-image'
+import { insertClipboardText, insertImageFile } from '@/lib/external-content'
 import {
   copySelection,
   cutSelection,
   memoryPayload,
   nativePasteArrived,
-  pasteObjects,
-  payloadFromClipboardText
+  pasteObjects
 } from '@/lib/object-clipboard'
 import { isEditableTarget } from '@/lib/platform-keys'
 import { showErrorMessage } from '@/platform/document-file-access'
-import { useCameraStore } from '@/store/camera-store'
-import { useDocumentStore } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
-import { useToolStore } from '@/store/tool-store'
-
-async function pasteImage(file: File): Promise<void> {
-  const decoded = await decodeImageFile(file)
-  const { camera, viewport } = useCameraStore.getState()
-  const visible = visibleWorldRect(camera, viewport)
-  const maxBox = {
-    x: visible.x + visible.width * 0.2,
-    y: visible.y + visible.height * 0.2,
-    width: visible.width * 0.6,
-    height: visible.height * 0.6
-  }
-  const asset = createImageAsset(decoded.src, decoded.width, decoded.height)
-  const document = useDocumentStore.getState().document
-  const rect = cascadeRect(placeImageRect(decoded, maxBox), document)
-  useDocumentStore.getState().insertImage(asset, createImageElement(asset.id, decoded, rect))
-  useToolStore.getState().setTool('select')
-}
 
 function ignoring(event: ClipboardEvent): boolean {
   return isEditableTarget(event.target) || usePresentationStore.getState().active
 }
 
-/** Native copy/cut/paste events: objects first (our JSON), then pasted images. */
+/** Native copy/cut/paste events: objects first (our JSON), then images, then plain text. */
 export function useClipboard(): void {
   useEffect(() => {
     const onCopy = (event: ClipboardEvent, cut: boolean) => {
@@ -61,20 +37,18 @@ export function useClipboard(): void {
       }
       nativePasteArrived()
       const text = event.clipboardData?.getData('text/plain') ?? ''
-      const payload = payloadFromClipboardText(text)
-      if (payload) {
-        event.preventDefault()
-        pasteObjects(payload)
-        return
-      }
       const file = findImageFile(event.clipboardData)
       if (file) {
         event.preventDefault()
         try {
-          await pasteImage(file)
+          await insertImageFile(file)
         } catch (error) {
           await showErrorMessage(error instanceof Error ? error.message : String(error))
         }
+        return
+      }
+      if (text !== '' && insertClipboardText(text)) {
+        event.preventDefault()
         return
       }
       const remembered = memoryPayload()

@@ -1,4 +1,14 @@
-import { FileDown, FilePlus2, FolderOpen, Play, Redo2, Save, Settings, Undo2 } from 'lucide-react'
+import {
+  CircleQuestionMark,
+  FileDown,
+  FilePlus2,
+  FolderOpen,
+  Play,
+  Redo2,
+  Save,
+  Settings,
+  Undo2
+} from 'lucide-react'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { IconButton } from '@/components/ui/icon-button'
 import { TextButton } from '@/components/ui/text-button'
@@ -14,6 +24,7 @@ import {
 } from '@/store/document-store'
 import { useExportDialogStore } from '@/store/export-dialog-store'
 import { useSettingsDialogStore } from '@/store/settings-dialog-store'
+import { useShortcutHelpStore } from '@/store/shortcut-help-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
 export function TopBar({ commands }: { commands: DocumentCommands }) {
@@ -27,6 +38,7 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
   const start = usePresentationStore((s) => s.start)
   const showExport = useExportDialogStore((s) => s.show)
   const showSettings = useSettingsDialogStore((s) => s.show)
+  const showHelp = useShortcutHelpStore((s) => s.show)
   const frameCount = orderedFrames(document).length
 
   return (
@@ -80,6 +92,9 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
       />
       {dirty && <span className="text-xs text-muted-foreground">{t('file.unsaved')}</span>}
       <div className="flex-1" />
+      <IconButton label={`${t('help.title')} (?)`} onClick={showHelp}>
+        <CircleQuestionMark size={16} />
+      </IconButton>
       <IconButton label={`${t('settings.title')} (${shortcutLabel(',')})`} onClick={showSettings}>
         <Settings size={16} />
       </IconButton>

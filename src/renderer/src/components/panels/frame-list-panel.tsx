@@ -1,11 +1,14 @@
+import { Play } from 'lucide-react'
 import { useState, type DragEvent, type KeyboardEvent } from 'react'
 import { elementRect } from '@shared/canvas/element-bounds'
 import type { FrameElement } from '@shared/canvas/element-types'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { inputClass } from '@/components/ui/field-row'
+import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
 import { useCameraStore } from '@/store/camera-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
+import { usePresentationStore } from '@/store/presentation-store'
 
 const DRAG_TYPE = 'application/x-canvaslide-frame'
 
@@ -57,6 +60,7 @@ export function FrameListPanel() {
   const setSelection = useDocumentStore((s) => s.setSelection)
   const moveFrameTo = useDocumentStore((s) => s.moveFrameTo)
   const fitRect = useCameraStore((s) => s.fitRect)
+  const startPresentation = usePresentationStore((s) => s.start)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const frames = orderedFrames(document)
 
@@ -108,7 +112,7 @@ export function FrameListPanel() {
               onDragOver={(event) => onDragOver(event, index)}
               onDrop={(event) => onDrop(event, index)}
               onDragEnd={() => setDropIndex(null)}
-              className={`flex h-8 items-center gap-1 rounded-md px-2 text-xs ${
+              className={`group flex h-8 items-center gap-1 rounded-md px-2 text-xs ${
                 selected ? 'bg-accent' : 'hover:bg-accent/60'
               } ${dropIndex === index ? 'ring-1 ring-selection' : ''}`}
             >
@@ -122,6 +126,13 @@ export function FrameListPanel() {
                 </span>
                 <FrameName frame={frame} />
               </button>
+              <IconButton
+                label={t('present.fromFrame')}
+                className="h-6 w-6 shrink-0 opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+                onClick={() => startPresentation(index)}
+              >
+                <Play size={12} />
+              </IconButton>
             </li>
           )
         })}

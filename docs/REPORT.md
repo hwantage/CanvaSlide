@@ -13,8 +13,8 @@ PRD의 v1 목표(G1~G11)를 모두 구현했고, 정적 검사·단위 테스트
 | `pnpm lint` (oxlint + max-lines 가드)                           | 통과, 경고 0                                   |
 | `pnpm format:check` (oxfmt)                                     | 통과                                           |
 | `pnpm typecheck` (tsc strict, web/node/e2e)                     | 통과                                           |
-| `pnpm test` (vitest, happy-dom)                                 | 18 파일 · 78 테스트 통과                       |
-| `pnpm test:e2e` (Playwright, Chromium)                          | 24 시나리오 통과                               |
+| `pnpm test` (vitest, happy-dom)                                 | 29 파일 · 129 테스트 통과                      |
+| `pnpm test:e2e` (Playwright, Chromium)                          | 42 시나리오 통과                               |
 | `cargo fmt --check` / `cargo clippy -D warnings` / `cargo test` | 통과 · 4 테스트 통과                           |
 | `pnpm tauri build --bundles app` (macOS arm64)                  | `CanvaSlide.app` 생성 (릴리즈, ~7 MB 바이너리) |
 
@@ -129,6 +129,21 @@ React·Tauri에 의존하지 않는 8개 모듈(총 ~900줄)이 카메라 수학
   상하 배치에서 왼쪽 포트→오른쪽 포트는 "왼쪽으로 나가 → 내려가 → 오른쪽에서 진입"이 된다.
 - 익스포트 플레이어도 같은 경로 함수로 렌더링한다. 인터랙션 세션은 파일 길이 한도에 맞춰 move/resize/connector로 분리.
 
+### 3.10 편집 기본기 II (v1.3) — `discuss/todo/README.md`
+
+반복 작업을 줄이고 배치를 정확히 하기 위한 14개 항목. 순수 로직은 `src/shared/canvas`에 두고 단위 테스트를 붙였다.
+
+- **일반 텍스트 붙여넣기**: 외부 앱에서 복사한 텍스트를 ⌘V 하면 보이는 영역 가운데에 텍스트 요소를 만든다. CRLF 정규화·끝 줄바꿈 제거, 폭은 가장 긴 줄 기준으로 추정하되 화면의 60%를 넘지 않는다(`pasted-text.ts`). 텍스트 편집 중에는 `EditableText`가 `paste`를 가로채 서식 없는 텍스트만 삽입한다. 우선순위: 앱 객체 JSON → 이미지 → 일반 텍스트 → 메모리 폴백(`lib/external-content.ts`).
+- **마지막 사용 스타일 기억**: 속성 패널에서 채우기·테두리·글자·연결선 스타일을 바꾸면 종류별로 기억(`style-memory.ts`, `store/style-memory-store.ts`)하고 새 도형/텍스트/연결선이 그 값에서 시작한다. 세션 범위.
+- **선택 영역 확대**: ⇧2, 줌 컨트롤의 버튼, 우클릭 메뉴. 프레임 피팅과 같은 계산이지만 최대 400%까지만 확대(`fitSelectionToViewport`).
+- **색상 입력 개선**: `ui/color-field.tsx` — 스와치+HEX 버튼을 누르면 팝오버에 네이티브 피커, HEX 직접 입력(`#abc`/`abc`/`#aabbcc` 허용), 채우기/테두리 ‘없음’(`fill="none"`), 최근 사용 색 8개(localStorage). 순수 로직 `color-input.ts`.
+- **Shift 제약**: 도형/프레임을 그릴 때 정사각형·정원, 이동 시 이동량이 큰 축으로 고정(`drag-constraints.ts`). ⇧⌘ 드래그 복제는 그대로 동작한다.
+- **우클릭 메뉴**: `canvas/context-menu.tsx`. 커서 아래 요소를 선택(다중 선택은 유지)한 뒤 편집·스타일·순서·프레임·확대·발표 항목을 단축키 라벨과 함께 보여준다. 뷰포트 밖으로 나가지 않도록 위치를 보정하고, 붙여넣기는 `navigator.clipboard.readText()` → 메모리 폴백. 진행 중인 제스처가 있으면 무시한다(macOS Ctrl+클릭이 `contextmenu`를 함께 내기 때문).
+- **선택한 객체로 프레임 만들기**: ⌘⇧F, 속성 패널 버튼, 메뉴. 선택 영역에 48px 여백을 더한 프레임을 만들고 선택한다(`frame-from-selection.ts`, `lib/selection-commands.ts`).
+- **이미지 파일 끌어놓기**: 뷰포트 `dragover/drop`에서 PNG/JPEG를 받아 떨어뜨린 지점을 중심으로 배치(여러 장이면 계단식). `tauri.conf.json`의 `dragDropEnabled: false` 덕분에 WebView에서도 HTML5 드롭이 그대로 온다.
+- **작은 작업**: Enter → 선택한 텍스트·도형·연결선 편집, F2 → 프레임 이름 변경, ⌘] / ⌘[ 한 단계 앞/뒤(맨 앞/뒤는 ⌘⇧] / ⌘⇧[; `reorderZ`의 `forward`/`backward`는 선택 묶음의 상대 순서를 유지), ⌘⇧⏎ 또는 프레임 행의 ▶로 선택한 프레임(또는 선택을 완전히 포함한 프레임)부터 발표, ⌥⌘C / ⌥⌘V 스타일 복사·붙여넣기(`style-clipboard.ts`, 내용·위치는 유지), 상단 바 `?` 버튼과 `?` 키로 플랫폼별 단축키 도움말.
+- 단축키 처리는 `lib/primary-shortcuts.ts`(⌘/Ctrl 조합)와 `lib/plain-shortcuts.ts`(단일 키)로 분리했고, macOS에서 ⌥가 글자를 바꾸는 조합은 `event.code`로 판별한다.
+
 ## 4. 리뷰 중 발견·수정한 결함
 
 | #   | 증상                                                                  | 원인                                                                                 | 수정                                                                                                     |
@@ -150,11 +165,11 @@ React·Tauri에 의존하지 않는 8개 모듈(총 ~900줄)이 카메라 수학
 
 ## 5. 테스트 구성
 
-- **단위(vitest, 48개)**: 카메라 변환 round-trip, 커서 고정 줌, 보간의 시작·끝·중간 허프, 순수 줌,
+- **단위(vitest, 129개)**: 드래그 제약, 한 단계 z-order, 스타일 기억/복사, HEX·최근 색, 붙여넣은 텍스트 폭, 선택 프레임 여백, 선택 명령(프레임 생성·발표 시작 프레임·Enter/F2 편집) 포함. 카메라 변환 round-trip, 커서 고정 줌, 보간의 시작·끝·중간 허프, 순수 줌,
   프레임 피팅, 히트테스트/박스 선택, 리사이즈 최소 크기·비율 유지, 프레임 순서 swap, 문서 파싱·복구,
   문서 변환(불변성), 애니메이터(가짜 rAF로 재타게팅), 스토어 undo/redo·드래그 병합·프레임 순서·저장 상태,
   프레젠테이션 시작/클램프/복귀.
-- **E2E(Playwright, 19개)**: 드래그 스냅(모서리·동일 간격·가이드 표시), 복사/붙여넣기·⌥드래그 복제·정렬/분배·프레임 DnD/인라인 이름 변경, HTML 익스포트 → 다운로드 파일을 `file://`로 열어 프레임 이동·Overview 클릭·외부 요청 없음 검증 포함, 사각형 드래그 생성 + undo/redo, 드래그 이동, 텍스트 도구 입력, Ctrl+휠 줌,
+- **E2E(Playwright, 42개)**: `editing-basics.spec.ts`(텍스트 붙여넣기, Shift 제약, 우클릭 메뉴, 선택→프레임, 한 단계 순서, 선택 확대, Enter/F2, HEX·없음·최근 색, 마지막 스타일·스타일 복사, 이미지 드롭, 현재 프레임부터 발표, 단축키 도움말) 포함. 드래그 스냅(모서리·동일 간격·가이드 표시), 복사/붙여넣기·⌥드래그 복제·정렬/분배·프레임 DnD/인라인 이름 변경, HTML 익스포트 → 다운로드 파일을 `file://`로 열어 프레임 이동·Overview 클릭·외부 요청 없음 검증 포함, 사각형 드래그 생성 + undo/redo, 드래그 이동, 텍스트 도구 입력, Ctrl+휠 줌,
   클립보드 이미지 paste, 2프레임 프레젠테이션(카운터·카메라 transform 변화·종료), 프레임 순서 재정렬,
   SE 핸들 리사이즈, 프레임 이동 시 내용 동반.
 - **Rust(cargo test, 3개)**: 확장자 정규화, 파일 round-trip(원자적 쓰기), 잘못된 JSON/확장자 거부.

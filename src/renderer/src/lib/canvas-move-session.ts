@@ -4,6 +4,7 @@ import {
   translateElement
 } from '@shared/canvas/document-mutations'
 import { elementRect, unionRects, withFrameContents } from '@shared/canvas/element-bounds'
+import { constrainToAxis } from '@shared/canvas/drag-constraints'
 import type { CanvasElement, ElementId, Point, Rect } from '@shared/canvas/element-types'
 import { computeSnap } from '@shared/canvas/snap-guides'
 import { useCameraStore } from '@/store/camera-store'
@@ -69,9 +70,18 @@ export function beginMoveSession(
   }
 }
 
-/** Absolute move from the press origin; the primary modifier disables smart-guide snapping. */
-export function applyMoveSession(move: MoveSession, world: Point, disableSnap: boolean): void {
-  const raw = { x: world.x - move.startWorld.x, y: world.y - move.startWorld.y }
+export type MoveModifiers = {
+  /** Primary modifier: disables smart-guide snapping. */
+  disableSnap: boolean
+  /** Shift: locks the move to the dominant axis. */
+  constrainAxis: boolean
+}
+
+/** Absolute move from the press origin so modifiers can be toggled mid-drag without drift. */
+export function applyMoveSession(move: MoveSession, world: Point, modifiers: MoveModifiers): void {
+  const free = { x: world.x - move.startWorld.x, y: world.y - move.startWorld.y }
+  const raw = modifiers.constrainAxis ? constrainToAxis(free) : free
+  const disableSnap = modifiers.disableSnap
   const zoom = useCameraStore.getState().camera.zoom
   const proposed = { ...move.bounds, x: move.bounds.x + raw.x, y: move.bounds.y + raw.y }
   const snap = disableSnap

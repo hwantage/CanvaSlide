@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { visibleWorldRect } from './camera-transform'
-import { fitContentToViewport, fitRectToViewport } from './frame-fit'
+import {
+  SELECTION_FIT_MAX_ZOOM,
+  fitContentToViewport,
+  fitRectToViewport,
+  fitSelectionToViewport
+} from './frame-fit'
 
 describe('frame-fit', () => {
   const viewport = { width: 1600, height: 900 }
@@ -26,5 +31,12 @@ describe('frame-fit', () => {
     expect(fitContentToViewport(tiny, viewport).zoom).toBe(1)
     const huge = { x: 0, y: 0, width: 20_000, height: 20 }
     expect(fitContentToViewport(huge, viewport).zoom).toBeLessThan(1)
+  })
+
+  it('zoom-to-selection magnifies small selections but only up to the cap', () => {
+    const tiny = { x: 0, y: 0, width: 20, height: 20 }
+    expect(fitSelectionToViewport(tiny, viewport).zoom).toBe(SELECTION_FIT_MAX_ZOOM)
+    const medium = { x: 0, y: 0, width: 800, height: 400 }
+    expect(fitSelectionToViewport(medium, viewport).zoom).toBeCloseTo(1600 / (800 * 1.16), 6)
   })
 })

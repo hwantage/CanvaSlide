@@ -3,6 +3,7 @@ import { ExportDialog } from '@/components/panels/export-dialog'
 import { FrameListPanel } from '@/components/panels/frame-list-panel'
 import { PropertiesPanel } from '@/components/panels/properties-panel'
 import { SettingsDialog } from '@/components/panels/settings-dialog'
+import { ShortcutHelpDialog } from '@/components/panels/shortcut-help-dialog'
 import { ToolBar } from '@/components/toolbar/tool-bar'
 import { TopBar } from '@/components/toolbar/top-bar'
 import { ZoomControls } from '@/components/toolbar/zoom-controls'
@@ -39,6 +40,7 @@ export function App() {
         </main>
         {!presenting && <ExportDialog />}
         {!presenting && <SettingsDialog />}
+        {!presenting && <ShortcutHelpDialog />}
         {!presenting && (
           <aside className="flex w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-border bg-background p-3">
             <FrameListPanel />

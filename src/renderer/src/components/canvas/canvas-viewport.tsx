@@ -4,6 +4,7 @@ import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { useWheelZoom } from '@/hooks/use-wheel-zoom'
 import { selectPresentationActive, usePresentationStore } from '@/store/presentation-store'
 import { selectEffectiveTool, useToolStore } from '@/store/tool-store'
+import { ContextMenu } from './context-menu'
 import { DragOverlays } from './drag-overlays'
 import { GridBackground } from './grid-background'
 import { PresentationFramePicker } from './presentation-frame-picker'
@@ -49,7 +50,9 @@ export function CanvasViewport() {
       onPointerUp={handlers.onPointerUp}
       onPointerCancel={handlers.onPointerUp}
       onDoubleClick={handlers.onDoubleClick}
-      onContextMenu={(event) => event.preventDefault()}
+      onContextMenu={handlers.onContextMenu}
+      onDragOver={handlers.onDragOver}
+      onDrop={handlers.onDrop}
     >
       <GridBackground />
       <WorldLayer />
@@ -60,6 +63,7 @@ export function CanvasViewport() {
       <DragOverlays />
       <PresentationFramePicker />
       <PresentationOverlay />
+      {!presenting && <ContextMenu />}
     </div>
   )
 }

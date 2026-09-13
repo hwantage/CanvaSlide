@@ -6,18 +6,17 @@ import {
 } from '@shared/canvas/connector-geometry'
 import { patchElements } from '@shared/canvas/document-mutations'
 import { elementRect, rectContainsPoint } from '@shared/canvas/element-bounds'
-import {
-  defaultConnectorStyle,
-  defaultTextStyle,
-  type CanvasDocument,
-  type ConnectorElement,
-  type ConnectorEnd,
-  type ElementId,
-  type Point
+import type {
+  CanvasDocument,
+  ConnectorElement,
+  ConnectorEnd,
+  ElementId,
+  Point
 } from '@shared/canvas/element-types'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
 import { useCameraStore } from '@/store/camera-store'
+import { currentStyleMemory } from '@/store/style-memory-store'
 import { useToolStore } from '@/store/tool-store'
 
 export type ConnectorCreateSession = { kind: 'connector-create'; id: ElementId; startWorld: Point }
@@ -105,6 +104,7 @@ export function previewConnectorHostAt(document: CanvasDocument, point: Point): 
 export function beginConnectorCreate(world: Point): ConnectorCreateSession {
   const doc = useDocumentStore.getState()
   const preset = useToolStore.getState().connectorPreset
+  const memory = currentStyleMemory()
   const id = newElementId()
   const start = resolveConnectorEndAt(doc.document, world, id)
   const connector: ConnectorElement = {
@@ -119,9 +119,9 @@ export function beginConnectorCreate(world: Point): ConnectorCreateSession {
     route: preset.route,
     startHead: preset.startHead,
     endHead: preset.endHead,
-    style: { ...defaultConnectorStyle },
+    style: { ...memory.connector },
     label: '',
-    textStyle: { ...defaultTextStyle, fontSize: 14, align: 'center' }
+    textStyle: { ...memory.connectorText }
   }
   doc.beginEdit()
   doc.applyLive((d) => ({

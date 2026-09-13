@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  type DragEvent,
   type MouseEvent,
   type PointerEvent,
   type RefObject
@@ -9,8 +10,16 @@ import {
 import { screenToWorld } from '@shared/canvas/camera-transform'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
 import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
+import { imageFilesFrom, insertImageFile } from '@/lib/external-content'
 import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
+import { showErrorMessage } from '@/platform/document-file-access'
 import { useCameraStore } from '@/store/camera-store'
+
+/** Mouse/drag events share the fields `toInfo` needs; only pointer events carry `button`. */
+function eventCoords(event: MouseEvent<HTMLElement> | DragEvent<HTMLElement>) {
+  const { clientX, clientY, shiftKey, altKey, metaKey, ctrlKey } = event
+  return { clientX, clientY, shiftKey, altKey, metaKey, ctrlKey }
+}
 
 function isOverlayUiTarget(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest('[data-canvas-ui]') !== null
@@ -21,6 +30,9 @@ export type CanvasPointerHandlers = {
   onPointerMove: (event: PointerEvent<HTMLElement>) => void
   onPointerUp: (event: PointerEvent<HTMLElement>) => void
   onDoubleClick: (event: MouseEvent<HTMLElement>) => void
+  onContextMenu: (event: MouseEvent<HTMLElement>) => void
+  onDragOver: (event: DragEvent<HTMLElement>) => void
+  onDrop: (event: DragEvent<HTMLElement>) => void
   onResizeHandleDown: (handle: HandlePosition, event: PointerEvent<HTMLElement>) => void
   onConnectorEndDown: (id: string, which: 'start' | 'end', event: PointerEvent<HTMLElement>) => void
 }
@@ -83,6 +95,36 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
         interaction.pointerUp(toInfo(event))
       },
       onDoubleClick: (event) => interaction.doubleClick(toInfo(event)),
+      onContextMenu: (event) => {
+        event.preventDefault()
+        if (isEditableTarget(event.target) || isOverlayUiTarget(event.target)) {
+          return
+        }
+        interaction.contextMenu(toInfo({ ...eventCoords(event), button: 2 }))
+      },
+      onDragOver: (event) => {
+        if (event.dataTransfer.types.includes('Files')) {
+          event.preventDefault()
+          event.dataTransfer.dropEffect = 'copy'
+        }
+      },
+      onDrop: (event) => {
+        const files = imageFilesFrom(event.dataTransfer)
+        if (files.length === 0) {
+          return
+        }
+        event.preventDefault()
+        const { world } = toInfo({ ...eventCoords(event), button: 0 })
+        void (async () => {
+          for (const file of files) {
+            try {
+              await insertImageFile(file, world)
+            } catch (error) {
+              await showErrorMessage(error instanceof Error ? error.message : String(error))
+            }
+          }
+        })()
+      },
       onResizeHandleDown: (handle, event) => {
         event.stopPropagation()
         ref.current?.setPointerCapture(event.pointerId)

@@ -31,3 +31,11 @@ export function fitContentToViewport(rect: Rect, viewport: Size, maxZoom = 1): C
     viewport
   )
 }
+
+/** Zoom-to-selection never magnifies past this so a lone small element stays recognisable. */
+export const SELECTION_FIT_MAX_ZOOM = 4
+
+/** Fits the selection like a frame fit but capped at `SELECTION_FIT_MAX_ZOOM`. */
+export function fitSelectionToViewport(rect: Rect, viewport: Size): Camera {
+  return fitContentToViewport(rect, viewport, SELECTION_FIT_MAX_ZOOM)
+}

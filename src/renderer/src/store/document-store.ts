@@ -16,7 +16,8 @@ import {
   removeElements,
   reorderZ,
   translateElements,
-  type ElementPatch
+  type ElementPatch,
+  type ZDirection
 } from '@shared/canvas/document-mutations'
 import {
   createEmptyDocument,
@@ -74,7 +75,7 @@ export type DocumentActions = {
   translateSelected: (delta: Point) => void
   deleteSelected: () => void
   duplicateSelected: () => void
-  reorderSelected: (direction: 'front' | 'back') => void
+  reorderSelected: (direction: ZDirection) => void
   moveFrameOrder: (id: ElementId, direction: 'up' | 'down') => void
   moveFrameTo: (id: ElementId, index: number) => void
   alignSelected: (mode: AlignMode) => void

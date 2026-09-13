@@ -1,8 +1,9 @@
-import { Maximize, Minus, Plus } from 'lucide-react'
+import { Focus, Maximize, Minus, Plus } from 'lucide-react'
 import { contentBounds } from '@shared/canvas/element-bounds'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
 import { shiftLabel, shortcutLabel } from '@/lib/platform-keys'
+import { zoomToSelection } from '@/lib/selection-commands'
 import { selectZoom, useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 
@@ -11,6 +12,7 @@ export function ZoomControls() {
   const zoomStep = useCameraStore((s) => s.zoomStep)
   const resetZoom = useCameraStore((s) => s.resetZoom)
   const fitContent = useCameraStore((s) => s.fitContent)
+  const hasSelection = useDocumentStore((s) => s.selectedIds.length > 0)
   const fitAll = () => {
     const bounds = contentBounds(useDocumentStore.getState().document)
     if (bounds) {
@@ -36,6 +38,13 @@ export function ZoomControls() {
       </IconButton>
       <IconButton label={`${t('zoom.fit')} (${shiftLabel()}1)`} onClick={fitAll}>
         <Maximize size={14} />
+      </IconButton>
+      <IconButton
+        label={`${t('selection.zoom')} (${shiftLabel()}2)`}
+        disabled={!hasSelection}
+        onClick={zoomToSelection}
+      >
+        <Focus size={14} />
       </IconButton>
     </div>
   )

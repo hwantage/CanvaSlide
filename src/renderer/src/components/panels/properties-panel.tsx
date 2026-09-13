@@ -1,154 +1,15 @@
-import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  BringToFront,
-  Copy,
-  SendToBack,
-  Trash2
-} from 'lucide-react'
-import { useState } from 'react'
-import type { CanvasElement, ShapeStyle, TextAlign, TextStyle } from '@shared/canvas/element-types'
-import { parseBoundedNumber } from '@shared/canvas/numeric-input'
+import { BringToFront, ChevronDown, ChevronUp, Copy, Frame, SendToBack, Trash2 } from 'lucide-react'
+import type { CanvasElement } from '@shared/canvas/element-types'
 import { MIN_ELEMENT_SIZE } from '@shared/canvas/resize-handles'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
-import { IconButton } from '@/components/ui/icon-button'
 import { TextButton } from '@/components/ui/text-button'
-import { t, tn, type UiStringKey } from '@/i18n/ui-strings'
+import { t, tn } from '@/i18n/ui-strings'
+import { shortcutLabel } from '@/lib/platform-keys'
+import { frameSelection } from '@/lib/selection-commands'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
 import { AlignmentToolbar } from './alignment-toolbar'
 import { ConnectorFields } from './connector-fields'
-
-function ColorInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <input
-      type="color"
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-7 w-9 cursor-pointer rounded border border-input bg-background p-0.5"
-    />
-  )
-}
-
-function NumberInput({
-  value,
-  min,
-  max,
-  onChange
-}: {
-  value: number
-  min: number
-  max: number
-  onChange: (v: number) => void
-}) {
-  // Why: a controlled number field can't be cleared while typing unless the draft lives locally.
-  // The draft is shown only while it belongs to the current value (typing may clamp, so the
-  // committed number can differ from the text); undo or another selection shows the real value.
-  const [draft, setDraft] = useState({ text: String(Math.round(value)), committed: value })
-  const shown = draft.committed === value ? draft.text : String(Math.round(value))
-  return (
-    <input
-      type="number"
-      className={`${inputClass} w-16`}
-      value={shown}
-      min={min}
-      max={max}
-      onChange={(event) => {
-        const parsed = parseBoundedNumber(event.target.value, min, max)
-        setDraft({ text: event.target.value, committed: parsed ?? value })
-        if (parsed !== null && parsed !== value) {
-          onChange(parsed)
-        }
-      }}
-      onBlur={() => setDraft({ text: String(Math.round(value)), committed: value })}
-    />
-  )
-}
-
-function ShapeStyleFields({ ids, style }: { ids: string[]; style: ShapeStyle }) {
-  const patch = (partial: Partial<ShapeStyle>) =>
-    useDocumentStore
-      .getState()
-      .patchElements(ids, (element) =>
-        element.type === 'shape' ? { style: { ...element.style, ...partial } } : {}
-      )
-  return (
-    <>
-      <FieldRow label={t('props.fill')}>
-        <ColorInput value={style.fill} onChange={(fill) => patch({ fill })} />
-      </FieldRow>
-      <FieldRow label={t('props.stroke')}>
-        <ColorInput value={style.stroke} onChange={(stroke) => patch({ stroke })} />
-        <NumberInput
-          value={style.strokeWidth}
-          min={0}
-          max={64}
-          onChange={(strokeWidth) => patch({ strokeWidth })}
-        />
-      </FieldRow>
-      <FieldRow label={t('props.radius')}>
-        <NumberInput
-          value={style.cornerRadius}
-          min={0}
-          max={512}
-          onChange={(cornerRadius) => patch({ cornerRadius })}
-        />
-      </FieldRow>
-    </>
-  )
-}
-
-const textAligns: { value: TextAlign; label: UiStringKey; icon: typeof AlignLeft }[] = [
-  { value: 'left', label: 'props.textAlign.left', icon: AlignLeft },
-  { value: 'center', label: 'props.textAlign.center', icon: AlignCenter },
-  { value: 'right', label: 'props.textAlign.right', icon: AlignRight }
-]
-
-function TextStyleFields({ ids, style }: { ids: string[]; style: TextStyle }) {
-  const patch = (partial: Partial<TextStyle>) =>
-    useDocumentStore
-      .getState()
-      .patchElements(ids, (element) =>
-        element.type === 'text' || element.type === 'shape' || element.type === 'connector'
-          ? { textStyle: { ...element.textStyle, ...partial } }
-          : {}
-      )
-  return (
-    <>
-      <FieldRow label={t('props.text')}>
-        <ColorInput value={style.color} onChange={(color) => patch({ color })} />
-        <NumberInput
-          value={style.fontSize}
-          min={4}
-          max={1024}
-          onChange={(fontSize) => patch({ fontSize })}
-        />
-      </FieldRow>
-      <FieldRow label={t('props.align')}>
-        {textAligns.map(({ value, label, icon: Icon }) => (
-          <IconButton
-            key={value}
-            label={t(label)}
-            className="h-7 w-7"
-            active={style.align === value}
-            onClick={() => patch({ align: value })}
-          >
-            <Icon size={14} />
-          </IconButton>
-        ))}
-        <IconButton
-          label={t('props.bold')}
-          className="h-7 w-7"
-          active={style.bold}
-          onClick={() => patch({ bold: !style.bold })}
-        >
-          <Bold size={14} />
-        </IconButton>
-      </FieldRow>
-    </>
-  )
-}
+import { NumberInput, ShapeStyleFields, TextStyleFields } from './style-fields'
 
 function firstOfType<T extends CanvasElement['type']>(
   elements: CanvasElement[],
@@ -181,6 +42,7 @@ export function PropertiesPanel() {
       {frame && elements.length === 1 && (
         <FieldRow label={t('props.name')}>
           <input
+            aria-label={t('props.name')}
             className={`${inputClass} w-36`}
             value={frame.name}
             onChange={(event) => store.patchElements([frame.id], { name: event.target.value })}
@@ -208,13 +70,42 @@ export function PropertiesPanel() {
       {shape && <ShapeStyleFields ids={selectedIds} style={shape.style} />}
       {textStyle && <TextStyleFields ids={selectedIds} style={textStyle} />}
       <div className="mt-2 flex flex-wrap gap-1">
-        <TextButton onClick={() => store.reorderSelected('front')}>
+        <TextButton
+          title={`${t('order.front')} (${shortcutLabel(']', { shift: true })})`}
+          onClick={() => store.reorderSelected('front')}
+        >
           <BringToFront size={12} /> {t('props.front')}
         </TextButton>
-        <TextButton onClick={() => store.reorderSelected('back')}>
+        <TextButton
+          title={`${t('order.forward')} (${shortcutLabel(']')})`}
+          onClick={() => store.reorderSelected('forward')}
+        >
+          <ChevronUp size={12} /> {t('props.forward')}
+        </TextButton>
+        <TextButton
+          title={`${t('order.backward')} (${shortcutLabel('[')})`}
+          onClick={() => store.reorderSelected('backward')}
+        >
+          <ChevronDown size={12} /> {t('props.backward')}
+        </TextButton>
+        <TextButton
+          title={`${t('order.back')} (${shortcutLabel('[', { shift: true })})`}
+          onClick={() => store.reorderSelected('back')}
+        >
           <SendToBack size={12} /> {t('props.back')}
         </TextButton>
-        <TextButton onClick={store.duplicateSelected}>
+      </div>
+      <div className="flex flex-wrap gap-1">
+        <TextButton
+          title={`${t('selection.frame')} (${shortcutLabel('F', { shift: true })})`}
+          onClick={frameSelection}
+        >
+          <Frame size={12} /> {t('selection.frame')}
+        </TextButton>
+        <TextButton
+          title={`${t('props.duplicate')} (${shortcutLabel('D')})`}
+          onClick={store.duplicateSelected}
+        >
           <Copy size={12} /> {t('props.duplicate')}
         </TextButton>
         <TextButton variant="destructive" onClick={store.deleteSelected}>

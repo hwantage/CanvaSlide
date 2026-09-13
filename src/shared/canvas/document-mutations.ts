@@ -91,14 +91,54 @@ export function duplicateElements(
   return { document: next, newIds }
 }
 
+export type ZDirection = 'front' | 'back' | 'forward' | 'backward'
+
 export function reorderZ(
   document: CanvasDocument,
   ids: readonly ElementId[],
-  direction: 'front' | 'back'
+  direction: ZDirection
 ): CanvasDocument {
+  if (direction === 'forward' || direction === 'backward') {
+    return stepZ(document, ids, direction)
+  }
   const moving = document.order.filter((id) => ids.includes(id))
   const rest = document.order.filter((id) => !ids.includes(id))
   return { ...document, order: direction === 'front' ? [...rest, ...moving] : [...moving, ...rest] }
+}
+
+/**
+ * Moves the selection one step past its nearest unselected neighbour, keeping the selection's own
+ * relative order. Contiguous selected runs move together so nothing leapfrogs inside the group.
+ */
+function stepZ(
+  document: CanvasDocument,
+  ids: readonly ElementId[],
+  direction: 'forward' | 'backward'
+): CanvasDocument {
+  const selected = new Set(ids)
+  const order = [...document.order]
+  const toward = direction === 'forward' ? 1 : -1
+  const edge = direction === 'forward' ? order.length - 1 : 0
+  // Why: walking from the destination edge, a selected item swaps with the unselected one ahead
+  // of it; items already packed against the edge (or behind another selected item) stay put.
+  let blocked = edge
+  for (let i = edge; i >= 0 && i < order.length; i -= toward) {
+    const id = order[i] as ElementId
+    if (!selected.has(id)) {
+      continue
+    }
+    if (i === blocked) {
+      blocked -= toward
+      continue
+    }
+    const ahead = order[i + toward] as ElementId
+    if (selected.has(ahead)) {
+      continue
+    }
+    order[i + toward] = id
+    order[i] = ahead
+  }
+  return order.every((id, i) => id === document.order[i]) ? document : { ...document, order }
 }
 
 export function applyFrameOrders(

@@ -1,17 +1,16 @@
-import {
-  defaultShapeStyle,
-  defaultTextStyle,
-  type CanvasDocument,
-  type FrameElement,
-  type ImageElement,
-  type Point,
-  type Rect,
-  type ShapeElement,
-  type ShapeKind,
-  type TextElement
+import type {
+  CanvasDocument,
+  FrameElement,
+  ImageElement,
+  Point,
+  Rect,
+  ShapeElement,
+  ShapeKind,
+  TextElement
 } from '@shared/canvas/element-types'
 import { defaultFrameName, nextFrameOrder } from '@shared/canvas/presentation-sequence'
 import { newElementId } from '@/store/document-store'
+import { currentStyleMemory } from '@/store/style-memory-store'
 
 export const DEFAULT_SHAPE_SIZE = { width: 160, height: 100 }
 export const DEFAULT_FRAME_SIZE = { width: 960, height: 540 }
@@ -21,19 +20,22 @@ export function textLineHeight(fontSize: number): number {
   return Math.round(fontSize * 1.4)
 }
 
+/** New shapes and text start from the last style the user applied (see style-memory-store). */
 export function createShapeElement(shape: ShapeKind, rect: Rect): ShapeElement {
+  const memory = currentStyleMemory()
   return {
     id: newElementId(),
     type: 'shape',
     shape,
     ...rect,
-    style: { ...defaultShapeStyle },
+    style: { ...memory.shape },
     text: '',
-    textStyle: { ...defaultTextStyle, align: 'center' }
+    textStyle: { ...memory.shapeText }
   }
 }
 
 export function createTextElement(origin: Point, width = DEFAULT_TEXT_WIDTH): TextElement {
+  const textStyle = { ...currentStyleMemory().text }
   return {
     id: newElementId(),
     type: 'text',
@@ -41,8 +43,8 @@ export function createTextElement(origin: Point, width = DEFAULT_TEXT_WIDTH): Te
     x: origin.x,
     y: origin.y,
     width,
-    height: textLineHeight(defaultTextStyle.fontSize),
-    textStyle: { ...defaultTextStyle }
+    height: textLineHeight(textStyle.fontSize),
+    textStyle
   }
 }
 

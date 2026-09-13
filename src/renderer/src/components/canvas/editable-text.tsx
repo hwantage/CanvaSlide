@@ -98,6 +98,13 @@ export function EditableText({
           .patchElements([elementId], { [textField]: readEditorText(event.currentTarget) }, false)
       }
       onBlur={() => useToolStore.getState().setEditingTextId(null)}
+      // Why: rich clipboard content (HTML from a browser) must arrive as plain text with its
+      // line breaks; the default paste would inject markup the document cannot hold.
+      onPaste={(event) => {
+        event.preventDefault()
+        const text = event.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n')
+        document.execCommand('insertText', false, text)
+      }}
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.currentTarget.blur()

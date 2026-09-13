@@ -12,10 +12,12 @@ import type {
   ConnectorRoute,
   ConnectorStyle
 } from '@shared/canvas/element-types'
+import { ColorField } from '@/components/ui/color-field'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
+import { useStyleMemoryStore } from '@/store/style-memory-store'
 
 const routes: { value: ConnectorRoute; label: UiStringKey; icon: typeof TrendingUp }[] = [
   { value: 'straight', label: 'connector.route.straight', icon: TrendingUp },
@@ -33,12 +35,17 @@ export function ConnectorFields({ ids, sample }: { ids: string[]; sample: Connec
     useDocumentStore
       .getState()
       .patchElements(ids, (element) => (element.type === 'connector' ? partial : {}))
-  const patchStyle = (partial: Partial<ConnectorStyle>) =>
+  const patchStyle = (partial: Partial<ConnectorStyle>) => {
     useDocumentStore
       .getState()
       .patchElements(ids, (element) =>
         element.type === 'connector' ? { style: { ...element.style, ...partial } } : {}
       )
+    const first = useDocumentStore.getState().document.elements[ids[0] as string]
+    if (first) {
+      useStyleMemoryStore.getState().rememberFrom(first)
+    }
+  }
   return (
     <>
       <FieldRow label={t('connector.route')}>
@@ -68,11 +75,10 @@ export function ConnectorFields({ ids, sample }: { ids: string[]; sample: Connec
         ))}
       </FieldRow>
       <FieldRow label={t('connector.line')}>
-        <input
-          type="color"
+        <ColorField
+          label={t('connector.color')}
           value={sample.style.stroke}
-          onChange={(event) => patchStyle({ stroke: event.target.value })}
-          className="h-7 w-9 cursor-pointer rounded border border-input bg-background p-0.5"
+          onChange={(stroke) => patchStyle({ stroke })}
         />
         <input
           type="number"

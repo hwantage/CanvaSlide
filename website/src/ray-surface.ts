@@ -1,3 +1,5 @@
+import { uploadRayTexture } from './ray-texture'
+
 const vertexSource = `
 attribute vec2 a_uv;
 uniform float u_time;
@@ -40,7 +42,7 @@ export async function createRaySurface(
   const gl = canvas.getContext('webgl', {
     alpha: true,
     antialias: true,
-    premultipliedAlpha: false,
+    premultipliedAlpha: true,
     powerPreference: 'low-power'
   })
   if (!gl) {
@@ -101,7 +103,10 @@ export async function createRaySurface(
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
   gl.bindTexture(gl.TEXTURE_2D, texture)
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
+  if (!uploadRayTexture(gl, image)) {
+    dispose()
+    return null
+  }
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)

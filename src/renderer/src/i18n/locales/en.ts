@@ -176,7 +176,7 @@ export const en = {
   'help.wheel': 'wheel',
   'help.rightClick': 'Right-click',
   'help.contextMenu': 'Context menu',
-  'help.dropImage': 'Drop image files onto the canvas',
+  'help.dropImage': 'Drop image or PDF files onto the canvas',
   'help.pasteText': 'Paste text or images from other apps',
 
   // Website documentation.
@@ -514,5 +514,7 @@ export const en = {
 
   'error.decodeAsset': 'Could not decode image asset',
   'error.decodePasted': 'Could not decode pasted image',
-  'error.canvasContext': 'Canvas 2D context unavailable'
+  'error.canvasContext': 'Canvas 2D context unavailable',
+  'error.decodePdf': 'Could not read the PDF file',
+  'error.pdfPassword': 'Password-protected PDF files are not supported'
 } as const

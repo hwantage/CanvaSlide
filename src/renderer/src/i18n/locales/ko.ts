@@ -179,7 +179,7 @@ export const ko: UiStrings = {
   'help.wheel': '휠',
   'help.rightClick': '오른쪽 클릭',
   'help.contextMenu': '상황 메뉴',
-  'help.dropImage': '이미지 파일을 캔버스에 끌어놓기',
+  'help.dropImage': '이미지·PDF 파일을 캔버스에 끌어놓기',
   'help.pasteText': '다른 앱의 텍스트·이미지 붙여넣기',
 
   // Website documentation.
@@ -515,5 +515,7 @@ export const ko: UiStrings = {
 
   'error.decodeAsset': '이미지 에셋을 디코딩할 수 없습니다',
   'error.decodePasted': '붙여넣은 이미지를 디코딩할 수 없습니다',
-  'error.canvasContext': 'Canvas 2D 컨텍스트를 사용할 수 없습니다'
+  'error.canvasContext': 'Canvas 2D 컨텍스트를 사용할 수 없습니다',
+  'error.decodePdf': 'PDF 파일을 읽을 수 없습니다',
+  'error.pdfPassword': '암호가 걸린 PDF 파일은 지원하지 않습니다'
 }

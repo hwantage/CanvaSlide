@@ -11,3 +11,5 @@ src-tauri/gen/
 test-results/
 .pnpm-store/
 /discuss/
+# pdf.js runtime assets copied by `pnpm build:pdfjs`
+src/renderer/public/pdfjs/

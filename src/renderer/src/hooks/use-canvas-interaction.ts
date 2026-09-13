@@ -10,7 +10,7 @@ import {
 import { screenToWorld } from '@shared/canvas/camera-transform'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
 import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
-import { imageFilesFrom, insertImageFile } from '@/lib/external-content'
+import { importableFilesFrom, insertFile } from '@/lib/external-content'
 import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
 import { showErrorMessage } from '@/platform/document-file-access'
 import { useCameraStore } from '@/store/camera-store'
@@ -109,7 +109,7 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
         }
       },
       onDrop: (event) => {
-        const files = imageFilesFrom(event.dataTransfer)
+        const files = importableFilesFrom(event.dataTransfer)
         if (files.length === 0) {
           return
         }
@@ -118,7 +118,7 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
         void (async () => {
           for (const file of files) {
             try {
-              await insertImageFile(file, world)
+              await insertFile(file, world)
             } catch (error) {
               await showErrorMessage(error instanceof Error ? error.message : String(error))
             }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { findImageFile } from '@/lib/clipboard-image'
-import { insertClipboardText, insertImageFile } from '@/lib/external-content'
+import { insertClipboardText, insertFile, isPdfFile } from '@/lib/external-content'
 import {
   copySelection,
   cutSelection,
@@ -11,6 +11,11 @@ import {
 import { isEditableTarget } from '@/lib/platform-keys'
 import { showErrorMessage } from '@/platform/document-file-access'
 import { usePresentationStore } from '@/store/presentation-store'
+
+/** A PDF copied from the file manager arrives as a file item on engines that expose it. */
+function findPdfFile(data: DataTransfer | null): File | null {
+  return [...(data?.files ?? [])].find(isPdfFile) ?? null
+}
 
 function ignoring(event: ClipboardEvent): boolean {
   return isEditableTarget(event.target) || usePresentationStore.getState().active
@@ -37,11 +42,11 @@ export function useClipboard(): void {
       }
       nativePasteArrived()
       const text = event.clipboardData?.getData('text/plain') ?? ''
-      const file = findImageFile(event.clipboardData)
+      const file = findImageFile(event.clipboardData) ?? findPdfFile(event.clipboardData)
       if (file) {
         event.preventDefault()
         try {
-          await insertImageFile(file)
+          await insertFile(file)
         } catch (error) {
           await showErrorMessage(error instanceof Error ? error.message : String(error))
         }

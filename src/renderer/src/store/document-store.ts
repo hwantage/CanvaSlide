@@ -71,6 +71,8 @@ export type DocumentActions = {
   insertElement: (element: CanvasElement, select?: boolean) => void
   /** Adds the asset (deduplicated by content hash) and the element in one undo step. */
   insertImage: (asset: ImageAsset, element: ImageElement) => void
+  /** Bulk import (e.g. PDF pages): every asset and element lands in one undo step. */
+  insertImported: (assets: ImageAsset[], elements: CanvasElement[], select: ElementId[]) => void
   patchElements: (ids: ElementId[], patch: ElementPatch, record?: boolean) => void
   translateSelected: (delta: Point) => void
   deleteSelected: () => void
@@ -174,6 +176,19 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     insertImage: (asset, element) => {
       recorded((d) => insertElement(upsertAsset(d, asset), element))
       set({ selectedIds: [element.id] })
+    },
+    insertImported: (assets, elements, select) => {
+      if (elements.length === 0) {
+        return
+      }
+      recorded((d) => {
+        let next = assets.reduce((doc, asset) => upsertAsset(doc, asset), d)
+        for (const element of elements) {
+          next = insertElement(next, element)
+        }
+        return next
+      })
+      set({ selectedIds: select })
     },
     patchElements: (ids, patch, record = true) => {
       const apply = (d: CanvasDocument) => patchElements(d, ids, patch)

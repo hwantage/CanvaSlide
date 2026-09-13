@@ -17,6 +17,9 @@ export default defineConfig({
     }
   },
   clearScreen: false,
+  // Why: discovering pdfjs-dist on first use makes the dev server re-bundle and reload the page
+  // mid-import; pre-bundling it keeps a PDF drop (and the E2E for it) uninterrupted.
+  optimizeDeps: { include: ['pdfjs-dist'] },
   server: {
     port: 1420,
     strictPort: true,

@@ -59,11 +59,26 @@ export function insertClipboardText(text: string, at?: Point): boolean {
   return insertPlainText(text, at)
 }
 
-export function imageFilesFrom(data: DataTransfer | null): File[] {
+export function isPdfFile(file: File): boolean {
+  return file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+}
+
+/** Dropped files we can turn into elements: images and PDFs, in the order they were dropped. */
+export function importableFilesFrom(data: DataTransfer | null): File[] {
   if (!data) {
     return []
   }
-  return [...data.files].filter((file) => file.type.startsWith('image/'))
+  return [...data.files].filter((file) => file.type.startsWith('image/') || isPdfFile(file))
+}
+
+/** Routes one dropped/pasted file to the right importer. */
+export async function insertFile(file: File, at?: Point): Promise<void> {
+  if (isPdfFile(file)) {
+    const { importPdfFile } = await import('./pdf-import')
+    await importPdfFile(file, at)
+    return
+  }
+  await insertImageFile(file, at)
 }
 
 /**

@@ -52,7 +52,11 @@ test('the mascot sweeps across pairs of sections and docks at the bottom center'
   await page.evaluate(() =>
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })
   )
-  await expect(page.locator('.ray-flight')).toHaveAttribute('data-stage', 'docked')
+  // Why: the pose eases at most 64ms of simulated time per frame, and CI's software GL renders
+  // frames slowly, so settling within 0.5px of the dock can take well over the default 7s.
+  await expect(page.locator('.ray-flight')).toHaveAttribute('data-stage', 'docked', {
+    timeout: 25_000
+  })
   const dock = await center(page, '.ray-dock img')
   const landed = await center(page, '.ray-flight')
   expect(Math.abs(landed.x - dock.x)).toBeLessThan(3)

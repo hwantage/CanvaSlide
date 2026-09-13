@@ -6,7 +6,9 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 7000 },
   fullyParallel: true,
-  workers: 3,
+  // Why: CI runners render WebGL in software; three parallel browsers starve the mascot animation.
+  workers: process.env.CI ? 1 : 3,
+  retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
   use: {
     baseURL: 'http://127.0.0.1:1422/CanvaSlide/',

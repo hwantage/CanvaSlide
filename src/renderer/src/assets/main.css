@@ -1,0 +1,136 @@
+@import 'tailwindcss';
+
+/* Design tokens: surface/foreground pairs, neutral chrome, colour reserved for state. */
+:root {
+  --background: #ffffff;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #2563eb;
+  --canvas: #f7f7f8;
+  --canvas-grid: #d4d4d8;
+  /* Why: continuous lines read much heavier than dots; keep them barely visible. */
+  --canvas-grid-line: #ececef;
+  --selection: #2563eb;
+  --frame-stroke: #a1a1aa;
+  --frame-label: #52525b;
+  --snap: #ef4444;
+  --frame-selected: #ec4899;
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #18181b;
+    --foreground: #fafafa;
+    --card: #1f1f23;
+    --card-foreground: #fafafa;
+    --popover: #1f1f23;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+    --destructive: #ef4444;
+    --destructive-foreground: #fafafa;
+    --border: #3f3f46;
+    --input: #3f3f46;
+    --ring: #60a5fa;
+    --canvas: #f7f7f8;
+    --canvas-grid: #d4d4d8;
+    --canvas-grid-line: #ececef;
+    --selection: #60a5fa;
+    --frame-stroke: #71717a;
+    --frame-label: #d4d4d8;
+    --snap: #f87171;
+    --frame-selected: #f472b6;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-canvas: var(--canvas);
+  --color-canvas-grid: var(--canvas-grid);
+  --color-selection: var(--selection);
+  --color-frame-stroke: var(--frame-stroke);
+  --color-frame-label: var(--frame-label);
+  --color-snap: var(--snap);
+  --color-frame-selected: var(--frame-selected);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Why: the desktop app should feel native — no text cursor or rubber-band on chrome. */
+button,
+input,
+select {
+  font: inherit;
+}
+
+.canvas-text-editor {
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.canvas-text-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #a1a1aa;
+  pointer-events: none;
+}

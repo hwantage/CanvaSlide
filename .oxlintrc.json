@@ -1,0 +1,135 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "react-hooks", "react-perf", "unicorn"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-fallthrough": "error",
+    "eslint/no-useless-call": "error",
+    "oxc/no-accumulating-spread": "error",
+    "react/jsx-no-duplicate-props": "error",
+    "react/jsx-no-undef": "error",
+    "react/no-children-prop": "error",
+    "react/no-direct-mutation-state": "error",
+    "react/no-string-refs": "error",
+    "react/no-unescaped-entities": "error",
+    "react/jsx-curly-brace-presence": [
+      "error",
+      {
+        "props": "never",
+        "children": "never",
+        "propElementValues": "always"
+      }
+    ],
+    "react/jsx-filename-extension": [
+      "error",
+      {
+        "extensions": [".tsx", ".jsx"]
+      }
+    ],
+    "react/jsx-fragments": "error",
+    "react/jsx-key": "error",
+    "react/jsx-no-constructed-context-values": "error",
+    "react/jsx-no-target-blank": "error",
+    "react/jsx-no-useless-fragment": [
+      "error",
+      {
+        "allowExpressions": true
+      }
+    ],
+    "react/jsx-pascal-case": "error",
+    "react/self-closing-comp": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "typescript/array-type": "error",
+    "typescript/consistent-type-definitions": ["error", "type"],
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-explicit-any": [
+      "error",
+      {
+        "ignoreRestArgs": true
+      }
+    ],
+    "typescript/no-import-type-side-effects": "error",
+    "typescript/no-unnecessary-boolean-literal-compare": "error",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/prefer-ts-expect-error": "error",
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      {
+        "allowDefaultCaseForExhaustiveSwitch": false
+      }
+    ],
+    "curly": "error",
+    "no-unneeded-ternary": "error",
+    "no-else-return": "error",
+    "no-useless-return": "error",
+    "prefer-template": "error",
+    "unicorn/no-array-reverse": "error",
+    "unicorn/no-instanceof-builtins": "error",
+    "unicorn/no-typeof-undefined": "error",
+    "unicorn/prefer-at": "error",
+    "unicorn/prefer-date-now": "error",
+    "unicorn/prefer-includes": "error",
+    "unicorn/prefer-math-min-max": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-number-properties": "error",
+    "unicorn/prefer-ternary": "error",
+    "unicorn/throw-new-error": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.*", "**/*.spec.*"],
+      "rules": {
+        "react/globals": "off"
+      }
+    },
+    {
+      "files": ["**/*.ts"],
+      "rules": {
+        "max-lines": [
+          "error",
+          {
+            "max": 300,
+            "skipBlankLines": true,
+            "skipComments": true
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.tsx"],
+      "rules": {
+        "max-lines": [
+          "error",
+          {
+            "max": 400,
+            "skipBlankLines": true,
+            "skipComments": true
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "rules": {
+        "max-lines": [
+          "error",
+          {
+            "max": 800,
+            "skipBlankLines": true,
+            "skipComments": true
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/i18n/locales/*.ts"],
+      "rules": {
+        "max-lines": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["**/node_modules", "**/dist", "src-tauri/target", "coverage"]
+}

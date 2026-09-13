@@ -1,0 +1,99 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  type MouseEvent,
+  type PointerEvent,
+  type RefObject
+} from 'react'
+import { screenToWorld } from '@shared/canvas/camera-transform'
+import type { HandlePosition } from '@shared/canvas/resize-handles'
+import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
+import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
+import { useCameraStore } from '@/store/camera-store'
+
+function isOverlayUiTarget(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest('[data-canvas-ui]') !== null
+}
+
+export type CanvasPointerHandlers = {
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void
+  onPointerMove: (event: PointerEvent<HTMLElement>) => void
+  onPointerUp: (event: PointerEvent<HTMLElement>) => void
+  onDoubleClick: (event: MouseEvent<HTMLElement>) => void
+  onResizeHandleDown: (handle: HandlePosition, event: PointerEvent<HTMLElement>) => void
+  onConnectorEndDown: (id: string, which: 'start' | 'end', event: PointerEvent<HTMLElement>) => void
+}
+
+export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): CanvasPointerHandlers {
+  const interaction = useMemo(() => createCanvasInteraction(), [])
+
+  const toInfo = useCallback(
+    (event: {
+      clientX: number
+      clientY: number
+      shiftKey: boolean
+      altKey: boolean
+      metaKey: boolean
+      ctrlKey: boolean
+      button: number
+    }): PointerInfo => {
+      const bounds = ref.current?.getBoundingClientRect()
+      const screen = {
+        x: event.clientX - (bounds?.left ?? 0),
+        y: event.clientY - (bounds?.top ?? 0)
+      }
+      return {
+        screen,
+        world: screenToWorld(useCameraStore.getState().camera, screen),
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+        primaryKey: hasPrimaryModifier(event),
+        button: event.button
+      }
+    },
+    [ref]
+  )
+
+  useEffect(() => {
+    const onCancel = () => interaction.cancel()
+    window.addEventListener('blur', onCancel)
+    return () => {
+      window.removeEventListener('blur', onCancel)
+      interaction.cancel()
+    }
+  }, [interaction])
+
+  return useMemo(
+    () => ({
+      onPointerDown: (event) => {
+        // Why: capturing here would retarget the click away from overlay buttons inside the viewport.
+        if (isEditableTarget(event.target) || isOverlayUiTarget(event.target)) {
+          return
+        }
+        // Why: keep receiving moves after the pointer leaves the canvas mid-drag.
+        event.currentTarget.setPointerCapture(event.pointerId)
+        interaction.pointerDown(toInfo(event))
+      },
+      onPointerMove: (event) => interaction.pointerMove(toInfo(event)),
+      onPointerUp: (event) => {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }
+        interaction.pointerUp(toInfo(event))
+      },
+      onDoubleClick: (event) => interaction.doubleClick(toInfo(event)),
+      onResizeHandleDown: (handle, event) => {
+        event.stopPropagation()
+        ref.current?.setPointerCapture(event.pointerId)
+        interaction.startResize(handle, toInfo(event))
+      },
+      onConnectorEndDown: (id, which, event) => {
+        event.stopPropagation()
+        ref.current?.setPointerCapture(event.pointerId)
+        interaction.startConnectorEnd(id, which)
+      }
+    }),
+    [interaction, toInfo, ref]
+  )
+}

@@ -1,0 +1,126 @@
+import css from './player.css?inline'
+import type { CanvasDocument } from '@shared/canvas/element-types'
+import { renderDocument } from './player-dom'
+import { createPlayerPresentation, type PlayerPresentation } from './player-presentation'
+
+/**
+ * Standalone player entry. The exported HTML embeds the document as
+ * <script id="canvas-document" type="application/json"> and this bundle right after it.
+ */
+
+function readDocument(): CanvasDocument {
+  const holder = document.getElementById('canvas-document')
+  if (!holder?.textContent) {
+    throw new Error('Missing embedded canvas document')
+  }
+  return JSON.parse(holder.textContent) as CanvasDocument
+}
+
+function buildNav(presentation: PlayerPresentation): HTMLElement {
+  const nav = document.createElement('div')
+  nav.className = 'uc-nav'
+  const bar = document.createElement('div')
+  bar.className = 'uc-nav-bar'
+  const button = (label: string, text: string, onClick: () => void) => {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.title = label
+    b.setAttribute('aria-label', label)
+    b.textContent = text
+    b.addEventListener('click', onClick)
+    return b
+  }
+  const overviewButton = button('Overview (O)', '▦', presentation.toggleOverview)
+  const prev = button('Previous frame (←)', '‹', presentation.previous)
+  const next = button('Next frame (→)', '›', presentation.next)
+  const counter = document.createElement('div')
+  counter.className = 'uc-counter'
+  counter.dataset.testid = 'presentation-counter'
+  const sync = () => {
+    const name = presentation.frames[presentation.index]?.name ?? ''
+    counter.textContent = `${presentation.index + 1} / ${presentation.count}`
+    const span = document.createElement('span')
+    span.textContent = name
+    counter.append(span)
+    prev.disabled = presentation.index === 0 && !presentation.overview
+    next.disabled = presentation.index >= presentation.count - 1 && !presentation.overview
+    overviewButton.setAttribute('aria-pressed', String(presentation.overview))
+  }
+  presentation.onChange(sync)
+  sync()
+  bar.append(overviewButton, prev, counter, next)
+  nav.append(bar)
+  return nav
+}
+
+function bindKeyboard(presentation: PlayerPresentation): void {
+  window.addEventListener('keydown', (event) => {
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+      case 'PageDown':
+      case 'Enter':
+        presentation.next()
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+      case 'PageUp':
+      case 'Backspace':
+        presentation.previous()
+        break
+      case 'o':
+      case 'O':
+        presentation.toggleOverview()
+        break
+      case 'Escape':
+        if (presentation.overview) {
+          presentation.goTo(presentation.index)
+        }
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+  })
+}
+
+function mount(): void {
+  const style = document.createElement('style')
+  style.textContent = css
+  document.head.append(style)
+
+  const doc = readDocument()
+  document.title = `${doc.name} — CanvaSlide`
+
+  const viewport = document.createElement('div')
+  viewport.className = 'uc-viewport'
+  viewport.dataset.testid = 'canvas-viewport'
+  const world = document.createElement('div')
+  world.className = 'uc-world'
+  world.dataset.testid = 'world-layer'
+  const zoomLayer = document.createElement('div')
+  zoomLayer.className = 'uc-zoom'
+  world.append(zoomLayer)
+  viewport.append(world)
+  document.body.append(viewport)
+
+  const { frameNodes } = renderDocument(doc, zoomLayer)
+  const presentation = createPlayerPresentation(doc, { viewport, world, zoomLayer, frameNodes })
+  for (const { node, index } of frameNodes) {
+    node.addEventListener('click', () => presentation.goTo(index))
+  }
+  if (frameNodes.length > 0) {
+    viewport.append(buildNav(presentation))
+  } else {
+    const empty = document.createElement('div')
+    empty.className = 'uc-empty'
+    empty.textContent = 'This board has no presentation frames.'
+    viewport.append(empty)
+  }
+  bindKeyboard(presentation)
+  new ResizeObserver(() => presentation.refit()).observe(viewport)
+  presentation.start()
+}
+
+mount()

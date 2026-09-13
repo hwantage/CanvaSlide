@@ -1,0 +1,1308 @@
+{
+  "version": 2,
+  "name": "Shop Schema (ERD)",
+  "elements": {
+    "text-1": {
+      "x": 80,
+      "y": 20,
+      "width": 235,
+      "height": 45,
+      "id": "text-1",
+      "type": "text",
+      "text": "Shop Schema",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 32,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-2": {
+      "x": 80,
+      "y": 68,
+      "width": 590,
+      "height": 23,
+      "id": "text-2",
+      "type": "text",
+      "text": "Entity-relationship diagram · PK = primary key, FK = foreign key",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "frame-3": {
+      "x": 40,
+      "y": 120,
+      "width": 1180,
+      "height": 920,
+      "id": "frame-3",
+      "type": "frame",
+      "name": "Whole schema",
+      "order": 0
+    },
+    "frame-4": {
+      "x": 60,
+      "y": 160,
+      "width": 360,
+      "height": 560,
+      "id": "frame-4",
+      "type": "frame",
+      "name": "Customer",
+      "order": 1
+    },
+    "frame-5": {
+      "x": 440,
+      "y": 160,
+      "width": 760,
+      "height": 560,
+      "id": "frame-5",
+      "type": "frame",
+      "name": "Order pipeline",
+      "order": 2
+    },
+    "frame-6": {
+      "x": 840,
+      "y": 460,
+      "width": 360,
+      "height": 560,
+      "id": "frame-6",
+      "type": "frame",
+      "name": "Catalog",
+      "order": 3
+    },
+    "rectangle-7": {
+      "x": 100,
+      "y": 180,
+      "width": 260,
+      "height": 137,
+      "id": "rectangle-7",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#3730a3",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-8": {
+      "x": 100,
+      "y": 180,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-8",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#4f46e5",
+        "stroke": "#3730a3",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-9": {
+      "x": 100,
+      "y": 199,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-9",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#4f46e5",
+        "stroke": "#3730a3",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-10": {
+      "x": 100,
+      "y": 188,
+      "width": 260,
+      "height": 21,
+      "id": "text-10",
+      "type": "text",
+      "text": "customers",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-11": {
+      "x": 112,
+      "y": 230,
+      "width": 28,
+      "height": 73,
+      "id": "text-11",
+      "type": "text",
+      "text": "PK\n  \n  \n  ",
+      "textStyle": {
+        "color": "#4f46e5",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-12": {
+      "x": 142,
+      "y": 230,
+      "width": 130,
+      "height": 73,
+      "id": "text-12",
+      "type": "text",
+      "text": "id\nemail\nfull_name\ncreated_at",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-13": {
+      "x": 272,
+      "y": 230,
+      "width": 80,
+      "height": 73,
+      "id": "text-13",
+      "type": "text",
+      "text": "uuid\ntext\ntext\ntimestamp",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "rectangle-14": {
+      "x": 100,
+      "y": 480,
+      "width": 260,
+      "height": 174,
+      "id": "rectangle-14",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#3730a3",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-15": {
+      "x": 100,
+      "y": 480,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-15",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#4f46e5",
+        "stroke": "#3730a3",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-16": {
+      "x": 100,
+      "y": 499,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-16",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#4f46e5",
+        "stroke": "#3730a3",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-17": {
+      "x": 100,
+      "y": 488,
+      "width": 260,
+      "height": 21,
+      "id": "text-17",
+      "type": "text",
+      "text": "addresses",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-18": {
+      "x": 112,
+      "y": 530,
+      "width": 28,
+      "height": 110,
+      "id": "text-18",
+      "type": "text",
+      "text": "PK\nFK\n  \n  \n  \n  ",
+      "textStyle": {
+        "color": "#4f46e5",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-19": {
+      "x": 142,
+      "y": 530,
+      "width": 130,
+      "height": 110,
+      "id": "text-19",
+      "type": "text",
+      "text": "id\ncustomer_id\nline1\ncity\ncountry\nis_default",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-20": {
+      "x": 272,
+      "y": 530,
+      "width": 80,
+      "height": 110,
+      "id": "text-20",
+      "type": "text",
+      "text": "uuid\nuuid\ntext\ntext\nchar(2)\nboolean",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "rectangle-21": {
+      "x": 480,
+      "y": 180,
+      "width": 260,
+      "height": 174,
+      "id": "rectangle-21",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#047857",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-22": {
+      "x": 480,
+      "y": 180,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-22",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#059669",
+        "stroke": "#047857",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-23": {
+      "x": 480,
+      "y": 199,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-23",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#059669",
+        "stroke": "#047857",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-24": {
+      "x": 480,
+      "y": 188,
+      "width": 260,
+      "height": 21,
+      "id": "text-24",
+      "type": "text",
+      "text": "orders",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-25": {
+      "x": 492,
+      "y": 230,
+      "width": 28,
+      "height": 110,
+      "id": "text-25",
+      "type": "text",
+      "text": "PK\nFK\nFK\n  \n  \n  ",
+      "textStyle": {
+        "color": "#059669",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-26": {
+      "x": 522,
+      "y": 230,
+      "width": 130,
+      "height": 110,
+      "id": "text-26",
+      "type": "text",
+      "text": "id\ncustomer_id\nship_to_id\nstatus\ntotal_cents\nplaced_at",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-27": {
+      "x": 652,
+      "y": 230,
+      "width": 80,
+      "height": 110,
+      "id": "text-27",
+      "type": "text",
+      "text": "uuid\nuuid\nuuid\nenum\ninteger\ntimestamp",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "rectangle-28": {
+      "x": 480,
+      "y": 500,
+      "width": 260,
+      "height": 155,
+      "id": "rectangle-28",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#047857",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-29": {
+      "x": 480,
+      "y": 500,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-29",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#059669",
+        "stroke": "#047857",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-30": {
+      "x": 480,
+      "y": 519,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-30",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#059669",
+        "stroke": "#047857",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-31": {
+      "x": 480,
+      "y": 508,
+      "width": 260,
+      "height": 21,
+      "id": "text-31",
+      "type": "text",
+      "text": "order_items",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-32": {
+      "x": 492,
+      "y": 550,
+      "width": 28,
+      "height": 91,
+      "id": "text-32",
+      "type": "text",
+      "text": "PK\nFK\nFK\n  \n  ",
+      "textStyle": {
+        "color": "#059669",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-33": {
+      "x": 522,
+      "y": 550,
+      "width": 130,
+      "height": 91,
+      "id": "text-33",
+      "type": "text",
+      "text": "id\norder_id\nproduct_id\nquantity\nunit_cents",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-34": {
+      "x": 652,
+      "y": 550,
+      "width": 80,
+      "height": 91,
+      "id": "text-34",
+      "type": "text",
+      "text": "uuid\nuuid\nuuid\ninteger\ninteger",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "rectangle-35": {
+      "x": 880,
+      "y": 180,
+      "width": 260,
+      "height": 155,
+      "id": "rectangle-35",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#be123c",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-36": {
+      "x": 880,
+      "y": 180,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-36",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#e11d48",
+        "stroke": "#be123c",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-37": {
+      "x": 880,
+      "y": 199,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-37",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#e11d48",
+        "stroke": "#be123c",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-38": {
+      "x": 880,
+      "y": 188,
+      "width": 260,
+      "height": 21,
+      "id": "text-38",
+      "type": "text",
+      "text": "payments",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-39": {
+      "x": 892,
+      "y": 230,
+      "width": 28,
+      "height": 91,
+      "id": "text-39",
+      "type": "text",
+      "text": "PK\nFK\n  \n  \n  ",
+      "textStyle": {
+        "color": "#e11d48",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-40": {
+      "x": 922,
+      "y": 230,
+      "width": 130,
+      "height": 91,
+      "id": "text-40",
+      "type": "text",
+      "text": "id\norder_id\nprovider\namount_cents\ncaptured_at",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-41": {
+      "x": 1052,
+      "y": 230,
+      "width": 80,
+      "height": 91,
+      "id": "text-41",
+      "type": "text",
+      "text": "uuid\nuuid\ntext\ninteger\ntimestamp",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "rectangle-42": {
+      "x": 880,
+      "y": 780,
+      "width": 260,
+      "height": 137,
+      "id": "rectangle-42",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#b45309",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-43": {
+      "x": 880,
+      "y": 780,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-43",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d97706",
+        "stroke": "#b45309",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-44": {
+      "x": 880,
+      "y": 799,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-44",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d97706",
+        "stroke": "#b45309",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-45": {
+      "x": 880,
+      "y": 788,
+      "width": 260,
+      "height": 21,
+      "id": "text-45",
+      "type": "text",
+      "text": "categories",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-46": {
+      "x": 892,
+      "y": 830,
+      "width": 28,
+      "height": 73,
+      "id": "text-46",
+      "type": "text",
+      "text": "PK\nFK\n  \n  ",
+      "textStyle": {
+        "color": "#d97706",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-47": {
+      "x": 922,
+      "y": 830,
+      "width": 130,
+      "height": 73,
+      "id": "text-47",
+      "type": "text",
+      "text": "id\nparent_id\nslug\nname",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-48": {
+      "x": 1052,
+      "y": 830,
+      "width": 80,
+      "height": 73,
+      "id": "text-48",
+      "type": "text",
+      "text": "uuid\nuuid?\ntext\ntext",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "rectangle-49": {
+      "x": 880,
+      "y": 480,
+      "width": 260,
+      "height": 174,
+      "id": "rectangle-49",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#b45309",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-50": {
+      "x": 880,
+      "y": 480,
+      "width": 260,
+      "height": 38,
+      "id": "rectangle-50",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d97706",
+        "stroke": "#b45309",
+        "strokeWidth": 1.5,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-51": {
+      "x": 880,
+      "y": 499,
+      "width": 260,
+      "height": 19,
+      "id": "rectangle-51",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d97706",
+        "stroke": "#b45309",
+        "strokeWidth": 1.5,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-52": {
+      "x": 880,
+      "y": 488,
+      "width": 260,
+      "height": 21,
+      "id": "text-52",
+      "type": "text",
+      "text": "products",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "text-53": {
+      "x": 892,
+      "y": 530,
+      "width": 28,
+      "height": 110,
+      "id": "text-53",
+      "type": "text",
+      "text": "PK\nFK\n  \n  \n  \n  ",
+      "textStyle": {
+        "color": "#d97706",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-54": {
+      "x": 922,
+      "y": 530,
+      "width": 130,
+      "height": 110,
+      "id": "text-54",
+      "type": "text",
+      "text": "id\ncategory_id\nsku\nname\nprice_cents\nactive",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-55": {
+      "x": 1052,
+      "y": 530,
+      "width": 80,
+      "height": 110,
+      "id": "text-55",
+      "type": "text",
+      "text": "uuid\nuuid\ntext\ntext\ninteger\nboolean",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "connector-56": {
+      "x": 230,
+      "y": 248.5,
+      "width": 1,
+      "height": 318.5,
+      "id": "connector-56",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 248.5,
+        "elementId": "rectangle-7",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 230,
+        "y": 567,
+        "elementId": "rectangle-14",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "1 : N",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-57": {
+      "x": 230,
+      "y": 248.5,
+      "width": 380,
+      "height": 18.5,
+      "id": "connector-57",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 248.5,
+        "elementId": "rectangle-7",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 610,
+        "y": 267,
+        "elementId": "rectangle-21",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "1 : N",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-58": {
+      "x": 230,
+      "y": 267,
+      "width": 380,
+      "height": 300,
+      "id": "connector-58",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 567,
+        "elementId": "rectangle-14",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 610,
+        "y": 267,
+        "elementId": "rectangle-21",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": true
+      },
+      "label": "ship_to",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-59": {
+      "x": 610,
+      "y": 267,
+      "width": 1,
+      "height": 310.5,
+      "id": "connector-59",
+      "type": "connector",
+      "start": {
+        "x": 610,
+        "y": 267,
+        "elementId": "rectangle-21",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 610,
+        "y": 577.5,
+        "elementId": "rectangle-28",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "1 : N",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-60": {
+      "x": 610,
+      "y": 257.5,
+      "width": 400,
+      "height": 9.5,
+      "id": "connector-60",
+      "type": "connector",
+      "start": {
+        "x": 610,
+        "y": 267,
+        "elementId": "rectangle-21",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1010,
+        "y": 257.5,
+        "elementId": "rectangle-35",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "1 : 1",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-61": {
+      "x": 610,
+      "y": 567,
+      "width": 400,
+      "height": 10.5,
+      "id": "connector-61",
+      "type": "connector",
+      "start": {
+        "x": 1010,
+        "y": 567,
+        "elementId": "rectangle-49",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 610,
+        "y": 577.5,
+        "elementId": "rectangle-28",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "1 : N",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-62": {
+      "x": 1010,
+      "y": 567,
+      "width": 1,
+      "height": 281.5,
+      "id": "connector-62",
+      "type": "connector",
+      "start": {
+        "x": 1010,
+        "y": 848.5,
+        "elementId": "rectangle-42",
+        "side": "top",
+        "pinned": true
+      },
+      "end": {
+        "x": 1010,
+        "y": 567,
+        "elementId": "rectangle-49",
+        "side": "bottom",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "1 : N",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-63": {
+      "x": 880,
+      "y": 990,
+      "width": 299,
+      "height": 17,
+      "id": "text-63",
+      "type": "text",
+      "text": "parent_id → categories.id (self-reference)",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "left",
+        "bold": false
+      }
+    }
+  },
+  "order": [
+    "frame-6",
+    "frame-5",
+    "frame-4",
+    "frame-3",
+    "text-1",
+    "text-2",
+    "rectangle-7",
+    "rectangle-8",
+    "rectangle-9",
+    "text-10",
+    "text-11",
+    "text-12",
+    "text-13",
+    "rectangle-14",
+    "rectangle-15",
+    "rectangle-16",
+    "text-17",
+    "text-18",
+    "text-19",
+    "text-20",
+    "rectangle-21",
+    "rectangle-22",
+    "rectangle-23",
+    "text-24",
+    "text-25",
+    "text-26",
+    "text-27",
+    "rectangle-28",
+    "rectangle-29",
+    "rectangle-30",
+    "text-31",
+    "text-32",
+    "text-33",
+    "text-34",
+    "rectangle-35",
+    "rectangle-36",
+    "rectangle-37",
+    "text-38",
+    "text-39",
+    "text-40",
+    "text-41",
+    "rectangle-42",
+    "rectangle-43",
+    "rectangle-44",
+    "text-45",
+    "text-46",
+    "text-47",
+    "text-48",
+    "rectangle-49",
+    "rectangle-50",
+    "rectangle-51",
+    "text-52",
+    "text-53",
+    "text-54",
+    "text-55",
+    "connector-56",
+    "connector-57",
+    "connector-58",
+    "connector-59",
+    "connector-60",
+    "connector-61",
+    "connector-62",
+    "text-63"
+  ],
+  "settings": {
+    "transitionMs": 900,
+    "background": "grid",
+    "frameBorder": "solid"
+  },
+  "assets": {},
+  "camera": {
+    "x": 109.0470588235294,
+    "y": 18.007843137254913,
+    "zoom": 0.7396
+  }
+}

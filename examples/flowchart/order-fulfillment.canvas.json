@@ -1,0 +1,813 @@
+{
+  "version": 2,
+  "name": "Order Fulfillment Flow",
+  "elements": {
+    "text-1": {
+      "x": 80,
+      "y": 20,
+      "width": 453,
+      "height": 45,
+      "id": "text-1",
+      "type": "text",
+      "text": "Order Fulfillment Flow",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 32,
+        "align": "left",
+        "bold": true
+      }
+    },
+    "text-2": {
+      "x": 80,
+      "y": 68,
+      "width": 536,
+      "height": 23,
+      "id": "text-2",
+      "type": "text",
+      "text": "From checkout to doorstep · exceptions branch to the right",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "frame-3": {
+      "x": 330,
+      "y": 120,
+      "width": 900,
+      "height": 380,
+      "id": "frame-3",
+      "type": "frame",
+      "name": "Intake",
+      "order": 0
+    },
+    "frame-4": {
+      "x": 330,
+      "y": 520,
+      "width": 900,
+      "height": 260,
+      "id": "frame-4",
+      "type": "frame",
+      "name": "Fulfilment",
+      "order": 1
+    },
+    "frame-5": {
+      "x": 330,
+      "y": 800,
+      "width": 900,
+      "height": 300,
+      "id": "frame-5",
+      "type": "frame",
+      "name": "Delivery",
+      "order": 2
+    },
+    "ellipse-6": {
+      "x": 390,
+      "y": 140,
+      "width": 220,
+      "height": 64,
+      "id": "ellipse-6",
+      "type": "shape",
+      "shape": "ellipse",
+      "style": {
+        "fill": "#ecfdf5",
+        "stroke": "#10b981",
+        "strokeWidth": 1.5,
+        "cornerRadius": 512
+      },
+      "text": "Order received",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "rectangle-7": {
+      "x": 390,
+      "y": 250,
+      "width": 220,
+      "height": 64,
+      "id": "rectangle-7",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#eef2ff",
+        "stroke": "#6366f1",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Validate payment",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "diamond-8": {
+      "x": 380,
+      "y": 360,
+      "width": 240,
+      "height": 110,
+      "id": "diamond-8",
+      "type": "shape",
+      "shape": "diamond",
+      "style": {
+        "fill": "#fffbeb",
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Payment OK?",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "rectangle-9": {
+      "x": 720,
+      "y": 383,
+      "width": 220,
+      "height": 64,
+      "id": "rectangle-9",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#fff1f2",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Notify customer",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "ellipse-10": {
+      "x": 990,
+      "y": 387,
+      "width": 210,
+      "height": 56,
+      "id": "ellipse-10",
+      "type": "shape",
+      "shape": "ellipse",
+      "style": {
+        "fill": "#fff1f2",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 512
+      },
+      "text": "Order cancelled",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "rectangle-11": {
+      "x": 390,
+      "y": 540,
+      "width": 220,
+      "height": 64,
+      "id": "rectangle-11",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#eef2ff",
+        "stroke": "#6366f1",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Reserve inventory",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "diamond-12": {
+      "x": 380,
+      "y": 640,
+      "width": 240,
+      "height": 110,
+      "id": "diamond-12",
+      "type": "shape",
+      "shape": "diamond",
+      "style": {
+        "fill": "#fffbeb",
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "In stock?",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 15,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "rectangle-13": {
+      "x": 720,
+      "y": 663,
+      "width": 220,
+      "height": 64,
+      "id": "rectangle-13",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#fff1f2",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Create backorder",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "rectangle-14": {
+      "x": 390,
+      "y": 820,
+      "width": 220,
+      "height": 64,
+      "id": "rectangle-14",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#eef2ff",
+        "stroke": "#6366f1",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Pick & pack",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "rectangle-15": {
+      "x": 390,
+      "y": 920,
+      "width": 220,
+      "height": 64,
+      "id": "rectangle-15",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#eef2ff",
+        "stroke": "#6366f1",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Ship via carrier",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "ellipse-16": {
+      "x": 390,
+      "y": 1020,
+      "width": 220,
+      "height": 64,
+      "id": "ellipse-16",
+      "type": "shape",
+      "shape": "ellipse",
+      "style": {
+        "fill": "#ecfdf5",
+        "stroke": "#10b981",
+        "strokeWidth": 1.5,
+        "cornerRadius": 512
+      },
+      "text": "Delivered",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "connector-17": {
+      "x": 500,
+      "y": 172,
+      "width": 1,
+      "height": 110,
+      "id": "connector-17",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 172,
+        "elementId": "ellipse-6"
+      },
+      "end": {
+        "x": 500,
+        "y": 282,
+        "elementId": "rectangle-7"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-18": {
+      "x": 500,
+      "y": 282,
+      "width": 1,
+      "height": 133,
+      "id": "connector-18",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 282,
+        "elementId": "rectangle-7"
+      },
+      "end": {
+        "x": 500,
+        "y": 415,
+        "elementId": "diamond-8"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-19": {
+      "x": 500,
+      "y": 415,
+      "width": 1,
+      "height": 157,
+      "id": "connector-19",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 415,
+        "elementId": "diamond-8"
+      },
+      "end": {
+        "x": 500,
+        "y": 572,
+        "elementId": "rectangle-11"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "yes",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-20": {
+      "x": 500,
+      "y": 415,
+      "width": 330,
+      "height": 1,
+      "id": "connector-20",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 415,
+        "elementId": "diamond-8",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 830,
+        "y": 415,
+        "elementId": "rectangle-9",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "no",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-21": {
+      "x": 830,
+      "y": 415,
+      "width": 265,
+      "height": 1,
+      "id": "connector-21",
+      "type": "connector",
+      "start": {
+        "x": 830,
+        "y": 415,
+        "elementId": "rectangle-9",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1095,
+        "y": 415,
+        "elementId": "ellipse-10",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-22": {
+      "x": 500,
+      "y": 282,
+      "width": 330,
+      "height": 133,
+      "id": "connector-22",
+      "type": "connector",
+      "start": {
+        "x": 830,
+        "y": 415,
+        "elementId": "rectangle-9",
+        "side": "top",
+        "pinned": true
+      },
+      "end": {
+        "x": 500,
+        "y": 282,
+        "elementId": "rectangle-7",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "dashed": true
+      },
+      "label": "retry ≤ 3×",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-23": {
+      "x": 500,
+      "y": 572,
+      "width": 1,
+      "height": 123,
+      "id": "connector-23",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 572,
+        "elementId": "rectangle-11"
+      },
+      "end": {
+        "x": 500,
+        "y": 695,
+        "elementId": "diamond-12"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-24": {
+      "x": 500,
+      "y": 695,
+      "width": 1,
+      "height": 157,
+      "id": "connector-24",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 695,
+        "elementId": "diamond-12"
+      },
+      "end": {
+        "x": 500,
+        "y": 852,
+        "elementId": "rectangle-14"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "yes",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-25": {
+      "x": 500,
+      "y": 695,
+      "width": 330,
+      "height": 1,
+      "id": "connector-25",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 695,
+        "elementId": "diamond-12",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 830,
+        "y": 695,
+        "elementId": "rectangle-13",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "no",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-26": {
+      "x": 500,
+      "y": 572,
+      "width": 330,
+      "height": 123,
+      "id": "connector-26",
+      "type": "connector",
+      "start": {
+        "x": 830,
+        "y": 695,
+        "elementId": "rectangle-13",
+        "side": "top",
+        "pinned": true
+      },
+      "end": {
+        "x": 500,
+        "y": 572,
+        "elementId": "rectangle-11",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "dashed": true
+      },
+      "label": "restocked",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-27": {
+      "x": 500,
+      "y": 852,
+      "width": 1,
+      "height": 100,
+      "id": "connector-27",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 852,
+        "elementId": "rectangle-14"
+      },
+      "end": {
+        "x": 500,
+        "y": 952,
+        "elementId": "rectangle-15"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-28": {
+      "x": 500,
+      "y": 952,
+      "width": 1,
+      "height": 100,
+      "id": "connector-28",
+      "type": "connector",
+      "start": {
+        "x": 500,
+        "y": 952,
+        "elementId": "rectangle-15"
+      },
+      "end": {
+        "x": 500,
+        "y": 1052,
+        "elementId": "ellipse-16"
+      },
+      "route": "orthogonal",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#52525b",
+        "strokeWidth": 1.5,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "text-29": {
+      "x": 80,
+      "y": 380,
+      "width": 169,
+      "height": 37,
+      "id": "text-29",
+      "type": "text",
+      "text": "Payment retries are\nspaced 8 hours apart.",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-30": {
+      "x": 80,
+      "y": 660,
+      "width": 169,
+      "height": 37,
+      "id": "text-30",
+      "type": "text",
+      "text": "Backorders notify the\ncustomer with an ETA.",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    },
+    "text-31": {
+      "x": 80,
+      "y": 930,
+      "width": 184,
+      "height": 37,
+      "id": "text-31",
+      "type": "text",
+      "text": "Carrier webhook flips\nthe order to Delivered.",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false
+      }
+    }
+  },
+  "order": [
+    "frame-5",
+    "frame-4",
+    "frame-3",
+    "text-1",
+    "text-2",
+    "ellipse-6",
+    "rectangle-7",
+    "diamond-8",
+    "rectangle-9",
+    "ellipse-10",
+    "rectangle-11",
+    "diamond-12",
+    "rectangle-13",
+    "rectangle-14",
+    "rectangle-15",
+    "ellipse-16",
+    "connector-17",
+    "connector-18",
+    "connector-19",
+    "connector-20",
+    "connector-21",
+    "connector-22",
+    "connector-23",
+    "connector-24",
+    "connector-25",
+    "connector-26",
+    "connector-27",
+    "connector-28",
+    "text-29",
+    "text-30",
+    "text-31"
+  ],
+  "settings": {
+    "transitionMs": 900,
+    "background": "dots",
+    "frameBorder": "dashed"
+  },
+  "assets": {},
+  "camera": {
+    "x": 117.47037037037036,
+    "y": 18.82962962962964,
+    "zoom": 0.6985
+  }
+}

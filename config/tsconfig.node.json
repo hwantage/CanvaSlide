@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["./*.ts", "./scripts/**/*.mjs"],
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "lib": ["ES2022"],
+    "types": ["node"]
+  }
+}

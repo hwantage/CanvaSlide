@@ -1,0 +1,1328 @@
+{
+  "version": 2,
+  "name": "Product Strategy 2027 (mind map)",
+  "elements": {
+    "ellipse-1": {
+      "x": 700,
+      "y": 440,
+      "width": 300,
+      "height": 120,
+      "id": "ellipse-1",
+      "type": "shape",
+      "shape": "ellipse",
+      "style": {
+        "fill": "#18181b",
+        "stroke": "#18181b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 10
+      },
+      "text": "Product Strategy\n2027",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 22,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "frame-2": {
+      "x": -100,
+      "y": 40,
+      "width": 1900,
+      "height": 1140,
+      "id": "frame-2",
+      "type": "frame",
+      "name": "Everything",
+      "order": 0
+    },
+    "rectangle-3": {
+      "x": 1180,
+      "y": 220,
+      "width": 240,
+      "height": 64,
+      "id": "rectangle-3",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#0ea5e9",
+        "stroke": "#0ea5e9",
+        "strokeWidth": 1.5,
+        "cornerRadius": 32
+      },
+      "text": "Growth",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 20,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "connector-4": {
+      "x": 850,
+      "y": 252,
+      "width": 450,
+      "height": 248,
+      "id": "connector-4",
+      "type": "connector",
+      "start": {
+        "x": 850,
+        "y": 500,
+        "elementId": "ellipse-1",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1300,
+        "y": 252,
+        "elementId": "rectangle-3",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#0ea5e9",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "frame-5": {
+      "x": 1140,
+      "y": 90,
+      "width": 640,
+      "height": 300,
+      "id": "frame-5",
+      "type": "frame",
+      "name": "Growth",
+      "order": 1
+    },
+    "rectangle-6": {
+      "x": 1460,
+      "y": 130,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-6",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#e0f2fe",
+        "stroke": "#0ea5e9",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Self-serve onboarding",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-7": {
+      "x": 1300,
+      "y": 156,
+      "width": 310,
+      "height": 96,
+      "id": "connector-7",
+      "type": "connector",
+      "start": {
+        "x": 1300,
+        "y": 252,
+        "elementId": "rectangle-3",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1610,
+        "y": 156,
+        "elementId": "rectangle-6",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#0ea5e9",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-8": {
+      "x": 1460,
+      "y": 220,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-8",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#e0f2fe",
+        "stroke": "#0ea5e9",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Referral loop",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-9": {
+      "x": 1300,
+      "y": 246,
+      "width": 310,
+      "height": 6,
+      "id": "connector-9",
+      "type": "connector",
+      "start": {
+        "x": 1300,
+        "y": 252,
+        "elementId": "rectangle-3",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1610,
+        "y": 246,
+        "elementId": "rectangle-8",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#0ea5e9",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-10": {
+      "x": 1460,
+      "y": 310,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-10",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#e0f2fe",
+        "stroke": "#0ea5e9",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "SEO content engine",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-11": {
+      "x": 1300,
+      "y": 252,
+      "width": 310,
+      "height": 84,
+      "id": "connector-11",
+      "type": "connector",
+      "start": {
+        "x": 1300,
+        "y": 252,
+        "elementId": "rectangle-3",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1610,
+        "y": 336,
+        "elementId": "rectangle-10",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#0ea5e9",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-12": {
+      "x": 1180,
+      "y": 640,
+      "width": 240,
+      "height": 64,
+      "id": "rectangle-12",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#8b5cf6",
+        "stroke": "#8b5cf6",
+        "strokeWidth": 1.5,
+        "cornerRadius": 32
+      },
+      "text": "Platform",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 20,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "connector-13": {
+      "x": 850,
+      "y": 500,
+      "width": 450,
+      "height": 172,
+      "id": "connector-13",
+      "type": "connector",
+      "start": {
+        "x": 850,
+        "y": 500,
+        "elementId": "ellipse-1",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1300,
+        "y": 672,
+        "elementId": "rectangle-12",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#8b5cf6",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "frame-14": {
+      "x": 1140,
+      "y": 520,
+      "width": 640,
+      "height": 300,
+      "id": "frame-14",
+      "type": "frame",
+      "name": "Platform",
+      "order": 2
+    },
+    "rectangle-15": {
+      "x": 1460,
+      "y": 560,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-15",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ede9fe",
+        "stroke": "#8b5cf6",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Public API v2",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-16": {
+      "x": 1300,
+      "y": 586,
+      "width": 310,
+      "height": 86,
+      "id": "connector-16",
+      "type": "connector",
+      "start": {
+        "x": 1300,
+        "y": 672,
+        "elementId": "rectangle-12",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1610,
+        "y": 586,
+        "elementId": "rectangle-15",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#8b5cf6",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-17": {
+      "x": 1460,
+      "y": 650,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-17",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ede9fe",
+        "stroke": "#8b5cf6",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Plugin marketplace",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-18": {
+      "x": 1300,
+      "y": 672,
+      "width": 310,
+      "height": 4,
+      "id": "connector-18",
+      "type": "connector",
+      "start": {
+        "x": 1300,
+        "y": 672,
+        "elementId": "rectangle-12",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1610,
+        "y": 676,
+        "elementId": "rectangle-17",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#8b5cf6",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-19": {
+      "x": 1460,
+      "y": 740,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-19",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ede9fe",
+        "stroke": "#8b5cf6",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "SSO & audit logs",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-20": {
+      "x": 1300,
+      "y": 672,
+      "width": 310,
+      "height": 94,
+      "id": "connector-20",
+      "type": "connector",
+      "start": {
+        "x": 1300,
+        "y": 672,
+        "elementId": "rectangle-12",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 1610,
+        "y": 766,
+        "elementId": "rectangle-19",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#8b5cf6",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-21": {
+      "x": 280,
+      "y": 220,
+      "width": 240,
+      "height": 64,
+      "id": "rectangle-21",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#10b981",
+        "stroke": "#10b981",
+        "strokeWidth": 1.5,
+        "cornerRadius": 32
+      },
+      "text": "Customers",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 20,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "connector-22": {
+      "x": 400,
+      "y": 252,
+      "width": 450,
+      "height": 248,
+      "id": "connector-22",
+      "type": "connector",
+      "start": {
+        "x": 850,
+        "y": 500,
+        "elementId": "ellipse-1",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 400,
+        "y": 252,
+        "elementId": "rectangle-21",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#10b981",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "frame-23": {
+      "x": -100,
+      "y": 90,
+      "width": 640,
+      "height": 300,
+      "id": "frame-23",
+      "type": "frame",
+      "name": "Customers",
+      "order": 3
+    },
+    "rectangle-24": {
+      "x": -60,
+      "y": 130,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-24",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d1fae5",
+        "stroke": "#10b981",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Quarterly councils",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-25": {
+      "x": 90,
+      "y": 156,
+      "width": 310,
+      "height": 96,
+      "id": "connector-25",
+      "type": "connector",
+      "start": {
+        "x": 400,
+        "y": 252,
+        "elementId": "rectangle-21",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 90,
+        "y": 156,
+        "elementId": "rectangle-24",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#10b981",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-26": {
+      "x": -60,
+      "y": 220,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-26",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d1fae5",
+        "stroke": "#10b981",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "NPS above 50",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-27": {
+      "x": 90,
+      "y": 246,
+      "width": 310,
+      "height": 6,
+      "id": "connector-27",
+      "type": "connector",
+      "start": {
+        "x": 400,
+        "y": 252,
+        "elementId": "rectangle-21",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 90,
+        "y": 246,
+        "elementId": "rectangle-26",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#10b981",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-28": {
+      "x": -60,
+      "y": 310,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-28",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#d1fae5",
+        "stroke": "#10b981",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Same-day support",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-29": {
+      "x": 90,
+      "y": 252,
+      "width": 310,
+      "height": 84,
+      "id": "connector-29",
+      "type": "connector",
+      "start": {
+        "x": 400,
+        "y": 252,
+        "elementId": "rectangle-21",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 90,
+        "y": 336,
+        "elementId": "rectangle-28",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#10b981",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-30": {
+      "x": 280,
+      "y": 640,
+      "width": 240,
+      "height": 64,
+      "id": "rectangle-30",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#f59e0b",
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 32
+      },
+      "text": "Team",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 20,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "connector-31": {
+      "x": 400,
+      "y": 500,
+      "width": 450,
+      "height": 172,
+      "id": "connector-31",
+      "type": "connector",
+      "start": {
+        "x": 850,
+        "y": 500,
+        "elementId": "ellipse-1",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 400,
+        "y": 672,
+        "elementId": "rectangle-30",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "frame-32": {
+      "x": -100,
+      "y": 520,
+      "width": 640,
+      "height": 300,
+      "id": "frame-32",
+      "type": "frame",
+      "name": "Team",
+      "order": 4
+    },
+    "rectangle-33": {
+      "x": -60,
+      "y": 560,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-33",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#fef3c7",
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Hire 4 engineers",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-34": {
+      "x": 90,
+      "y": 586,
+      "width": 310,
+      "height": 86,
+      "id": "connector-34",
+      "type": "connector",
+      "start": {
+        "x": 400,
+        "y": 672,
+        "elementId": "rectangle-30",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 90,
+        "y": 586,
+        "elementId": "rectangle-33",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-35": {
+      "x": -60,
+      "y": 650,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-35",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#fef3c7",
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Design system owner",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-36": {
+      "x": 90,
+      "y": 672,
+      "width": 310,
+      "height": 4,
+      "id": "connector-36",
+      "type": "connector",
+      "start": {
+        "x": 400,
+        "y": 672,
+        "elementId": "rectangle-30",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 90,
+        "y": 676,
+        "elementId": "rectangle-35",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-37": {
+      "x": -60,
+      "y": 740,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-37",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#fef3c7",
+        "stroke": "#f59e0b",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Async-first rituals",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-38": {
+      "x": 90,
+      "y": 672,
+      "width": 310,
+      "height": 94,
+      "id": "connector-38",
+      "type": "connector",
+      "start": {
+        "x": 400,
+        "y": 672,
+        "elementId": "rectangle-30",
+        "side": "left",
+        "pinned": true
+      },
+      "end": {
+        "x": 90,
+        "y": 766,
+        "elementId": "rectangle-37",
+        "side": "right",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-39": {
+      "x": 710,
+      "y": 880,
+      "width": 240,
+      "height": 64,
+      "id": "rectangle-39",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#f43f5e",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 32
+      },
+      "text": "Revenue",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 20,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "connector-40": {
+      "x": 830,
+      "y": 500,
+      "width": 20,
+      "height": 412,
+      "id": "connector-40",
+      "type": "connector",
+      "start": {
+        "x": 850,
+        "y": 500,
+        "elementId": "ellipse-1",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 830,
+        "y": 912,
+        "elementId": "rectangle-39",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "frame-41": {
+      "x": 260,
+      "y": 860,
+      "width": 1000,
+      "height": 260,
+      "id": "frame-41",
+      "type": "frame",
+      "name": "Revenue",
+      "order": 5
+    },
+    "rectangle-42": {
+      "x": 300,
+      "y": 1060,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-42",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffe4e6",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Usage-based tier",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-43": {
+      "x": 450,
+      "y": 912,
+      "width": 380,
+      "height": 174,
+      "id": "connector-43",
+      "type": "connector",
+      "start": {
+        "x": 830,
+        "y": 912,
+        "elementId": "rectangle-39",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 450,
+        "y": 1086,
+        "elementId": "rectangle-42",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-44": {
+      "x": 640,
+      "y": 1060,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-44",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffe4e6",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Annual plans",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-45": {
+      "x": 790,
+      "y": 912,
+      "width": 40,
+      "height": 174,
+      "id": "connector-45",
+      "type": "connector",
+      "start": {
+        "x": 830,
+        "y": 912,
+        "elementId": "rectangle-39",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 790,
+        "y": 1086,
+        "elementId": "rectangle-44",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "rectangle-46": {
+      "x": 980,
+      "y": 1060,
+      "width": 300,
+      "height": 52,
+      "id": "rectangle-46",
+      "type": "shape",
+      "shape": "rectangle",
+      "style": {
+        "fill": "#ffe4e6",
+        "stroke": "#f43f5e",
+        "strokeWidth": 1.5,
+        "cornerRadius": 26
+      },
+      "text": "Partner resale",
+      "textStyle": {
+        "color": "#18181b",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "connector-47": {
+      "x": 830,
+      "y": 912,
+      "width": 300,
+      "height": 174,
+      "id": "connector-47",
+      "type": "connector",
+      "start": {
+        "x": 830,
+        "y": 912,
+        "elementId": "rectangle-39",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 1130,
+        "y": 1086,
+        "elementId": "rectangle-46",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "none",
+      "style": {
+        "stroke": "#f43f5e",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#71717a",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    }
+  },
+  "order": [
+    "frame-41",
+    "frame-32",
+    "frame-23",
+    "frame-14",
+    "frame-5",
+    "frame-2",
+    "ellipse-1",
+    "rectangle-3",
+    "connector-4",
+    "rectangle-6",
+    "connector-7",
+    "rectangle-8",
+    "connector-9",
+    "rectangle-10",
+    "connector-11",
+    "rectangle-12",
+    "connector-13",
+    "rectangle-15",
+    "connector-16",
+    "rectangle-17",
+    "connector-18",
+    "rectangle-19",
+    "connector-20",
+    "rectangle-21",
+    "connector-22",
+    "rectangle-24",
+    "connector-25",
+    "rectangle-26",
+    "connector-27",
+    "rectangle-28",
+    "connector-29",
+    "rectangle-30",
+    "connector-31",
+    "rectangle-33",
+    "connector-34",
+    "rectangle-35",
+    "connector-36",
+    "rectangle-37",
+    "connector-38",
+    "rectangle-39",
+    "connector-40",
+    "rectangle-42",
+    "connector-43",
+    "rectangle-44",
+    "connector-45",
+    "rectangle-46",
+    "connector-47"
+  ],
+  "settings": {
+    "transitionMs": 900,
+    "background": "plain",
+    "frameBorder": "solid"
+  },
+  "assets": {},
+  "camera": {
+    "x": 101.6842105263158,
+    "y": 70.32631578947365,
+    "zoom": 0.5568
+  }
+}

@@ -1,0 +1,202 @@
+:root {
+  --canvas: #f7f7f8;
+  --selection: #2563eb;
+  --frame-stroke: #a1a1aa;
+  --frame-label: #52525b;
+  --popover: rgba(255, 255, 255, 0.92);
+  --popover-fg: #18181b;
+  --border: #e4e4e7;
+  --muted-fg: #71717a;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    sans-serif;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--canvas);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.uc-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+.uc-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.uc-zoom {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+/* Content never intercepts pointer events; frames are the only click targets (overview). */
+.uc-el,
+.uc-img {
+  position: absolute;
+  pointer-events: none;
+}
+.uc-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.uc-connector svg {
+  position: absolute;
+  inset: 0;
+}
+.uc-connector-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: var(--canvas);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.uc-shape svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.uc-shape-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+.uc-shape-label > div {
+  width: 100%;
+}
+.uc-img {
+  max-width: none;
+  display: block;
+}
+.uc-frame {
+  position: absolute;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: none;
+  pointer-events: none;
+}
+.uc-frame-label {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  display: none;
+  height: 24px;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--frame-label);
+}
+.uc-frame-label b {
+  display: inline-flex;
+  min-width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  padding: 0 4px;
+  background: var(--frame-label);
+  color: #fff;
+  font-weight: 600;
+}
+.uc-overview .uc-frame {
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 0 0 var(--stroke-px, 2px) var(--frame-stroke);
+  transition: box-shadow 120ms;
+}
+.uc-overview .uc-frame.is-current {
+  box-shadow: 0 0 0 var(--stroke-px, 2px) rgba(37, 99, 235, 0.6);
+}
+.uc-overview .uc-frame:hover {
+  box-shadow: 0 0 0 var(--stroke-px, 3px) var(--selection);
+  background: rgba(37, 99, 235, 0.05);
+}
+.uc-overview .uc-frame-label {
+  display: flex;
+}
+.uc-overview .uc-frame:hover .uc-frame-label b {
+  background: var(--selection);
+}
+.uc-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.uc-nav-bar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--popover);
+  color: var(--popover-fg);
+  padding: 4px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+}
+.uc-nav-bar button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+.uc-nav-bar button:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.uc-nav-bar button[aria-pressed='true'] {
+  background: var(--popover-fg);
+  color: #fff;
+}
+.uc-nav-bar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.uc-counter {
+  min-width: 96px;
+  padding: 0 8px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.uc-counter span {
+  margin-left: 8px;
+  color: var(--muted-fg);
+}
+.uc-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted-fg);
+  font-size: 14px;
+}

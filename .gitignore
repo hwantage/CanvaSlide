@@ -1,0 +1,13 @@
+node_modules/
+dist/
+out/
+coverage/
+.DS_Store
+*.log
+.vite/
+config/*.tsbuildinfo
+src-tauri/target/
+src-tauri/gen/
+test-results/
+.pnpm-store/
+/discuss/

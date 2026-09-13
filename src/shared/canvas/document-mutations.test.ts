@@ -1,0 +1,74 @@
+import { describe, expect, it } from 'vitest'
+import {
+  applyFrameOrders,
+  duplicateElements,
+  insertElement,
+  patchElements,
+  removeElements,
+  reorderZ,
+  translateElements
+} from './document-mutations'
+import { createEmptyDocument, type CanvasElement } from './element-types'
+
+const text = (id: string, x = 0): CanvasElement => ({
+  id,
+  type: 'text',
+  text: id,
+  x,
+  y: 0,
+  width: 10,
+  height: 10,
+  textStyle: { color: '#000', fontSize: 16, align: 'left', bold: false }
+})
+
+describe('document-mutations', () => {
+  it('inserts on top and removes cleanly without mutating input', () => {
+    const empty = createEmptyDocument()
+    const one = insertElement(empty, text('a'))
+    const two = insertElement(one, text('b'))
+    expect(empty.order).toEqual([])
+    expect(two.order).toEqual(['a', 'b'])
+    const removed = removeElements(two, ['a', 'ghost'])
+    expect(removed.order).toEqual(['b'])
+    expect(removed.elements.a).toBeUndefined()
+    expect(two.elements.a).toBeDefined()
+  })
+
+  it('patches with objects or updaters and returns same doc when nothing changed', () => {
+    const doc = insertElement(createEmptyDocument(), text('a'))
+    expect(patchElements(doc, ['nope'], { x: 5 })).toBe(doc)
+    expect(patchElements(doc, ['a'], { x: 5 }).elements.a?.x).toBe(5)
+    expect(translateElements(doc, ['a'], { x: 3, y: 4 }).elements.a).toMatchObject({ x: 3, y: 4 })
+  })
+
+  it('duplicates with offset preserving stacking', () => {
+    let doc = insertElement(createEmptyDocument(), text('a'))
+    doc = insertElement(doc, text('b', 100))
+    let n = 0
+    const { document, newIds } = duplicateElements(doc, ['b', 'a'], () => `dup${(n += 1)}`)
+    expect(newIds).toEqual(['dup1', 'dup2'])
+    expect(document.order).toEqual(['a', 'b', 'dup1', 'dup2'])
+    expect(document.elements.dup2).toMatchObject({ x: 124, y: 24, text: 'b' })
+  })
+
+  it('reorders z and applies frame orders', () => {
+    let doc = insertElement(createEmptyDocument(), text('a'))
+    doc = insertElement(doc, text('b'))
+    doc = insertElement(doc, text('c'))
+    expect(reorderZ(doc, ['a'], 'front').order).toEqual(['b', 'c', 'a'])
+    expect(reorderZ(doc, ['c'], 'back').order).toEqual(['c', 'a', 'b'])
+    const frameDoc = insertElement(doc, {
+      id: 'f',
+      type: 'frame',
+      name: 'F',
+      order: 1,
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1
+    })
+    const applied = applyFrameOrders(frameDoc, { f: 7, a: 9 })
+    expect(applied.elements.f).toMatchObject({ order: 7 })
+    expect(applied.elements.a).toEqual(frameDoc.elements.a)
+  })
+})

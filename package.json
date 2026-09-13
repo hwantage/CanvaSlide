@@ -1,0 +1,85 @@
+{
+  "name": "canvaslide",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Infinite canvas with presentation frames (Tauri + React)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "dev:web": "pnpm run build:player && vite --config config/vite.config.ts --host 127.0.0.1",
+    "build:web": "pnpm run build:player && tsc --noEmit -p config/tsconfig.web.json && vite build --config config/vite.config.ts",
+    "build": "tauri build",
+    "preview:web": "vite preview --config config/vite.config.ts",
+    "tauri": "tauri",
+    "tc": "pnpm run typecheck",
+    "tc:web": "pnpm run build:player && tsc --noEmit -p config/tsconfig.web.json",
+    "tc:node": "tsc --noEmit -p config/tsconfig.node.json",
+    "typecheck": "pnpm run tc:web && pnpm run tc:node && pnpm run tc:e2e && pnpm run tc:examples",
+    "lint": "oxlint && pnpm run check:max-lines",
+    "lint:fix": "oxlint --fix",
+    "check:max-lines": "node config/scripts/check-max-lines.mjs",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "test:coverage": "vitest run --config config/vitest.config.ts --coverage",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test",
+    "rust:check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "rust:test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "rust:clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
+    "prepare": "husky",
+    "tc:e2e": "tsc --noEmit -p config/tsconfig.e2e.json",
+    "test:e2e": "playwright test --config tests/playwright.config.ts",
+    "build:player": "vite build --config config/vite.player.config.ts",
+    "tc:examples": "tsc --noEmit -p config/tsconfig.examples.json",
+    "examples:build": "node examples/build/index.ts"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.45.0",
+    "nanoid": "^6.0.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.6.2",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2.11.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.20.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^5.0.0",
+    "happy-dom": "^20.14.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,mts,cts}": [
+      "oxlint",
+      "oxfmt --write"
+    ],
+    "*.{json,css,md}": [
+      "oxfmt --write"
+    ]
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.24.0"
+}

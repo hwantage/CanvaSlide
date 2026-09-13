@@ -4,8 +4,10 @@ import type { Point, Rect } from '@shared/canvas/element-types'
 import { cascadeRect } from '@shared/canvas/paste-placement'
 import { normalizePastedText, pastedTextWidth } from '@shared/canvas/pasted-text'
 import { decodeImageFile } from '@/lib/clipboard-image'
+import { pickFiles } from '@/lib/file-picker'
 import { createImageElement, createTextElement, placeImageRect } from '@/lib/element-factory'
 import { memoryPayload, pasteObjects, payloadFromClipboardText } from '@/lib/object-clipboard'
+import { showErrorMessage } from '@/platform/document-file-access'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
@@ -98,5 +100,19 @@ export async function pasteFromSystemClipboard(at?: Point): Promise<void> {
   const remembered = memoryPayload()
   if (remembered) {
     pasteObjects(remembered)
+  }
+}
+
+export const IMPORT_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,application/pdf,.pdf'
+
+/** Toolbar / menu / ⌘I: choose image or PDF files and insert them around the visible centre. */
+export async function importPickedFiles(at?: Point): Promise<void> {
+  const files = await pickFiles(IMPORT_ACCEPT)
+  for (const file of files) {
+    try {
+      await insertFile(file, at)
+    } catch (error) {
+      await showErrorMessage(error instanceof Error ? error.message : String(error))
+    }
   }
 }

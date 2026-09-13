@@ -10,6 +10,7 @@ export const ko: UiStrings = {
   'tool.diamond': '마름모',
   'tool.frame': '프레젠테이션 프레임',
   'tool.connector': '연결선',
+  'import.files': '이미지·PDF 가져오기…',
 
   'connector.route': '경로',
   'connector.route.straight': '직선',

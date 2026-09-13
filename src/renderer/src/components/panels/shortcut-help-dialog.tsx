@@ -81,6 +81,7 @@ function sections(): Section[] {
         [t('file.open'), shortcutLabel('O')],
         [t('file.save'), shortcutLabel('S')],
         [t('file.saveAs'), shortcutLabel('S', { shift: true })],
+        [t('import.files'), shortcutLabel('I')],
         [t('export.title'), shortcutLabel('E')],
         [t('settings.title'), shortcutLabel(',')],
         [t('help.title'), '?']

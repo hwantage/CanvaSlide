@@ -146,7 +146,7 @@ React·Tauri에 의존하지 않는 8개 모듈(총 ~900줄)이 카메라 수학
 
 ### 3.11 PDF 가져오기
 
-- 캔버스에 PDF를 끌어놓거나 붙여넣으면 [pdf.js](https://mozilla.github.io/pdf.js/)로 각 페이지를 1600px 폭(최대 변 2048px)의 JPEG로 렌더링해 이미지 요소로 넣고, 페이지마다 같은 크기의 프레임을 만들어 바로 발표할 수 있게 한다(`lib/pdf-import.ts`). 프레임 이름은 `파일명 n`, 전체가 undo 1단계(`insertImported`), 생성된 프레임이 선택된다.
+- 왼쪽 툴바의 **이미지·PDF 가져오기** 버튼(⌘I / Ctrl+I, 우클릭 메뉴에도 있음)이 파일 선택 창을 열며, 숨김 `<input type="file">`을 쓰므로 브라우저와 Tauri WebView에서 같은 코드가 돈다(`lib/file-picker.ts`). 캔버스에 PDF를 끌어놓거나 붙여넣으면 [pdf.js](https://mozilla.github.io/pdf.js/)로 각 페이지를 1600px 폭(최대 변 2048px)의 JPEG로 렌더링해 이미지 요소로 넣고, 페이지마다 같은 크기의 프레임을 만들어 바로 발표할 수 있게 한다(`lib/pdf-import.ts`). 프레임 이름은 `파일명 n`, 전체가 undo 1단계(`insertImported`), 생성된 프레임이 선택된다.
 - 배치는 순수 로직 `pdf-page-layout.ts`: 페이지 폭 960(기본 프레임 폭), 간격 80, 열 수 `ceil(√n)`의 격자, 행 높이는 그 행의 가장 큰 페이지 기준. 드롭 지점이 격자의 좌상단이다.
 - pdf.js 런타임 파일(워커, 표준 글꼴 14종, 이미지 디코더 wasm)은 `pnpm build:pdfjs`(`config/scripts/copy-pdfjs-assets.mjs`)가 `src/renderer/public/pdfjs/`로 복사하며 gitignore 대상이다. `dev:web`/`build:web` 앞에 자동 실행된다. Tauri CSP에 `script-src 'self' 'wasm-unsafe-eval'`을 추가해 wasm 디코더를 허용했고, 라이브러리는 첫 사용 시 지연 로드한다.
 - 제약: 텍스트는 편집할 수 없는 그림이 되고, 암호가 걸린 PDF는 거부한다. 이미지가 data URL로 문서에 인라인되므로 30페이지 덱이면 문서가 수 MB가 된다.

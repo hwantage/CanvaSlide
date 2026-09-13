@@ -1,4 +1,5 @@
 import type { DocumentCommands } from '@/hooks/use-document-commands'
+import { importPickedFiles } from '@/lib/external-content'
 import { copySelection, cutSelection, requestKeyboardPaste } from '@/lib/object-clipboard'
 import { isMacPlatform } from '@/lib/platform-keys'
 import { frameSelection, presentFromSelection } from '@/lib/selection-commands'
@@ -66,6 +67,9 @@ export function handlePrimaryShortcuts(event: KeyboardEvent, commands: DocumentC
       return true
     case 'e':
       useExportDialogStore.getState().show()
+      return true
+    case 'i':
+      void importPickedFiles()
       return true
     case ',':
       useSettingsDialogStore.getState().toggle()

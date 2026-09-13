@@ -6,6 +6,7 @@ import {
   Diamond,
   Frame,
   Hand,
+  ImagePlus,
   Minus,
   MousePointer2,
   Spline,
@@ -17,6 +18,8 @@ import type { ReactNode } from 'react'
 import type { ArrowHead, ConnectorRoute } from '@shared/canvas/element-types'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
+import { importPickedFiles } from '@/lib/external-content'
+import { shortcutLabel } from '@/lib/platform-keys'
 import { selectTool, useToolStore, type ToolId } from '@/store/tool-store'
 
 const tools: { id: ToolId; label: UiStringKey; key: string; icon: ReactNode }[] = [
@@ -99,6 +102,14 @@ export function ToolBar() {
           {tool.icon}
         </IconButton>
       ))}
+      <div className="my-0.5 h-px bg-border" />
+      <IconButton
+        label={`${t('import.files')} (${shortcutLabel('I')})`}
+        data-testid="import-files"
+        onClick={() => void importPickedFiles()}
+      >
+        <ImagePlus size={16} />
+      </IconButton>
       {active === 'connector' && <ConnectorFlyout />}
     </div>
   )

@@ -8,6 +8,7 @@ export const en = {
   'tool.diamond': 'Diamond',
   'tool.frame': 'Presentation frame',
   'tool.connector': 'Connector',
+  'import.files': 'Import image or PDF…',
 
   'connector.route': 'Route',
   'connector.route.straight': 'Straight',

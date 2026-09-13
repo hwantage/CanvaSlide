@@ -83,3 +83,21 @@ test('dropping a PDF adds one image and one frame per page, laid out as a grid',
   await expect(images).toHaveCount(0)
   await expect(frames).toHaveCount(0)
 })
+
+test('the toolbar import button opens a file chooser for images and PDFs', async ({ page }) => {
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==',
+    'base64'
+  )
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByTestId('import-files').click()
+  await (
+    await chooser
+  ).setFiles([
+    { name: 'dot.png', mimeType: 'image/png', buffer: png },
+    { name: 'deck.pdf', mimeType: 'application/pdf', buffer: Buffer.from(twoPagePdf()) }
+  ])
+  await expect(page.locator('[data-element-type="image"]')).toHaveCount(3, { timeout: 15_000 })
+  await expect(page.locator('[data-element-type="frame"]')).toHaveCount(2)
+  await expect(page.getByTestId('frame-row').nth(1)).toContainText('deck 2')
+})

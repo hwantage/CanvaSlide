@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Point } from '@shared/canvas/element-types'
 import { contentBounds } from '@shared/canvas/element-bounds'
 import { t } from '@/i18n/ui-strings'
-import { pasteFromSystemClipboard } from '@/lib/external-content'
+import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/external-content'
 import { copySelection, cutSelection } from '@/lib/object-clipboard'
 import { shiftLabel, shortcutLabel } from '@/lib/platform-keys'
 import {
@@ -106,6 +106,9 @@ function canvasItems(world: Point | null): MenuItem[] {
     }),
     item(t('edit.selectAll'), store.selectAll, { shortcut: shortcutLabel('A') }),
     separator,
+    item(t('import.files'), () => void importPickedFiles(world ?? undefined), {
+      shortcut: shortcutLabel('I')
+    }),
     item(
       t('zoom.fit'),
       () => {

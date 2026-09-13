@@ -4,10 +4,12 @@
 import { cpSync, mkdirSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const require = createRequire(import.meta.url)
 const source = dirname(require.resolve('pdfjs-dist/package.json'))
-const target = new URL('../../src/renderer/public/pdfjs/', import.meta.url).pathname
+// Why: `URL.pathname` yields `/D:/...` on Windows; fileURLToPath gives a real filesystem path.
+const target = fileURLToPath(new URL('../../src/renderer/public/pdfjs/', import.meta.url))
 
 rmSync(target, { recursive: true, force: true })
 mkdirSync(target, { recursive: true })

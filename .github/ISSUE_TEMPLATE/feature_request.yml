@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest an improvement for CanvaSlide
+title: '[Feature]: '
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for new features or workflow improvements.
+
+        Please write your issue in English.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what is missing today? Describe the problem before the solution.
+      placeholder: When presenting a deck with many frames, it is hard to jump to a specific frame without leaving the slideshow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the change you want to see. Mockups or sketches help.
+      placeholder: Add a frame overview (press O) that shows thumbnails and jumps on click.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or additional context
+      description: Workarounds, how other tools (Figma, Miro, PowerPoint, Prezi) handle it, or anything else that helps.
+    validations:
+      required: false

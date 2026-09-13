@@ -2,6 +2,7 @@
 
 Infinite-canvas desktop app (Tauri 2 + React 19). Read [`docs/PRD.md`](./docs/PRD.md) for scope and
 [`docs/REPORT.md`](./docs/REPORT.md) for the current state before changing behaviour.
+Releases follow [`docs/RELEASE.md`](./docs/RELEASE.md).
 
 ## Layout
 

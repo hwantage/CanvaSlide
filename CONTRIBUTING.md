@@ -130,8 +130,9 @@ For feature requests, describe the problem you are trying to solve before the so
 
 ## Releases
 
-Version bumps, tags and releases are maintainer-managed. Bundles for macOS (`.dmg` / `.app`) and
-Windows (`.exe` / `.msi`) are produced by the CI `bundle` job on `main`.
+Releases are maintainer-managed and driven by git tags: `npm version <bump>` then
+`git push --follow-tags` builds macOS and Windows installers into a draft GitHub Release.
+The full procedure, troubleshooting and the signing roadmap are in [`docs/RELEASE.md`](./docs/RELEASE.md).
 
 ## License
 

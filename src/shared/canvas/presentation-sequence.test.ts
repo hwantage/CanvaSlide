@@ -3,6 +3,8 @@ import { createEmptyDocument, type CanvasDocument, type FrameElement } from './e
 import {
   clampFrameIndex,
   moveFrameInSequence,
+  gapToIndex,
+  moveFrameToGap,
   moveFrameToIndex,
   nextFrameOrder,
   orderedFrames,
@@ -52,5 +54,27 @@ describe('presentation-sequence', () => {
     expect(clampFrameIndex(0, 0)).toBe(0)
     expect(stepFrameIndex(2, 3, 1)).toBe(2)
     expect(stepFrameIndex(0, 3, -1)).toBe(0)
+  })
+
+  it('maps drop gaps to indexes and treats the gaps around the dragged row as no-ops', () => {
+    expect(gapToIndex(1, 0)).toBe(0)
+    expect(gapToIndex(1, 1)).toBe(1)
+    expect(gapToIndex(1, 2)).toBe(1)
+    expect(gapToIndex(1, 3)).toBe(2)
+    const frames = ['a', 'b', 'c'].map((id, i) => ({
+      id,
+      type: 'frame' as const,
+      name: id,
+      order: i + 1,
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10
+    }))
+    expect(moveFrameToGap(frames, 'b', 1)).toEqual({})
+    expect(moveFrameToGap(frames, 'b', 2)).toEqual({})
+    expect(moveFrameToGap(frames, 'b', 0)).toEqual({ b: 1, a: 2, c: 3 })
+    expect(moveFrameToGap(frames, 'b', 3)).toEqual({ a: 1, c: 2, b: 3 })
+    expect(moveFrameToGap(frames, 'zz', 0)).toEqual({})
   })
 })

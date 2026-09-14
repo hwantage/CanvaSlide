@@ -1,8 +1,10 @@
 import { Play } from 'lucide-react'
-import { useState, type DragEvent, type KeyboardEvent } from 'react'
+import { useCallback, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { elementRect } from '@shared/canvas/element-bounds'
 import type { FrameElement } from '@shared/canvas/element-types'
-import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import { gapAtPointer } from '@shared/canvas/list-drop-gap'
+import { frameIndexById, gapToIndex, orderedFrames } from '@shared/canvas/presentation-sequence'
+import { useDragAutoScroll } from '@/hooks/use-drag-auto-scroll'
 import { inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
@@ -61,7 +63,9 @@ export function FrameListPanel() {
   const moveFrameTo = useDocumentStore((s) => s.moveFrameTo)
   const fitRect = useCameraStore((s) => s.fitRect)
   const startPresentation = usePresentationStore((s) => s.start)
-  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  /** Gap 0..n between rows where the dragged frame would land; null while not dragging. */
+  const [dropGap, setDropGap] = useState<number | null>(null)
+  const [dragging, setDragging] = useState<number | null>(null)
   const frames = orderedFrames(document)
 
   // Why: one click both highlights the frame on the canvas and brings it into view.
@@ -70,36 +74,87 @@ export function FrameListPanel() {
     fitRect(elementRect(frame))
   }
 
-  const onDragStart = (event: DragEvent, id: string) => {
+  const listRef = useRef<HTMLOListElement>(null)
+  const scrollPane = useCallback(
+    () => listRef.current?.closest<HTMLElement>('[data-scroll-pane]') ?? null,
+    []
+  )
+  useDragAutoScroll(dragging !== null, scrollPane)
+
+  const onDragStart = (event: DragEvent, id: string, index: number) => {
     event.dataTransfer.setData(DRAG_TYPE, id)
     event.dataTransfer.effectAllowed = 'move'
+    setDragging(index)
   }
-  const onDragOver = (event: DragEvent, index: number) => {
+  const endDrag = () => {
+    setDropGap(null)
+    setDragging(null)
+  }
+  // Why: the drop target is a gap between rows, chosen from the pointer's position against every
+  // row's midpoint, so the heading, the padding and the space below the list all work too.
+  const onDragOver = (event: DragEvent) => {
     if (!event.dataTransfer.types.includes(DRAG_TYPE)) {
       return
     }
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
-    setDropIndex(index)
+    const rows = [
+      ...(listRef.current?.querySelectorAll<HTMLElement>('[data-testid="frame-row"]') ?? [])
+    ]
+    const midpoints = rows.map((row) => {
+      const rect = row.getBoundingClientRect()
+      return rect.top + rect.height / 2
+    })
+    setDropGap(gapAtPointer(midpoints, event.clientY))
   }
-  const onDrop = (event: DragEvent, index: number) => {
+  const onDrop = (event: DragEvent) => {
     event.preventDefault()
     const id = event.dataTransfer.getData(DRAG_TYPE)
-    setDropIndex(null)
-    if (id) {
-      moveFrameTo(id, index)
+    const gap = dropGap
+    endDrag()
+    if (id && gap !== null) {
+      const from = frameIndexById(frames, id)
+      if (from !== -1) {
+        moveFrameTo(id, gapToIndex(from, gap))
+      }
     }
   }
+  const draggedGapHidden = (gap: number) => {
+    // Why: the gaps right around the dragged row are no-ops; showing a line there is misleading.
+    if (dragging === null) {
+      return false
+    }
+    return gap === dragging || gap === dragging + 1
+  }
+  const gapLine = (gap: number, edge: 'top' | 'bottom') =>
+    dropGap === gap && !draggedGapHidden(gap) ? (
+      <span
+        data-testid="frame-drop-indicator"
+        className={`pointer-events-none absolute left-1 right-1 h-0.5 rounded-full bg-selection ${
+          edge === 'top' ? '-top-[3px]' : '-bottom-[3px]'
+        }`}
+      />
+    ) : null
 
   return (
-    <section className="flex flex-col gap-1">
+    <section
+      className="flex min-h-full flex-col gap-1"
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragLeave={(event) => {
+        // Why: leaving the whole section (not a child) hides the line; dragend also clears it.
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          setDropGap(null)
+        }
+      }}
+    >
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         {t('frames.title')}
       </h2>
       {frames.length === 0 && (
         <p className="px-1 text-xs text-muted-foreground">{t('frames.empty')}</p>
       )}
-      <ol className="flex flex-col gap-1" onDragLeave={() => setDropIndex(null)}>
+      <ol ref={listRef} className="flex flex-col gap-1 pb-2">
         {frames.map((frame, index) => {
           const selected = selectedIds.includes(frame.id)
           return (
@@ -108,14 +163,14 @@ export function FrameListPanel() {
               draggable
               data-current={selected}
               data-testid="frame-row"
-              onDragStart={(event) => onDragStart(event, frame.id)}
-              onDragOver={(event) => onDragOver(event, index)}
-              onDrop={(event) => onDrop(event, index)}
-              onDragEnd={() => setDropIndex(null)}
-              className={`group flex h-8 items-center gap-1 rounded-md px-2 text-xs ${
+              onDragStart={(event) => onDragStart(event, frame.id, index)}
+              onDragEnd={endDrag}
+              className={`group relative flex h-8 items-center gap-1 rounded-md px-2 text-xs ${
                 selected ? 'bg-accent' : 'hover:bg-accent/60'
-              } ${dropIndex === index ? 'ring-1 ring-selection' : ''}`}
+              } ${dragging === index ? 'opacity-50' : ''}`}
             >
+              {gapLine(index, 'top')}
+              {index === frames.length - 1 && gapLine(frames.length, 'bottom')}
               <button
                 type="button"
                 className="flex h-full min-w-0 flex-1 items-center gap-2 text-left"

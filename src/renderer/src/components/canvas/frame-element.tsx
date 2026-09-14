@@ -89,7 +89,10 @@ export function FrameElement({
             bottom: '100%',
             height: FRAME_TITLE_HEIGHT_PX,
             fontSize: FRAME_TITLE_FONT_PX,
-            zoom: inverse
+            zoom: inverse,
+            // Why: frames paint beneath content, but a frame smaller than the object it sits
+            // under must still show its number and name, so the strip rises above the content.
+            zIndex: 2
           }}
         >
           <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-frame-label px-1 font-semibold text-white">
@@ -102,11 +105,15 @@ export function FrameElement({
           )}
         </div>
       )}
+      <div className="absolute inset-0 rounded-sm bg-white/60" />
       <div
         data-testid="frame-outline"
-        className="absolute inset-0 rounded-sm bg-white/60"
+        className="absolute inset-0 rounded-sm"
         style={{
           // Why: a border (not box-shadow) so the dashed style is possible; width is 1 screen px.
+          // The outline sits above content (the fill stays beneath) so a frame hidden under a
+          // larger object still shows where it is.
+          zIndex: 1,
           borderWidth:
             presenting || (borderStyle === 'none' && !selected) ? 0 : (selected ? 2 : 1) * inverse,
           borderStyle: selected ? 'solid' : borderStyle,

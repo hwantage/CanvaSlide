@@ -73,8 +73,7 @@ export function contentBounds(document: CanvasDocument): Rect | null {
 /** World-unit sizes of the frame's grabbable chrome (screen px ÷ zoom). */
 export type FrameHitChrome = { titleHeight: number; borderWidth: number; lineWidth?: number }
 
-/** True on the frame's title strip or within `borderWidth` of its outline. */
-export function frameChromeContainsPoint(
+export function frameTitleStripContainsPoint(
   frame: Rect,
   point: Point,
   chrome: FrameHitChrome
@@ -85,7 +84,16 @@ export function frameChromeContainsPoint(
     width: frame.width,
     height: chrome.titleHeight
   }
-  if (rectContainsPoint(titleStrip, point)) {
+  return rectContainsPoint(titleStrip, point)
+}
+
+/** True on the frame's title strip or within `borderWidth` of its outline. */
+export function frameChromeContainsPoint(
+  frame: Rect,
+  point: Point,
+  chrome: FrameHitChrome
+): boolean {
+  if (frameTitleStripContainsPoint(frame, point, chrome)) {
     return true
   }
   const half = chrome.borderWidth / 2
@@ -104,12 +112,42 @@ export function frameChromeContainsPoint(
   return rectContainsPoint(outer, point) && !rectContainsPoint(inner, point)
 }
 
-/** Topmost element under `point`; frames only hit on their chrome so content stays clickable. */
+function topmostFrame(
+  document: CanvasDocument,
+  point: Point,
+  hit: (frame: Rect) => boolean
+): CanvasElement | null {
+  for (let i = document.order.length - 1; i >= 0; i -= 1) {
+    const id = document.order[i]
+    const element = id === undefined ? undefined : document.elements[id]
+    if (element?.type === 'frame' && hit(elementRect(element))) {
+      return element
+    }
+  }
+  return null
+}
+
+/** Topmost frame whose whole rect contains `point`; used for modifier-clicks on a frame's interior. */
+export function frameContainingPoint(document: CanvasDocument, point: Point): CanvasElement | null {
+  return topmostFrame(document, point, (rect) => rectContainsPoint(rect, point))
+}
+
+/**
+ * Topmost element under `point`. Frames only hit on their chrome so content stays clickable, but
+ * the title strip is drawn above content and therefore wins over it; the outline band only
+ * counts where no content covers it.
+ */
 export function hitTestTopmost(
   document: CanvasDocument,
   point: Point,
   frameChrome: FrameHitChrome
 ): CanvasElement | null {
+  const byTitle = topmostFrame(document, point, (rect) =>
+    frameTitleStripContainsPoint(rect, point, frameChrome)
+  )
+  if (byTitle) {
+    return byTitle
+  }
   for (let i = document.order.length - 1; i >= 0; i -= 1) {
     const id = document.order[i]
     const element = id === undefined ? undefined : document.elements[id]
@@ -131,18 +169,7 @@ export function hitTestTopmost(
       return element
     }
   }
-  // Frames are visually beneath everything, so test them after content.
-  for (let i = document.order.length - 1; i >= 0; i -= 1) {
-    const id = document.order[i]
-    const element = id === undefined ? undefined : document.elements[id]
-    if (!element || element.type !== 'frame') {
-      continue
-    }
-    if (frameChromeContainsPoint(elementRect(element), point, frameChrome)) {
-      return element
-    }
-  }
-  return null
+  return topmostFrame(document, point, (rect) => frameChromeContainsPoint(rect, point, frameChrome))
 }
 
 /** Selected ids plus every non-frame element fully inside a selected frame (frames carry contents). */

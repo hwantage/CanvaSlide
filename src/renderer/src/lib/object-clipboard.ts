@@ -31,16 +31,25 @@ export function nativePasteArrived(): void {
   pendingFallbacks = []
 }
 
+let keyboardFallback: () => void = () => {
+  if (memory) {
+    pasteObjects(memory)
+  }
+}
+
+/** Lets the clipboard hook swap in a richer fallback (native image/text) than the memory copy. */
+export function setKeyboardPasteFallback(fallback: () => void): void {
+  keyboardFallback = fallback
+}
+
 /**
  * ⌘V fallback for engines that never dispatch `paste`: give the native event time to arrive
- * (it cancels us), then paste from the in-memory payload.
+ * (it cancels us), then run the registered fallback.
  */
 export function requestKeyboardPaste(): void {
   const timer = setTimeout(() => {
     pendingFallbacks = pendingFallbacks.filter((t) => t !== timer)
-    if (memory) {
-      pasteObjects(memory)
-    }
+    keyboardFallback()
   }, KEYBOARD_FALLBACK_DELAY_MS)
   pendingFallbacks.push(timer)
 }

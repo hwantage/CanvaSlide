@@ -1,12 +1,16 @@
 import { useEffect } from 'react'
 import { findImageFile } from '@/lib/clipboard-image'
-import { insertClipboardText, insertFile, isPdfFile } from '@/lib/external-content'
+import {
+  insertClipboardText,
+  insertFile,
+  isPdfFile,
+  pasteFromSystemClipboard
+} from '@/lib/external-content'
 import {
   copySelection,
   cutSelection,
-  memoryPayload,
   nativePasteArrived,
-  pasteObjects
+  setKeyboardPasteFallback
 } from '@/lib/object-clipboard'
 import { isEditableTarget } from '@/lib/platform-keys'
 import { showErrorMessage } from '@/platform/document-file-access'
@@ -24,6 +28,8 @@ function ignoring(event: ClipboardEvent): boolean {
 /** Native copy/cut/paste events: objects first (our JSON), then images, then plain text. */
 export function useClipboard(): void {
   useEffect(() => {
+    // Why: ⌘V without a `paste` event (WKWebView) falls back to the OS clipboard, not just memory.
+    setKeyboardPasteFallback(() => void pasteFromSystemClipboard())
     const onCopy = (event: ClipboardEvent, cut: boolean) => {
       if (ignoring(event)) {
         return
@@ -56,10 +62,10 @@ export function useClipboard(): void {
         event.preventDefault()
         return
       }
-      const remembered = memoryPayload()
-      if (text === '' && remembered) {
+      if (text === '') {
+        // Why: the engine fired `paste` but withheld its data; read the OS clipboard directly.
         event.preventDefault()
-        pasteObjects(remembered)
+        void pasteFromSystemClipboard()
       }
     }
     const copy = (event: ClipboardEvent) => onCopy(event, false)

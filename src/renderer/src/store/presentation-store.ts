@@ -1,11 +1,15 @@
 import { create } from 'zustand'
 import { contentBounds, elementRect } from '@shared/canvas/element-bounds'
+import { camerasEqual } from '@shared/canvas/camera-transform'
 import { fitRectToViewport } from '@shared/canvas/frame-fit'
 import { orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
 import type { Camera } from '@shared/canvas/element-types'
 import { useCameraStore } from './camera-store'
 import { setWindowFullscreen } from '@/platform/window-fullscreen'
 import { useDocumentStore } from './document-store'
+
+/** Correction hop after a flight lands on a viewport that changed underneath it. */
+const SETTLE_MS = 250
 
 export type PresentationState = {
   active: boolean
@@ -33,14 +37,31 @@ export type PresentationActions = {
 export type PresentationStore = PresentationState & PresentationActions
 
 export const usePresentationStore = create<PresentationStore>()((set, get) => {
-  const flyToFrame = (index: number, durationMs: number) => {
-    const document = useDocumentStore.getState().document
-    const frame = orderedFrames(document)[index]
-    if (!frame) {
+  const frameTarget = (index: number): Camera | null => {
+    const frame = orderedFrames(useDocumentStore.getState().document)[index]
+    return frame ? fitRectToViewport(elementRect(frame), useCameraStore.getState().viewport) : null
+  }
+  /**
+   * Why: the viewport can change while a flight is in the air (macOS fullscreen finishes on its
+   * own schedule, and not every engine reports the final size before the flight ends). When the
+   * flight lands, compare against the viewport as it is now and correct with a short hop.
+   */
+  const settle = (index: number) => {
+    const { active, overview } = get()
+    if (!active || overview || get().index !== index) {
       return
     }
+    const target = frameTarget(index)
     const camera = useCameraStore.getState()
-    camera.animateTo(fitRectToViewport(elementRect(frame), camera.viewport), durationMs)
+    if (target && !camerasEqual(camera.camera, target, 0.5)) {
+      camera.animateTo(target, SETTLE_MS, () => settle(index))
+    }
+  }
+  const flyToFrame = (index: number, durationMs: number) => {
+    const target = frameTarget(index)
+    if (target) {
+      useCameraStore.getState().animateTo(target, durationMs, () => settle(index))
+    }
   }
   const step = (direction: 1 | -1) => {
     const { active, index } = get()
@@ -98,7 +119,9 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
         overview: false,
         cameraBeforeStart: useCameraStore.getState().camera
       })
-      void setWindowFullscreen(true)
+      // Why: once the OS reports fullscreen, refit against the final viewport whatever events
+      // arrived (or not) during the transition.
+      void setWindowFullscreen(true).then(() => get().refitToViewport())
     },
     flyToCurrent: () => {
       const { active, index } = get()

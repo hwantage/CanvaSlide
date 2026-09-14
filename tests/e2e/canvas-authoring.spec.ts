@@ -447,3 +447,29 @@ test('dragging snaps to neighbour edges and to equal spacing, with guides shown'
     await expect(shapes.nth(2)).toHaveCSS('left', '503px')
   }
 })
+
+test('a viewport resize during the opening flight still ends with the frame fitted', async ({
+  page
+}) => {
+  await page.keyboard.press('f')
+  await dragOnCanvas(page, [100, 150], [740, 510])
+  await page.getByRole('button', { name: 'Slide Show', exact: true }).click()
+  // Why: mimics macOS finishing its fullscreen animation while the camera is still flying.
+  await page.waitForTimeout(300)
+  await page.setViewportSize({ width: 1000, height: 700 })
+  const fitted = () =>
+    page.evaluate(() => {
+      const vp = document.querySelector('[data-testid="canvas-viewport"]')!.getBoundingClientRect()
+      const f = document.querySelector('[data-element-type="frame"]')!.getBoundingClientRect()
+      const pads = [f.left - vp.left, vp.right - f.right, f.top - vp.top, vp.bottom - f.bottom]
+      const [l, r, t, b] = pads as [number, number, number, number]
+      // Centred, fully inside, and touching one axis with the 4% padding.
+      return (
+        Math.abs(l - r) <= 2 &&
+        Math.abs(t - b) <= 2 &&
+        Math.min(...pads) >= 0 &&
+        Math.min(l, t) < 60
+      )
+    })
+  await expect.poll(fitted, { timeout: 4000 }).toBe(true)
+})

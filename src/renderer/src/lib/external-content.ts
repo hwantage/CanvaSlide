@@ -8,6 +8,7 @@ import { pickFiles } from '@/lib/file-picker'
 import { createImageElement, createTextElement, placeImageRect } from '@/lib/element-factory'
 import { memoryPayload, pasteObjects, payloadFromClipboardText } from '@/lib/object-clipboard'
 import { showErrorMessage } from '@/platform/document-file-access'
+import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
@@ -88,11 +89,18 @@ export async function insertFile(file: File, at?: Point): Promise<void> {
  * refuse the read (or hold nothing we understand) fall back to the last in-app copy.
  */
 export async function pasteFromSystemClipboard(at?: Point): Promise<void> {
-  let text = ''
-  try {
-    text = (await navigator.clipboard?.readText()) ?? ''
-  } catch {
-    text = ''
+  const image = await readNativeClipboardImage()
+  if (image) {
+    await insertImageFile(image, at)
+    return
+  }
+  let text = await readNativeClipboardText()
+  if (text === '') {
+    try {
+      text = (await navigator.clipboard?.readText()) ?? ''
+    } catch {
+      text = ''
+    }
   }
   if (text !== '' && insertClipboardText(text, at)) {
     return

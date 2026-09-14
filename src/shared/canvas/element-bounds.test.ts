@@ -4,6 +4,7 @@ import { insertElement } from './document-mutations'
 import {
   contentBounds,
   elementsInBox,
+  frameContainingPoint,
   hitTestTopmost,
   rectFromPoints,
   rectsIntersect,
@@ -155,5 +156,59 @@ describe('hitTestTopmost with elbow connectors', () => {
     expect(connectorDistance(element, onRoute, [])).toBeGreaterThan(chrome.lineWidth)
     expect(connectorDistance(element, onRoute, connectorObstacles(doc, element))).toBeLessThan(1)
     expect(hitTestTopmost(doc, onRoute, chrome)?.id).toBe('c')
+  })
+})
+
+describe('hitTestTopmost with a frame hidden under content', () => {
+  const chrome = { titleHeight: 24, borderWidth: 8 }
+  let doc = createEmptyDocument()
+  doc = insertElement(doc, {
+    id: 'frame',
+    type: 'frame',
+    name: 'F',
+    order: 1,
+    x: 100,
+    y: 100,
+    width: 200,
+    height: 100
+  })
+  doc = insertElement(doc, {
+    id: 'big',
+    type: 'shape',
+    shape: 'rectangle',
+    x: 0,
+    y: 0,
+    width: 600,
+    height: 600,
+    style: { fill: '#fff', stroke: '#000', strokeWidth: 1, cornerRadius: 0 },
+    text: '',
+    textStyle: { color: '#000', fontSize: 16, align: 'left', bold: false }
+  })
+
+  it('lets the title strip win even when a larger shape covers it', () => {
+    expect(hitTestTopmost(doc, { x: 150, y: 90 }, chrome)?.id).toBe('frame')
+  })
+
+  it('still gives the covered outline band and interior to the shape', () => {
+    expect(hitTestTopmost(doc, { x: 100, y: 150 }, chrome)?.id).toBe('big')
+    expect(hitTestTopmost(doc, { x: 200, y: 150 }, chrome)?.id).toBe('big')
+  })
+})
+
+describe('frameContainingPoint', () => {
+  it('finds the frame whose interior holds the point, else null', () => {
+    let doc = createEmptyDocument()
+    doc = insertElement(doc, {
+      id: 'f',
+      type: 'frame',
+      name: 'F',
+      order: 1,
+      x: 100,
+      y: 100,
+      width: 200,
+      height: 100
+    })
+    expect(frameContainingPoint(doc, { x: 150, y: 150 })?.id).toBe('f')
+    expect(frameContainingPoint(doc, { x: 50, y: 50 })).toBeNull()
   })
 })

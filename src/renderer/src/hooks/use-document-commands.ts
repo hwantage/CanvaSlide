@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { documentNameFromPath } from '@shared/canvas/document-file'
+import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import {
   confirmDiscardChanges,
   openDocumentFile,
@@ -68,9 +69,9 @@ export function useDocumentCommands(): DocumentCommands {
           }
           usePresentationStore.getState().exit()
           useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
-          if (opened.document.camera) {
-            useCameraStore.getState().setCamera(opened.document.camera)
-          }
+          // Why: the saved camera may point at empty space; show the whole board instead.
+          const camera = useCameraStore.getState()
+          camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))
         })
     }),
     [save]

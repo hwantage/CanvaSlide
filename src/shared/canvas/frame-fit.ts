@@ -1,5 +1,7 @@
 import { cameraForWorldCenter, clampZoom } from './camera-transform'
-import type { Camera, Rect, Size } from './element-types'
+import { contentBounds } from './element-bounds'
+import { DEFAULT_CAMERA } from './camera-transform'
+import type { CanvasDocument, Camera, Rect, Size } from './element-types'
 
 export const FRAME_FIT_PADDING_RATIO = 0.04
 
@@ -38,4 +40,13 @@ export const SELECTION_FIT_MAX_ZOOM = 4
 /** Fits the selection like a frame fit but capped at `SELECTION_FIT_MAX_ZOOM`. */
 export function fitSelectionToViewport(rect: Rect, viewport: Size): Camera {
   return fitContentToViewport(rect, viewport, SELECTION_FIT_MAX_ZOOM)
+}
+
+/**
+ * Camera for a freshly opened file: everything in view, never past 100%. Why: a document saved
+ * while scrolled to empty space would otherwise open looking blank.
+ */
+export function cameraForOpenedDocument(document: CanvasDocument, viewport: Size): Camera {
+  const bounds = contentBounds(document)
+  return bounds ? fitContentToViewport(bounds, viewport) : DEFAULT_CAMERA
 }

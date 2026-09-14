@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { visibleWorldRect } from './camera-transform'
+import { insertElement } from './document-mutations'
+import { createEmptyDocument } from './element-types'
 import {
   SELECTION_FIT_MAX_ZOOM,
+  cameraForOpenedDocument,
   fitContentToViewport,
   fitRectToViewport,
   fitSelectionToViewport
@@ -38,5 +41,28 @@ describe('frame-fit', () => {
     expect(fitSelectionToViewport(tiny, viewport).zoom).toBe(SELECTION_FIT_MAX_ZOOM)
     const medium = { x: 0, y: 0, width: 800, height: 400 }
     expect(fitSelectionToViewport(medium, viewport).zoom).toBeCloseTo(1600 / (800 * 1.16), 6)
+  })
+
+  it('opens a document fitted to its content, or at the origin when empty', () => {
+    expect(cameraForOpenedDocument(createEmptyDocument(), viewport)).toEqual({
+      x: 0,
+      y: 0,
+      zoom: 1
+    })
+    const doc = insertElement(createEmptyDocument(), {
+      id: 'f',
+      type: 'frame',
+      name: 'F',
+      order: 1,
+      x: 5000,
+      y: 5000,
+      width: 800,
+      height: 400
+    })
+    const camera = cameraForOpenedDocument(doc, viewport)
+    const visible = visibleWorldRect(camera, viewport)
+    expect(visible.x).toBeLessThanOrEqual(5000)
+    expect(visible.x + visible.width).toBeGreaterThanOrEqual(5800)
+    expect(camera.zoom).toBeLessThanOrEqual(1)
   })
 })

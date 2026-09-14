@@ -473,3 +473,46 @@ test('a viewport resize during the opening flight still ends with the frame fitt
     })
   await expect.poll(fitted, { timeout: 4000 }).toBe(true)
 })
+
+test('opening a file shows all of its content even if it was saved scrolled away', async ({
+  page
+}) => {
+  const saved = {
+    version: 2,
+    name: 'Far away',
+    elements: {
+      f1: {
+        id: 'f1',
+        type: 'frame',
+        name: 'Frame 1',
+        order: 1,
+        x: 5000,
+        y: 5000,
+        width: 800,
+        height: 450
+      }
+    },
+    order: ['f1'],
+    settings: { transitionMs: 1000, background: 'dots', frameBorder: 'solid' },
+    assets: {},
+    camera: { x: 0, y: 0, zoom: 1 }
+  }
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /^Open/ }).click()
+  await (
+    await chooser
+  ).setFiles({
+    name: 'far.canvas.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(saved))
+  })
+  const frame = page.locator('[data-element-type="frame"]')
+  await expect(frame).toHaveCount(1)
+  const inside = await page.evaluate(() => {
+    const vp = document.querySelector('[data-testid="canvas-viewport"]')!.getBoundingClientRect()
+    const f = document.querySelector('[data-element-type="frame"]')!.getBoundingClientRect()
+    return f.left >= vp.left && f.right <= vp.right && f.top >= vp.top && f.bottom <= vp.bottom
+  })
+  expect(inside).toBe(true)
+  await expect(page.getByTestId('zoom-level')).toHaveText('100%')
+})

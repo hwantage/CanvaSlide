@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Point } from '@shared/canvas/element-types'
 import { contentBounds } from '@shared/canvas/element-bounds'
+import { canGroup, canUngroup } from '@shared/canvas/element-groups'
 import { t } from '@/i18n/ui-strings'
 import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/external-content'
 import { copySelection, cutSelection } from '@/lib/object-clipboard'
@@ -68,6 +69,15 @@ function selectionItems(world: Point | null): MenuItem[] {
     item(t('edit.pasteStyle'), () => pasteStyleToSelection(), {
       shortcut: shortcutLabel('V', { alt: true }),
       disabled: !hasCopiedStyle()
+    }),
+    separator,
+    item(t('edit.group'), store.groupSelected, {
+      shortcut: shortcutLabel('G'),
+      disabled: !canGroup(document, selectedIds)
+    }),
+    item(t('edit.ungroup'), store.ungroupSelected, {
+      shortcut: shortcutLabel('G', { shift: true }),
+      disabled: !canUngroup(document, selectedIds)
     }),
     separator,
     item(t('order.front'), () => store.reorderSelected('front'), {

@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { syncConnectorGeometry } from '@shared/canvas/connector-geometry'
 import { upsertAsset } from '@shared/canvas/document-assets'
+import { groupElements, ungroupElements } from '@shared/canvas/element-groups'
 import {
   alignElements,
   distributeElements,
@@ -80,6 +81,9 @@ export type DocumentActions = {
   reorderSelected: (direction: ZDirection) => void
   moveFrameOrder: (id: ElementId, direction: 'up' | 'down') => void
   moveFrameTo: (id: ElementId, index: number) => void
+  /** Groups the selection (frames excluded); the new group becomes the selection. */
+  groupSelected: () => void
+  ungroupSelected: () => void
   alignSelected: (mode: AlignMode) => void
   distributeSelected: (axis: DistributeAxis) => void
   updateSettings: (patch: Partial<DocumentSettings>) => void
@@ -241,6 +245,16 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
         const orders = moveFrameToIndex(orderedFrames(d), id, index)
         return Object.keys(orders).length === 0 ? d : applyFrameOrders(d, orders)
       }),
+    groupSelected: () => {
+      const result = groupElements(get().document, get().selectedIds, newElementId)
+      if (!result) {
+        return
+      }
+      const { document: grouped, groupId } = result
+      recorded(() => grouped)
+      set({ selectedIds: grouped.order.filter((id) => grouped.elements[id]?.groupId === groupId) })
+    },
+    ungroupSelected: () => recorded((d) => ungroupElements(d, get().selectedIds)),
     alignSelected: (mode) => recorded((d) => alignElements(d, get().selectedIds, mode)),
     distributeSelected: (axis) => recorded((d) => distributeElements(d, get().selectedIds, axis)),
     updateSettings: (patch) => recorded((d) => ({ ...d, settings: { ...d.settings, ...patch } })),

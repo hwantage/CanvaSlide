@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { remapConnectorHosts } from './connector-geometry'
 import { upsertAsset } from './document-assets'
+import { remapGroupIds } from './element-groups'
 import { translateElement } from './document-mutations'
 import { insertElement } from './document-mutations'
 import {
@@ -74,7 +75,7 @@ export function pasteClipboardPayload(
   const newIds: ElementId[] = []
   let frameOrder = nextFrameOrder(next)
   const idMap = new Map(payload.elements.map((element) => [element.id, makeId()] as const))
-  for (const source of payload.elements) {
+  for (const source of remapGroupIds(payload.elements, makeId)) {
     let copy: CanvasElement = { ...source, id: idMap.get(source.id) as ElementId }
     // Why: detach before translating; translate skips attached ends, so a detached-after end would
     // stay at its original coordinates.

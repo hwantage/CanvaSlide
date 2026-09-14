@@ -1,5 +1,16 @@
-import { BringToFront, ChevronDown, ChevronUp, Copy, Frame, SendToBack, Trash2 } from 'lucide-react'
+import {
+  BringToFront,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Frame,
+  Group,
+  SendToBack,
+  Trash2,
+  Ungroup
+} from 'lucide-react'
 import type { CanvasElement } from '@shared/canvas/element-types'
+import { canGroup, canUngroup, selectionGroupId } from '@shared/canvas/element-groups'
 import { MIN_ELEMENT_SIZE } from '@shared/canvas/resize-handles'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { TextButton } from '@/components/ui/text-button'
@@ -37,7 +48,9 @@ export function PropertiesPanel() {
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         {elements.length === 1
           ? t(`element.${first.type}`)
-          : tn('selection.count', elements.length)}
+          : selectionGroupId(document, selectedIds)
+            ? `${t('element.group')} · ${tn('selection.count', elements.length)}`
+            : tn('selection.count', elements.length)}
       </h2>
       {frame && elements.length === 1 && (
         <FieldRow label={t('props.name')}>
@@ -96,6 +109,22 @@ export function PropertiesPanel() {
         </TextButton>
       </div>
       <div className="flex flex-wrap gap-1">
+        {canGroup(document, selectedIds) && (
+          <TextButton
+            title={`${t('edit.group')} (${shortcutLabel('G')})`}
+            onClick={store.groupSelected}
+          >
+            <Group size={12} /> {t('edit.group')}
+          </TextButton>
+        )}
+        {canUngroup(document, selectedIds) && (
+          <TextButton
+            title={`${t('edit.ungroup')} (${shortcutLabel('G', { shift: true })})`}
+            onClick={store.ungroupSelected}
+          >
+            <Ungroup size={12} /> {t('edit.ungroup')}
+          </TextButton>
+        )}
         <TextButton
           title={`${t('selection.frame')} (${shortcutLabel('F', { shift: true })})`}
           onClick={frameSelection}

@@ -1,5 +1,6 @@
 import { remapConnectorHosts, translateConnector } from './connector-geometry'
 import { pruneUnreferencedAssets } from './document-assets'
+import { remapGroupIds } from './element-groups'
 import type { CanvasDocument, CanvasElement, ElementId, Point } from './element-types'
 
 /** Pure document transforms; every function returns a new document and never mutates. */
@@ -79,12 +80,17 @@ export function duplicateElements(
   // so connectors can be re-pointed at duplicated hosts.
   const sources = document.order.filter((id) => ids.includes(id) && document.elements[id])
   const idMap = new Map(sources.map((id) => [id, makeId()] as const))
+  const copies: CanvasElement[] = []
   for (const id of sources) {
     const source = document.elements[id] as CanvasElement
     let copy = translateElement({ ...source, id: idMap.get(id) as ElementId }, offset)
     if (copy.type === 'connector') {
       copy = remapConnectorHosts(copy, idMap, true)
     }
+    copies.push(copy)
+  }
+  // Why: a duplicated group must stay grouped, but as its own group.
+  for (const copy of remapGroupIds(copies, makeId)) {
     next = insertElement(next, copy)
     newIds.push(copy.id)
   }

@@ -40,7 +40,7 @@ function sections(): Section[] {
         [t('edit.duplicate'), shortcutLabel('D')],
         [t('edit.delete'), 'Del'],
         [t('edit.selectAll'), shortcutLabel('A')],
-        [t('help.addToSelection'), `${shift}Click`],
+        [t('help.addToSelection'), `${shift}Click / ${mod}Click`],
         [t('edit.editText'), '⏎'],
         [t('edit.renameFrame'), 'F2'],
         [t('edit.copyStyle'), shortcutLabel('C', { alt: true })],
@@ -59,7 +59,9 @@ function sections(): Section[] {
         [t('order.forward'), shortcutLabel(']')],
         [t('order.backward'), shortcutLabel('[')],
         [t('order.back'), shortcutLabel('[', { shift: true })],
-        [t('selection.frame'), shortcutLabel('F', { shift: true })]
+        [t('selection.frame'), shortcutLabel('F', { shift: true })],
+        [t('edit.group'), shortcutLabel('G')],
+        [t('edit.ungroup'), shortcutLabel('G', { shift: true })]
       ]
     },
     {

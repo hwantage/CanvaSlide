@@ -1,10 +1,5 @@
-import {
-  elementsInBox,
-  hitTestTopmost,
-  rectContainsPoint,
-  rectFromPoints,
-  selectionBounds
-} from '@shared/canvas/element-bounds'
+import { elementsInBox, hitTestTopmost, rectFromPoints } from '@shared/canvas/element-bounds'
+import { expandToGroups } from '@shared/canvas/element-groups'
 import { constrainToSquare } from '@shared/canvas/drag-constraints'
 import type { ElementId, Point } from '@shared/canvas/element-types'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
@@ -24,6 +19,12 @@ import {
   type ConnectorEndSession
 } from './canvas-connector-session'
 import { openContextMenu } from './canvas-context-menu'
+import {
+  beginSelectSession,
+  toggleTargets,
+  type BoxSession,
+  type PressSession
+} from './canvas-select-session'
 import {
   applyMoveSession,
   beginMoveSession,
@@ -47,10 +48,9 @@ export type PointerInfo = {
 
 type Session =
   | { kind: 'pan'; lastScreen: Point }
-  /** `targetId` null = pressed on empty space inside the selection bounds (drag moves the group). */
-  | { kind: 'press'; start: PointerInfo; targetId: ElementId | null; additive: boolean }
+  | PressSession
   | MoveSession
-  | { kind: 'box'; startWorld: Point; additive: boolean; baseSelection: ElementId[] }
+  | BoxSession
   | { kind: 'create'; tool: CreateTool; startWorld: Point }
   | ResizeSession
   | ConnectorCreateSession
@@ -79,40 +79,6 @@ export function createCanvasInteraction(): CanvasInteraction {
   const overlay = useInteractionOverlayStore
 
   const frameChrome = () => frameHitChromeAt(useCameraStore.getState().camera.zoom)
-
-  const pressOn = (info: PointerInfo, targetId: ElementId) => {
-    const { selectedIds, setSelection } = docStore.getState()
-    const additive = info.shiftKey && !info.primaryKey
-    if (!additive && !selectedIds.includes(targetId)) {
-      setSelection([targetId])
-    }
-    session = { kind: 'press', start: info, targetId, additive }
-  }
-
-  const beginSelectTool = (info: PointerInfo) => {
-    const tools = useToolStore.getState()
-    const hit = hitTestTopmost(docStore.getState().document, info.world, frameChrome())
-    if (hit && tools.editingTextId === hit.id) {
-      return
-    }
-    tools.setEditingTextId(null)
-    if (hit) {
-      pressOn(info, hit.id)
-      return
-    }
-    const { selectedIds, clearSelection, document } = docStore.getState()
-    // Why: gaps between multi-selected objects must still grab the group, like Miro/Figma.
-    const bounds = selectionBounds(document, selectedIds)
-    if (bounds && !info.shiftKey && rectContainsPoint(bounds, info.world)) {
-      session = { kind: 'press', start: info, targetId: null, additive: false }
-      return
-    }
-    const baseSelection = info.shiftKey ? selectedIds : []
-    if (!info.shiftKey) {
-      clearSelection()
-    }
-    session = { kind: 'box', startWorld: info.world, additive: info.shiftKey, baseSelection }
-  }
 
   /** Shift squares every box-like tool; text only takes a width, so it stays free. */
   const createRect = (tool: CreateTool, startWorld: Point, info: PointerInfo) =>
@@ -153,9 +119,9 @@ export function createCanvasInteraction(): CanvasInteraction {
         if (current.targetId === null) {
           doc.clearSelection()
         } else if (current.additive) {
-          doc.toggleSelected(current.targetId)
+          toggleTargets(current.targets)
         } else {
-          doc.setSelection([current.targetId])
+          doc.setSelection(current.targets)
         }
         break
       case 'move':
@@ -219,7 +185,7 @@ export function createCanvasInteraction(): CanvasInteraction {
         session = { kind: 'create', tool, startWorld: info.world }
         return
       }
-      beginSelectTool(info)
+      session = beginSelectSession(info)
     },
 
     pointerMove: (info) => {
@@ -261,7 +227,8 @@ export function createCanvasInteraction(): CanvasInteraction {
         case 'box': {
           const box = rectFromPoints(session.startWorld, info.world)
           overlay.getState().setDragBox(box)
-          const inBox = elementsInBox(doc.document, box)
+          // Why: touching any member of a group with the marquee selects the whole group.
+          const inBox = expandToGroups(doc.document, elementsInBox(doc.document, box))
           doc.setSelection(
             session.additive ? [...new Set([...session.baseSelection, ...inBox])] : inBox
           )

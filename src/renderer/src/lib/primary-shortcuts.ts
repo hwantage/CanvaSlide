@@ -71,6 +71,9 @@ export function handlePrimaryShortcuts(event: KeyboardEvent, commands: DocumentC
     case 'i':
       void importPickedFiles()
       return true
+    case 'g':
+      doc.groupSelected()
+      return true
     case ',':
       useSettingsDialogStore.getState().toggle()
       return true
@@ -108,6 +111,10 @@ function handleShiftedShortcuts(event: KeyboardEvent, commands: DocumentCommands
   }
   if (key === 'f') {
     frameSelection()
+    return true
+  }
+  if (key === 'g') {
+    doc.ungroupSelected()
     return true
   }
   if (key === 'enter') {

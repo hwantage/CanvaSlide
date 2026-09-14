@@ -111,4 +111,5 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 
 - 릴리즈 워크플로가 `bundle.createUpdaterArtifacts`로 서명 파일(`.sig`)을 만들고, `tauri-action`의 `includeUpdaterJson`이 **`latest.json`**을 Release에 첨부한다. 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
 - 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`, 비밀키는 저장소 Secret `TAURI_SIGNING_PRIVATE_KEY`(암호 없음, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`는 비워 둠). 원본 비밀키는 메인테이너의 `~/.tauri/canvaslide.key`에 있다. **이 키를 잃으면 기존 설치본이 이후 업데이트를 검증하지 못하므로** 반드시 백업한다. 키를 바꾸면 공개키도 함께 바꾸고 사용자는 한 번 수동 재설치해야 한다.
+- 로컬에서 `pnpm tauri build`를 돌릴 때도 같은 키가 필요하다. `TAURI_SIGNING_PRIVATE_KEY_PATH=~/.tauri/canvaslide.key pnpm tauri build`처럼 경로를 넘긴다(CI 워크플로 두 곳은 Secret으로 받는다).
 - 릴리즈 노트: `latest.json`의 `notes`는 Release 본문에서 온다. 초안에 노트를 쓴 뒤 Publish 하면 앱의 업데이트 안내에 그대로 보인다.

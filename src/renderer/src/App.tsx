@@ -11,6 +11,7 @@ import { useDocumentCommands, useWindowTitle } from '@/hooks/use-document-comman
 import { useClipboard } from '@/hooks/use-clipboard'
 import { useCloseGuard } from '@/hooks/use-close-guard'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useUpdateCheck } from '@/hooks/use-update-check'
 import { selectPresentationActive, usePresentationStore } from '@/store/presentation-store'
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
   useClipboard()
   useWindowTitle()
   useCloseGuard()
+  useUpdateCheck()
 
   return (
     <div className="flex h-full flex-col bg-background text-foreground">

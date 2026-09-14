@@ -11,6 +11,7 @@ import { TextButton } from '@/components/ui/text-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { useSettingsDialogStore } from '@/store/settings-dialog-store'
+import { UpdateSection } from './update-section'
 
 /** Document settings; add a <Section> per concern so the dialog grows without restructuring. */
 
@@ -141,6 +142,9 @@ export function SettingsDialog() {
               onChange={(frameBorder) => set({ frameBorder })}
             />
           </div>
+        </Section>
+        <Section title={t('update.title')}>
+          <UpdateSection />
         </Section>
         <div className="flex justify-end">
           <TextButton variant="primary" onClick={hide}>

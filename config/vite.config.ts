@@ -1,9 +1,13 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 const rendererRoot = resolve(import.meta.dirname, '../src/renderer')
+const { version } = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8')
+)
 const host = process.env.TAURI_DEV_HOST
 
 // Why: Tauri watches src-tauri itself; Vite must not restart on Rust changes.
@@ -28,6 +32,8 @@ export default defineConfig({
     watch: { ignored: ['**/src-tauri/**'] }
   },
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
+  // Why: the update check compares against the running version without a Tauri call.
+  define: { __APP_VERSION__: JSON.stringify(version) },
   build: {
     outDir: resolve(import.meta.dirname, '../dist'),
     emptyOutDir: true,

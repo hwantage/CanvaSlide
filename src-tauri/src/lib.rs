@@ -1,11 +1,15 @@
 mod app_menu;
 mod document_io;
+mod font_embed;
+mod system_fonts;
 
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 
 /// Sent to the webview when the user wants to quit; the frontend confirms unsaved work first and
 /// then calls `quit_app`.
 pub const QUIT_REQUESTED_EVENT: &str = "quit-requested";
+/// Sent when the user picks "Check for Updates…" in the native menu; the frontend runs the check.
+pub const CHECK_UPDATES_EVENT: &str = "check-updates-requested";
 
 #[tauri::command]
 fn quit_app(app: AppHandle) {
@@ -16,6 +20,10 @@ fn quit_app(app: AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             app_menu::install(app)?;
             Ok(())
@@ -24,6 +32,8 @@ pub fn run() {
             document_io::read_document,
             document_io::write_document,
             document_io::write_html_export,
+            system_fonts::list_system_fonts,
+            font_embed::subset_fonts,
             quit_app
         ])
         .build(tauri::generate_context!())

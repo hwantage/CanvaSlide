@@ -25,6 +25,7 @@ import {
 import { useExportDialogStore } from '@/store/export-dialog-store'
 import { useSettingsDialogStore } from '@/store/settings-dialog-store'
 import { useShortcutHelpStore } from '@/store/shortcut-help-store'
+import { selectUpdateAvailable, useUpdateStore } from '@/store/update-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
 export function TopBar({ commands }: { commands: DocumentCommands }) {
@@ -39,6 +40,7 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
   const showExport = useExportDialogStore((s) => s.show)
   const showSettings = useSettingsDialogStore((s) => s.show)
   const showHelp = useShortcutHelpStore((s) => s.show)
+  const updateAvailable = useUpdateStore(selectUpdateAvailable)
   const frameCount = orderedFrames(document).length
 
   return (
@@ -95,8 +97,18 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
       <IconButton label={`${t('help.title')} (?)`} onClick={showHelp}>
         <CircleQuestionMark size={16} />
       </IconButton>
-      <IconButton label={`${t('settings.title')} (${shortcutLabel(',')})`} onClick={showSettings}>
+      <IconButton
+        label={`${updateAvailable ? `${t('update.badge')} · ` : ''}${t('settings.title')} (${shortcutLabel(',')})`}
+        className="relative"
+        onClick={showSettings}
+      >
         <Settings size={16} />
+        {updateAvailable && (
+          <span
+            data-testid="update-badge"
+            className="absolute right-1 top-1 h-2 w-2 rounded-full bg-selection"
+          />
+        )}
       </IconButton>
       <div className="mx-1 h-5 w-px bg-border" />
       <TextButton

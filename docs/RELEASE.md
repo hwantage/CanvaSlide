@@ -97,13 +97,18 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 | macOS   | Apple Developer 계정, Developer ID 인증서(.p12) | `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` |
 | Windows | 코드 서명 인증서(EV 권장)                       | `tauri.conf.json`의 `bundle.windows.certificateThumbprint` 또는 Azure Trusted Signing 설정                                 |
 
-## 7. 자동 업데이트 (다음 단계)
+## 7. 자동 업데이트
 
-`tauri-plugin-updater`를 붙이면 앱이 최신 Release의 `latest.json`을 읽어 스스로 갱신한다. 필요한 작업:
+앱에는 `tauri-plugin-updater`가 들어 있다. 설정 다이얼로그(⌘, / Ctrl+,)의 **업데이트** 절에서 현재 버전 확인, 수동 확인, 설치를 할 수 있고, 데스크톱 앱은 시작 3초 뒤 한 번 자동으로 확인한다(설정에서 끌 수 있음). macOS 메뉴의 **Check for Updates…**도 같은 동작이다.
 
-1. `pnpm tauri signer generate`로 업데이트 서명 키 쌍을 만들고 비밀키를 `TAURI_SIGNING_PRIVATE_KEY` Secret에 저장.
-2. `tauri.conf.json`에 `plugins.updater.endpoints`와 공개키, `bundle.createUpdaterArtifacts: true` 추가.
-3. `release.yml`에서 `tauri-action`의 `includeUpdaterJson: true`.
-4. 앱에 업데이트 확인 UI 추가(설정 다이얼로그가 적당하다).
+| 플랫폼   | 동작                                                                                                       |
+| -------- | ---------------------------------------------------------------------------------------------------------- |
+| Windows  | 새 버전을 앱 안에서 내려받아 설치하고 다시 시작한다(NSIS 조용한 설치).                                     |
+| macOS    | 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. Apple 서명이 생기면 앱 내 설치로 바꾼다. |
+| 브라우저 | `latest.json`을 직접 읽어 알림만 한다(개발·E2E용).                                                         |
 
-릴리즈 흐름이 한두 번 자리 잡은 뒤에 별도 작업으로 진행한다.
+동작 원리:
+
+- 릴리즈 워크플로가 `bundle.createUpdaterArtifacts`로 서명 파일(`.sig`)을 만들고, `tauri-action`의 `includeUpdaterJson`이 **`latest.json`**을 Release에 첨부한다. 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
+- 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`, 비밀키는 저장소 Secret `TAURI_SIGNING_PRIVATE_KEY`(암호 없음, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`는 비워 둠). 원본 비밀키는 메인테이너의 `~/.tauri/canvaslide.key`에 있다. **이 키를 잃으면 기존 설치본이 이후 업데이트를 검증하지 못하므로** 반드시 백업한다. 키를 바꾸면 공개키도 함께 바꾸고 사용자는 한 번 수동 재설치해야 한다.
+- 릴리즈 노트: `latest.json`의 `notes`는 Release 본문에서 온다. 초안에 노트를 쓴 뒤 Publish 하면 앱의 업데이트 안내에 그대로 보인다.

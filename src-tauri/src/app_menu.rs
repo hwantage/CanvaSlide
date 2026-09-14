@@ -11,8 +11,11 @@ pub fn install(app: &tauri::App) -> tauri::Result<()> {
     let quit = MenuItemBuilder::with_id("quit", "Quit CanvaSlide")
         .accelerator("CmdOrCtrl+Q")
         .build(handle)?;
+    let check_updates =
+        MenuItemBuilder::with_id("check-updates", "Check for Updates…").build(handle)?;
     let app_menu = SubmenuBuilder::new(handle, "CanvaSlide")
         .about(None)
+        .item(&check_updates)
         .separator()
         .services()
         .separator()
@@ -38,10 +41,14 @@ pub fn install(app: &tauri::App) -> tauri::Result<()> {
         .items(&[&app_menu, &edit_menu, &window_menu])
         .build()?;
     app.set_menu(menu)?;
-    app.on_menu_event(|app, event| {
-        if event.id().as_ref() == "quit" {
+    app.on_menu_event(|app, event| match event.id().as_ref() {
+        "quit" => {
             let _ = app.emit(crate::QUIT_REQUESTED_EVENT, ());
         }
+        "check-updates" => {
+            let _ = app.emit(crate::CHECK_UPDATES_EVENT, ());
+        }
+        _ => {}
     });
     Ok(())
 }

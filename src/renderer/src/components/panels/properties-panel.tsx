@@ -44,7 +44,7 @@ export function PropertiesPanel() {
   const first = elements[0] as CanvasElement
 
   return (
-    <section className="flex flex-col gap-1 border-t border-border pt-3">
+    <section className="flex flex-col gap-1">
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         {elements.length === 1
           ? t(`element.${first.type}`)

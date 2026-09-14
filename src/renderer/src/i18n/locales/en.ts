@@ -94,6 +94,8 @@ export const en = {
   'props.backward': 'Backward',
   'props.duplicate': 'Duplicate',
   'props.delete': 'Delete',
+  'props.empty': 'Select an element to edit its properties.',
+  'panel.resize': 'Resize panels',
 
   'frames.title': 'Frames',
   'frames.empty': 'Press F and drag on the canvas to add a presentation frame.',

@@ -96,6 +96,8 @@ export const ko: UiStrings = {
   'props.backward': '뒤로',
   'props.duplicate': '복제',
   'props.delete': '삭제',
+  'props.empty': '요소를 선택하면 속성을 편집할 수 있습니다.',
+  'panel.resize': '패널 크기 조절',
 
   'frames.title': '프레임',
   'frames.empty': 'F를 누른 뒤 캔버스를 드래그해 프레젠테이션 프레임을 추가하세요.',

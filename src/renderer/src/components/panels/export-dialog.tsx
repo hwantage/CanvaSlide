@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { focusOnMount } from '@/lib/focus-on-mount'
 import { assetsByteLength } from '@shared/canvas/document-assets'
+import { collectFontUsage, embeddedFontBytes, fontFaceCss } from '@shared/canvas/font-embedding'
 import { buildStandaloneHtml, estimateHtmlBytes, formatBytes } from '@shared/canvas/html-export'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
@@ -12,12 +13,21 @@ import {
   recompressDocumentAssets,
   type ExportQuality
 } from '@/lib/export-image-recompress'
+import { canEmbedFonts, subsetFonts } from '@/platform/font-embedding'
 import { saveHtmlExport } from '@/platform/html-export-file'
 import { showErrorMessage } from '@/platform/document-file-access'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { useExportDialogStore } from '@/store/export-dialog-store'
 
-type Preview = { html: string; bytes: number; quality: ExportQuality; source: CanvasDocument }
+type Preview = {
+  html: string
+  bytes: number
+  fontBytes: number
+  fontCount: number
+  quality: ExportQuality
+  embedFonts: boolean
+  source: CanvasDocument
+}
 
 const qualityLabels: Record<ExportQuality, { label: UiStringKey; hint: UiStringKey }> = {
   original: { label: 'export.quality.original', hint: 'export.quality.originalHint' },
@@ -31,21 +41,39 @@ export function ExportDialog() {
   const hide = useExportDialogStore((s) => s.hide)
   const document = useDocumentStore(selectDocument)
   const [quality, setQuality] = useState<ExportQuality>('balanced')
+  const [embedFonts, setEmbedFonts] = useState(true)
   const [built, setBuilt] = useState<Preview | null>(null)
   const [busy, setBusy] = useState(false)
+  const fontUsage = collectFontUsage(document)
+  const embedding = embedFonts && canEmbedFonts() && fontUsage.length > 0
 
   useEffect(() => {
     if (!open) {
       return
     }
     let cancelled = false
-    void recompressDocumentAssets(document, quality)
-      .then((prepared) => {
+    void Promise.all([
+      recompressDocumentAssets(document, quality),
+      embedding ? subsetFonts(collectFontUsage(document)) : Promise.resolve([])
+    ])
+      .then(([prepared, fonts]) => {
         if (cancelled) {
           return
         }
-        const html = buildStandaloneHtml({ document: prepared, playerScript })
-        setBuilt({ html, bytes: estimateHtmlBytes(html), quality, source: document })
+        const html = buildStandaloneHtml({
+          document: prepared,
+          playerScript,
+          ...(fonts.length > 0 ? { fontFaceCss: fontFaceCss(fonts) } : {})
+        })
+        setBuilt({
+          html,
+          bytes: estimateHtmlBytes(html),
+          fontBytes: embeddedFontBytes(fonts),
+          fontCount: fonts.length,
+          quality,
+          embedFonts: embedding,
+          source: document
+        })
       })
       .catch((error: unknown) =>
         showErrorMessage(error instanceof Error ? error.message : String(error))
@@ -53,13 +81,19 @@ export function ExportDialog() {
     return () => {
       cancelled = true
     }
-  }, [open, quality, document])
+  }, [open, quality, document, embedding])
 
   if (!open) {
     return null
   }
   // Why: derived, not reset in the effect — a stale build for another quality/document is "calculating".
-  const preview = built && built.quality === quality && built.source === document ? built : null
+  const preview =
+    built &&
+    built.quality === quality &&
+    built.source === document &&
+    built.embedFonts === embedding
+      ? built
+      : null
   const frameCount = orderedFrames(document).length
   const assetCount = Object.keys(document.assets).length
 
@@ -116,11 +150,37 @@ export function ExportDialog() {
             </label>
           ))}
         </fieldset>
+        {fontUsage.length > 0 && (
+          <div className="mt-3 flex flex-col gap-1 text-xs" data-testid="export-fonts">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={embedFonts && canEmbedFonts()}
+                disabled={!canEmbedFonts()}
+                onChange={(event) => setEmbedFonts(event.target.checked)}
+              />
+              <span className="font-medium">
+                {t('export.embedFonts', { fonts: tn('export.fonts', fontUsage.length) })}
+              </span>
+            </label>
+            <p className="pl-5 text-muted-foreground">
+              {canEmbedFonts() ? t('export.embedFontsHint') : t('export.embedFontsUnavailable')}
+            </p>
+          </div>
+        )}
         <div className="mt-3 text-xs" data-testid="export-size">
           {t('export.estimatedSize')}{' '}
           <span className="font-medium tabular-nums">
             {preview ? formatBytes(preview.bytes) : t('export.calculating')}
           </span>
+          {preview && preview.fontCount > 0 && (
+            <span className="ml-1 text-muted-foreground">
+              {t('export.fontsIncluded', {
+                fonts: tn('export.fonts', preview.fontCount),
+                bytes: formatBytes(preview.fontBytes)
+              })}
+            </span>
+          )}
         </div>
         <div className="mt-4 flex justify-end gap-2">
           <TextButton variant="ghost" onClick={hide}>

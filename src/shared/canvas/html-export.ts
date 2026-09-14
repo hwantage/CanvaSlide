@@ -3,6 +3,8 @@ import type { CanvasDocument } from './element-types'
 export type StandaloneHtmlInput = {
   document: CanvasDocument
   playerScript: string
+  /** `@font-face` rules for embedded installed fonts (see font-embedding.ts); optional. */
+  fontFaceCss?: string
 }
 
 function escapeHtml(text: string): string {
@@ -16,7 +18,11 @@ export function embedJsonSafely(value: unknown): string {
 }
 
 /** One self-contained page: no external requests, opens from disk in any modern browser. */
-export function buildStandaloneHtml({ document, playerScript }: StandaloneHtmlInput): string {
+export function buildStandaloneHtml({
+  document,
+  playerScript,
+  fontFaceCss
+}: StandaloneHtmlInput): string {
   const title = escapeHtml(document.name.trim() === '' ? 'Untitled' : document.name.trim())
   return [
     '<!doctype html>',
@@ -26,6 +32,8 @@ export function buildStandaloneHtml({ document, playerScript }: StandaloneHtmlIn
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
     '<meta name="generator" content="CanvaSlide">',
     `<title>${title}</title>`,
+    // Why: base64 font data never contains `</`, so the rules can sit inline safely.
+    ...(fontFaceCss ? [`<style>${fontFaceCss}</style>`] : []),
     '</head>',
     '<body>',
     `<script id="canvas-document" type="application/json">${embedJsonSafely(document)}</script>`,

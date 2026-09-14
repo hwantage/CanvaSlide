@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { insertEditorLineBreak, readEditorText } from '@/lib/editable-text-content'
 import type { TextStyle } from '@shared/canvas/element-types'
+import { fontStackFor } from '@shared/canvas/font-family'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
 
@@ -69,7 +70,8 @@ export function EditableText({
     fontSize: style.fontSize,
     lineHeight: 1.4,
     textAlign: style.align,
-    fontWeight: style.bold ? 700 : 400
+    fontWeight: style.bold ? 700 : 400,
+    fontFamily: fontStackFor(style.fontFamily)
   } as const
 
   if (!editing) {

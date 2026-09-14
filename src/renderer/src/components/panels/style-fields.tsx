@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { ShapeStyle, TextAlign, TextStyle } from '@shared/canvas/element-types'
 import { parseBoundedNumber } from '@shared/canvas/numeric-input'
 import { ColorField } from '@/components/ui/color-field'
+import { FontPicker } from '@/components/ui/font-picker'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
@@ -128,6 +129,13 @@ export function TextStyleFields({ ids, style }: { ids: string[]; style: TextStyl
           min={4}
           max={1024}
           onChange={(fontSize) => patch({ fontSize })}
+        />
+      </FieldRow>
+      <FieldRow label={t('props.font')}>
+        <FontPicker
+          label={t('props.font')}
+          value={style.fontFamily}
+          onChange={(fontFamily) => patch({ fontFamily })}
         />
       </FieldRow>
       <FieldRow label={t('props.align')}>

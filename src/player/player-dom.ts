@@ -12,6 +12,7 @@ import {
   connectorPath
 } from '@shared/canvas/connector-geometry'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import { fontStackFor } from '@shared/canvas/font-family'
 
 /** Static DOM for a document; mirrors the app's renderer without React. */
 
@@ -38,6 +39,7 @@ function applyTextStyle(node: HTMLElement, style: TextStyle): void {
   node.style.fontSize = `${style.fontSize}px`
   node.style.textAlign = style.align
   node.style.fontWeight = style.bold ? '700' : '400'
+  node.style.fontFamily = fontStackFor(style.fontFamily) ?? ''
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg'

@@ -20,7 +20,9 @@ const rectSchema = z.object({
 })
 
 const elementBaseSchema = rectSchema.extend({
-  id: z.string().min(1)
+  id: z.string().min(1),
+  // Why: groups are flat sets of elements sharing an id (Miro-style); optional so older files load.
+  groupId: z.string().min(1).optional()
 })
 
 export const shapeStyleSchema = z.object({
@@ -35,7 +37,10 @@ export const textStyleSchema = z.object({
   color: z.string(),
   fontSize: z.number().min(4).max(1024),
   align: z.enum(textAligns),
-  bold: z.boolean()
+  bold: z.boolean(),
+  // Why: optional so documents saved before font selection existed keep loading unchanged;
+  // absent means the app's default sans stack (see font-family.ts).
+  fontFamily: z.string().optional()
 })
 export type TextStyle = z.infer<typeof textStyleSchema>
 

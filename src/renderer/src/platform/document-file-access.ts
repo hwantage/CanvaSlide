@@ -53,21 +53,24 @@ export async function showErrorMessage(message: string): Promise<void> {
   window.alert(message)
 }
 
-async function openWithTauri(): Promise<OpenedDocument | null> {
-  const [{ open }, { invoke }] = await Promise.all([
-    import('@tauri-apps/plugin-dialog'),
-    import('@tauri-apps/api/core')
-  ])
-  const selected = await open({ multiple: false, filters: [DOCUMENT_OPEN_FILE_FILTER] })
-  if (typeof selected !== 'string') {
-    return null
-  }
-  const contents = await invoke<string>('read_document', { path: selected })
+/** Opens a path the app was given rather than one the user picked; Tauri only. */
+export async function openDocumentAtPath(path: string): Promise<OpenedDocument> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  const contents = await invoke<string>('read_document', { path })
   const parsed = parseDocument(contents)
   if (!parsed.ok) {
     throw new Error(parsed.error)
   }
-  return { document: withDocumentName(parsed.document, selected), filePath: selected }
+  return { document: withDocumentName(parsed.document, path), filePath: path }
+}
+
+async function openWithTauri(): Promise<OpenedDocument | null> {
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const selected = await open({ multiple: false, filters: [DOCUMENT_OPEN_FILE_FILTER] })
+  if (typeof selected !== 'string') {
+    return null
+  }
+  return openDocumentAtPath(selected)
 }
 
 async function saveWithTauri(

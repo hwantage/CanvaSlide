@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo } from 'react'
 import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import {
   confirmDiscardChanges,
+  openDocumentAtPath,
   openDocumentFile,
   saveDocumentFile,
-  showErrorMessage
+  showErrorMessage,
+  type OpenedDocument
 } from '@/platform/document-file-access'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
 import { useCameraStore } from '@/store/camera-store'
@@ -14,6 +16,8 @@ import { usePresentationStore } from '@/store/presentation-store'
 export type DocumentCommands = {
   newDocument: () => Promise<void>
   openDocument: () => Promise<void>
+  /** Opens a document the OS handed us, with the same unsaved-work guard as the Open command. */
+  openDocumentPath: (path: string) => Promise<void>
   saveDocument: () => Promise<void>
   saveDocumentAs: () => Promise<void>
 }
@@ -24,6 +28,22 @@ async function guarded(action: () => Promise<void>): Promise<void> {
   } catch (error) {
     await showErrorMessage(error instanceof Error ? error.message : String(error))
   }
+}
+
+/** Shared by the Open command and by a document handed to us: confirm, load, then frame it. */
+async function openInto(read: () => Promise<OpenedDocument | null>): Promise<void> {
+  if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
+    return
+  }
+  const opened = await read()
+  if (!opened) {
+    return
+  }
+  usePresentationStore.getState().exit()
+  useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
+  // Why: the saved camera may point at empty space; show the whole board instead.
+  const camera = useCameraStore.getState()
+  camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))
 }
 
 export function useDocumentCommands(): DocumentCommands {
@@ -54,21 +74,8 @@ export function useDocumentCommands(): DocumentCommands {
           useDocumentStore.getState().newDocument()
           useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
         }),
-      openDocument: () =>
-        guarded(async () => {
-          if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
-            return
-          }
-          const opened = await openDocumentFile()
-          if (!opened) {
-            return
-          }
-          usePresentationStore.getState().exit()
-          useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
-          // Why: the saved camera may point at empty space; show the whole board instead.
-          const camera = useCameraStore.getState()
-          camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))
-        })
+      openDocument: () => guarded(() => openInto(openDocumentFile)),
+      openDocumentPath: (path: string) => guarded(() => openInto(() => openDocumentAtPath(path)))
     }),
     [save]
   )

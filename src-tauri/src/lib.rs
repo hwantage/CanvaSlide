@@ -1,6 +1,7 @@
 mod app_menu;
 mod document_io;
 mod font_embed;
+mod launch_document;
 mod system_fonts;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -34,8 +35,12 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(launch_document::PendingDocument::default())
         .setup(|app| {
             app_menu::install(app)?;
+            if let Some(path) = launch_document::document_path_from_args(std::env::args_os()) {
+                launch_document::offer(app.handle(), path);
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -44,12 +49,19 @@ pub fn run() {
             document_io::write_html_export,
             system_fonts::list_system_fonts,
             font_embed::subset_fonts,
+            launch_document::take_launch_document,
             quit_app,
             acknowledge_quit
         ])
         .build(tauri::generate_context!())
         .expect("error while building canvaslide")
         .run(|app, event| {
+            // Why: macOS delivers a double-clicked document here, both at launch and later, while
+            // Windows and Linux only ever pass it in `argv`.
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
+            if let RunEvent::Opened { urls } = &event {
+                launch_document::offer_urls(app, urls);
+            }
             // Why: a native quit (Dock, ⌘Q, shutdown) bypasses the window's close-requested hook, so
             // hold the exit and let the frontend decide. `quit_app` exits with an explicit code.
             if let RunEvent::ExitRequested {

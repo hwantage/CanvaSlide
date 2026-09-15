@@ -10,6 +10,7 @@ import { useDocumentCommands, useWindowTitle } from '@/hooks/use-document-comman
 import { useClipboard } from '@/hooks/use-clipboard'
 import { useCloseGuard } from '@/hooks/use-close-guard'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useLaunchDocument } from '@/hooks/use-launch-document'
 import { useUpdateCheck } from '@/hooks/use-update-check'
 import { selectPresentationActive, usePresentationStore } from '@/store/presentation-store'
 
@@ -20,6 +21,7 @@ export function App() {
   useClipboard()
   useWindowTitle()
   useCloseGuard()
+  useLaunchDocument(commands)
   useUpdateCheck()
 
   return (

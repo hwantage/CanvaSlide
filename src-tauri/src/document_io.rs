@@ -32,7 +32,7 @@ fn ends_with_extension(path: &Path, extension: &str) -> bool {
         .ends_with(&format!(".{extension}"))
 }
 
-fn has_document_extension(path: &Path) -> bool {
+pub fn has_document_extension(path: &Path) -> bool {
     ends_with_extension(path, DOCUMENT_EXTENSION)
         || ends_with_extension(path, LEGACY_DOCUMENT_EXTENSION)
 }

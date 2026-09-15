@@ -2,7 +2,6 @@ import {
   DOCUMENT_FILE_EXTENSION,
   DOCUMENT_FILE_FILTER,
   DOCUMENT_OPEN_FILE_FILTER,
-  LEGACY_DOCUMENT_FILE_EXTENSION,
   documentFileName,
   parseDocument,
   serializeDocument,
@@ -94,7 +93,7 @@ function openWithBrowser(): Promise<OpenedDocument | null> {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = `.${DOCUMENT_FILE_EXTENSION},.${LEGACY_DOCUMENT_FILE_EXTENSION},.json`
+    input.accept = `.${DOCUMENT_FILE_EXTENSION},.json`
     input.onchange = async () => {
       const file = input.files?.[0]
       if (!file) {

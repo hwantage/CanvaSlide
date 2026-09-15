@@ -122,8 +122,8 @@ describe('document-file', () => {
     expect(documentNameFromPath('/tmp/plan.json')).toBe('plan.json')
   })
 
-  it('offers the legacy extension when opening but never when saving', () => {
-    expect(DOCUMENT_OPEN_FILE_FILTER.extensions).toEqual(['canvaslide', 'canvas.json'])
+  it('lets the native dialog reach legacy documents without offering to write them', () => {
+    expect(DOCUMENT_OPEN_FILE_FILTER.extensions).toEqual(['canvaslide', 'json'])
     expect(DOCUMENT_FILE_FILTER.extensions).toEqual(['canvaslide'])
   })
 

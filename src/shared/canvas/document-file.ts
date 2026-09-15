@@ -15,7 +15,8 @@ export const DOCUMENT_FILE_FILTER = {
 }
 export const DOCUMENT_OPEN_FILE_FILTER = {
   name: 'CanvaSlide document',
-  extensions: [DOCUMENT_FILE_EXTENSION, LEGACY_DOCUMENT_FILE_EXTENSION]
+  // Why: native dialogs match only the last segment, so a legacy `.canvas.json` has to enter as `json`.
+  extensions: [DOCUMENT_FILE_EXTENSION, LEGACY_DOCUMENT_FILE_EXTENSION.split('.').pop() ?? 'json']
 }
 
 export type ParseDocumentResult =

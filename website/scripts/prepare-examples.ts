@@ -51,7 +51,7 @@ try {
   })
   for (const example of examples) {
     const document = JSON.parse(
-      await readFile(resolve(root, `examples/${example.source}.canvas.json`), 'utf8')
+      await readFile(resolve(root, `examples/${example.source}.canvaslide`), 'utf8')
     ) as CanvasDocument
     const file = resolve(output, `${example.id}.html`)
     await writeFile(file, buildStandaloneHtml({ document, playerScript }))

@@ -105,7 +105,7 @@ export function SharingSection() {
         <div className="document-file source-file">
           <FileJson2 size={34} strokeWidth={1.3} />
           <span>{t('site.share.source')}</span>
-          <strong>.canvas.json</strong>
+          <strong>.canvaslide</strong>
           <div className="file-preview">
             <i />
             <i />

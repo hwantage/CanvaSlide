@@ -20,7 +20,7 @@ the board, press _Present_, and the camera glides between them with a smooth zoo
 - Frame list: click to select and jump to a frame, drag rows to reorder, double-click to rename
 - Presentation frames with explicit order; moving a frame carries its contents
 - Slideshow: fixed per-transition duration (0–3 s slider) so long jumps feel fast, short ones slow
-- `.canvas.json` documents via native dialogs (Tauri) or download/upload (browser dev mode)
+- `.canvaslide` documents via native dialogs (Tauri) or download/upload (browser dev mode)
 - **Export as HTML** (⌘E / Ctrl+E): one self-contained file with a built-in player (keyboard, nav bar,
   overview with click-to-jump), image quality presets and a size estimate before saving
 

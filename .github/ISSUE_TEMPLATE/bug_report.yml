@@ -65,6 +65,6 @@ body:
     id: document
     attributes:
       label: Sample document
-      description: If the bug depends on document content, attach a `.canvas.json` (or an exported HTML) that reproduces it. Drag and drop the file here.
+      description: If the bug depends on document content, attach a `.canvaslide` (or an exported HTML) that reproduces it. Drag and drop the file here.
     validations:
       required: false

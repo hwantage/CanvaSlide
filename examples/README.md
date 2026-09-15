@@ -1,22 +1,22 @@
 # Examples
 
-Sample `.canvas.json` documents that show what CanvaSlide is good at. Open any of them with
+Sample `.canvaslide` documents that show what CanvaSlide is good at. Open any of them with
 **Open** (⌘O / Ctrl+O), then press **⏎** to walk the presentation frames.
 
-Start with **`showcase/one-order.canvas.json`** — a 23-frame journey through an order, a lost
+Start with **`showcase/one-order.canvaslide`** — a 23-frame journey through an order, a lost
 payment response, an idempotent retry, and completion, built entirely from editable native shapes,
 text, connectors, and presentation frames.
 
-| Folder          | Document                            | What it shows                                                                                                      |
-| --------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `showcase/`     | `one-order.canvas.json`             | 23 camera stops: checkout → request envelope → payment timeout → recovery → receipt; nested zooms and a system map |
-| `swing/`        | `the-swing.canvas.json`             | 12 frames scattered over a 48 000-unit skyline: the camera hurls itself across the city and doubles back           |
-| `anatomy/`      | `the-body.canvas.json`              | An atlas on the left and a whole standing figure on the right: 20 stops, then a fall from skull to one cell        |
-| `flowchart/`    | `order-fulfillment.canvas.json`     | Process flow with decisions, exception branches, dashed retry loops, three stage frames                            |
-| `erd/`          | `shop-schema.canvas.json`           | Seven-table entity-relationship diagram with cardinality labels and cluster frames                                 |
-| `slides/`       | `northwind-launch-deck.canvas.json` | Six-slide launch deck: title, agenda, stat cards, step diagram, bar chart, roadmap                                 |
-| `architecture/` | `shop-platform.canvas.json`         | Cloud system architecture in zones; solid request path, dashed event lane                                          |
-| `mindmap/`      | `product-strategy-2027.canvas.json` | Central topic with five colour-coded branches on curved connectors, one frame each                                 |
+| Folder          | Document                           | What it shows                                                                                                      |
+| --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `showcase/`     | `one-order.canvaslide`             | 23 camera stops: checkout → request envelope → payment timeout → recovery → receipt; nested zooms and a system map |
+| `swing/`        | `the-swing.canvaslide`             | 12 frames scattered over a 48 000-unit skyline: the camera hurls itself across the city and doubles back           |
+| `anatomy/`      | `the-body.canvaslide`              | An atlas on the left and a whole standing figure on the right: 20 stops, then a fall from skull to one cell        |
+| `flowchart/`    | `order-fulfillment.canvaslide`     | Process flow with decisions, exception branches, dashed retry loops, three stage frames                            |
+| `erd/`          | `shop-schema.canvaslide`           | Seven-table entity-relationship diagram with cardinality labels and cluster frames                                 |
+| `slides/`       | `northwind-launch-deck.canvaslide` | Six-slide launch deck: title, agenda, stat cards, step diagram, bar chart, roadmap                                 |
+| `architecture/` | `shop-platform.canvaslide`         | Cloud system architecture in zones; solid request path, dashed event lane                                          |
+| `mindmap/`      | `product-strategy-2027.canvaslide` | Central topic with five colour-coded branches on curved connectors, one frame each                                 |
 
 ## Editing a sample
 
@@ -29,7 +29,7 @@ sync. Two things to check before committing an edit:
   35 MB that way and had to be dropped. Keep raster artwork small, or draw with native shapes
   instead.
 
-`pnpm test` runs `examples.test.ts`, which parses every `.canvas.json` here with the app's own
+`pnpm test` runs `examples.test.ts`, which parses every `.canvaslide` here with the app's own
 `parseDocument` and checks that frames and connector endpoints are intact — a document broken by a
 hand edit or a schema change fails CI.
 
@@ -40,8 +40,8 @@ A sample is a plain JSON document validated by `canvasDocumentSchema` in
 difference between a usable result and a mess:
 
 **Give it the schema and a sibling.** Point it at `element-types.ts` for the contract and at an
-existing document of a similar shape — `flowchart/order-fulfillment.canvas.json` for a diagram,
-`slides/northwind-launch-deck.canvas.json` for a deck. The sibling settles the conventions that the
+existing document of a similar shape — `flowchart/order-fulfillment.canvaslide` for a diagram,
+`slides/northwind-launch-deck.canvaslide` for a deck. The sibling settles the conventions that the
 schema does not: id naming, how much padding a frame leaves, what a readable font size is here.
 
 **Have it emit a script, not 4 000 lines of JSON.** Ask for a throwaway Node script that assembles

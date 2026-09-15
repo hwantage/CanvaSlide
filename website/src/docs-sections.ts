@@ -81,7 +81,7 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'save',
         heading: 'site.docs.quick.saveHeading',
         body: 'site.docs.quick.saveBody',
-        params: { shortcut: primary('S'), format: '.canvas.json' }
+        params: { shortcut: primary('S'), format: '.canvaslide' }
       }
     ],
     canvas: [
@@ -180,7 +180,7 @@ export function docSections(topic: TopicId): DocSection[] {
           save: primary('S'),
           saveAs: primary('S', { shift: true }),
           open: primary('O'),
-          format: '.canvas.json'
+          format: '.canvaslide'
         }
       },
       {

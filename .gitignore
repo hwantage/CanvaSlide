@@ -13,7 +13,3 @@ test-results/
 /discuss/
 # pdf.js runtime assets copied by `pnpm build:pdfjs`
 src/renderer/public/pdfjs/
-
-# Oversized sample documents (~80 MB of inlined artwork); never commit these
-examples/showcase/freefall.canvas.json
-examples/anatomy/inside.canvas.json

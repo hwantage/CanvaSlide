@@ -26,8 +26,8 @@ sync. Two things to check before committing an edit:
 - **Diff size.** Saving rewrites the whole file, so a one-shape change can still touch the camera
   and the element order. Skim the diff rather than assuming it is small.
 - **File size.** Images are base64-inlined into the document. Two earlier samples reached 45 MB and
-  35 MB that way and had to be dropped; they are still named in `.gitignore` as a reminder. Keep
-  raster artwork small, or draw with native shapes instead.
+  35 MB that way and had to be dropped. Keep raster artwork small, or draw with native shapes
+  instead.
 
 `pnpm test` runs `examples.test.ts`, which parses every `.canvas.json` here with the app's own
 `parseDocument` and checks that frames and connector endpoints are intact — a document broken by a

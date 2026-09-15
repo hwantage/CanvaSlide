@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "northwind-launch-deck",
+  "name": "Northwind Launch Deck",
   "elements": {
     "frame-1": {
       "x": 80,
@@ -1816,8 +1816,8 @@
     }
   },
   "camera": {
-    "zoom": 1.7013888888888888,
-    "x": -4949,
-    "y": -1711.3194444444443
+    "x": 25.653846153846036,
+    "y": 181.1057692307692,
+    "zoom": 0.2543
   }
 }

@@ -39,8 +39,7 @@
     "test:e2e": "playwright test --config tests/playwright.config.ts",
     "build:player": "vite build --config config/vite.player.config.ts",
     "build:pdfjs": "node config/scripts/copy-pdfjs-assets.mjs",
-    "tc:examples": "tsc --noEmit -p config/tsconfig.examples.json",
-    "examples:build": "node examples/build/index.ts"
+    "tc:examples": "tsc --noEmit -p config/tsconfig.examples.json"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

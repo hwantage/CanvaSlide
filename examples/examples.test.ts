@@ -1,10 +1,10 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { parseDocument } from '../../src/shared/canvas/document-file.ts'
-import { orderedFrames } from '../../src/shared/canvas/presentation-sequence.ts'
+import { parseDocument } from '../src/shared/canvas/document-file.ts'
+import { orderedFrames } from '../src/shared/canvas/presentation-sequence.ts'
 
-const examplesDir = join(import.meta.dirname, '..')
+const examplesDir = import.meta.dirname
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {

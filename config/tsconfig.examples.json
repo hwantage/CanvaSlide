@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["../examples/build/**/*.ts", "../src/shared/**/*.ts"],
+  "include": ["../examples/**/*.ts", "../src/shared/**/*.ts"],
   "exclude": ["../src/shared/**/*.test.ts"],
   "compilerOptions": {
     "noEmit": true,

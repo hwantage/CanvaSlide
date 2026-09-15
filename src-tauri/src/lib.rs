@@ -3,6 +3,7 @@ mod document_io;
 mod font_embed;
 mod system_fonts;
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 
 /// Sent to the webview when the user wants to quit; the frontend confirms unsaved work first and
@@ -11,9 +12,18 @@ pub const QUIT_REQUESTED_EVENT: &str = "quit-requested";
 /// Sent when the user picks "Check for Updates…" in the native menu; the frontend runs the check.
 pub const CHECK_UPDATES_EVENT: &str = "check-updates-requested";
 
+/// Set when a quit request goes out, cleared as soon as the webview answers.
+static QUIT_UNANSWERED: AtomicBool = AtomicBool::new(false);
+
 #[tauri::command]
 fn quit_app(app: AppHandle) {
     app.exit(0);
+}
+
+/// Tells the Rust side the webview received the quit request and is handling it.
+#[tauri::command]
+fn acknowledge_quit() {
+    QUIT_UNANSWERED.store(false, Ordering::Relaxed);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -34,7 +44,8 @@ pub fn run() {
             document_io::write_html_export,
             system_fonts::list_system_fonts,
             font_embed::subset_fonts,
-            quit_app
+            quit_app,
+            acknowledge_quit
         ])
         .build(tauri::generate_context!())
         .expect("error while building canvaslide")
@@ -45,7 +56,11 @@ pub fn run() {
                 code: None, api, ..
             } = event
             {
-                if !app.webview_windows().is_empty() {
+                // Why: an unanswered previous request means the webview is dead, so stop holding
+                // the exit — otherwise a blank webview makes the app impossible to quit.
+                if !app.webview_windows().is_empty()
+                    && !QUIT_UNANSWERED.swap(true, Ordering::Relaxed)
+                {
                     api.prevent_exit();
                     let _ = app.emit(QUIT_REQUESTED_EVENT, ());
                 }

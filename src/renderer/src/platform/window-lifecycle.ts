@@ -59,7 +59,11 @@ function installTauriCloseGuard(guard: CloseGuard): () => void {
       event.preventDefault()
       void quit()
     })
-    const unlistenQuit = await listen(QUIT_REQUESTED_EVENT, () => void quit())
+    // Why: the ack proves the webview is alive; without it Rust lets the next quit through.
+    const unlistenQuit = await listen(QUIT_REQUESTED_EVENT, () => {
+      void invoke('acknowledge_quit')
+      void quit()
+    })
     if (disposed) {
       unlistenClose()
       unlistenQuit()

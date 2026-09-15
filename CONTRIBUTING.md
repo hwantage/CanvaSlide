@@ -44,7 +44,7 @@ pnpm dev:web        # browser only, http://127.0.0.1:1420
 | `src-tauri/`         | Rust shell: window, macOS menu, file IO commands                                     |
 | `config/`            | Tool configs (tsconfig, vite, vitest)                                                |
 | `tests/e2e/`         | Playwright browser E2E                                                               |
-| `examples/`          | Sample `.canvas.json` documents and their generated HTML exports                     |
+| `examples/`          | Sample `.canvaslide` documents and their generated HTML exports                      |
 
 ## Code Rules
 
@@ -124,7 +124,7 @@ Open a GitHub issue. For bugs, include:
 
 - CanvaSlide version (or commit), OS and version, and whether you ran the Tauri app or browser mode
 - Steps to reproduce, expected vs. actual behaviour
-- A `.canvas.json` that reproduces it, if the bug depends on document content
+- A `.canvaslide` that reproduces it, if the bug depends on document content
 
 For feature requests, describe the problem you are trying to solve before the solution you have in mind.
 

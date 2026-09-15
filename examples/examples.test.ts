@@ -11,14 +11,14 @@ function* walk(dir: string): Generator<string> {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) {
       yield* walk(full)
-    } else if (entry.endsWith('.canvas.json')) {
+    } else if (entry.endsWith('.canvaslide')) {
       yield full
     }
   }
 }
 
 /** Guards the shipped samples against schema drift: every file must open and present. */
-describe('examples/*.canvas.json', () => {
+describe('examples/*.canvaslide', () => {
   const files = [...walk(examplesDir)]
 
   it('ships at least five samples', () => {

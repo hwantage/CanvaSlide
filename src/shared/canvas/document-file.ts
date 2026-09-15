@@ -6,10 +6,17 @@ import {
   type CanvasDocument
 } from './element-types'
 
-export const DOCUMENT_FILE_EXTENSION = 'canvas.json'
+export const DOCUMENT_FILE_EXTENSION = 'canvaslide'
+/** Documents written before the single-extension move; still openable, never written. */
+export const LEGACY_DOCUMENT_FILE_EXTENSION = 'canvas.json'
 export const DOCUMENT_FILE_FILTER = {
-  name: 'Canvas document',
+  name: 'CanvaSlide document',
   extensions: [DOCUMENT_FILE_EXTENSION]
+}
+export const DOCUMENT_OPEN_FILE_FILTER = {
+  name: 'CanvaSlide document',
+  // Why: native dialogs match only the last segment, so a legacy `.canvas.json` has to enter as `json`.
+  extensions: [DOCUMENT_FILE_EXTENSION, LEGACY_DOCUMENT_FILE_EXTENSION.split('.').pop() ?? 'json']
 }
 
 export type ParseDocumentResult =
@@ -88,9 +95,14 @@ export function documentFileName(document: CanvasDocument): string {
   return `${fileNameStem(document.name)}.${DOCUMENT_FILE_EXTENSION}`
 }
 
+const DOCUMENT_SUFFIX = new RegExp(
+  `\\.(?:${DOCUMENT_FILE_EXTENSION}|${LEGACY_DOCUMENT_FILE_EXTENSION.replaceAll('.', '\\.')})$`,
+  'i'
+)
+
 export function documentNameFromPath(path: string): string {
   const fileName = path.split(/[\\/]/).at(-1) ?? ''
-  return fileName.replace(new RegExp(`\\.${DOCUMENT_FILE_EXTENSION.replace('.', '\\.')}$`, 'i'), '')
+  return fileName.replace(DOCUMENT_SUFFIX, '')
 }
 
 /** The name written in the document wins; only an unnamed document falls back to its file name. */

@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-pub const DOCUMENT_EXTENSION: &str = "canvas.json";
+pub const DOCUMENT_EXTENSION: &str = "canvaslide";
+/// Documents written before the single-extension move; still readable, never written.
+pub const LEGACY_DOCUMENT_EXTENSION: &str = "canvas.json";
 
 #[derive(Debug, thiserror::Error)]
 pub enum DocumentIoError {
@@ -24,23 +26,33 @@ impl Serialize for DocumentIoError {
     }
 }
 
-fn has_document_extension(path: &Path) -> bool {
+fn ends_with_extension(path: &Path, extension: &str) -> bool {
     path.to_string_lossy()
         .to_ascii_lowercase()
-        .ends_with(&format!(".{DOCUMENT_EXTENSION}"))
+        .ends_with(&format!(".{extension}"))
 }
 
-/// Appends the canonical extension when the picker returned a bare name.
+fn has_document_extension(path: &Path) -> bool {
+    ends_with_extension(path, DOCUMENT_EXTENSION)
+        || ends_with_extension(path, LEGACY_DOCUMENT_EXTENSION)
+}
+
+/// Appends the canonical extension when the picker returned a bare name, and rewrites a
+/// legacy `.canvas.json` name so that saving an old document migrates it.
 pub fn normalize_document_path(path: &Path) -> PathBuf {
-    if has_document_extension(path) {
+    if ends_with_extension(path, DOCUMENT_EXTENSION) {
         return path.to_path_buf();
     }
     let mut name = path
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default();
-    if name.ends_with(".json") {
-        name.truncate(name.len() - ".json".len());
+    // Why: the legacy suffix has to go first, otherwise `.json` leaves a dangling `.canvas`.
+    for suffix in [format!(".{LEGACY_DOCUMENT_EXTENSION}"), ".json".to_owned()] {
+        if name.to_ascii_lowercase().ends_with(&suffix) {
+            name.truncate(name.len() - suffix.len());
+            break;
+        }
     }
     path.with_file_name(format!("{name}.{DOCUMENT_EXTENSION}"))
 }
@@ -60,7 +72,7 @@ pub fn write_document_file(path: &Path, contents: &str) -> Result<PathBuf, Docum
         .map_err(|e| DocumentIoError::InvalidJson(e.to_string()))?;
     let target = normalize_document_path(path);
     // Why: write to a sibling temp file then rename so a crash never truncates the user's document.
-    let tmp = target.with_extension("canvas.json.tmp");
+    let tmp = target.with_extension(format!("{DOCUMENT_EXTENSION}.tmp"));
     std::fs::write(&tmp, contents)?;
     std::fs::rename(&tmp, &target)?;
     Ok(target)
@@ -101,18 +113,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn normalizes_bare_and_json_names() {
+    fn normalizes_bare_json_and_legacy_names() {
         assert_eq!(
             normalize_document_path(Path::new("/tmp/deck")),
-            PathBuf::from("/tmp/deck.canvas.json")
+            PathBuf::from("/tmp/deck.canvaslide")
         );
         assert_eq!(
             normalize_document_path(Path::new("/tmp/deck.json")),
-            PathBuf::from("/tmp/deck.canvas.json")
+            PathBuf::from("/tmp/deck.canvaslide")
         );
         assert_eq!(
             normalize_document_path(Path::new("/tmp/deck.canvas.json")),
-            PathBuf::from("/tmp/deck.canvas.json")
+            PathBuf::from("/tmp/deck.canvaslide")
+        );
+        assert_eq!(
+            normalize_document_path(Path::new("/tmp/deck.canvaslide")),
+            PathBuf::from("/tmp/deck.canvaslide")
         );
     }
 
@@ -122,7 +138,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("doc");
         let written = write_document_file(&path, r#"{"version":1,"elements":[]}"#).unwrap();
-        assert!(written.ends_with("doc.canvas.json"));
+        assert!(written.ends_with("doc.canvaslide"));
         assert_eq!(
             read_document_file(&written).unwrap(),
             r#"{"version":1,"elements":[]}"#
@@ -153,5 +169,18 @@ mod tests {
             read_document_file(Path::new("/tmp/x.txt")),
             Err(DocumentIoError::InvalidExtension(_))
         ));
+    }
+
+    #[test]
+    fn reads_a_legacy_document() {
+        let dir = std::env::temp_dir().join(format!("uc-legacy-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("doc.canvas.json");
+        std::fs::write(&path, r#"{"version":1,"elements":[]}"#).unwrap();
+        assert_eq!(
+            read_document_file(&path).unwrap(),
+            r#"{"version":1,"elements":[]}"#
+        );
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

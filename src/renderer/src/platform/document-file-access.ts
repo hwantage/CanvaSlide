@@ -1,9 +1,9 @@
 import {
   DOCUMENT_FILE_FILTER,
   documentFileName,
-  documentNameFromPath,
   parseDocument,
-  serializeDocument
+  serializeDocument,
+  withDocumentName
 } from '@shared/canvas/document-file'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
@@ -65,10 +65,7 @@ async function openWithTauri(): Promise<OpenedDocument | null> {
   if (!parsed.ok) {
     throw new Error(parsed.error)
   }
-  return {
-    document: { ...parsed.document, name: documentNameFromPath(selected) },
-    filePath: selected
-  }
+  return { document: withDocumentName(parsed.document, selected), filePath: selected }
 }
 
 async function saveWithTauri(
@@ -106,10 +103,7 @@ function openWithBrowser(): Promise<OpenedDocument | null> {
         reject(new Error(parsed.error))
         return
       }
-      resolve({
-        document: { ...parsed.document, name: documentNameFromPath(file.name) },
-        filePath: null
-      })
+      resolve({ document: withDocumentName(parsed.document, file.name), filePath: null })
     }
     input.oncancel = () => resolve(null)
     input.click()

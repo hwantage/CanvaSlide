@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   documentFileName,
   documentNameFromPath,
+  fileNameStem,
   parseDocument,
   repairDocumentOrder,
-  serializeDocument
+  serializeDocument,
+  withDocumentName
 } from './document-file'
 import { createEmptyDocument, defaultShapeStyle, defaultTextStyle } from './element-types'
 
@@ -110,5 +112,25 @@ describe('document-file', () => {
     expect(documentFileName(createEmptyDocument('  '))).toBe('Untitled.canvas.json')
     expect(documentNameFromPath('C:\\docs\\Deck.canvas.json')).toBe('Deck')
     expect(documentNameFromPath('/tmp/plan.CANVAS.JSON')).toBe('plan')
+  })
+
+  it('replaces whitespace and characters the file systems reject', () => {
+    expect(documentFileName(createEmptyDocument('Northwind Launch Deck'))).toBe(
+      'Northwind-Launch-Deck.canvas.json'
+    )
+    expect(fileNameStem('Q3: plan / draft')).toBe('Q3-plan-draft')
+    expect(fileNameStem('a<b>c"d|e?f*g\\h')).toBe('a-b-c-d-e-f-g-h')
+    expect(fileNameStem('  .hidden.  ')).toBe('hidden')
+    expect(fileNameStem('출시 계획 2027')).toBe('출시-계획-2027')
+    expect(fileNameStem('***')).toBe('Untitled')
+    expect(fileNameStem('CON')).toBe('Untitled')
+    expect(fileNameStem('x'.repeat(200))).toHaveLength(80)
+  })
+
+  it('keeps the name stored in the document and falls back to the file name', () => {
+    const named = { ...createEmptyDocument('Northwind Launch Deck') }
+    expect(withDocumentName(named, '/tmp/northwind-launch-deck.canvas.json')).toBe(named)
+    const unnamed = createEmptyDocument('  ')
+    expect(withDocumentName(unnamed, '/tmp/Recovered.canvas.json').name).toBe('Recovered')
   })
 })

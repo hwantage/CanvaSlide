@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { focusOnMount } from '@/lib/focus-on-mount'
 import { assetsByteLength } from '@shared/canvas/document-assets'
+import { fileNameStem } from '@shared/canvas/document-file'
 import { collectFontUsage, embeddedFontBytes, fontFaceCss } from '@shared/canvas/font-embedding'
 import { buildStandaloneHtml, estimateHtmlBytes, formatBytes } from '@shared/canvas/html-export'
 import type { CanvasDocument } from '@shared/canvas/element-types'
@@ -103,7 +104,7 @@ export function ExportDialog() {
     }
     setBusy(true)
     try {
-      await saveHtmlExport(preview.html, `${document.name.trim() || 'Untitled'}.html`)
+      await saveHtmlExport(preview.html, `${fileNameStem(document.name)}.html`)
       hide()
     } catch (error) {
       await showErrorMessage(error instanceof Error ? error.message : String(error))

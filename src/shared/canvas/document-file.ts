@@ -65,14 +65,37 @@ export function repairDocumentOrder(document: CanvasDocument): CanvasDocument {
   return { ...document, order }
 }
 
+/** Windows rejects these outright; macOS rejects `/` and shows `:` as one. */
+const UNSAFE_FILE_NAME_CHARS = /[\p{Cc}<>:"/\\|?*]/gu
+/** Windows refuses these stems whatever the extension. */
+const RESERVED_FILE_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i
+/** 80 CJK characters plus the extension stay inside the 255-byte limit. */
+const MAX_FILE_NAME_STEM = 80
+
+/** Turns a display name into a stem both macOS and Windows accept. */
+export function fileNameStem(name: string): string {
+  const stem = name
+    .normalize('NFC')
+    .replace(UNSAFE_FILE_NAME_CHARS, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .slice(0, MAX_FILE_NAME_STEM)
+    .replace(/^[-.]+|[-.]+$/g, '')
+  return stem === '' || RESERVED_FILE_NAMES.test(stem) ? 'Untitled' : stem
+}
+
 export function documentFileName(document: CanvasDocument): string {
-  const base = document.name.trim() === '' ? 'Untitled' : document.name.trim()
-  return `${base}.${DOCUMENT_FILE_EXTENSION}`
+  return `${fileNameStem(document.name)}.${DOCUMENT_FILE_EXTENSION}`
 }
 
 export function documentNameFromPath(path: string): string {
   const fileName = path.split(/[\\/]/).at(-1) ?? ''
   return fileName.replace(new RegExp(`\\.${DOCUMENT_FILE_EXTENSION.replace('.', '\\.')}$`, 'i'), '')
+}
+
+/** The name written in the document wins; only an unnamed document falls back to its file name. */
+export function withDocumentName(document: CanvasDocument, path: string): CanvasDocument {
+  return document.name.trim() === '' ? { ...document, name: documentNameFromPath(path) } : document
 }
 
 export { createEmptyDocument }

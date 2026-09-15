@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo } from 'react'
-import { documentNameFromPath } from '@shared/canvas/document-file'
 import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import {
   confirmDiscardChanges,
@@ -36,10 +35,7 @@ export function useDocumentCommands(): DocumentCommands {
         const withCamera = { ...snapshot.document, camera: useCameraStore.getState().camera }
         const result = await saveDocumentFile(withCamera, state.filePath, forcePrompt)
         if (result) {
-          const name = result.filePath
-            ? documentNameFromPath(result.filePath)
-            : snapshot.document.name
-          useDocumentStore.getState().completeSave(snapshot, result.filePath, name)
+          useDocumentStore.getState().completeSave(snapshot, result.filePath)
         }
       }),
     []

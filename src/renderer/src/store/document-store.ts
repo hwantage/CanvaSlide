@@ -56,7 +56,7 @@ export type DocumentActions = {
   newDocument: () => void
   takeSaveSnapshot: () => SaveSnapshot
   /** Applies a finished save: path + name always, `dirty=false` only if nothing changed since. */
-  completeSave: (snapshot: SaveSnapshot, filePath: string | null, name: string) => void
+  completeSave: (snapshot: SaveSnapshot, filePath: string | null) => void
   setSelection: (ids: ElementId[]) => void
   toggleSelected: (id: ElementId) => void
   selectAll: () => void
@@ -130,14 +130,12 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     newDocument: () =>
       set((s) => ({ ...initialState, document: createEmptyDocument(), session: s.session + 1 })),
     takeSaveSnapshot: () => ({ document: get().document, session: get().session }),
-    completeSave: (snapshot, filePath, name) =>
+    completeSave: (snapshot, filePath) =>
       set((s) => {
         if (s.session !== snapshot.session) {
           return s
         }
-        const unchanged = s.document === snapshot.document
-        const document = s.document.name === name ? s.document : { ...s.document, name }
-        return { document, filePath, dirty: unchanged ? false : s.dirty }
+        return { filePath, dirty: s.document === snapshot.document ? false : s.dirty }
       }),
 
     setSelection: (ids) => set({ selectedIds: ids }),

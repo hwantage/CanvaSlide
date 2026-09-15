@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DOCUMENT_FILE_FILTER,
+  DOCUMENT_OPEN_FILE_FILTER,
   documentFileName,
   documentNameFromPath,
   fileNameStem,
@@ -109,14 +111,25 @@ describe('document-file', () => {
   })
 
   it('derives file names', () => {
-    expect(documentFileName(createEmptyDocument('  '))).toBe('Untitled.canvas.json')
+    expect(documentFileName(createEmptyDocument('  '))).toBe('Untitled.canvaslide')
+    expect(documentNameFromPath('C:\\docs\\Deck.canvaslide')).toBe('Deck')
+    expect(documentNameFromPath('/tmp/plan.CANVASLIDE')).toBe('plan')
+  })
+
+  it('strips the legacy double extension when opening older documents', () => {
     expect(documentNameFromPath('C:\\docs\\Deck.canvas.json')).toBe('Deck')
     expect(documentNameFromPath('/tmp/plan.CANVAS.JSON')).toBe('plan')
+    expect(documentNameFromPath('/tmp/plan.json')).toBe('plan.json')
+  })
+
+  it('offers the legacy extension when opening but never when saving', () => {
+    expect(DOCUMENT_OPEN_FILE_FILTER.extensions).toEqual(['canvaslide', 'canvas.json'])
+    expect(DOCUMENT_FILE_FILTER.extensions).toEqual(['canvaslide'])
   })
 
   it('replaces whitespace and characters the file systems reject', () => {
     expect(documentFileName(createEmptyDocument('Northwind Launch Deck'))).toBe(
-      'Northwind-Launch-Deck.canvas.json'
+      'Northwind-Launch-Deck.canvaslide'
     )
     expect(fileNameStem('Q3: plan / draft')).toBe('Q3-plan-draft')
     expect(fileNameStem('a<b>c"d|e?f*g\\h')).toBe('a-b-c-d-e-f-g-h')
@@ -129,8 +142,9 @@ describe('document-file', () => {
 
   it('keeps the name stored in the document and falls back to the file name', () => {
     const named = { ...createEmptyDocument('Northwind Launch Deck') }
-    expect(withDocumentName(named, '/tmp/northwind-launch-deck.canvas.json')).toBe(named)
+    expect(withDocumentName(named, '/tmp/northwind-launch-deck.canvaslide')).toBe(named)
     const unnamed = createEmptyDocument('  ')
-    expect(withDocumentName(unnamed, '/tmp/Recovered.canvas.json').name).toBe('Recovered')
+    expect(withDocumentName(unnamed, '/tmp/Recovered.canvaslide').name).toBe('Recovered')
+    expect(withDocumentName(createEmptyDocument('  '), '/tmp/Old.canvas.json').name).toBe('Old')
   })
 })

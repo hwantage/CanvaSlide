@@ -87,7 +87,7 @@ Run the same checks CI runs:
 
 ```bash
 pnpm check                          # oxlint + max-lines + oxfmt + tsc + vitest
-pnpm test:e2e                       # Playwright (starts vite on :1420)
+pnpm test:e2e                       # Playwright (starts its own vite; port derived from the checkout)
 pnpm rust:fmt && pnpm rust:clippy && pnpm rust:test   # only if src-tauri/ changed
 pnpm tauri build --bundles app      # if you touched the shell, config, or bundling
 ```

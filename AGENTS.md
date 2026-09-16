@@ -42,7 +42,7 @@ Releases follow [`docs/RELEASE.md`](./docs/RELEASE.md).
 
 ```
 pnpm check        # lint + format + typecheck + unit
-pnpm test:e2e     # Playwright (starts vite on :1420)
+pnpm test:e2e     # Playwright (starts its own vite on a port derived from this checkout)
 pnpm rust:clippy && pnpm rust:test
 pnpm tauri build --bundles app
 ```

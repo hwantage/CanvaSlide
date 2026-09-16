@@ -1,13 +1,18 @@
 import { defineConfig, devices } from '@playwright/test'
+import { portForCheckout } from './e2e-server'
+
+const port = portForCheckout()
+const baseURL = `http://127.0.0.1:${port}`
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './global-setup.ts',
   timeout: 30_000,
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:1420',
+    baseURL,
     // Why: selectors match English UI strings; the app follows navigator.language otherwise.
     locale: 'en-US',
     viewport: { width: 1400, height: 900 },
@@ -21,8 +26,12 @@ export default defineConfig({
     }
   ],
   webServer: {
+    // Why: the port is this checkout's own, so a dev server on 1420 is left alone and a sibling
+    // worktree cannot be reused by accident. `strictPort` turns the remaining collisions into a
+    // failed run, and `global-setup.ts` proves whatever answers really is this tree.
     command: 'pnpm dev:web',
-    url: 'http://127.0.0.1:1420',
+    env: { CANVASLIDE_DEV_PORT: String(port) },
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 60_000
   }

@@ -352,6 +352,23 @@ test('presentation nav buttons work and overview lets you click a frame', async 
   await expect(counter).toHaveCount(0)
 })
 
+test('overview keeps a frame nested inside a bigger one clickable', async ({ page }) => {
+  await page.keyboard.press('f')
+  await dragOnCanvas(page, [450, 380], [650, 500])
+  // Drawn last, so plain DOM order would put this wrapping frame over the nested one.
+  await page.keyboard.press('f')
+  await dragOnCanvas(page, [80, 100], [1100, 780])
+  await page.getByRole('button', { name: 'Slide Show', exact: true }).click()
+  const counter = page.getByTestId('presentation-counter')
+  await page.getByRole('button', { name: 'Next frame (→)' }).click()
+  await expect(counter).toContainText('2 / 2')
+  await page.getByRole('button', { name: 'Overview (O)' }).click()
+  const targets = page.getByTestId('overview-frame')
+  await expect(targets).toHaveCount(2)
+  await targets.first().click()
+  await expect(counter).toContainText('1 / 2')
+})
+
 test('copies and pastes objects with the keyboard, offset each time', async ({ page }) => {
   const mod = await primaryModifier(page)
   await page.keyboard.press('r')

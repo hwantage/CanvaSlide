@@ -1,5 +1,6 @@
 import { worldRectToScreen, rectToCssPosition } from '@shared/canvas/camera-transform'
 import { elementRect } from '@shared/canvas/element-bounds'
+import { overviewStackRanks } from '@shared/canvas/overview-stacking'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { selectCamera, useCameraStore } from '@/store/camera-store'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
@@ -15,23 +16,26 @@ export function PresentationFramePicker() {
   if (!overview) {
     return null
   }
+  const frames = orderedFrames(document)
+  const ranks = overviewStackRanks(frames)
   return (
     <div data-canvas-ui className="absolute inset-0">
-      {orderedFrames(document).map((frame, index) => (
+      {frames.map((frame, index) => (
         <button
           key={frame.id}
           type="button"
           data-testid="overview-frame"
           aria-label={`Go to frame ${index + 1}: ${frame.name}`}
-          className={`group absolute cursor-pointer rounded-sm border-2 transition-colors ${
-            index === current
-              ? 'border-selection/60 hover:border-selection'
-              : 'border-frame-stroke/70 hover:border-selection'
-          } hover:bg-selection/5`}
-          style={rectToCssPosition(worldRectToScreen(camera, elementRect(frame)))}
+          className={`group absolute cursor-pointer rounded-sm border-2 transition-colors hover:border-selection hover:bg-selection/10 hover:ring-2 hover:ring-selection/30 ${
+            index === current ? 'border-selection/60' : 'border-frame-stroke/70'
+          }`}
+          style={{
+            ...rectToCssPosition(worldRectToScreen(camera, elementRect(frame))),
+            zIndex: ranks[frame.id]
+          }}
           onClick={() => goTo(index)}
         >
-          <span className="absolute left-0 top-0 -translate-y-full rounded-t bg-frame-label px-1.5 py-0.5 text-[11px] font-medium text-white group-hover:bg-selection">
+          <span className="absolute left-0 top-0 -translate-y-full rounded-t bg-frame-label px-1.5 py-0.5 text-[11px] font-medium text-white transition-colors group-hover:bg-selection">
             {index + 1} · {frame.name}
           </span>
         </button>

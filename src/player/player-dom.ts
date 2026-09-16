@@ -11,6 +11,7 @@ import {
   connectorObstacles,
   connectorPath
 } from '@shared/canvas/connector-geometry'
+import { overviewStackRanks, overviewZIndex } from '@shared/canvas/overview-stacking'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { fontStackFor } from '@shared/canvas/font-family'
 
@@ -203,9 +204,13 @@ export function renderDocument(
   zoomLayer: HTMLElement
 ): { frameNodes: FrameNode[] } {
   const frameNodes: FrameNode[] = []
-  orderedFrames(doc).forEach((frame, index) => {
+  const frames = orderedFrames(doc)
+  const ranks = overviewStackRanks(frames)
+  frames.forEach((frame, index) => {
     const node = el('div', 'uc-frame')
     place(node, frame)
+    // Why: a frame that covers others would otherwise swallow their clicks in overview.
+    node.style.zIndex = String(overviewZIndex(ranks[frame.id] ?? 0, frames.length))
     node.dataset.frameIndex = String(index)
     const label = el('div', 'uc-frame-label')
     const badge = document.createElement('b')

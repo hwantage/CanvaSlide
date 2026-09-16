@@ -1,15 +1,9 @@
-import type { FilePath } from '@/platform/file-path'
 import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { syncConnectorGeometry } from '@shared/canvas/connector-geometry'
 import { upsertAsset } from '@shared/canvas/document-assets'
 import { groupElements, ungroupElements } from '@shared/canvas/element-groups'
-import {
-  alignElements,
-  distributeElements,
-  type AlignMode,
-  type DistributeAxis
-} from '@shared/canvas/element-alignment'
+import { alignElements, distributeElements } from '@shared/canvas/element-alignment'
 import {
   applyFrameOrders,
   duplicateElements,
@@ -17,89 +11,30 @@ import {
   patchElements,
   removeElements,
   reorderZ,
-  translateElements,
-  type ElementPatch,
-  type ZDirection
+  translateElements
 } from '@shared/canvas/document-mutations'
 import {
   createEmptyDocument,
   type CanvasDocument,
-  type CanvasElement,
-  type DocumentSettings,
-  type ElementId,
-  type ImageAsset,
-  type ImageElement,
-  type Point
+  type ElementId
 } from '@shared/canvas/element-types'
 import {
   moveFrameInSequence,
   moveFrameToIndex,
   orderedFrames
 } from '@shared/canvas/presentation-sequence'
-import { popRedo, popUndo, pushSnapshot, type HistoryStacks } from './document-history'
+import { syncTextHeight } from '@shared/canvas/text-height'
+import { popRedo, popUndo, pushSnapshot } from './document-history'
+import type { DocumentState, DocumentStore } from './document-state'
 
-/** What a save started from; completing it must not clear edits made while the file was written. */
-export type SaveSnapshot = { document: CanvasDocument; session: number }
-
-export type DocumentState = HistoryStacks & {
-  document: CanvasDocument
-  selectedIds: ElementId[]
-  filePath: FilePath | null
-  dirty: boolean
-  /** Bumped on new/open so an in-flight save can't attach its path to another document. */
-  session: number
-  /** Snapshot taken at the start of a drag; committed as one undo step on end. */
-  editBaseline: CanvasDocument | null
-}
-
-export type DocumentActions = {
-  loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
-  newDocument: () => void
-  takeSaveSnapshot: () => SaveSnapshot
-  /** Applies a finished save: path + name always, `dirty=false` only if nothing changed since. */
-  completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
-  setSelection: (ids: ElementId[]) => void
-  toggleSelected: (id: ElementId) => void
-  selectAll: () => void
-  clearSelection: () => void
-  /** One-shot recorded edit. */
-  applyEdit: (updater: (document: CanvasDocument) => CanvasDocument) => void
-  /** Unrecorded live change between beginEdit/endEdit (drags, typing). */
-  applyLive: (updater: (document: CanvasDocument) => CanvasDocument) => void
-  beginEdit: () => void
-  endEdit: () => void
-  /** Drops everything since beginEdit (e.g. an aborted connector drag). */
-  cancelEdit: () => void
-  insertElement: (element: CanvasElement, select?: boolean) => void
-  /** Adds the asset (deduplicated by content hash) and the element in one undo step. */
-  insertImage: (asset: ImageAsset, element: ImageElement) => void
-  /** Bulk import (e.g. PDF pages): every asset and element lands in one undo step. */
-  insertImported: (assets: ImageAsset[], elements: CanvasElement[], select: ElementId[]) => void
-  patchElements: (ids: ElementId[], patch: ElementPatch, record?: boolean) => void
-  translateSelected: (delta: Point) => void
-  deleteSelected: () => void
-  duplicateSelected: () => void
-  reorderSelected: (direction: ZDirection) => void
-  moveFrameOrder: (id: ElementId, direction: 'up' | 'down') => void
-  moveFrameTo: (id: ElementId, index: number) => void
-  /** Groups the selection (frames excluded); the new group becomes the selection. */
-  groupSelected: () => void
-  ungroupSelected: () => void
-  alignSelected: (mode: AlignMode) => void
-  distributeSelected: (axis: DistributeAxis) => void
-  updateSettings: (patch: Partial<DocumentSettings>) => void
-  renameDocument: (name: string) => void
-  undo: () => void
-  redo: () => void
-}
-
-export type DocumentStore = DocumentState & DocumentActions
+export type { DocumentActions, DocumentState, DocumentStore, SaveSnapshot } from './document-state'
 
 const initialState: DocumentState = {
   document: createEmptyDocument(),
   selectedIds: [],
   filePath: null,
   dirty: false,
+  revision: 0,
   session: 0,
   past: [],
   future: [],
@@ -110,12 +45,17 @@ export const newElementId = (): ElementId => nanoid(10)
 
 export const useDocumentStore = create<DocumentStore>()((set, get) => {
   const recorded = (updater: (document: CanvasDocument) => CanvasDocument) => {
-    const { document, past, future } = get()
+    const { document, past, future, revision } = get()
     const next = syncConnectorGeometry(updater(document))
     if (next === document) {
       return
     }
-    set({ document: next, dirty: true, ...pushSnapshot({ past, future }, document) })
+    set({
+      document: next,
+      dirty: true,
+      revision: revision + 1,
+      ...pushSnapshot({ past, future }, document)
+    })
   }
 
   return {
@@ -130,13 +70,17 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
       })),
     newDocument: () =>
       set((s) => ({ ...initialState, document: createEmptyDocument(), session: s.session + 1 })),
-    takeSaveSnapshot: () => ({ document: get().document, session: get().session }),
+    takeSaveSnapshot: () => ({
+      document: get().document,
+      session: get().session,
+      revision: get().revision
+    }),
     completeSave: (snapshot, filePath) =>
       set((s) => {
         if (s.session !== snapshot.session) {
           return s
         }
-        return { filePath, dirty: s.document === snapshot.document ? false : s.dirty }
+        return { filePath, dirty: s.revision === snapshot.revision ? false : s.dirty }
       }),
 
     setSelection: (ids) => set({ selectedIds: ids }),
@@ -153,10 +97,27 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     applyLive: (updater) =>
       set((s) => {
         const next = syncConnectorGeometry(updater(s.document))
-        return next === s.document ? s : { document: next, dirty: true }
+        return next === s.document ? s : { document: next, dirty: true, revision: s.revision + 1 }
+      }),
+    syncTextHeight: (id, measuredHeight) =>
+      set((s) => {
+        const document = syncTextHeight(s.document, id, measuredHeight)
+        if (document === s.document) {
+          return s
+        }
+        // A measurement before the first keystroke must not turn focus/blur into an undo step.
+        return { document, editBaseline: s.editBaseline === s.document ? document : s.editBaseline }
       }),
     cancelEdit: () =>
-      set((s) => (s.editBaseline ? { document: s.editBaseline, editBaseline: null } : s)),
+      set((s) =>
+        s.editBaseline
+          ? {
+              document: s.editBaseline,
+              editBaseline: null,
+              revision: s.revision + (s.document === s.editBaseline ? 0 : 1)
+            }
+          : s
+      ),
     beginEdit: () => set((s) => ({ editBaseline: s.editBaseline ?? s.document })),
     endEdit: () => {
       const { editBaseline, document, past, future } = get()
@@ -260,18 +221,30 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     renameDocument: (name) => recorded((d) => ({ ...d, name })),
 
     undo: () => {
-      const { past, future, document } = get()
+      const { past, future, document, revision } = get()
       const result = popUndo({ past, future }, document)
       if (result) {
-        set({ document: result.document, ...result.stacks, dirty: true, editBaseline: null })
+        set({
+          document: result.document,
+          ...result.stacks,
+          dirty: true,
+          revision: revision + 1,
+          editBaseline: null
+        })
         pruneSelection(set, get)
       }
     },
     redo: () => {
-      const { past, future, document } = get()
+      const { past, future, document, revision } = get()
       const result = popRedo({ past, future }, document)
       if (result) {
-        set({ document: result.document, ...result.stacks, dirty: true, editBaseline: null })
+        set({
+          document: result.document,
+          ...result.stacks,
+          dirty: true,
+          revision: revision + 1,
+          editBaseline: null
+        })
         pruneSelection(set, get)
       }
     }

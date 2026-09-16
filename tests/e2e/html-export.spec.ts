@@ -67,6 +67,11 @@ test('exports a self-contained HTML player that presents the frames', async ({ p
   await expect.poll(() => world.evaluate((el) => el.style.transform)).not.toBe(before)
   await player.getByRole('button', { name: 'Overview (O)' }).click()
   await expect(player.locator('.uc-overview')).toHaveCount(1)
+  // Smaller frames stack above bigger ones so a wrapping frame can't swallow their clicks.
+  const stacking = await player
+    .locator('.uc-frame')
+    .evaluateAll((nodes) => nodes.map((node) => Number(getComputedStyle(node).zIndex)))
+  expect(stacking[0]).toBeGreaterThan(stacking[1] as number)
   await player.locator('.uc-frame').first().click()
   await expect(counter).toContainText('1 / 2')
   await expect(player.locator('.uc-overview')).toHaveCount(0)

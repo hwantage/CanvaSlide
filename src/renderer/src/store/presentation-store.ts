@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import { contentBounds, elementRect } from '@shared/canvas/element-bounds'
+import { elementRect } from '@shared/canvas/element-bounds'
 import { camerasEqual } from '@shared/canvas/camera-transform'
-import { fitRectToViewport } from '@shared/canvas/frame-fit'
+import { cameraForOverview, fitRectToViewport } from '@shared/canvas/frame-fit'
 import { orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
 import type { Camera } from '@shared/canvas/element-types'
 import { useCameraStore } from './camera-store'
@@ -82,12 +82,12 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
     flyToFrame(nextIndex, document.settings.transitionMs)
   }
   const flyToOverview = (durationMs: number) => {
-    const bounds = contentBounds(useDocumentStore.getState().document)
-    if (!bounds) {
+    const camera = useCameraStore.getState()
+    const target = cameraForOverview(useDocumentStore.getState().document, camera.viewport)
+    if (!target) {
       return false
     }
-    const camera = useCameraStore.getState()
-    camera.animateTo(fitRectToViewport(bounds, camera.viewport, 0.08), durationMs)
+    camera.animateTo(target, durationMs)
     return true
   }
   const showOverview = () => {

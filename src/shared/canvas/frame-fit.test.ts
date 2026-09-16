@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { visibleWorldRect } from './camera-transform'
+import { MAX_ZOOM, MIN_ZOOM, visibleWorldRect, worldRectToScreen } from './camera-transform'
 import { insertElement } from './document-mutations'
 import { createEmptyDocument } from './element-types'
 import {
+  OVERVIEW_FIT_PADDING_RATIO,
   SELECTION_FIT_MAX_ZOOM,
   cameraForOpenedDocument,
+  cameraForOverview,
   fitContentToViewport,
+  fitOverviewToViewport,
   fitRectToViewport,
   fitSelectionToViewport
 } from './frame-fit'
@@ -34,6 +37,95 @@ describe('frame-fit', () => {
     expect(fitContentToViewport(tiny, viewport).zoom).toBe(1)
     const huge = { x: 0, y: 0, width: 20_000, height: 20 }
     expect(fitContentToViewport(huge, viewport).zoom).toBeLessThan(1)
+  })
+
+  it.each([
+    { width: 800, height: 500 },
+    { width: 1400, height: 900 },
+    { width: 900, height: 1400 }
+  ])('fits distant content below the manual zoom minimum in $width × $height', (size) => {
+    for (const bounds of [
+      { x: -50_000, y: -10_000, width: 169_000, height: 13_500 },
+      { x: -10_000, y: -50_000, width: 13_500, height: 169_000 }
+    ]) {
+      const camera = fitOverviewToViewport(bounds, size)
+      const screen = worldRectToScreen(camera, bounds)
+      expect(camera.zoom).toBeGreaterThan(0)
+      expect(camera.zoom).toBeLessThan(MIN_ZOOM)
+      expect(screen.x).toBeGreaterThan(0)
+      expect(screen.y).toBeGreaterThan(0)
+      expect(screen.x + screen.width).toBeLessThan(size.width)
+      expect(screen.y + screen.height).toBeLessThan(size.height)
+      expect(screen.x + screen.width / 2).toBeCloseTo(size.width / 2)
+      expect(screen.y + screen.height / 2).toBeCloseTo(size.height / 2)
+    }
+  })
+
+  it('fits the overview with padding and caps magnification for tiny content', () => {
+    const bounds = { x: 120, y: -300, width: 800, height: 400 }
+    const camera = fitOverviewToViewport(bounds, viewport)
+    expect(camera.zoom).toBeCloseTo(
+      fitRectToViewport(bounds, viewport, OVERVIEW_FIT_PADDING_RATIO).zoom
+    )
+    const screen = worldRectToScreen(camera, bounds)
+    expect(screen.x + screen.width / 2).toBeCloseTo(viewport.width / 2)
+    expect(screen.y + screen.height / 2).toBeCloseTo(viewport.height / 2)
+    expect(fitOverviewToViewport({ ...bounds, width: 1, height: 1 }, viewport).zoom).toBe(MAX_ZOOM)
+  })
+
+  it('fits the frame extents without including an oversized, off-center background', () => {
+    let document = createEmptyDocument()
+    for (const [index, x] of [-1000, 98_600].entries()) {
+      document = insertElement(document, {
+        id: `f${index}`,
+        type: 'frame',
+        name: 'Slide',
+        order: index,
+        x,
+        y: 2312.5,
+        width: index === 0 ? 70_000 : 26_800,
+        height: 39_375
+      })
+    }
+    const expected = cameraForOverview(document, viewport)
+    document = insertElement(document, {
+      id: 'background',
+      type: 'shape',
+      shape: 'rectangle',
+      x: -72_000,
+      y: -60_000,
+      width: 280_000,
+      height: 160_000,
+      text: '',
+      textStyle: { color: '#000000', fontSize: 16, align: 'left', bold: false },
+      style: { fill: '#ffffff', stroke: 'none', strokeWidth: 0, cornerRadius: 0 }
+    })
+    expect(cameraForOverview(document, viewport)).toEqual(expected)
+    const screen = worldRectToScreen(expected!, {
+      x: -1000,
+      y: 2312.5,
+      width: 126_400,
+      height: 39_375
+    })
+    expect(screen.width).toBeGreaterThan(viewport.width * 0.8)
+    expect(screen.x + screen.width / 2).toBeCloseTo(viewport.width / 2)
+    expect(screen.y + screen.height / 2).toBeCloseTo(viewport.height / 2)
+  })
+
+  it('falls back to content only when there are no frames', () => {
+    const empty = createEmptyDocument()
+    expect(cameraForOverview(empty, viewport)).toBeNull()
+    const rect = { x: -8000, y: 900, width: 700, height: 1000 }
+    const document = insertElement(empty, {
+      ...rect,
+      id: 'shape',
+      type: 'shape',
+      shape: 'rectangle',
+      text: '',
+      textStyle: { color: '#000000', fontSize: 16, align: 'left', bold: false },
+      style: { fill: '#ffffff', stroke: 'none', strokeWidth: 0, cornerRadius: 0 }
+    })
+    expect(cameraForOverview(document, viewport)).toEqual(fitOverviewToViewport(rect, viewport))
   })
 
   it('zoom-to-selection magnifies small selections but only up to the cap', () => {

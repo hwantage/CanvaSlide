@@ -1,13 +1,12 @@
 import { createCameraAnimator } from '@shared/canvas/camera-animator'
 import {
   ZOOM_SETTLE_MS,
-  clampZoom,
   layoutZoomFor,
   worldLayerCssTransform
 } from '@shared/canvas/camera-transform'
 import { contentBounds, elementRect } from '@shared/canvas/element-bounds'
 import type { Camera, CanvasDocument, Size } from '@shared/canvas/element-types'
-import { fitRectToViewport } from '@shared/canvas/frame-fit'
+import { cameraForOverview, fitRectToViewport } from '@shared/canvas/frame-fit'
 import { orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
 import type { FrameNode } from './player-dom'
 
@@ -54,7 +53,7 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
   const animator = createCameraAnimator({
     getCamera: () => camera,
     setCamera: (next) => {
-      camera = { ...next, zoom: clampZoom(next.zoom) }
+      camera = next
       paint()
     },
     getViewport: viewportSize
@@ -109,13 +108,13 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
       api.goTo(nextIndex)
     },
     showOverview: () => {
-      const bounds = contentBounds(doc)
-      if (!bounds) {
+      const target = cameraForOverview(doc, viewportSize())
+      if (!target) {
         return
       }
       overview = true
       notify()
-      animator.animateTo(fitRectToViewport(bounds, viewportSize(), 0.08), doc.settings.transitionMs)
+      animator.animateTo(target, doc.settings.transitionMs)
     },
     toggleOverview: () => {
       if (overview) {

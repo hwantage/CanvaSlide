@@ -47,7 +47,8 @@
         "ext": ["canvaslide"],
         "name": "CanvaSlide Document",
         "description": "CanvaSlide canvas presentation document",
-        "role": "Editor"
+        "role": "Editor",
+        "mimeType": "application/vnd.canvaslide+json"
       }
     ],
     "macOS": { "minimumSystemVersion": "12.0" },

@@ -1,5 +1,7 @@
 mod app_menu;
+mod document_dialog;
 mod document_io;
+mod file_path;
 mod font_embed;
 mod launch_document;
 mod system_fonts;
@@ -69,6 +71,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            document_dialog::pick_document_path,
+            document_dialog::pick_document_save_path,
             document_io::read_document,
             document_io::write_document,
             document_io::write_html_export,

@@ -1,3 +1,4 @@
+import type { FilePath } from '@/platform/file-path'
 import type { AlignMode, DistributeAxis } from '@shared/canvas/element-alignment'
 import type { ElementPatch, ZDirection } from '@shared/canvas/document-mutations'
 import type {
@@ -17,7 +18,7 @@ export type SaveSnapshot = { document: CanvasDocument; session: number; revision
 export type DocumentState = HistoryStacks & {
   document: CanvasDocument
   selectedIds: ElementId[]
-  filePath: string | null
+  filePath: FilePath | null
   dirty: boolean
   /** Counts content edits; renderer measurements do not invalidate an in-flight save. */
   revision: number
@@ -27,11 +28,11 @@ export type DocumentState = HistoryStacks & {
   editBaseline: CanvasDocument | null
 }
 export type DocumentActions = {
-  loadDocument: (document: CanvasDocument, filePath: string | null) => void
+  loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
   newDocument: () => void
   takeSaveSnapshot: () => SaveSnapshot
   /** Applies a finished save: path + name always, `dirty=false` only if nothing changed since. */
-  completeSave: (snapshot: SaveSnapshot, filePath: string | null) => void
+  completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
   setSelection: (ids: ElementId[]) => void
   toggleSelected: (id: ElementId) => void
   selectAll: () => void

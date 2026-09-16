@@ -1,3 +1,4 @@
+import type { FilePath } from './file-path'
 import { t } from '@/i18n/ui-strings'
 import { showErrorMessage } from './document-file-access'
 import { isTauriRuntime } from './tauri-runtime'
@@ -10,7 +11,7 @@ const OPEN_FILE_EVENT = 'open-file-requested'
  * exactly once, so parking it here is what keeps the document from vanishing when the effect is
  * torn down between the invoke and its answer — which React StrictMode does on every mount.
  */
-let undelivered: string | null = null
+let undelivered: FilePath | null = null
 
 /**
  * Serialises every drain in the process, across listeners.
@@ -25,7 +26,7 @@ let draining: Promise<void> = Promise.resolve()
  * Calls back with the document the OS handed the app — at launch, or later when one is opened while
  * the app runs. Browser mode has no such document. Returns a disposer.
  */
-export function onLaunchDocument(open: (path: string) => void | Promise<void>): () => void {
+export function onLaunchDocument(open: (path: FilePath) => void | Promise<void>): () => void {
   if (!isTauriRuntime()) {
     return () => {}
   }
@@ -39,7 +40,7 @@ export function onLaunchDocument(open: (path: string) => void | Promise<void>): 
         draining = draining.then(async () => {
           const parked = undelivered
           undelivered = null
-          const path = parked ?? (await invoke<string | null>('take_launch_document'))
+          const path = parked ?? (await invoke<FilePath | null>('take_launch_document'))
           if (path === null) {
             return
           }

@@ -8,6 +8,7 @@ import {
   showErrorMessage,
   type OpenedDocument
 } from '@/platform/document-file-access'
+import type { FilePath } from '@/platform/file-path'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
@@ -17,7 +18,7 @@ export type DocumentCommands = {
   newDocument: () => Promise<void>
   openDocument: () => Promise<void>
   /** Opens a document the OS handed us, with the same unsaved-work guard as the Open command. */
-  openDocumentPath: (path: string) => Promise<void>
+  openDocumentPath: (path: FilePath) => Promise<void>
   saveDocument: () => Promise<void>
   saveDocumentAs: () => Promise<void>
 }
@@ -75,7 +76,7 @@ export function useDocumentCommands(): DocumentCommands {
           useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
         }),
       openDocument: () => guarded(() => openInto(openDocumentFile)),
-      openDocumentPath: (path: string) => guarded(() => openInto(() => openDocumentAtPath(path)))
+      openDocumentPath: (path: FilePath) => guarded(() => openInto(() => openDocumentAtPath(path)))
     }),
     [save]
   )

@@ -9,7 +9,7 @@ const asset: ImageAsset = {
   width: 66000,
   height: 40000
 }
-const result = (src = 'blob:preview') => ({ src, bytes: 100, dispose: vi.fn() })
+const result = (src = 'blob:preview', bytes = 100) => ({ src, bytes, dispose: vi.fn() })
 
 describe('SVG preview cache lifecycle', () => {
   it('shares work for duplicate images, but separates document assets and aspect ratios', async () => {
@@ -73,6 +73,141 @@ describe('SVG preview cache lifecycle', () => {
     c.release()
     a.release()
     expect(large.dispose).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    { name: 'aspect ratios', aspect: 1, firstRegion: undefined, secondRegion: undefined },
+    {
+      name: 'detail regions',
+      aspect: 2,
+      firstRegion: {
+        crop: { x: 0, y: 0, width: 0.5, height: 1 },
+        pixels: { width: 100, height: 100 }
+      },
+      secondRegion: {
+        crop: { x: 0.5, y: 0, width: 0.5, height: 1 },
+        pixels: { width: 100, height: 100 }
+      }
+    }
+  ])(
+    'reuses released $name when their shared source fits the budget',
+    async ({ aspect, firstRegion, secondRegion }) => {
+      const shared = { ...asset, data: 'x'.repeat(40) }
+      const first = result('blob:first')
+      const second = result('blob:second')
+      const create = vi.fn().mockResolvedValueOnce(first).mockResolvedValueOnce(second)
+      const cache = createSvgPreviewCache(create, 300)
+      const a = cache.acquire(shared, 2, firstRegion)
+      const b = cache.acquire(shared, aspect, secondRegion)
+      await Promise.all([a.ready, b.ready])
+      a.release()
+      b.release()
+      expect(first.dispose).not.toHaveBeenCalled()
+      expect(second.dispose).not.toHaveBeenCalled()
+      const reusedA = cache.acquire(shared, 2, firstRegion)
+      const reusedB = cache.acquire(shared, aspect, secondRegion)
+      expect(await reusedA.ready).toBe(first)
+      expect(await reusedB.ready).toBe(second)
+      expect(create).toHaveBeenCalledTimes(2)
+      reusedA.release()
+      reusedB.release()
+    }
+  )
+
+  it('does not inflate the soft target for active variants of the same asset', async () => {
+    const shared = { ...asset, data: 'x'.repeat(40) }
+    const first = result('blob:first')
+    const second = result('blob:second')
+    const unused = result('blob:unused', 80)
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce(second)
+      .mockResolvedValueOnce(unused)
+    const cache = createSvgPreviewCache(create, 100)
+    const a = cache.acquire(shared, 2)
+    const b = cache.acquire(shared, 1)
+    await Promise.all([a.ready, b.ready])
+    const c = cache.acquire({ ...asset }, 2)
+    await c.ready
+    c.release()
+    expect(unused.dispose).toHaveBeenCalledOnce()
+    expect(first.dispose).not.toHaveBeenCalled()
+    expect(second.dispose).not.toHaveBeenCalled()
+    a.release()
+    b.release()
+  })
+
+  it('keeps a released variant warm while a later variant still uses its source', async () => {
+    const shared = { ...asset, data: 'x'.repeat(40) }
+    const small = result('blob:small', 8)
+    const large = result('blob:large', 180)
+    const create = vi.fn().mockResolvedValueOnce(small).mockResolvedValueOnce(large)
+    const cache = createSvgPreviewCache(create, 100)
+    const a = cache.acquire(shared, 2)
+    const b = cache.acquire(shared, 1)
+    await Promise.all([a.ready, b.ready])
+    a.release()
+    expect(small.dispose).not.toHaveBeenCalled()
+    expect(large.dispose).not.toHaveBeenCalled()
+    const reused = cache.acquire(shared, 2)
+    expect(await reused.ready).toBe(small)
+    expect(create).toHaveBeenCalledTimes(2)
+    reused.release()
+    b.release()
+  })
+
+  it('reclaims shared source bytes only when its final cached variant is evicted', async () => {
+    const shared = { ...asset, data: 'x'.repeat(40) }
+    const first = result('blob:first', 20)
+    const second = result('blob:second', 20)
+    const warm = result('blob:warm', 18)
+    const active = result('blob:active', 88)
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce(second)
+      .mockResolvedValueOnce(warm)
+      .mockResolvedValueOnce(active)
+    const cache = createSvgPreviewCache(create, 150)
+    const a = cache.acquire(shared, 2)
+    const b = cache.acquire(shared, 1)
+    await Promise.all([a.ready, b.ready])
+    a.release()
+    b.release()
+    expect(first.dispose).not.toHaveBeenCalled()
+    expect(second.dispose).not.toHaveBeenCalled()
+    const neighbor = { ...asset }
+    const c = cache.acquire(neighbor, 2)
+    await c.ready
+    c.release()
+    const d = cache.acquire({ ...asset }, 2)
+    await d.ready
+    expect(first.dispose).toHaveBeenCalledOnce()
+    expect(second.dispose).toHaveBeenCalledOnce()
+    expect(warm.dispose).not.toHaveBeenCalled()
+    expect(active.dispose).not.toHaveBeenCalled()
+    const reused = cache.acquire(neighbor, 2)
+    expect(await reused.ready).toBe(warm)
+    expect(create).toHaveBeenCalledTimes(4)
+    reused.release()
+    d.release()
+  })
+
+  it('counts sources separately for distinct asset objects with the same id and data', async () => {
+    const shared = { ...asset, data: 'x'.repeat(40) }
+    const first = result('blob:first', 20)
+    const second = result('blob:second', 20)
+    const create = vi.fn().mockResolvedValueOnce(first).mockResolvedValueOnce(second)
+    const cache = createSvgPreviewCache(create, 150)
+    const a = cache.acquire(shared, 2)
+    await a.ready
+    a.release()
+    const b = cache.acquire({ ...shared }, 2)
+    await b.ready
+    expect(first.dispose).toHaveBeenCalledOnce()
+    expect(second.dispose).not.toHaveBeenCalled()
+    b.release()
   })
 
   it('skips queued work after an image leaves the viewport and serializes decoding', async () => {

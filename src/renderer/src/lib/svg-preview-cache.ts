@@ -59,11 +59,20 @@ export function createSvgPreviewCache(
   const trim = () => {
     let bytes = 0
     let activeBytes = 0
+    const assetEntries = new Map<ImageAsset, number>()
+    const activeAssets = new Set<ImageAsset>()
     for (const entry of entries) {
-      const size = entry.asset.data.length * 2 + (entry.result?.bytes ?? 0)
-      bytes += size
+      const count = assetEntries.get(entry.asset) ?? 0
+      const sourceBytes = entry.asset.data.length * 2
+      const rasterBytes = entry.result?.bytes ?? 0
+      assetEntries.set(entry.asset, count + 1)
+      bytes += rasterBytes + (count === 0 ? sourceBytes : 0)
       if (entry.users) {
-        activeBytes += size
+        activeBytes += rasterBytes
+        if (!activeAssets.has(entry.asset)) {
+          activeAssets.add(entry.asset)
+          activeBytes += sourceBytes
+        }
       }
     }
     // Keep nearby previews warm even when visible images exceed the soft budget.
@@ -75,7 +84,10 @@ export function createSvgPreviewCache(
       if (entry.users || !entry.result) {
         continue
       }
-      bytes -= entry.asset.data.length * 2 + entry.result.bytes
+      const remaining = assetEntries.get(entry.asset)! - 1
+      assetEntries.set(entry.asset, remaining)
+      // Other variants retain the source even after its document or lease is gone.
+      bytes -= entry.result.bytes + (remaining === 0 ? entry.asset.data.length * 2 : 0)
       remove(entry)
     }
   }

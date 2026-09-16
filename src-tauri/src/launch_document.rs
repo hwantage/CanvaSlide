@@ -29,7 +29,8 @@ impl PendingDocument {
 }
 
 /// Picks the document out of a process argv. Flags and anything that is not one of our documents
-/// are skipped, so a dev switch never looks like a file.
+/// are skipped, so a dev switch never looks like a file. Only the first document counts — the app
+/// has a single window, so selecting several and opening them at once cannot be honoured.
 ///
 /// Why `OsString`: `std::env::args()` panics on a path the platform encoding cannot turn into
 /// UTF-8, which would crash the app at startup for the very file it was asked to open.
@@ -48,10 +49,20 @@ pub fn offer(app: &AppHandle, path: PathBuf) {
     let _ = app.emit(OPEN_FILE_EVENT, ());
 }
 
+/// Picks the document out of the URLs macOS hands over, skipping any that is not a local file.
+///
+/// Selecting several documents in Finder delivers them all in one event. The app has a single
+/// window, so the first one wins and the rest are dropped on purpose: offering each in turn would
+/// make the *last* one win, which is not what picking a set of files asks for.
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+pub fn document_path_from_urls(urls: &[tauri::Url]) -> Option<PathBuf> {
+    urls.iter().find_map(|url| url.to_file_path().ok())
+}
+
 /// macOS never uses `argv`; it hands documents over as file URLs, at launch and while the app runs.
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 pub fn offer_urls(app: &AppHandle, urls: &[tauri::Url]) {
-    if let Some(path) = urls.iter().find_map(|url| url.to_file_path().ok()) {
+    if let Some(path) = document_path_from_urls(urls) {
         offer(app, path);
     }
 }
@@ -105,6 +116,22 @@ mod tests {
             document_path_from_args(args(&["canvaslide", "--flag", "/tmp/deck.canvaslide"])),
             Some(PathBuf::from("/tmp/deck.canvaslide"))
         );
+    }
+
+    /// A single-window app opens one document; the choice of *which* one has to be the first, not
+    /// whichever happened to be offered last.
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    #[test]
+    fn takes_the_first_file_url_and_skips_the_rest() {
+        let urls: Vec<tauri::Url> = ["https://example.com/a.canvaslide", "file:///tmp/first.canvaslide", "file:///tmp/second.canvaslide"]
+            .iter()
+            .map(|u| u.parse().unwrap())
+            .collect();
+        assert_eq!(
+            document_path_from_urls(&urls),
+            Some(PathBuf::from("/tmp/first.canvaslide"))
+        );
+        assert_eq!(document_path_from_urls(&[]), None);
     }
 
     #[test]

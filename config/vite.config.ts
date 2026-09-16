@@ -18,18 +18,36 @@ const host = process.env.TAURI_DEV_HOST
  *
  * Why the wrapper object rather than the bare path: a server that predates this endpoint answers
  * unknown paths with `index.html` and a 200, so the reply has to be recognisable, not just present.
+ *
+ * Why loopback only: `TAURI_DEV_HOST` makes the dev server listen on the network, and an absolute
+ * path through a route with no authentication tells anyone who asks how this machine is laid out.
+ * The only caller is the E2E suite on this machine.
  */
 function checkoutIdentity(): Plugin {
   return {
     name: 'canvaslide:checkout-identity',
     apply: 'serve',
     configureServer(server) {
-      server.middlewares.use('/__checkout', (_request, response) => {
+      server.middlewares.use('/__checkout', (request, response) => {
+        if (!isLoopback(request.socket.remoteAddress)) {
+          response.statusCode = 403
+          response.end()
+          return
+        }
         response.setHeader('content-type', 'application/json')
         response.end(JSON.stringify({ canvaslideCheckout: repoRoot }))
       })
     }
   }
+}
+
+/** Why the `::ffff:` case: a v4 client on a dual-stack socket arrives as a v4-mapped v6 address. */
+function isLoopback(address: string | undefined): boolean {
+  if (address === undefined) {
+    return false
+  }
+  const plain = address.startsWith('::ffff:') ? address.slice('::ffff:'.length) : address
+  return plain === '::1' || plain === '127.0.0.1' || plain.startsWith('127.')
 }
 
 // Why: Tauri watches src-tauri itself; Vite must not restart on Rust changes.

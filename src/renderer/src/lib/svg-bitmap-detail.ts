@@ -6,12 +6,19 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
 const XLINK_NS = 'http://www.w3.org/1999/xlink'
 
 function fullViewportPhoto(svg: SVGSVGElement, aspect: number): Element | undefined {
-  const box = svg
-    .getAttribute('viewBox')!
+  const box = (svg.getAttribute('viewBox') ?? '')
     .trim()
     .split(/[\s,]+/)
     .map(Number)
-  if (box[0] !== 0 || box[1] !== 0 || Math.abs(box[2]! / box[3]! / aspect - 1) > 0.00001) {
+  if (
+    box.length !== 4 ||
+    !box.every(Number.isFinite) ||
+    box[2]! <= 0 ||
+    box[3]! <= 0 ||
+    box[0] !== 0 ||
+    box[1] !== 0 ||
+    Math.abs(box[2]! / box[3]! / aspect - 1) > 0.00001
+  ) {
     return undefined
   }
   // Only a single full-viewport photo has the same geometry after separating its color from alpha.

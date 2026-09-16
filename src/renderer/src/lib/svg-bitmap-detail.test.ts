@@ -32,18 +32,52 @@ function decoder(width = 100, height = 50) {
 afterEach(() => vi.restoreAllMocks())
 
 describe('bounded masked photo detail', () => {
-  it('separates photo pixels and limits mask allocation to the visible crop', async () => {
-    const { image, release } = decoder()
+  it.each(['0 0 100 50', '0,0,100,50', ' 0  0  1e2  5e1 '])(
+    'separates photo pixels and bounds mask allocation for viewBox %s',
+    async (viewBox) => {
+      const { image, release } = decoder()
+      const root = svg()
+      root.setAttribute('viewBox', viewBox)
+      const prepared = await prepareSvgBitmapDetail(root, asset, 2, region)
+      expect(prepared?.image).toBe(image)
+      expect(root.querySelector('image')).toBeNull()
+      expect(root.querySelector('mask')?.getAttribute('width')).toBe('0.001')
+      expect(root.querySelector('mask')?.getAttribute('height')).toBe('0.002')
+      expect(root.querySelector('g > rect')?.getAttribute('fill')).toBe('white')
+      expect(release).not.toHaveBeenCalled()
+      prepared?.release()
+      expect(release).toHaveBeenCalledOnce()
+    }
+  )
+
+  it.each([
+    null,
+    '',
+    '0 0',
+    '0 0 100',
+    '0 0 100 50 1',
+    '0 0 NaN 50',
+    '0 0 100 NaN',
+    '0 0 Infinity Infinity',
+    '0 0 100 Infinity',
+    '0 0 0 50',
+    '0 0 100 0',
+    '0 0 0 0',
+    '0 0 -100 -50',
+    '0 0 -100 50',
+    '0 0 100 -50'
+  ])('rejects invalid viewBox %s before decoding or changing the SVG', async (viewBox) => {
+    const { acquire } = decoder()
     const root = svg()
-    const prepared = await prepareSvgBitmapDetail(root, asset, 2, region)
-    expect(prepared?.image).toBe(image)
-    expect(root.querySelector('image')).toBeNull()
-    expect(root.querySelector('mask')?.getAttribute('width')).toBe('0.001')
-    expect(root.querySelector('mask')?.getAttribute('height')).toBe('0.002')
-    expect(root.querySelector('g > rect')?.getAttribute('fill')).toBe('white')
-    expect(release).not.toHaveBeenCalled()
-    prepared?.release()
-    expect(release).toHaveBeenCalledOnce()
+    if (viewBox === null) {
+      root.removeAttribute('viewBox')
+    } else {
+      root.setAttribute('viewBox', viewBox)
+    }
+    const original = root.outerHTML
+    await expect(prepareSvgBitmapDetail(root, asset, 2, region)).resolves.toBeUndefined()
+    expect(acquire).not.toHaveBeenCalled()
+    expect(root.outerHTML).toBe(original)
   })
 
   it.each([

@@ -49,6 +49,8 @@ body {
 .uc-img {
   position: absolute;
   pointer-events: none;
+  /* Frames carry negative z-indices (largest at the bottom), so content always paints above. */
+  z-index: 0;
 }
 .uc-text {
   white-space: pre-wrap;
@@ -128,11 +130,16 @@ body {
   box-shadow: 0 0 0 var(--stroke-px, 2px) rgba(37, 99, 235, 0.6);
 }
 .uc-overview .uc-frame:hover {
-  box-shadow: 0 0 0 var(--stroke-px, 3px) var(--selection);
-  background: rgba(37, 99, 235, 0.05);
+  box-shadow:
+    0 0 0 var(--stroke-px, 3px) var(--selection),
+    0 0 0 calc(var(--stroke-px, 3px) * 2.5) rgba(37, 99, 235, 0.3);
+  background: rgba(37, 99, 235, 0.1);
 }
 .uc-overview .uc-frame-label {
   display: flex;
+}
+.uc-overview .uc-frame:hover .uc-frame-label {
+  color: var(--selection);
 }
 .uc-overview .uc-frame:hover .uc-frame-label b {
   background: var(--selection);

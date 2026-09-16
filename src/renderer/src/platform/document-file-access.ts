@@ -82,13 +82,20 @@ async function saveWithTauri(
     import('@tauri-apps/plugin-dialog'),
     import('@tauri-apps/api/core')
   ])
-  const target =
+  const chosen =
     filePath ??
     (await save({ defaultPath: documentFileName(document), filters: [DOCUMENT_FILE_FILTER] }))
-  if (!target) {
+  if (!chosen) {
     return null
   }
-  const written = await invoke<string>('write_document', { path: target, contents })
+  const written = await invoke<string>('write_document', {
+    path: chosen,
+    contents,
+    // Why: only a name the user just picked may gain the canonical extension. Rewriting the target
+    // of a silent save would strand the original file with stale content and clobber whatever
+    // already sits at the new name, without the overwrite prompt the dialog would have shown.
+    normalizeExtension: filePath === null
+  })
   return { filePath: written }
 }
 

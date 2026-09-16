@@ -11,6 +11,7 @@ import { PresentationFramePicker } from './presentation-frame-picker'
 import { PresentationOverlay } from './presentation-overlay'
 import { SelectionOverlay } from './selection-overlay'
 import { WorldLayer } from './world-layer'
+import { FrameChromeOverlay } from './frame-chrome-overlay'
 
 const cursorByTool = {
   select: 'default',
@@ -56,6 +57,7 @@ export function CanvasViewport() {
     >
       <GridBackground />
       <WorldLayer />
+      <FrameChromeOverlay />
       <SelectionOverlay
         onResizeHandleDown={handlers.onResizeHandleDown}
         onConnectorEndDown={handlers.onConnectorEndDown}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createCameraAnimator } from './camera-animator'
 import type { Camera } from './element-types'
 
@@ -72,5 +72,115 @@ describe('camera-animator', () => {
     })
     animator.animateTo({ x: 1, y: 1, zoom: 1 }, 0)
     expect(camera).toEqual({ x: 1, y: 1, zoom: 1 })
+  })
+
+  it('keeps the full transition duration after preparation and pins resources until arrival', async () => {
+    const clock = fakeClock()
+    const initial = { x: 0, y: 0, zoom: 1 }
+    let camera: Camera = initial
+    let ready!: () => void
+    const release = vi.fn()
+    const onDone = vi.fn()
+    const onActiveChange = vi.fn()
+    const animator = createCameraAnimator({
+      getCamera: () => camera,
+      setCamera: (c) => {
+        camera = c
+      },
+      getViewport: () => ({ width: 1000, height: 600 }),
+      prepare: () => ({
+        ready: new Promise<void>((resolve) => {
+          ready = resolve
+        }),
+        release
+      }),
+      onActiveChange,
+      ...clock
+    })
+    const target = { x: -1000, y: -300, zoom: 4 }
+    animator.animateTo(target, 1000, onDone)
+    clock.step(5000)
+    expect(camera).toBe(initial)
+    expect(animator.isAnimating()).toBe(true)
+    expect(onActiveChange.mock.calls).toEqual([[true]])
+    ready()
+    await Promise.resolve()
+    clock.step(500)
+    expect(camera).not.toEqual(initial)
+    expect(camera).not.toEqual(target)
+    expect(release).not.toHaveBeenCalled()
+    clock.step(500)
+    expect(camera).toEqual(target)
+    expect(release).toHaveBeenCalledOnce()
+    expect(onDone).toHaveBeenCalledOnce()
+    expect(animator.isAnimating()).toBe(false)
+    expect(onActiveChange.mock.calls).toEqual([[true], [false]])
+  })
+
+  it('ignores a cancelled preparation and releases its images when retargeted', async () => {
+    const clock = fakeClock()
+    let camera: Camera = { x: 0, y: 0, zoom: 1 }
+    let ready!: () => void
+    const release = vi.fn()
+    const onDone = vi.fn()
+    const prepare = vi
+      .fn()
+      .mockReturnValueOnce({
+        ready: new Promise<void>((resolve) => {
+          ready = resolve
+        }),
+        release
+      })
+      .mockReturnValue(undefined)
+    const animator = createCameraAnimator({
+      getCamera: () => camera,
+      setCamera: (c) => {
+        camera = c
+      },
+      getViewport: () => ({ width: 1000, height: 600 }),
+      prepare,
+      ...clock
+    })
+    animator.animateTo({ x: -10000, y: 0, zoom: 10 }, 1000, onDone)
+    animator.animateTo({ x: -500, y: 0, zoom: 2 }, 500)
+    expect(release).toHaveBeenCalledOnce()
+    ready()
+    await Promise.resolve()
+    clock.step(500)
+    expect(camera).toEqual({ x: -500, y: 0, zoom: 2 })
+    expect(onDone).not.toHaveBeenCalled()
+    expect(animator.isAnimating()).toBe(false)
+    animator.cancel()
+    expect(release).toHaveBeenCalledOnce()
+  })
+
+  it('continues after a failed preparation, and skips preparation for instant moves', async () => {
+    const clock = fakeClock()
+    let camera: Camera = { x: 0, y: 0, zoom: 1 }
+    const release = vi.fn()
+    const prepare = vi.fn(() => ({ ready: Promise.reject(new Error('decode')), release }))
+    const animator = createCameraAnimator({
+      getCamera: () => camera,
+      setCamera: (c) => {
+        camera = c
+      },
+      getViewport: () => ({ width: 1000, height: 600 }),
+      prepare,
+      ...clock
+    })
+    animator.animateTo({ x: 1, y: 2, zoom: 3 }, 0)
+    expect(prepare).not.toHaveBeenCalled()
+    animator.animateTo({ x: 4, y: 5, zoom: 6 }, 500)
+    await Promise.resolve()
+    clock.step(500)
+    expect(camera).toEqual({ x: 4, y: 5, zoom: 6 })
+    expect(release).toHaveBeenCalledOnce()
+    prepare.mockImplementation(() => {
+      throw new Error('preparation failed')
+    })
+    animator.animateTo({ x: 10, y: 20, zoom: 2 }, 500)
+    clock.step(500)
+    expect(camera).toEqual({ x: 10, y: 20, zoom: 2 })
+    expect(animator.isAnimating()).toBe(false)
   })
 })

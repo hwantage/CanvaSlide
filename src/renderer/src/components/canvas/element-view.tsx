@@ -10,14 +10,12 @@ type ElementViewProps = {
   element: CanvasElement
   editing: boolean
   selected: boolean
-  frameIndex: number
 }
 
 export const ElementView = memo(function ElementView({
   element,
   editing,
-  selected,
-  frameIndex
+  selected
 }: ElementViewProps) {
   switch (element.type) {
     case 'shape':
@@ -25,11 +23,9 @@ export const ElementView = memo(function ElementView({
     case 'text':
       return <TextElement element={element} editing={editing} />
     case 'image':
-      return <ImageElement element={element} />
+      return <ImageElement element={element} selected={selected} />
     case 'frame':
-      return (
-        <FrameElement element={element} index={frameIndex} selected={selected} editing={editing} />
-      )
+      return <FrameElement element={element} />
     case 'connector':
       return <ConnectorElement element={element} editing={editing} />
   }

@@ -1,0 +1,93 @@
+import type { Size } from '@shared/canvas/element-types'
+
+export type ImagePreview = { src: string; size?: Size; bytes: number; dispose: () => void }
+
+async function loadImage(src: string, signal?: AbortSignal): Promise<HTMLImageElement> {
+  signal?.throwIfAborted()
+  const image = new Image()
+  await new Promise<void>((resolve, reject) => {
+    const finish = (error?: Error) => {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', abort)
+      image.onload = null
+      image.onerror = null
+      if (error) {
+        image.src = ''
+        reject(error)
+      } else {
+        resolve()
+      }
+    }
+    const abort = () => finish(new DOMException('Raster cancelled', 'AbortError'))
+    const timer = setTimeout(() => finish(new Error('SVG raster timed out')), 10000)
+    signal?.addEventListener('abort', abort, { once: true })
+    image.onload = () => finish()
+    image.onerror = () => finish(new Error('SVG raster could not be decoded'))
+    image.src = src
+  })
+  return image
+}
+
+export async function rasterizeSvg(
+  svg: SVGSVGElement,
+  size: Size,
+  signal?: AbortSignal
+): Promise<ImagePreview> {
+  signal?.throwIfAborted()
+  const sourceUrl = URL.createObjectURL(
+    new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' })
+  )
+  const canvas = document.createElement('canvas')
+  let image: HTMLImageElement | undefined
+  let decoded: HTMLImageElement | undefined
+  let src: string | undefined
+  try {
+    image = await loadImage(sourceUrl, signal)
+    await image.decode()
+    signal?.throwIfAborted()
+    canvas.width = size.width
+    canvas.height = size.height
+    const context = canvas.getContext('2d')
+    if (!context) {
+      throw new Error('Canvas raster is unavailable')
+    }
+    context.drawImage(image, 0, 0, size.width, size.height)
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (result) => (result ? resolve(result) : reject(new Error('SVG raster encoding failed'))),
+        'image/png'
+      )
+    )
+    signal?.throwIfAborted()
+    src = URL.createObjectURL(blob)
+    decoded = await loadImage(src, signal)
+    await decoded.decode()
+    signal?.throwIfAborted()
+    const retained = decoded
+    const retainedUrl = src
+    return {
+      src,
+      size,
+      bytes: size.width * size.height * 4 + blob.size,
+      dispose: () => {
+        retained.src = ''
+        URL.revokeObjectURL(retainedUrl)
+      }
+    }
+  } catch (error) {
+    if (decoded) {
+      decoded.src = ''
+    }
+    if (src) {
+      URL.revokeObjectURL(src)
+    }
+    throw error
+  } finally {
+    URL.revokeObjectURL(sourceUrl)
+    if (image) {
+      image.src = ''
+    }
+    canvas.width = 0
+    canvas.height = 0
+  }
+}

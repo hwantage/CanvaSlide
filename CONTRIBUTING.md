@@ -88,11 +88,12 @@ Run the same checks CI runs:
 ```bash
 pnpm check                          # oxlint + max-lines + oxfmt + tsc + vitest
 pnpm test:e2e                       # Playwright (starts its own vite; port derived from the checkout)
-pnpm rust:fmt && pnpm rust:clippy && pnpm rust:test   # only if src-tauri/ changed
+pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test   # only if src-tauri/ changed
 pnpm tauri build --bundles app      # if you touched the shell, config, or bundling
 ```
 
-`pnpm format` fixes formatting; `pnpm lint:fix` fixes auto-fixable lint issues.
+`pnpm format` fixes formatting; `pnpm lint:fix` fixes auto-fixable lint issues; `pnpm rust:fmt`
+reformats `src-tauri/`.
 
 Add tests that would actually catch a regression, not just the happy path:
 

@@ -552,6 +552,7 @@ export const ko: UiStrings = {
   'update.checkOnLaunch': '앱을 시작할 때 업데이트 확인',
   'update.badge': '업데이트 가능',
 
+  'error.launchDocument': '앱이 열도록 요청받은 문서를 열 수 없습니다: {message}',
   'error.decodeAsset': '이미지 에셋을 디코딩할 수 없습니다',
   'error.decodePasted': '붙여넣은 이미지를 디코딩할 수 없습니다',
   'error.canvasContext': 'Canvas 2D 컨텍스트를 사용할 수 없습니다',

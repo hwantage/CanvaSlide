@@ -91,7 +91,14 @@ test('releases transient compositing on a light document after opening, panning 
   await expect(page.locator('[data-element-type="shape"]')).toHaveCount(2459)
   const layer = page.getByTestId('world-layer')
   await expect(layer).toHaveCSS('will-change', 'transform')
-  await openExample(page, 'flowchart/order-fulfillment.canvaslide')
+  // Why: always exercise the discard prompt instead of relying on post-load dirty state.
+  await page.getByRole('textbox', { name: 'Document name' }).fill('Compositing transition')
+  const discardPrompt = page.waitForEvent('dialog').then(async (dialog) => {
+    expect(dialog.type()).toBe('confirm')
+    expect(dialog.message()).toBe('You have unsaved changes. Discard them?')
+    await dialog.accept()
+  })
+  await Promise.all([discardPrompt, openExample(page, 'flowchart/order-fulfillment.canvaslide')])
   await expect(page.locator('[data-element-type="shape"]')).toHaveCount(11)
   await expect(layer).toHaveCSS('will-change', 'auto')
   await observeCamera(page)

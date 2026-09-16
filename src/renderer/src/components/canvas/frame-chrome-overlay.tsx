@@ -47,7 +47,7 @@ const FrameChrome = memo(function FrameChrome({
           zIndex: 2
         }}
       >
-        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-frame-label px-1 font-semibold text-white">
+        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-frame-label px-1 font-semibold text-canvas">
           {index + 1}
         </span>
         {editing ? (

@@ -28,6 +28,8 @@
   --canvas-grid: #d4d4d8;
   /* Why: continuous lines read much heavier than dots; keep them barely visible. */
   --canvas-grid-line: #ececef;
+  /* Why: frames are the artefact, not chrome — the sheet keeps its paper colour in every theme. */
+  --frame-fill: rgb(255 255 255 / 0.6);
   --selection: #2563eb;
   --frame-stroke: #a1a1aa;
   --frame-label: #52525b;
@@ -57,9 +59,13 @@
   --border: #3f3f46;
   --input: #3f3f46;
   --ring: #60a5fa;
-  --canvas: #f7f7f8;
-  --canvas-grid: #d4d4d8;
-  --canvas-grid-line: #ececef;
+  /* Why: the canvas is workspace, so it sits below the chrome; the grid keeps the light theme's
+     faint contrast (dots ~1.4:1, lines ~1.2:1) against it. */
+  --canvas: #121215;
+  --canvas-grid: #2f2f35;
+  --canvas-grid-line: #232328;
+  /* Why: the light sheet is translucent, which would turn paper grey here — use what it blends to. */
+  --frame-fill: #fcfcfc;
   --selection: #60a5fa;
   --frame-stroke: #71717a;
   --frame-label: #d4d4d8;
@@ -91,6 +97,7 @@
   --color-canvas-grid: var(--canvas-grid);
   --color-selection: var(--selection);
   --color-frame-stroke: var(--frame-stroke);
+  --color-frame-fill: var(--frame-fill);
   --color-frame-label: var(--frame-label);
   --color-snap: var(--snap);
   --color-frame-selected: var(--frame-selected);

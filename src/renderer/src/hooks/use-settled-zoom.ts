@@ -12,6 +12,15 @@ export function useSettledZoom(): number {
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
+    const settle = () => {
+      // A delayed animation frame is not the end of a camera flight.
+      if (useCameraStore.getState().isAnimating()) {
+        timer = setTimeout(settle, ZOOM_SETTLE_MS)
+        return
+      }
+      timer = null
+      setZoom(layoutZoomFor(useCameraStore.getState().camera.zoom))
+    }
     const unsubscribe = useCameraStore.subscribe((state, previous) => {
       if (state.camera.zoom === previous.camera.zoom) {
         return
@@ -19,10 +28,7 @@ export function useSettledZoom(): number {
       if (timer !== null) {
         clearTimeout(timer)
       }
-      timer = setTimeout(() => {
-        timer = null
-        setZoom(layoutZoomFor(useCameraStore.getState().camera.zoom))
-      }, ZOOM_SETTLE_MS)
+      timer = setTimeout(settle, ZOOM_SETTLE_MS)
     })
     return () => {
       unsubscribe()

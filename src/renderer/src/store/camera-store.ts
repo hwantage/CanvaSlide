@@ -9,6 +9,7 @@ import {
   zoomByWheel
 } from '@shared/canvas/camera-transform'
 import { createCameraAnimator } from '@shared/canvas/camera-animator'
+import { prepareCameraImages } from '@/lib/camera-image-preparation'
 import type { Camera, Point, Rect, Size } from '@shared/canvas/element-types'
 import {
   fitContentToViewport,
@@ -22,6 +23,7 @@ const UI_ANIMATION_MS = 350
 export type CameraState = {
   camera: Camera
   viewport: Size
+  animationActive: boolean
 }
 
 export type CameraActions = {
@@ -46,7 +48,9 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
   const animator = createCameraAnimator({
     getCamera: () => get().camera,
     setCamera: (camera) => set({ camera }),
-    getViewport: () => get().viewport
+    getViewport: () => get().viewport,
+    prepare: prepareCameraImages,
+    onActiveChange: (animationActive) => set({ animationActive })
   })
   const stopAndSet = (camera: Camera) => {
     animator.cancel()
@@ -55,6 +59,7 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
   return {
     camera: DEFAULT_CAMERA,
     viewport: { width: 1, height: 1 },
+    animationActive: false,
     setCamera: stopAndSet,
     setViewport: (viewport) => set({ viewport }),
     panBy: (dx, dy) => stopAndSet(panBy(get().camera, dx, dy)),

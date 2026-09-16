@@ -23,9 +23,8 @@ test('a frame smaller than the shape over it stays visible and selectable by its
   const frame = page.locator('[data-element-type="frame"]')
   await expect(frame).toHaveCount(1)
   await page.keyboard.press('Escape')
-  // Why: the world layer ignores pointer events, so stacking is asserted through the z-index
-  // that lifts the title strip and outline above later (content) siblings.
-  const strip = frame.locator('> div').first()
+  // Frame chrome stays above content in a separate screen-space overlay.
+  const strip = page.locator('[data-frame-chrome-id] > div').first()
   await expect(strip).toContainText('1')
   await expect(strip).toHaveCSS('z-index', '2')
   await expect(page.getByTestId('frame-outline')).toHaveCSS('z-index', '1')

@@ -183,21 +183,21 @@ test('reorders frames by dragging rows and renames inline', async ({ page }) => 
   await input.fill('Intro')
   await input.press('Enter')
   await expect(rows.nth(0)).toContainText('Intro')
-  await expect(page.locator('[data-element-type="frame"]', { hasText: 'Intro' })).toHaveCount(1)
+  await expect(page.locator('[data-frame-chrome-id]', { hasText: 'Intro' })).toHaveCount(1)
   // Clicking a row selects the frame (pink outline) and flies the camera to it.
   const world = page.getByTestId('world-layer')
   const before = await world.evaluate((el) => el.style.transform)
   await rows.nth(1).getByText('Frame 1').click()
   await expect(rows.nth(1)).toHaveAttribute('data-current', 'true')
   await expect.poll(() => world.evaluate((el) => el.style.transform)).not.toBe(before)
-  await expect(page.locator('[data-element-type="frame"]', { hasText: 'Frame 1' })).toHaveCount(1)
+  await expect(page.locator('[data-frame-chrome-id]', { hasText: 'Frame 1' })).toHaveCount(1)
 })
 
 test('double-clicking a frame title on the canvas renames it inline', async ({ page }) => {
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 150], [300, 300])
   await page.keyboard.press('v')
-  const frame = page.locator('[data-element-type="frame"]').first()
+  const frame = page.locator('[data-frame-chrome-id]').first()
   await expect(frame).toContainText('Frame 1')
   // The title strip sits just above the frame's top edge.
   const canvas = page.getByTestId('canvas-viewport')

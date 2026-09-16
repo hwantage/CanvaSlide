@@ -8,7 +8,7 @@ import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 
 export const IMAGE_DETAIL_SETTLE_MS = ZOOM_SETTLE_MS * 2
-type DetailTile = ImageDetailRegion & { src: string }
+type DetailTile = ImageDetailRegion & { canvas: HTMLCanvasElement }
 type Detail = {
   element: ImageElement
   source: string
@@ -64,7 +64,7 @@ export function useImageDetail(
         return
       }
       // Replace the entire visible crop atomically so transparency is never composited twice.
-      if (results.every((result) => result.size)) {
+      if (results.every((result) => result.canvas)) {
         displayed = true
         setDetail({
           element,
@@ -72,7 +72,7 @@ export function useImageDetail(
           camera: state.camera,
           viewport: state.viewport,
           density,
-          tiles: regions.map((region, index) => ({ ...region, src: results[index]!.src }))
+          tiles: regions.map((region, index) => ({ ...region, canvas: results[index]!.canvas! }))
         })
       } else {
         clear()

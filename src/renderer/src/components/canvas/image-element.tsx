@@ -14,27 +14,30 @@ export function ImageElement({
   const asset = useDocumentStore((s) => s.document.assets[element.assetId])
   const preview = useImageSource(element, asset, selected)
   const detail = useImageDetail(element, asset, preview)
-  const tiles = useRef<(HTMLImageElement | null)[]>([])
-  const [decoded, setDecoded] = useState<typeof detail>()
+  const tiles = useRef<(HTMLCanvasElement | null)[]>([])
+  const [painted, setPainted] = useState<typeof detail>()
   useLayoutEffect(() => {
     if (!detail) {
       return
     }
-    let active = true
-    // Mounted images must be ready before hiding the fallback, even when their cached decoder is warm.
-    void Promise.all(detail.map((_, index) => tiles.current[index]!.decode())).then(
-      () => {
-        if (active) {
-          setDecoded(detail)
+    const frame = requestAnimationFrame(() => {
+      if (detail.some((tile, index) => !tile.canvas.width || !tiles.current[index])) {
+        return
+      }
+      // Copy every surface before hiding the preview; PNG encoding blocks WebKit's main thread.
+      for (const [index, tile] of detail.entries()) {
+        const context = tiles.current[index]!.getContext('2d')
+        if (!context) {
+          return
         }
-      },
-      () => {}
-    )
-    return () => {
-      active = false
-    }
+        context.clearRect(0, 0, tile.pixels.width, tile.pixels.height)
+        context.drawImage(tile.canvas, 0, 0)
+      }
+      setPainted(detail)
+    })
+    return () => cancelAnimationFrame(frame)
   }, [detail])
-  const showDetail = detail && decoded === detail
+  const showDetail = detail && painted === detail
   return (
     <>
       <img
@@ -52,15 +55,15 @@ export function ImageElement({
           visibility: preview && !showDetail ? 'visible' : 'hidden'
         }}
       />
-      {detail?.map(({ crop, src }, index) => (
-        <img
+      {detail?.map(({ crop, pixels }, index) => (
+        <canvas
           key={index}
           ref={(node) => {
             tiles.current[index] = node
           }}
-          src={src}
-          alt=""
-          draggable={false}
+          width={pixels.width}
+          height={pixels.height}
+          aria-hidden="true"
           data-image-detail-id={element.id}
           className="absolute max-w-none select-none"
           style={{

@@ -155,4 +155,7 @@ export function createSvgPreviewCache(
 
 export const svgPreviewCache = createSvgPreviewCache()
 // Detail tiles must not evict the previews already warmed for camera flights.
-export const svgDetailCache = createSvgPreviewCache(createSvgImagePreview, 64 * 1024 * 1024)
+export const svgDetailCache = createSvgPreviewCache(
+  (asset, aspect, detail, signal) => createSvgImagePreview(asset, aspect, detail, signal, 'canvas'),
+  64 * 1024 * 1024
+)

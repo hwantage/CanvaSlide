@@ -1,8 +1,15 @@
-import type { Size } from '@shared/canvas/element-types'
+import type { Rect, Size } from '@shared/canvas/element-types'
+import { imageDetailSourceRect } from '@shared/canvas/image-detail'
 
-export type ImagePreview = { src: string; size?: Size; bytes: number; dispose: () => void }
+export type ImagePreview = {
+  src: string
+  size?: Size
+  canvas?: HTMLCanvasElement
+  bytes: number
+  dispose: () => void
+}
 
-async function loadImage(src: string, signal?: AbortSignal): Promise<HTMLImageElement> {
+export async function loadImage(src: string, signal?: AbortSignal): Promise<HTMLImageElement> {
   signal?.throwIfAborted()
   const image = new Image()
   await new Promise<void>((resolve, reject) => {
@@ -31,7 +38,9 @@ async function loadImage(src: string, signal?: AbortSignal): Promise<HTMLImageEl
 export async function rasterizeSvg(
   svg: SVGSVGElement,
   size: Size,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  surface: 'png' | 'canvas' = 'png',
+  bitmap?: { image: HTMLImageElement; crop: Rect }
 ): Promise<ImagePreview> {
   signal?.throwIfAborted()
   const sourceUrl = URL.createObjectURL(
@@ -41,6 +50,7 @@ export async function rasterizeSvg(
   let image: HTMLImageElement | undefined
   let decoded: HTMLImageElement | undefined
   let src: string | undefined
+  let retainedCanvas = false
   try {
     image = await loadImage(sourceUrl, signal)
     await image.decode()
@@ -52,6 +62,38 @@ export async function rasterizeSvg(
       throw new Error('Canvas raster is unavailable')
     }
     context.drawImage(image, 0, 0, size.width, size.height)
+    if (bitmap) {
+      const source = imageDetailSourceRect(bitmap.crop, {
+        width: bitmap.image.naturalWidth,
+        height: bitmap.image.naturalHeight
+      })
+      context.globalCompositeOperation = 'source-in'
+      context.drawImage(
+        bitmap.image,
+        source.x,
+        source.y,
+        source.width,
+        source.height,
+        0,
+        0,
+        size.width,
+        size.height
+      )
+    }
+    if (surface === 'canvas') {
+      // Avoid the synchronous pixel readback and PNG encoding used by image previews.
+      retainedCanvas = true
+      return {
+        src: '',
+        canvas,
+        size,
+        bytes: size.width * size.height * 4,
+        dispose: () => {
+          canvas.width = 0
+          canvas.height = 0
+        }
+      }
+    }
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(
         (result) => (result ? resolve(result) : reject(new Error('SVG raster encoding failed'))),
@@ -87,7 +129,9 @@ export async function rasterizeSvg(
     if (image) {
       image.src = ''
     }
-    canvas.width = 0
-    canvas.height = 0
+    if (!retainedCanvas) {
+      canvas.width = 0
+      canvas.height = 0
+    }
   }
 }

@@ -105,6 +105,12 @@ export const en = {
   'text.placeholder': 'Type…',
 
   'settings.title': 'Settings',
+  'settings.appearance': 'Appearance',
+  'settings.theme': 'Theme',
+  'settings.themePreference': 'Theme preference',
+  'settings.theme.system': 'System',
+  'settings.theme.light': 'Light',
+  'settings.theme.dark': 'Dark',
   'settings.slideShow': 'Slide show',
   'settings.transition': 'Transition',
   'settings.transitionDuration': 'Transition duration',

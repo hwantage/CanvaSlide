@@ -107,6 +107,12 @@ export const ko: UiStrings = {
   'text.placeholder': '입력…',
 
   'settings.title': '설정',
+  'settings.appearance': '모양',
+  'settings.theme': '테마',
+  'settings.themePreference': '테마 설정',
+  'settings.theme.system': '시스템 설정',
+  'settings.theme.light': '라이트 모드',
+  'settings.theme.dark': '다크 모드',
   'settings.slideShow': '슬라이드 쇼',
   'settings.transition': '전환',
   'settings.transitionDuration': '전환 시간',

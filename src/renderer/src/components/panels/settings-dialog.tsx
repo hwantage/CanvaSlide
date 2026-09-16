@@ -11,9 +11,15 @@ import { TextButton } from '@/components/ui/text-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { useSettingsDialogStore } from '@/store/settings-dialog-store'
+import {
+  selectThemePreference,
+  themePreferences,
+  useThemeStore,
+  type ThemePreference
+} from '@/store/theme-store'
 import { UpdateSection } from './update-section'
 
-/** Document settings; add a <Section> per concern so the dialog grows without restructuring. */
+/** Document and app settings; add a <Section> per concern so the dialog grows without restructuring. */
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -64,6 +70,11 @@ const backgroundLabels: Record<CanvasBackground, UiStringKey> = {
   grid: 'settings.background.grid',
   plain: 'settings.background.plain'
 }
+const themeLabels: Record<ThemePreference, UiStringKey> = {
+  system: 'settings.theme.system',
+  light: 'settings.theme.light',
+  dark: 'settings.theme.dark'
+}
 const frameBorderLabels: Record<FrameBorderStyle, UiStringKey> = {
   solid: 'settings.frameBorder.solid',
   dashed: 'settings.frameBorder.dashed',
@@ -75,6 +86,8 @@ export function SettingsDialog() {
   const hide = useSettingsDialogStore((s) => s.hide)
   const settings = useDocumentStore(selectDocument).settings
   const updateSettings = useDocumentStore((s) => s.updateSettings)
+  const themePreference = useThemeStore(selectThemePreference)
+  const setThemePreference = useThemeStore((s) => s.setPreference)
   if (!open) {
     return null
   }
@@ -96,6 +109,20 @@ export function SettingsDialog() {
         onClick={(event) => event.stopPropagation()}
       >
         <h2 className="text-sm font-semibold">{t('settings.title')}</h2>
+        <Section title={t('settings.appearance')}>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="w-24 text-muted-foreground">{t('settings.theme')}</span>
+            <Choice
+              name={t('settings.themePreference')}
+              value={themePreference}
+              options={themePreferences.map((value) => ({
+                value,
+                label: t(themeLabels[value])
+              }))}
+              onChange={setThemePreference}
+            />
+          </div>
+        </Section>
         <Section title={t('settings.slideShow')}>
           <label className="flex items-center gap-3 text-xs">
             <span className="w-24 text-muted-foreground">{t('settings.transition')}</span>

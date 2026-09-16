@@ -1,9 +1,12 @@
-import { cameraForWorldCenter, clampZoom } from './camera-transform'
-import { contentBounds } from './element-bounds'
+import { cameraForWorldCenter, clampZoom, MAX_ZOOM } from './camera-transform'
+import { contentBounds, elementRect, unionRects } from './element-bounds'
+import { orderedFrames } from './presentation-sequence'
 import { DEFAULT_CAMERA } from './camera-transform'
 import type { CanvasDocument, Camera, Rect, Size } from './element-types'
 
 export const FRAME_FIT_PADDING_RATIO = 0.04
+/** Margin on each side of the frame bounds; increase for a smaller overview. */
+export const OVERVIEW_FIT_PADDING_RATIO = 0.08
 
 /** Camera that shows `rect` fully inside `viewport` (contain fit), centered. */
 export function fitRectToViewport(
@@ -19,6 +22,27 @@ export function fitRectToViewport(
     zoom,
     viewport
   )
+}
+
+/** Overview must contain the whole board even below the manual zoom minimum. */
+export function fitOverviewToViewport(rect: Rect, viewport: Size): Camera {
+  const paddingScale = 1 + 2 * Math.max(0, OVERVIEW_FIT_PADDING_RATIO)
+  const zoom = Math.min(
+    MAX_ZOOM,
+    viewport.width / (rect.width * paddingScale),
+    viewport.height / (rect.height * paddingScale)
+  )
+  return {
+    zoom,
+    x: viewport.width / 2 - (rect.x + rect.width / 2) * zoom,
+    y: viewport.height / 2 - (rect.y + rect.height / 2) * zoom
+  }
+}
+
+/** Large backdrops outside the slides must not shrink or shift the frame picker. */
+export function cameraForOverview(document: CanvasDocument, viewport: Size): Camera | null {
+  const bounds = unionRects(orderedFrames(document).map(elementRect)) ?? contentBounds(document)
+  return bounds ? fitOverviewToViewport(bounds, viewport) : null
 }
 
 /** Fit-all: like a frame fit but never zooms in past 100% so small content stays readable. */

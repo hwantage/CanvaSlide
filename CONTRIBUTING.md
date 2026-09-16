@@ -65,6 +65,15 @@ The full list is in [`AGENTS.md`](./AGENTS.md). The ones that most often come up
 - **Styling:** use design tokens from `src/renderer/src/assets/main.css`; no ad-hoc hex in components.
 - **Comments** explain _why_, one line, only when it is not obvious from the code.
 
+## Documentation and Temporary Files
+
+- Do not add files under `docs/` without a specific, lasting documentation need. Explain that need
+  in the PR; `docs/` is not a workspace for task artifacts or review evidence.
+- Keep temporary files in `discuss/`, which is already excluded by `.gitignore`. This includes
+  screenshots, before/after images, recordings, reproduction files, logs and issue/PR drafts.
+- Do not force-add files from `discuss/`. Attach review screenshots or videos directly to the issue
+  or PR instead of committing them solely as visual proof.
+
 ## Branch Naming
 
 Work branches must use `<type>/<short-kebab-case-description>`. Start with a purpose prefix such as
@@ -120,7 +129,8 @@ Each PR should be small, focused and easy to review. In the description:
 - **What changed and why:** the approach and any alternatives you rejected.
 - **Linked issue:** `Fixes #123` where one exists.
 - **Visual proof:** before / after screenshots or a short video for any UI or interaction change. If
-  there is truly no visual change, say `No visual change` and why.
+  there is truly no visual change, say `No visual change` and why. Attach this evidence directly to
+  the PR; this requirement does not mean adding image files to the repository.
 - **Testing:** how you verified it, which platforms you actually ran it on, and which automated tests
   you added or why none were needed.
 - **Platform notes:** anything macOS-only, Windows-only, or Tauri-vs-browser specific.

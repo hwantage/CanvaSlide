@@ -31,14 +31,16 @@ fn acknowledge_quit() {
 /// process when one is double-clicked in the shell, and without this the two instances would each
 /// hold a copy of the same file and overwrite each other's saves.
 #[cfg(any(target_os = "windows", target_os = "linux"))]
-fn adopt_second_launch(app: &AppHandle, argv: Vec<String>, _cwd: String) {
+fn adopt_second_launch(app: &AppHandle, argv: Vec<String>, cwd: String) {
     if let Some(window) = app.webview_windows().values().next() {
         let _ = window.unminimize();
         let _ = window.set_focus();
     }
-    if let Some(path) =
-        launch_document::document_path_from_args(argv.into_iter().map(std::ffi::OsString::from))
-    {
+    // Why `cwd`: it is the duplicate process's working directory, which this one need not share.
+    if let Some(path) = launch_document::document_path_from_args(
+        std::path::Path::new(&cwd),
+        argv.into_iter().map(std::ffi::OsString::from),
+    ) {
         launch_document::offer(app, path);
     }
 }
@@ -59,7 +61,9 @@ pub fn run() {
         .manage(launch_document::PendingDocument::default())
         .setup(|app| {
             app_menu::install(app)?;
-            if let Some(path) = launch_document::document_path_from_args(std::env::args_os()) {
+            let cwd = std::env::current_dir().unwrap_or_default();
+            if let Some(path) = launch_document::document_path_from_args(&cwd, std::env::args_os())
+            {
                 launch_document::offer(app.handle(), path);
             }
             Ok(())

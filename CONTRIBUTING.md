@@ -67,13 +67,21 @@ The full list is in [`AGENTS.md`](./AGENTS.md). The ones that most often come up
 
 ## Branch Naming
 
-Use a short, descriptive branch name that says what the change is:
+Work branches must use `<type>/<short-kebab-case-description>`. Start with a purpose prefix such as
+`fix/`, `feat/`, `docs/`, `refactor/`, `test/`, `perf/`, or `chore/`, followed by a short description
+in lowercase words separated by hyphens:
 
+- `fix/canvas-rendering-performance`
 - `fix/connector-port-snap-on-resize`
 - `feat/frame-list-drag-reorder`
 - `chore/update-playwright`
 
-Avoid vague names like `test`, `wip`, or `changes`.
+The slash between the type and description is required: `fix-canvas-rendering-performance` is invalid.
+Do not prepend a username, team, or tool name, such as `username/fix-canvas-rendering-performance`
+or `username/fix/canvas-rendering-performance`. Avoid vague names like `test`, `wip`, or `changes`.
+
+After a tool creates a branch or worktree, check the actual Git branch name with
+`git branch --show-current` and correct any automatic prefix before committing or opening a PR.
 
 ## Commits
 

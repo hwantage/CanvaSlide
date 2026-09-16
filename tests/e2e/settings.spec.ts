@@ -58,3 +58,35 @@ test('blocks canvas shortcuts while the settings dialog is open', async ({ page 
   await expect(dialog).toBeHidden()
   await expect(shapes).toHaveCount(1)
 })
+
+test('theme preference overrides the OS and survives a reload', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.goto('/')
+  const html = page.locator('html')
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Settings' })
+  await dialog.getByRole('radio', { name: 'Light' }).click()
+  await expect(dialog.getByRole('radio', { name: 'Light' })).toBeChecked()
+  await expect(html).toHaveAttribute('data-theme', 'light')
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+
+  await dialog.getByRole('radio', { name: 'Dark' }).click()
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(24, 24, 27)')
+
+  // A forced theme must stay put across restarts, and `system` must follow the OS again.
+  await page.reload()
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(24, 24, 27)')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  await dialog.getByRole('radio', { name: 'System' }).click()
+  await expect(dialog.getByRole('radio', { name: 'System' })).toBeChecked()
+  await expect(html).toHaveAttribute('data-theme', 'light')
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await expect(html).toHaveAttribute('data-theme', 'dark')
+})

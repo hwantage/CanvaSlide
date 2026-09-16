@@ -11,6 +11,7 @@ import { useClipboard } from '@/hooks/use-clipboard'
 import { useCloseGuard } from '@/hooks/use-close-guard'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useLaunchDocument } from '@/hooks/use-launch-document'
+import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
 import { selectPresentationActive, usePresentationStore } from '@/store/presentation-store'
 
@@ -23,6 +24,7 @@ export function App() {
   useCloseGuard()
   useLaunchDocument(commands)
   useUpdateCheck()
+  useSystemTheme()
 
   return (
     <div className="flex h-full flex-col bg-background text-foreground">

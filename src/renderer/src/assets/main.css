@@ -1,8 +1,10 @@
 @import 'tailwindcss';
 @import './brand.css';
 
-/* Design tokens: surface/foreground pairs, neutral chrome, colour reserved for state. */
+/* Design tokens: surface/foreground pairs, neutral chrome, colour reserved for state.
+   `data-theme` is written onto <html> from the theme store before React renders. */
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #18181b;
   --card: #ffffff;
@@ -34,36 +36,35 @@
   --radius: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #18181b;
-    --foreground: #fafafa;
-    --card: #1f1f23;
-    --card-foreground: #fafafa;
-    --popover: #1f1f23;
-    --popover-foreground: #fafafa;
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
-    --secondary: #27272a;
-    --secondary-foreground: #fafafa;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --accent: #27272a;
-    --accent-foreground: #fafafa;
-    --destructive: #ef4444;
-    --destructive-foreground: #fafafa;
-    --border: #3f3f46;
-    --input: #3f3f46;
-    --ring: #60a5fa;
-    --canvas: #f7f7f8;
-    --canvas-grid: #d4d4d8;
-    --canvas-grid-line: #ececef;
-    --selection: #60a5fa;
-    --frame-stroke: #71717a;
-    --frame-label: #d4d4d8;
-    --snap: #f87171;
-    --frame-selected: #f472b6;
-  }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #18181b;
+  --foreground: #fafafa;
+  --card: #1f1f23;
+  --card-foreground: #fafafa;
+  --popover: #1f1f23;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #3f3f46;
+  --input: #3f3f46;
+  --ring: #60a5fa;
+  --canvas: #f7f7f8;
+  --canvas-grid: #d4d4d8;
+  --canvas-grid-line: #ececef;
+  --selection: #60a5fa;
+  --frame-stroke: #71717a;
+  --frame-label: #d4d4d8;
+  --snap: #f87171;
+  --frame-selected: #f472b6;
 }
 
 @theme inline {

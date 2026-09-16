@@ -27,9 +27,30 @@ fn acknowledge_quit() {
     QUIT_UNANSWERED.store(false, Ordering::Relaxed);
 }
 
+/// Hands a document from a second launch to the running app: Windows and Linux start a whole new
+/// process when one is double-clicked in the shell, and without this the two instances would each
+/// hold a copy of the same file and overwrite each other's saves.
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+fn adopt_second_launch(app: &AppHandle, argv: Vec<String>, _cwd: String) {
+    if let Some(window) = app.webview_windows().values().next() {
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+    if let Some(path) =
+        launch_document::document_path_from_args(argv.into_iter().map(std::ffi::OsString::from))
+    {
+        launch_document::offer(app, path);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // Why: Tauri requires this plugin before every other one, so the duplicate process bows out
+    // before it starts building windows.
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(adopt_second_launch));
+    builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_clipboard_manager::init())

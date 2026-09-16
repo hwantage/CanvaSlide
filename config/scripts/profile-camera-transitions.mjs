@@ -78,13 +78,27 @@ try {
   if (frames.length < 2) {
     throw new Error('The document must contain at least two frames')
   }
+  const sequence = process.env.CANVASLIDE_PROFILE_FRAMES
+    ? process.env.CANVASLIDE_PROFILE_FRAMES.split(',').map((value) => Number(value) - 1)
+    : frames.map((_, index) => index)
+  if (
+    sequence.length < 2 ||
+    sequence.some((index) => !Number.isInteger(index) || index < 0 || index >= frames.length)
+  ) {
+    throw new Error('CANVASLIDE_PROFILE_FRAMES must list at least two valid frame numbers')
+  }
+  report.sequence = sequence.map((index) => index + 1)
   await (mode === 'slideshow'
-    ? page.getByRole('button', { name: 'Slide Show', exact: true }).click()
-    : page.getByTestId('frame-row').first().locator('button').first().click())
+    ? page.evaluate(
+        (index) => window.transitionProfile.presentation.getState().start(index),
+        sequence[0]
+      )
+    : page.getByTestId('frame-row').nth(sequence[0]).locator('button').first().click())
   await page.waitForFunction(() => !window.transitionProfile.camera.getState().isAnimating())
   await page.waitForTimeout(settleMs)
   for (let pass = 0; pass < passes; pass++) {
-    for (let index = 1; index < frames.length; index++) {
+    let previousIndex = sequence[0]
+    for (const index of sequence.slice(1)) {
       const row = await page.evaluate(
         async ({ index, settleMs, mode }) => {
           const { camera, document, presentation } = window.transitionProfile
@@ -148,6 +162,7 @@ try {
             startupMs: first < 0 ? null : samples[first].t,
             arrivalMs: samples[last]?.t ?? 0,
             motion: stats(moving.map((sample) => sample.dt)),
+            afterArrival: stats(samples.slice(last + 1).map((sample) => sample.dt)),
             wholeRequest: stats(samples.slice(0, last + 1).map((sample) => sample.dt)),
             stalls: moving.filter((sample) => sample.dt > 40),
             samples
@@ -155,19 +170,30 @@ try {
         },
         { index, settleMs, mode }
       )
-      report.flights.push({ pass: pass + 1, from: frames[index - 1], to: frames[index], ...row })
+      report.flights.push({
+        pass: pass + 1,
+        from: frames[previousIndex],
+        to: frames[index],
+        ...row
+      })
+      previousIndex = index
       console.log(
         JSON.stringify({
           pass: pass + 1,
           frame: index + 1,
           startupMs: row.startupMs,
+          arrivalMs: row.arrivalMs,
+          afterArrival: row.afterArrival,
           ...row.motion
         })
       )
     }
     await (mode === 'slideshow'
-      ? page.evaluate(() => window.transitionProfile.presentation.getState().goTo(0))
-      : page.getByTestId('frame-row').first().locator('button').first().click())
+      ? page.evaluate(
+          (index) => window.transitionProfile.presentation.getState().goTo(index),
+          sequence[0]
+        )
+      : page.getByTestId('frame-row').nth(sequence[0]).locator('button').first().click())
     await page.waitForFunction(() => !window.transitionProfile.camera.getState().isAnimating())
     await page.waitForTimeout(settleMs)
   }

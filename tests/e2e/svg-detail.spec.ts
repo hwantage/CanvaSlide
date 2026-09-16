@@ -77,16 +77,16 @@ test('restores original vector detail at Retina density without double-compositi
   await expect(tiles.first()).toBeVisible()
   await expect(base).toHaveCSS('visibility', 'hidden')
   const result = await tiles.first().evaluate((node) => {
-    const img = node as HTMLImageElement
+    const img = node as HTMLCanvasElement
     const c = document.createElement('canvas')
-    c.width = img.naturalWidth
-    c.height = img.naturalHeight
+    c.width = img.width
+    c.height = img.height
     const ctx = c.getContext('2d')!
     ctx.drawImage(img, 0, 0)
     const rect = img.getBoundingClientRect()
     return {
-      width: img.naturalWidth,
-      height: img.naturalHeight,
+      width: img.width,
+      height: img.height,
       screen: { width: rect.width, height: rect.height },
       dark: [...ctx.getImageData(5, 100, 1, 1).data],
       light: [...ctx.getImageData(15, 100, 1, 1).data]
@@ -117,22 +117,22 @@ test('uses previews throughout a flight and refreshes bounded crops at the new p
   const base = page.locator('[data-element-id="photo"]')
   const tiles = page.locator('[data-image-detail-id="photo"]')
   await expect(tiles.first()).toBeVisible()
-  const old = await tiles.first().getAttribute('src')
+  const old = await tiles.first().elementHandle()
   await camera(page, { x: -32000 * 8, y: -16000 * 8, zoom: 8 }, 1000)
   await expect(tiles).toHaveCount(0)
   await expect(base).toHaveCSS('visibility', 'visible')
   await page.waitForTimeout(300)
   await expect(tiles).toHaveCount(0)
   await expect(tiles.first()).toBeVisible()
-  await expect(tiles.first()).not.toHaveAttribute('src', old!)
+  expect(await old!.evaluate((node) => node.isConnected)).toBe(false)
   const stats = await tiles.evaluateAll((nodes) =>
     nodes.map((node) => {
-      const img = node as HTMLImageElement
+      const img = node as HTMLCanvasElement
       const rect = img.getBoundingClientRect()
       return {
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-        density: img.naturalWidth / rect.width
+        width: img.width,
+        height: img.height,
+        density: img.width / rect.width
       }
     })
   )
@@ -259,39 +259,50 @@ test('matches original SVG pixels after cropping, filtering and changing aspect 
   }
 })
 
-test('keeps the fallback until every mounted detail image has decoded', async ({ page }) => {
+test('keeps the fallback until all detail surfaces are ready without encoding PNGs', async ({
+  page
+}) => {
   await openDetailDocument(page)
   await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeVisible()
-  await page.evaluate(() => {
-    const decode = HTMLImageElement.prototype.decode
-    let finish!: () => void
-    const gate = new Promise<void>((resolve) => {
-      finish = resolve
-    })
+  await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/lib/svg-preview-cache.ts'))
+      .at(-1)!
+    const { svgDetailCache } = await import(url)
+    const acquire = svgDetailCache.acquire.bind(svgDetailCache)
+    const pending: (() => void)[] = []
     Object.assign(window, {
-      finishMountedDetails: () => {
-        HTMLImageElement.prototype.decode = decode
-        finish()
-      }
+      finishDetail: () => pending.shift()?.(),
+      finishAllDetails: () => pending.splice(0).forEach((finish) => finish())
     })
-    HTMLImageElement.prototype.decode = function () {
-      const decoded = decode.call(this)
-      if (!this.dataset.imageDetailId) {
-        return decoded
+    svgDetailCache.acquire = (...args: unknown[]) => {
+      const lease = acquire(...args)
+      return {
+        ...lease,
+        ready: lease.ready.then(
+          (result: unknown) =>
+            new Promise((resolve) => {
+              pending.push(() => resolve(result))
+              Object.assign(window, { pendingDetailCount: pending.length })
+            })
+        )
       }
-      Object.assign(window, { mountedDetailPending: true })
-      return Promise.all([decoded, gate]).then(() => {})
+    }
+    HTMLCanvasElement.prototype.toBlob = () => {
+      throw new Error('Detail should not encode PNGs')
     }
   })
   await camera(page, { x: 80, y: 60, zoom: 0.021 })
-  await page.waitForFunction(() => 'mountedDetailPending' in window)
-  await expect(page.locator('[data-element-id="photo"]')).toHaveCSS('visibility', 'visible')
-  await expect(page.locator('[data-image-detail-id="photo"]').first()).toHaveCSS(
-    'visibility',
-    'hidden'
+  await page.waitForFunction(
+    () => (window as unknown as { pendingDetailCount: number }).pendingDetailCount >= 2
   )
+  await page.evaluate(() => (window as unknown as { finishDetail: () => void }).finishDetail())
+  await expect(page.locator('[data-element-id="photo"]')).toHaveCSS('visibility', 'visible')
+  await expect(page.locator('[data-image-detail-id="photo"]')).toHaveCount(0)
   await page.evaluate(() =>
-    (window as unknown as { finishMountedDetails: () => void }).finishMountedDetails()
+    (window as unknown as { finishAllDetails: () => void }).finishAllDetails()
   )
   await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeVisible()
   await expect(page.locator('[data-element-id="photo"]')).toHaveCSS('visibility', 'hidden')

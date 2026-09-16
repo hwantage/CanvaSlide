@@ -6,7 +6,7 @@ import { useCameraStore } from '@/store/camera-store'
  * The CSS zoom the world is laid out at, lagging behind gestures: it updates only after the camera
  * zoom has held still for ZOOM_SETTLE_MS, and never drops below 1 (see layoutZoomFor). The world
  * layer covers the difference with a compositor-only transform, so wheel zoom and slide
- * transitions never trigger a full re-layout.
+ * transitions hold one layout scale until arrival.
  */
 export function useSettledZoom(): number {
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
@@ -22,7 +22,14 @@ export function useSettledZoom(): number {
       setZoom(layoutZoomFor(useCameraStore.getState().camera.zoom))
     }
     const unsubscribe = useCameraStore.subscribe((state, previous) => {
-      if (state.camera.zoom === previous.camera.zoom) {
+      // A large departure scale makes WebKit rasterize newly visible SVGs before downscaling them.
+      if (state.animationActive && !previous.animationActive) {
+        setZoom(1)
+      }
+      if (
+        state.camera.zoom === previous.camera.zoom &&
+        state.animationActive === previous.animationActive
+      ) {
         return
       }
       if (timer !== null) {

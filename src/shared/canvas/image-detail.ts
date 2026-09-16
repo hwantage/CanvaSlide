@@ -4,6 +4,15 @@ import type { Camera, Rect, Size } from './element-types'
 export type ImageDetailRegion = { crop: Rect; pixels: Size }
 export const IMAGE_DETAIL_TILE_EDGE = 2048
 
+export function imageDetailSourceRect(crop: Rect, source: Size): Rect {
+  return {
+    x: crop.x * source.width,
+    y: crop.y * source.height,
+    width: crop.width * source.width,
+    height: crop.height * source.height
+  }
+}
+
 export function imageDetailRegions(
   element: Rect,
   camera: Camera,

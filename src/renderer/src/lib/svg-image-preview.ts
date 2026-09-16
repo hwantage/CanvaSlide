@@ -2,6 +2,7 @@ import type { ImageAsset } from '@shared/canvas/element-types'
 import type { ImageDetailRegion } from '@shared/canvas/image-detail'
 import { svgPreviewSize } from '@shared/canvas/image-rendering'
 import { rasterizeSvg, type ImagePreview } from './svg-raster'
+import { prepareSvgBitmapDetail } from './svg-bitmap-detail'
 
 export type { ImagePreview } from './svg-raster'
 
@@ -106,7 +107,8 @@ export async function createSvgImagePreview(
   asset: ImageAsset,
   aspect: number,
   detail?: ImageDetailRegion,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  surface: 'png' | 'canvas' = 'png'
 ): Promise<ImagePreview> {
   signal?.throwIfAborted()
   const svg = staticMaskedSvg(asset.data)
@@ -135,6 +137,7 @@ export async function createSvgImagePreview(
   if (!detail) {
     return rasterizeSvg(svg, size, signal)
   }
+  const bitmap = await prepareSvgBitmapDetail(svg, asset, aspect, detail, signal)
   // Nesting preserves percentage geometry and meet/slice alignment while clipping the render surface.
   const crop = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   crop.setAttribute('width', String(detail.pixels.width))
@@ -148,5 +151,15 @@ export async function createSvgImagePreview(
   svg.setAttribute('y', '0')
   svg.setAttribute('overflow', 'hidden')
   crop.appendChild(svg)
-  return rasterizeSvg(crop, detail.pixels, signal)
+  try {
+    return await rasterizeSvg(
+      crop,
+      detail.pixels,
+      signal,
+      surface,
+      bitmap ? { image: bitmap.image, crop: detail.crop } : undefined
+    )
+  } finally {
+    bitmap?.release()
+  }
 }

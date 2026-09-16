@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { imageDetailRegions, IMAGE_DETAIL_TILE_EDGE } from './image-detail'
+import { imageDetailRegions, imageDetailSourceRect, IMAGE_DETAIL_TILE_EDGE } from './image-detail'
 
 const element = { x: 0, y: 0, width: 66000, height: 33000 }
 const viewport = { width: 1280, height: 720 }
@@ -56,5 +56,11 @@ describe('visible image detail resolution', () => {
     expect(first.crop.y).toBe(0)
     expect((last.crop.x + last.crop.width) * image.width + camera.x).toBeCloseTo(1280, 10)
     expect((last.crop.y + last.crop.height) * image.height + camera.y).toBeCloseTo(720, 10)
+    const source = { width: 1672, height: 941 }
+    const a = imageDetailSourceRect(first.crop, source)
+    const b = imageDetailSourceRect(last.crop, source)
+    expect(a.x / source.width).toBeCloseTo(100.1 / image.width, 10)
+    expect(b.x + b.width).toBeLessThanOrEqual(source.width)
+    expect(b.y + b.height).toBeLessThanOrEqual(source.height)
   })
 })

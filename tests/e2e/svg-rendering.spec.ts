@@ -346,3 +346,31 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
   ).toBe(true)
   await expect(page.locator('[data-element-id="distant"]')).toHaveAttribute('src', /^blob:/)
 })
+
+test('drops a large departure layout scale during zoom-out and restores it after a same-zoom flight', async ({
+  page
+}) => {
+  await openMaskedImage(page)
+  const layer = page.getByTestId('world-layer').locator('> div')
+  await setCamera(page, { x: -32000 * 32, y: -16000 * 32, zoom: 32 })
+  await expect(layer).toHaveCSS('zoom', '32')
+  const url = await page.evaluate(() =>
+    performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/store/camera-store.ts'))
+      .at(-1)!
+  )
+  await page.evaluate(async (url) => {
+    const { useCameraStore } = await import(url)
+    useCameraStore.getState().animateTo({ x: -32000 * 2, y: -16000 * 2, zoom: 2 }, 600)
+  }, url)
+  await expect(layer).toHaveCSS('zoom', '1')
+  await expect(layer).toHaveCSS('zoom', '2')
+  await page.evaluate(async (url) => {
+    const { useCameraStore } = await import(url)
+    useCameraStore.getState().animateTo(useCameraStore.getState().camera, 600)
+  }, url)
+  await expect(layer).toHaveCSS('zoom', '1')
+  await expect(layer).toHaveCSS('zoom', '2')
+})

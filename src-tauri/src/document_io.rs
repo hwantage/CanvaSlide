@@ -38,6 +38,13 @@ pub fn has_document_extension(path: &Path) -> bool {
         || ends_with_extension(path, LEGACY_DOCUMENT_EXTENSION)
 }
 
+/// True for everything the Open dialog lets the user pick. A bare `.json` is in there because native
+/// dialogs match only the last segment, so a legacy `.canvas.json` can only be offered as `json`;
+/// the shape is validated right after, first here as JSON and then in the frontend by zod.
+pub fn is_openable_document(path: &Path) -> bool {
+    has_document_extension(path) || ends_with_extension(path, "json")
+}
+
 /// Appends the canonical extension when the save dialog returned a bare name, and rewrites a legacy
 /// `.canvas.json` or bare `.json` name so that "Save as…" migrates an old document. Only ever
 /// applied to a name the user just picked — see `write_document_file`.
@@ -60,7 +67,7 @@ pub fn normalize_document_path(path: &Path) -> PathBuf {
 }
 
 pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
-    if !has_document_extension(path) {
+    if !is_openable_document(path) {
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
     }
     let contents = std::fs::read_to_string(path)?;
@@ -232,6 +239,15 @@ mod tests {
         ));
     }
 
+    /// The Open dialog offers bare `.json` so legacy documents are reachable; the reader has to
+    /// accept the same set, or picking one raises a raw "not a canvas document" path instead.
+    #[test]
+    fn opens_the_same_extensions_the_dialog_offers() {
+        assert!(is_openable_document(Path::new("/tmp/deck.canvaslide")));
+        assert!(is_openable_document(Path::new("/tmp/deck.canvas.json")));
+        assert!(is_openable_document(Path::new("/tmp/package.json")));
+        assert!(!is_openable_document(Path::new("/tmp/notes.txt")));
+    }
 
     #[test]
     fn reads_a_legacy_document() {

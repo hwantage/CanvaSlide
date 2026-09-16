@@ -2,19 +2,17 @@ import { useCallback, useEffect, useRef } from 'react'
 import type { TextElement as TextElementModel } from '@shared/canvas/element-types'
 import { removeElements } from '@shared/canvas/document-mutations'
 import { t } from '@/i18n/ui-strings'
-import { textLineHeight } from '@/lib/element-factory'
 import { useDocumentStore } from '@/store/document-store'
 import { EditableText } from './editable-text'
 
 export function TextElement({ element, editing }: { element: TextElementModel; editing: boolean }) {
   const onHeightChange = useCallback(
     (height: number) => {
-      const next = Math.max(textLineHeight(element.textStyle.fontSize), Math.ceil(height))
-      if (Math.abs(next - element.height) > 1) {
-        useDocumentStore.getState().patchElements([element.id], { height: next }, false)
+      if (height !== element.height) {
+        useDocumentStore.getState().syncTextHeight(element.id, height)
       }
     },
-    [element.id, element.height, element.textStyle.fontSize]
+    [element.id, element.height]
   )
   // Why: track the true→false transition explicitly; effect cleanups also fire on StrictMode
   // double-mount, which would wrongly delete a freshly created text element.

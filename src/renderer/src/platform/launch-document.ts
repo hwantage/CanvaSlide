@@ -13,10 +13,19 @@ const OPEN_FILE_EVENT = 'open-file-requested'
 let undelivered: string | null = null
 
 /**
+ * Serialises every drain in the process, across listeners.
+ *
+ * Why: two listeners overlap during a StrictMode remount, and a launch document must survive that.
+ * Interleaved drains would let one park a path while the other is mid-flight, and let two documents
+ * load at once with the slower read deciding what the window ends up showing.
+ */
+let draining: Promise<void> = Promise.resolve()
+
+/**
  * Calls back with the document the OS handed the app — at launch, or later when one is opened while
  * the app runs. Browser mode has no such document. Returns a disposer.
  */
-export function onLaunchDocument(open: (path: string) => void): () => void {
+export function onLaunchDocument(open: (path: string) => void | Promise<void>): () => void {
   if (!isTauriRuntime()) {
     return () => {}
   }
@@ -26,17 +35,23 @@ export function onLaunchDocument(open: (path: string) => void): () => void {
     .then(async ([{ invoke }, { listen }]) => {
       // Why: Rust holds the path rather than pushing it, so a launch document that arrived before
       // this listener existed is still picked up by the first drain below.
-      const drain = async () => {
-        const path = undelivered ?? (await invoke<string | null>('take_launch_document'))
-        undelivered = null
-        if (path === null) {
-          return
-        }
-        if (disposed) {
-          undelivered = path
-          return
-        }
-        open(path)
+      const drain = () => {
+        draining = draining.then(async () => {
+          const parked = undelivered
+          undelivered = null
+          const path = parked ?? (await invoke<string | null>('take_launch_document'))
+          if (path === null) {
+            return
+          }
+          if (disposed) {
+            // Why: the path is already out of Rust and cannot be asked for again, so hand it to
+            // whichever listener comes next rather than losing the document.
+            undelivered = path
+            return
+          }
+          await open(path)
+        })
+        return draining
       }
       const stop = await listen(OPEN_FILE_EVENT, () => void drain().catch(reportFailure))
       if (disposed) {

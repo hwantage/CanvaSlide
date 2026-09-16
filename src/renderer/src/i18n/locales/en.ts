@@ -551,6 +551,7 @@ export const en = {
   'update.checkOnLaunch': 'Check for updates when the app starts',
   'update.badge': 'Update available',
 
+  'error.launchDocument': 'Could not open the document the app was asked to open: {message}',
   'error.decodeAsset': 'Could not decode image asset',
   'error.decodePasted': 'Could not decode pasted image',
   'error.canvasContext': 'Canvas 2D context unavailable',

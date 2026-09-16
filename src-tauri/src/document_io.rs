@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 pub const DOCUMENT_EXTENSION: &str = "canvaslide";
-/// Documents written before the single-extension move; still readable, never written.
+/// Documents written before the single-extension move. They open and save in place; only the save
+/// dialog ("Save as…") migrates one to `DOCUMENT_EXTENSION`.
 pub const LEGACY_DOCUMENT_EXTENSION: &str = "canvas.json";
 
 #[derive(Debug, thiserror::Error)]
@@ -32,13 +33,21 @@ fn ends_with_extension(path: &Path, extension: &str) -> bool {
         .ends_with(&format!(".{extension}"))
 }
 
-fn has_document_extension(path: &Path) -> bool {
+pub fn has_document_extension(path: &Path) -> bool {
     ends_with_extension(path, DOCUMENT_EXTENSION)
         || ends_with_extension(path, LEGACY_DOCUMENT_EXTENSION)
 }
 
-/// Appends the canonical extension when the picker returned a bare name, and rewrites a
-/// legacy `.canvas.json` name so that saving an old document migrates it.
+/// True for everything the Open dialog lets the user pick. A bare `.json` is in there because native
+/// dialogs match only the last segment, so a legacy `.canvas.json` can only be offered as `json`;
+/// the shape is validated right after, first here as JSON and then in the frontend by zod.
+pub fn is_openable_document(path: &Path) -> bool {
+    has_document_extension(path) || ends_with_extension(path, "json")
+}
+
+/// Appends the canonical extension when the save dialog returned a bare name, and rewrites a legacy
+/// `.canvas.json` or bare `.json` name so that "Save as…" migrates an old document. Only ever
+/// applied to a name the user just picked — see `write_document_file`.
 pub fn normalize_document_path(path: &Path) -> PathBuf {
     if ends_with_extension(path, DOCUMENT_EXTENSION) {
         return path.to_path_buf();
@@ -58,7 +67,7 @@ pub fn normalize_document_path(path: &Path) -> PathBuf {
 }
 
 pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
-    if !has_document_extension(path) {
+    if !is_openable_document(path) {
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
     }
     let contents = std::fs::read_to_string(path)?;
@@ -67,12 +76,31 @@ pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
     Ok(contents)
 }
 
-pub fn write_document_file(path: &Path, contents: &str) -> Result<PathBuf, DocumentIoError> {
+/// `normalize_extension` is set only for a name the user just picked in the save dialog. A silent
+/// save (⌘S on an open document) must land on the exact file it was read from: rewriting the target
+/// would leave the original behind holding stale content and would overwrite whatever already sits
+/// at the new name, with none of the confirmation the save dialog would have given.
+pub fn write_document_file(
+    path: &Path,
+    contents: &str,
+    normalize_extension: bool,
+) -> Result<PathBuf, DocumentIoError> {
     serde_json::from_str::<serde_json::Value>(contents)
         .map_err(|e| DocumentIoError::InvalidJson(e.to_string()))?;
-    let target = normalize_document_path(path);
+    let target = if normalize_extension {
+        normalize_document_path(path)
+    } else if is_openable_document(path) {
+        // Why the same test as the reader: a document opened from a bare `.json` keeps that path,
+        // and refusing it here would make the file readable but impossible to save.
+        path.to_path_buf()
+    } else {
+        return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
+    };
     // Why: write to a sibling temp file then rename so a crash never truncates the user's document.
-    let tmp = target.with_extension(format!("{DOCUMENT_EXTENSION}.tmp"));
+    // Why append rather than `with_extension`: a legacy `deck.canvas.json` would lose its `.json`.
+    let mut tmp = target.clone().into_os_string();
+    tmp.push(".tmp");
+    let tmp = PathBuf::from(tmp);
     std::fs::write(&tmp, contents)?;
     std::fs::rename(&tmp, &target)?;
     Ok(target)
@@ -104,8 +132,13 @@ pub fn read_document(path: String) -> Result<String, DocumentIoError> {
 }
 
 #[tauri::command]
-pub fn write_document(path: String, contents: String) -> Result<String, DocumentIoError> {
-    write_document_file(Path::new(&path), &contents).map(|p| p.to_string_lossy().into_owned())
+pub fn write_document(
+    path: String,
+    contents: String,
+    normalize_extension: bool,
+) -> Result<String, DocumentIoError> {
+    write_document_file(Path::new(&path), &contents, normalize_extension)
+        .map(|p| p.to_string_lossy().into_owned())
 }
 
 #[cfg(test)]
@@ -137,7 +170,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("uc-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("doc");
-        let written = write_document_file(&path, r#"{"version":1,"elements":[]}"#).unwrap();
+        let written = write_document_file(&path, r#"{"version":1,"elements":[]}"#, true).unwrap();
         assert!(written.ends_with("doc.canvaslide"));
         assert_eq!(
             read_document_file(&written).unwrap(),
@@ -162,13 +195,83 @@ mod tests {
     #[test]
     fn rejects_invalid_json_and_extension() {
         assert!(matches!(
-            write_document_file(Path::new("/tmp/x"), "{not json"),
+            write_document_file(Path::new("/tmp/x"), "{not json", true),
             Err(DocumentIoError::InvalidJson(_))
         ));
         assert!(matches!(
             read_document_file(Path::new("/tmp/x.txt")),
             Err(DocumentIoError::InvalidExtension(_))
         ));
+    }
+
+    /// A silent save must never move the document: the old file would keep the pre-edit content and
+    /// anything already sitting at the new name would be overwritten without a word.
+    #[test]
+    fn a_silent_save_keeps_a_legacy_document_where_it_is() {
+        let dir = std::env::temp_dir().join(format!("uc-silent-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let legacy = dir.join("deck.canvas.json");
+        std::fs::write(&legacy, r#"{"version":1,"elements":[]}"#).unwrap();
+
+        let written =
+            write_document_file(&legacy, r#"{"version":2,"elements":[]}"#, false).unwrap();
+
+        assert_eq!(written, legacy);
+        assert_eq!(
+            std::fs::read_to_string(&legacy).unwrap(),
+            r#"{"version":2,"elements":[]}"#
+        );
+        assert!(!dir.join("deck.canvaslide").exists());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// The save dialog is the one place a legacy name may be migrated.
+    #[test]
+    fn save_as_migrates_a_legacy_name() {
+        assert_eq!(
+            normalize_document_path(Path::new("/tmp/deck.canvas.json")),
+            PathBuf::from("/tmp/deck.canvaslide")
+        );
+    }
+
+    /// A document saved under a plain `.json` name opens, so it has to save again where it was.
+    #[test]
+    fn a_silent_save_round_trips_a_bare_json_document() {
+        let dir = std::env::temp_dir().join(format!("uc-bare-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("deck.json");
+        std::fs::write(&path, r#"{"version":1,"elements":[]}"#).unwrap();
+
+        assert_eq!(
+            read_document_file(&path).unwrap(),
+            r#"{"version":1,"elements":[]}"#
+        );
+        let written = write_document_file(&path, r#"{"version":2,"elements":[]}"#, false).unwrap();
+
+        assert_eq!(written, path);
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            r#"{"version":2,"elements":[]}"#
+        );
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_silent_save_refuses_a_path_that_is_not_a_document() {
+        assert!(matches!(
+            write_document_file(Path::new("/tmp/notes.txt"), "{}", false),
+            Err(DocumentIoError::InvalidExtension(_))
+        ));
+    }
+
+    /// The Open dialog offers bare `.json` so legacy documents are reachable; the reader has to
+    /// accept the same set, or picking one raises a raw "not a canvas document" path instead.
+    #[test]
+    fn opens_the_same_extensions_the_dialog_offers() {
+        assert!(is_openable_document(Path::new("/tmp/deck.canvaslide")));
+        assert!(is_openable_document(Path::new("/tmp/deck.canvas.json")));
+        assert!(is_openable_document(Path::new("/tmp/package.json")));
+        assert!(!is_openable_document(Path::new("/tmp/notes.txt")));
     }
 
     #[test]

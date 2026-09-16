@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::document_io::is_openable_document;
+use crate::file_path::FilePath;
 
 /// Sent when a document arrives while the app is already running; the frontend answers by taking
 /// the path with `take_launch_document`.
@@ -25,6 +26,10 @@ impl PendingDocument {
 
     fn take(&self) -> Option<PathBuf> {
         self.0.lock().unwrap_or_else(|e| e.into_inner()).take()
+    }
+
+    fn take_transport(&self) -> Option<FilePath> {
+        self.take().map(|path| FilePath::from_path(&path))
     }
 }
 
@@ -84,10 +89,8 @@ pub fn offer_urls(app: &AppHandle, urls: &[tauri::Url]) {
 }
 
 #[tauri::command]
-pub fn take_launch_document(pending: State<'_, PendingDocument>) -> Option<String> {
-    pending
-        .take()
-        .map(|path| path.to_string_lossy().into_owned())
+pub fn take_launch_document(pending: State<'_, PendingDocument>) -> Option<FilePath> {
+    pending.take_transport()
 }
 
 #[cfg(test)]
@@ -200,5 +203,20 @@ mod tests {
             pending.take(),
             Some(PathBuf::from("/tmp/second.canvaslide"))
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn launch_args_survive_the_json_bridge() {
+        use std::os::unix::ffi::OsStringExt;
+        let name = OsString::from_vec(b"deck\xff.canvaslide".to_vec());
+        let path =
+            document_path_from_args(Path::new(ELSEWHERE), ["canvaslide".into(), name]).unwrap();
+        let pending = PendingDocument::default();
+        pending.set(path.clone());
+        let json = serde_json::to_string(&pending.take_transport().unwrap()).unwrap();
+        let received: FilePath = serde_json::from_str(&json).unwrap();
+        assert_eq!(received.into_path().unwrap(), path);
+        assert_eq!(pending.take_transport(), None);
     }
 }

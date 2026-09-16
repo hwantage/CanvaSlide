@@ -1,7 +1,5 @@
 import {
   DOCUMENT_FILE_EXTENSION,
-  DOCUMENT_FILE_FILTER,
-  DOCUMENT_OPEN_FILE_FILTER,
   documentFileName,
   parseDocument,
   serializeDocument,
@@ -9,10 +7,11 @@ import {
 } from '@shared/canvas/document-file'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
+import { displayFilePath, type FilePath } from './file-path'
 import { isTauriRuntime } from './tauri-runtime'
 
-export type OpenedDocument = { document: CanvasDocument; filePath: string | null }
-export type SavedDocument = { filePath: string | null }
+export type OpenedDocument = { document: CanvasDocument; filePath: FilePath | null }
+export type SavedDocument = { filePath: FilePath | null }
 
 /** Tauri: native dialogs + Rust IO. Browser (dev:web): file input + download fallback. */
 export async function openDocumentFile(): Promise<OpenedDocument | null> {
@@ -24,7 +23,7 @@ export async function openDocumentFile(): Promise<OpenedDocument | null> {
 
 export async function saveDocumentFile(
   document: CanvasDocument,
-  filePath: string | null,
+  filePath: FilePath | null,
   forcePrompt = false
 ): Promise<SavedDocument | null> {
   const contents = serializeDocument(document)
@@ -54,20 +53,20 @@ export async function showErrorMessage(message: string): Promise<void> {
 }
 
 /** Opens a path the app was given rather than one the user picked; Tauri only. */
-export async function openDocumentAtPath(path: string): Promise<OpenedDocument> {
+export async function openDocumentAtPath(path: FilePath): Promise<OpenedDocument> {
   const { invoke } = await import('@tauri-apps/api/core')
   const contents = await invoke<string>('read_document', { path })
   const parsed = parseDocument(contents)
   if (!parsed.ok) {
     throw new Error(parsed.error)
   }
-  return { document: withDocumentName(parsed.document, path), filePath: path }
+  return { document: withDocumentName(parsed.document, displayFilePath(path)), filePath: path }
 }
 
 async function openWithTauri(): Promise<OpenedDocument | null> {
-  const { open } = await import('@tauri-apps/plugin-dialog')
-  const selected = await open({ multiple: false, filters: [DOCUMENT_OPEN_FILE_FILTER] })
-  if (typeof selected !== 'string') {
+  const { invoke } = await import('@tauri-apps/api/core')
+  const selected = await invoke<FilePath | null>('pick_document_path')
+  if (selected === null) {
     return null
   }
   return openDocumentAtPath(selected)
@@ -76,19 +75,18 @@ async function openWithTauri(): Promise<OpenedDocument | null> {
 async function saveWithTauri(
   document: CanvasDocument,
   contents: string,
-  filePath: string | null
+  filePath: FilePath | null
 ): Promise<SavedDocument | null> {
-  const [{ save }, { invoke }] = await Promise.all([
-    import('@tauri-apps/plugin-dialog'),
-    import('@tauri-apps/api/core')
-  ])
+  const { invoke } = await import('@tauri-apps/api/core')
   const chosen =
     filePath ??
-    (await save({ defaultPath: documentFileName(document), filters: [DOCUMENT_FILE_FILTER] }))
+    (await invoke<FilePath | null>('pick_document_save_path', {
+      defaultName: documentFileName(document)
+    }))
   if (!chosen) {
     return null
   }
-  const written = await invoke<string>('write_document', {
+  const written = await invoke<FilePath>('write_document', {
     path: chosen,
     contents,
     // Why: only a name the user just picked may gain the canonical extension. Rewriting the target

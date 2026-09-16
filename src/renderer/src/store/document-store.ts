@@ -1,3 +1,4 @@
+import type { FilePath } from '@/platform/file-path'
 import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { syncConnectorGeometry } from '@shared/canvas/connector-geometry'
@@ -43,7 +44,7 @@ export type SaveSnapshot = { document: CanvasDocument; session: number }
 export type DocumentState = HistoryStacks & {
   document: CanvasDocument
   selectedIds: ElementId[]
-  filePath: string | null
+  filePath: FilePath | null
   dirty: boolean
   /** Bumped on new/open so an in-flight save can't attach its path to another document. */
   session: number
@@ -52,11 +53,11 @@ export type DocumentState = HistoryStacks & {
 }
 
 export type DocumentActions = {
-  loadDocument: (document: CanvasDocument, filePath: string | null) => void
+  loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
   newDocument: () => void
   takeSaveSnapshot: () => SaveSnapshot
   /** Applies a finished save: path + name always, `dirty=false` only if nothing changed since. */
-  completeSave: (snapshot: SaveSnapshot, filePath: string | null) => void
+  completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
   setSelection: (ids: ElementId[]) => void
   toggleSelected: (id: ElementId) => void
   selectAll: () => void

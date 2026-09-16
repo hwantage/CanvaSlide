@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
+use crate::file_path::FilePath;
+
 pub const DOCUMENT_EXTENSION: &str = "canvaslide";
 /// Documents written before the single-extension move. They open and save in place; only the save
 /// dialog ("Save as…") migrates one to `DOCUMENT_EXTENSION`.
@@ -12,6 +14,8 @@ pub const LEGACY_DOCUMENT_EXTENSION: &str = "canvas.json";
 
 #[derive(Debug, thiserror::Error)]
 pub enum DocumentIoError {
+    #[error("invalid native path: {0}")]
+    InvalidPath(String),
     #[error("path is not a canvas document: {0}")]
     InvalidExtension(PathBuf),
     #[error("document is not valid JSON: {0}")]
@@ -52,18 +56,25 @@ pub fn normalize_document_path(path: &Path) -> PathBuf {
     if ends_with_extension(path, DOCUMENT_EXTENSION) {
         return path.to_path_buf();
     }
-    let mut name = path
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
-    // Why: the legacy suffix has to go first, otherwise `.json` leaves a dangling `.canvas`.
-    for suffix in [format!(".{LEGACY_DOCUMENT_EXTENSION}"), ".json".to_owned()] {
-        if name.to_ascii_lowercase().ends_with(&suffix) {
-            name.truncate(name.len() - suffix.len());
-            break;
+    let mut name = PathBuf::from(path.file_name().unwrap_or_default());
+    // Strip ASCII suffixes with native path operations so the remaining filename stays lossless.
+    if ends_with_extension(&name, "json") {
+        if name.as_os_str().eq_ignore_ascii_case(".json") {
+            name.clear();
+        } else {
+            name = name.file_stem().unwrap_or_default().into();
+        }
+        if ends_with_extension(path, LEGACY_DOCUMENT_EXTENSION) {
+            if name.as_os_str().eq_ignore_ascii_case(".canvas") {
+                name.clear();
+            } else {
+                name = name.file_stem().unwrap_or_default().into();
+            }
         }
     }
-    path.with_file_name(format!("{name}.{DOCUMENT_EXTENSION}"))
+    let mut name = name.into_os_string();
+    name.push(format!(".{DOCUMENT_EXTENSION}"));
+    path.with_file_name(name)
 }
 
 pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
@@ -127,18 +138,19 @@ pub fn write_html_export(path: String, contents: String) -> Result<String, Docum
 }
 
 #[tauri::command]
-pub fn read_document(path: String) -> Result<String, DocumentIoError> {
-    read_document_file(Path::new(&path))
+pub fn read_document(path: FilePath) -> Result<String, DocumentIoError> {
+    read_document_file(&path.into_path().map_err(DocumentIoError::InvalidPath)?)
 }
 
 #[tauri::command]
 pub fn write_document(
-    path: String,
+    path: FilePath,
     contents: String,
     normalize_extension: bool,
-) -> Result<String, DocumentIoError> {
-    write_document_file(Path::new(&path), &contents, normalize_extension)
-        .map(|p| p.to_string_lossy().into_owned())
+) -> Result<FilePath, DocumentIoError> {
+    let path = path.into_path().map_err(DocumentIoError::InvalidPath)?;
+    write_document_file(&path, &contents, normalize_extension)
+        .map(|path| FilePath::from_path(&path))
 }
 
 #[cfg(test)]
@@ -287,3 +299,7 @@ mod tests {
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }
+
+#[cfg(test)]
+#[path = "document_path_tests.rs"]
+mod path_tests;

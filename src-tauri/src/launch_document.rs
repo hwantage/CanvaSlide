@@ -123,10 +123,14 @@ mod tests {
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     #[test]
     fn takes_the_first_file_url_and_skips_the_rest() {
-        let urls: Vec<tauri::Url> = ["https://example.com/a.canvaslide", "file:///tmp/first.canvaslide", "file:///tmp/second.canvaslide"]
-            .iter()
-            .map(|u| u.parse().unwrap())
-            .collect();
+        let urls: Vec<tauri::Url> = [
+            "https://example.com/a.canvaslide",
+            "file:///tmp/first.canvaslide",
+            "file:///tmp/second.canvaslide",
+        ]
+        .iter()
+        .map(|u| u.parse().unwrap())
+        .collect();
         assert_eq!(
             document_path_from_urls(&urls),
             Some(PathBuf::from("/tmp/first.canvaslide"))

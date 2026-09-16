@@ -211,7 +211,8 @@ mod tests {
         let legacy = dir.join("deck.canvas.json");
         std::fs::write(&legacy, r#"{"version":1,"elements":[]}"#).unwrap();
 
-        let written = write_document_file(&legacy, r#"{"version":2,"elements":[]}"#, false).unwrap();
+        let written =
+            write_document_file(&legacy, r#"{"version":2,"elements":[]}"#, false).unwrap();
 
         assert_eq!(written, legacy);
         assert_eq!(

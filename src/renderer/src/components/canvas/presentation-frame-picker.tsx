@@ -35,7 +35,7 @@ export function PresentationFramePicker() {
           }}
           onClick={() => goTo(index)}
         >
-          <span className="absolute left-0 top-0 -translate-y-full rounded-t bg-frame-label px-1.5 py-0.5 text-[11px] font-medium text-white transition-colors group-hover:bg-selection">
+          <span className="absolute left-0 top-0 -translate-y-full rounded-t bg-frame-label px-1.5 py-0.5 text-[11px] font-medium text-canvas transition-colors group-hover:bg-selection">
             {index + 1} · {frame.name}
           </span>
         </button>

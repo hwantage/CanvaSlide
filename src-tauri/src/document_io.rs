@@ -89,7 +89,9 @@ pub fn write_document_file(
         .map_err(|e| DocumentIoError::InvalidJson(e.to_string()))?;
     let target = if normalize_extension {
         normalize_document_path(path)
-    } else if has_document_extension(path) {
+    } else if is_openable_document(path) {
+        // Why the same test as the reader: a document opened from a bare `.json` keeps that path,
+        // and refusing it here would make the file readable but impossible to save.
         path.to_path_buf()
     } else {
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
@@ -230,6 +232,28 @@ mod tests {
             normalize_document_path(Path::new("/tmp/deck.canvas.json")),
             PathBuf::from("/tmp/deck.canvaslide")
         );
+    }
+
+    /// A document saved under a plain `.json` name opens, so it has to save again where it was.
+    #[test]
+    fn a_silent_save_round_trips_a_bare_json_document() {
+        let dir = std::env::temp_dir().join(format!("uc-bare-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("deck.json");
+        std::fs::write(&path, r#"{"version":1,"elements":[]}"#).unwrap();
+
+        assert_eq!(
+            read_document_file(&path).unwrap(),
+            r#"{"version":1,"elements":[]}"#
+        );
+        let written = write_document_file(&path, r#"{"version":2,"elements":[]}"#, false).unwrap();
+
+        assert_eq!(written, path);
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            r#"{"version":2,"elements":[]}"#
+        );
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

@@ -106,6 +106,49 @@ test('right-click menu selects the element under the cursor and runs commands', 
   await expect(menu).toHaveCount(0)
 })
 
+test('right-click menu keeps its width and stays inside the viewport near the edges', async ({
+  page
+}) => {
+  const canvas = page.getByTestId('canvas-viewport')
+  const box = await canvas.boundingBox()
+  if (!box) {
+    throw new Error('canvas not laid out')
+  }
+  const menu = page.getByTestId('context-menu')
+  const openMenuAt = async (x: number, y: number) => {
+    await canvas.click({ position: { x, y }, button: 'right' })
+    await expect(menu).toBeVisible()
+    const rect = await menu.boundingBox()
+    if (!rect) {
+      throw new Error('menu not laid out')
+    }
+    await page.keyboard.press('Escape')
+    await expect(menu).toHaveCount(0)
+    return rect
+  }
+
+  await drawRectangle(page, [300, 300], [400, 400])
+  await drawRectangle(page, [box.width - 120, 300], [box.width - 20, 400])
+  await drawRectangle(page, [300, box.height - 120], [400, box.height - 20])
+  await expect(shapes(page)).toHaveCount(3)
+
+  const open = await openMenuAt(350, 350)
+  expect(open.width).toBeGreaterThan(0)
+
+  // Why: the side panel sits right of the canvas, so this is the edge the issue reports.
+  const right = await openMenuAt(box.width - 30, 350)
+  expect(right.width).toBeCloseTo(open.width, 0)
+  expect(right.height).toBeCloseTo(open.height, 0)
+  expect(right.x).toBeGreaterThanOrEqual(box.x)
+  expect(right.x + right.width).toBeLessThanOrEqual(box.x + box.width)
+
+  const bottom = await openMenuAt(350, box.height - 30)
+  expect(bottom.width).toBeCloseTo(open.width, 0)
+  expect(bottom.height).toBeCloseTo(open.height, 0)
+  expect(bottom.y).toBeGreaterThanOrEqual(box.y)
+  expect(bottom.y + bottom.height).toBeLessThanOrEqual(box.y + box.height)
+})
+
 test('wraps the selection in a frame with padding', async ({ page }) => {
   await drawRectangle(page, [300, 300], [400, 400])
   await drawRectangle(page, [500, 350], [700, 450])

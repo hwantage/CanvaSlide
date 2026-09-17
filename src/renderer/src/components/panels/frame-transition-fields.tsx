@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, Play, RotateCcw } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { cameraEasings, type CameraEasing } from '@shared/canvas/camera-easing'
 import {
   MAX_CAMERA_ARC,
@@ -13,6 +13,7 @@ import {
   type MotionField
 } from '@shared/canvas/frame-transition'
 import { FieldRow, inputBaseClass } from '@/components/ui/field-row'
+import { useSliderEditSession } from '@/hooks/use-slider-edit-session'
 import { t } from '@/i18n/ui-strings'
 import {
   arcPresets,
@@ -98,42 +99,6 @@ function StepSelect({
       )}
     </select>
   )
-}
-
-/**
- * A drag fires `change` on every step it crosses, and recording each one would push a slider's worth
- * of whole-document snapshots — burying the edit before it, since history keeps only the last
- * `HISTORY_LIMIT`. The session opens on the first change and closes when whatever drove it lets go;
- * the pointer is routinely released off the input, so the release is watched on the window.
- */
-function useSliderEditSession(): { begin: () => void; end: () => void } {
-  const open = useRef(false)
-  const end = useCallback(() => {
-    if (open.current) {
-      open.current = false
-      useDocumentStore.getState().endEdit()
-    }
-  }, [])
-  const begin = useCallback(() => {
-    if (!open.current) {
-      open.current = true
-      useDocumentStore.getState().beginEdit()
-    }
-  }, [])
-  useEffect(() => {
-    window.addEventListener('pointerup', end)
-    window.addEventListener('pointercancel', end)
-    window.addEventListener('keyup', end)
-    return () => {
-      window.removeEventListener('pointerup', end)
-      window.removeEventListener('pointercancel', end)
-      window.removeEventListener('keyup', end)
-      // Why: collapsing Advanced mid-drag unmounts the slider, and an open session would swallow
-      // every later edit into the one undo step it is still holding.
-      end()
-    }
-  }, [end])
-  return { begin, end }
 }
 
 /** The numeric control Advanced puts in the step select's place, in the same column. */

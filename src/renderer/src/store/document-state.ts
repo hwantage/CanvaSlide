@@ -63,7 +63,8 @@ export type DocumentActions = {
   ungroupSelected: () => void
   alignSelected: (mode: AlignMode) => void
   distributeSelected: (axis: DistributeAxis) => void
-  updateSettings: (patch: Partial<DocumentSettings>) => void
+  /** `record: false` is the live half of a slider drag, between `beginEdit` and `endEdit`. */
+  updateSettings: (patch: Partial<DocumentSettings>, record?: boolean) => void
   renameDocument: (name: string) => void
   undo: () => void
   redo: () => void

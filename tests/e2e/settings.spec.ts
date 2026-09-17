@@ -144,3 +144,43 @@ test('language switches the whole interface and survives a reload', async ({ pag
     .click()
   await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
 })
+
+test('a default-transition drag collapses into one undo step', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Settings' })
+  await expect(dialog).toBeVisible()
+
+  // An edit before the drag: undoing past the drag has to reach this one, not the middle of it.
+  await dialog.getByRole('radio', { name: 'Grid lines' }).click()
+  const background = page.getByTestId('canvas-background')
+  await expect(background).toHaveAttribute('data-background', 'grid')
+
+  await expect(dialog.getByTestId('transition-value')).toHaveText('1.0s')
+  const track = (await dialog.getByLabel('Default transition duration').boundingBox())!
+  const y = track.y + track.height / 2
+  await page.mouse.move(track.x + track.width / 2, y)
+  await page.mouse.down()
+  for (let step = 1; step <= 8; step += 1) {
+    await page.mouse.move(track.x + track.width / 2 + step * 4, y)
+  }
+  await page.mouse.up()
+  await expect(dialog.getByTestId('transition-value')).not.toHaveText('1.0s')
+
+  // Why: the dialog swallows canvas shortcuts, so the author closes it before undoing.
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  const undo = async () => {
+    await page.keyboard.press('Meta+z')
+    await page.keyboard.press('Control+z')
+  }
+  await undo()
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  await expect(dialog.getByTestId('transition-value')).toHaveText('1.0s')
+  await expect(background).toHaveAttribute('data-background', 'grid')
+
+  // The whole sweep is behind us after one step, so the next undo reaches the edit before it.
+  await page.keyboard.press('Escape')
+  await undo()
+  await expect(background).toHaveAttribute('data-background', 'dots')
+})

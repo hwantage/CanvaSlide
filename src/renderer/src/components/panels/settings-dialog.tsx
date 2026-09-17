@@ -11,6 +11,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control'
 import { TextButton } from '@/components/ui/text-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
+import { useSliderEditSession } from '@/hooks/use-slider-edit-session'
 import {
   languagePreferences,
   selectLanguagePreference,
@@ -69,10 +70,11 @@ export function SettingsDialog() {
   const setThemePreference = useThemeStore((s) => s.setPreference)
   const languagePreference = useLanguageStore(selectLanguagePreference)
   const setLanguagePreference = useLanguageStore((s) => s.setPreference)
+  const transitionSession = useSliderEditSession()
   if (!open) {
     return null
   }
-  const set = (patch: Partial<DocumentSettings>) => updateSettings(patch)
+  const set = (patch: Partial<DocumentSettings>, record = true) => updateSettings(patch, record)
 
   return (
     <div
@@ -147,7 +149,11 @@ export function SettingsDialog() {
               max={3000}
               step={100}
               value={settings.transitionMs}
-              onChange={(event) => set({ transitionMs: Number(event.target.value) })}
+              onChange={(event) => {
+                transitionSession.begin()
+                set({ transitionMs: Number(event.target.value) }, false)
+              }}
+              onBlur={transitionSession.end}
               className="flex-1 accent-primary"
             />
             <span className="w-10 text-right tabular-nums" data-testid="transition-value">

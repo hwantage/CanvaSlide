@@ -1,4 +1,4 @@
-import { worldRectToScreen } from './camera-transform'
+import { MAX_ZOOM, worldRectToScreen } from './camera-transform'
 import type { Camera, Rect, Size } from './element-types'
 import { createCameraTween } from './zoom-pan-interpolation'
 
@@ -37,4 +37,13 @@ export function svgPreviewSize(size: Size): Size {
     width: Math.max(1, Math.round(width * scale)),
     height: Math.max(1, Math.round(height * scale))
   }
+}
+
+/** Keep small images out of WebKit's low-resolution backing stores during compositor zooms. */
+export function imageLayoutScale(size: Size, layoutZoom: number, renderZoom: number): number {
+  const edge = Math.max(size.width, size.height)
+  if (!(edge > 0) || !Number.isFinite(edge) || !(layoutZoom > 0)) {
+    return 1
+  }
+  return Math.max(1, Math.min(MAX_ZOOM, renderZoom, SVG_PREVIEW_MAX_EDGE / edge) / layoutZoom)
 }

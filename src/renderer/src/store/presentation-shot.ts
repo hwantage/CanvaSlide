@@ -1,11 +1,18 @@
 import { elementRect, interpolateRect } from '@shared/canvas/element-bounds'
 import { fitRectToViewport } from '@shared/canvas/frame-fit'
-import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import { frameIndexById, orderedFrames } from '@shared/canvas/presentation-sequence'
 import {
   resolveFrameTransition,
   type ResolvedFrameTransition
 } from '@shared/canvas/frame-transition'
-import type { Camera, CanvasDocument, FrameElement, Rect, Size } from '@shared/canvas/element-types'
+import type {
+  Camera,
+  CanvasDocument,
+  ElementId,
+  FrameElement,
+  Rect,
+  Size
+} from '@shared/canvas/element-types'
 
 /** A frame and the transition it presents with, the document defaults already folded in. */
 export type FrameShot = { frame: FrameElement; motion: ResolvedFrameTransition }
@@ -50,4 +57,41 @@ export function shotTween(
     spotlight: from.spotlight + (to.spotlight - from.spotlight) * t,
     spotlightRect: fromRect && toRect ? interpolateRect(fromRect, toRect, t) : (toRect ?? fromRect)
   })
+}
+
+/** The still a preview into a frame opens on, and where it goes from there. */
+export type PreviewDeparture = {
+  /** Where the previewed frame sits in the deck right now. */
+  index: number
+  /** The frame the flight departs from; null for the opening frame, which has no frame before it. */
+  departureIndex: number | null
+  /** Where the camera parks for the hold; null when the preview starts from the editor's own view. */
+  camera: Camera | null
+  /** The departing frame's tilt and dimming, so the hold looks the way a slide show would there. */
+  shot: Shot
+}
+
+/** Null when `frameId` is not a frame of this document. */
+export function previewDeparture(
+  document: CanvasDocument,
+  frameId: ElementId,
+  viewport: Size
+): PreviewDeparture | null {
+  const index = frameIndexById(orderedFrames(document), frameId)
+  if (index === -1) {
+    return null
+  }
+  // Why: the opening frame has no incoming flight, so its preview starts wherever the editor is.
+  const departureIndex = index > 0 ? index - 1 : null
+  const departure = departureIndex === null ? null : frameShotAt(document, departureIndex)
+  return {
+    index,
+    departureIndex,
+    camera: departureIndex === null ? null : frameCamera(document, departureIndex, viewport),
+    shot: {
+      roll: departure?.motion.roll ?? 0,
+      spotlight: departure?.motion.spotlight ?? 0,
+      spotlightRect: departure ? elementRect(departure.frame) : null
+    }
+  }
 }

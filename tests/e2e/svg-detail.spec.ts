@@ -117,14 +117,16 @@ test('uses previews throughout a flight and refreshes bounded crops at the new p
   const base = page.locator('[data-element-id="photo"]')
   const tiles = page.locator('[data-image-detail-id="photo"]')
   await expect(tiles.first()).toBeVisible()
-  const old = await tiles.first().elementHandle()
+  const oldPosition = await tiles.first().evaluate((node) => (node as HTMLElement).style.left)
   await camera(page, { x: -32000 * 8, y: -16000 * 8, zoom: 8 }, 1000)
-  await expect(tiles).toHaveCount(0)
+  await expect(tiles.first()).toBeHidden()
   await expect(base).toHaveCSS('visibility', 'visible')
   await page.waitForTimeout(300)
-  await expect(tiles).toHaveCount(0)
+  await expect(tiles.first()).toBeHidden()
   await expect(tiles.first()).toBeVisible()
-  expect(await old!.evaluate((node) => node.isConnected)).toBe(false)
+  expect(await tiles.first().evaluate((node) => (node as HTMLElement).style.left)).not.toBe(
+    oldPosition
+  )
   const stats = await tiles.evaluateAll((nodes) =>
     nodes.map((node) => {
       const img = node as HTMLCanvasElement
@@ -143,7 +145,7 @@ test('uses previews throughout a flight and refreshes bounded crops at the new p
     expect(tile.density).toBeCloseTo(2, 1)
   }
   await camera(page, { x: -32000 * 8 - 450, y: -16000 * 8, zoom: 8 })
-  await expect(tiles).toHaveCount(0)
+  await expect(tiles.first()).toBeHidden()
   await expect(tiles.first()).toBeVisible()
   await expect(base).toHaveCSS('visibility', 'hidden')
 })
@@ -300,7 +302,7 @@ test('keeps the fallback until all detail surfaces are ready without encoding PN
   )
   await page.evaluate(() => (window as unknown as { finishDetail: () => void }).finishDetail())
   await expect(page.locator('[data-element-id="photo"]')).toHaveCSS('visibility', 'visible')
-  await expect(page.locator('[data-image-detail-id="photo"]')).toHaveCount(0)
+  await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeHidden()
   await page.evaluate(() =>
     (window as unknown as { finishAllDetails: () => void }).finishAllDetails()
   )
@@ -326,10 +328,10 @@ test('pauses background detail during edits even when the camera and image stay 
     useDocumentStore.getState().beginEdit()
     useDocumentStore.getState().patchElements(['frame'], { name: 'Editing the frame' }, false)
   }, documentUrl)
-  await expect(tiles).toHaveCount(0)
+  await expect(tiles.first()).toBeHidden()
   await expect(page.locator('[data-element-id="photo"]')).toHaveCSS('visibility', 'visible')
   await page.waitForTimeout(500)
-  await expect(tiles).toHaveCount(0)
+  await expect(tiles.first()).toBeHidden()
   await page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     useDocumentStore.getState().endEdit()

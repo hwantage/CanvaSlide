@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Camera, ImageAsset, ImageElement, Size } from '@shared/canvas/element-types'
 import { imageDetailRegions, type ImageDetailRegion } from '@shared/canvas/image-detail'
-import { ZOOM_SETTLE_MS } from '@shared/canvas/camera-transform'
+import { imageIntersectsViewport } from '@shared/canvas/image-rendering'
+import { camerasEqual, ZOOM_SETTLE_MS } from '@shared/canvas/camera-transform'
 import type { ImagePreview } from '@/lib/svg-image-preview'
 import { svgDetailCache } from '@/lib/svg-preview-cache'
 import { useCameraStore } from '@/store/camera-store'
@@ -11,35 +12,68 @@ export const IMAGE_DETAIL_SETTLE_MS = ZOOM_SETTLE_MS * 2
 type DetailTile = ImageDetailRegion & { canvas: HTMLCanvasElement }
 type Detail = {
   element: ImageElement
-  source: string
+  asset: ImageAsset
   camera: Camera
   viewport: Size
   density: number
   tiles: DetailTile[]
 }
 
+function matches(detail: Detail | null, camera: Camera, viewport: Size): boolean {
+  return Boolean(
+    detail &&
+    camerasEqual(detail.camera, camera) &&
+    detail.viewport.width === viewport.width &&
+    detail.viewport.height === viewport.height &&
+    detail.density === window.devicePixelRatio
+  )
+}
+
 export function useImageDetail(
   element: ImageElement,
   asset: ImageAsset | undefined,
   preview: Pick<ImagePreview, 'src' | 'size'> | undefined
-): DetailTile[] | undefined {
+): { tiles: DetailTile[] | undefined; visible: boolean } {
   const [detail, setDetail] = useState<Detail | null>(null)
+  const latest = useRef(detail)
+  const displayedLeases = useRef<ReturnType<typeof svgDetailCache.acquire>[]>([])
+  const atDetail = useCameraStore((s) => matches(detail, s.camera, s.viewport))
+  const inView = useCameraStore(
+    (s) => s.animationActive || imageIntersectsViewport(element, s.camera, s.viewport)
+  )
+  const editing = useDocumentStore((s) => Boolean(s.editBaseline))
+  if (detail && (!inView || detail.element !== element || detail.asset !== asset)) {
+    setDetail(null)
+  }
   const source = preview?.src
   const width = preview?.size?.width
   const height = preview?.size?.height
+  useEffect(
+    () => () => {
+      displayedLeases.current.forEach((lease) => lease.release())
+      displayedLeases.current = []
+      latest.current = null
+    },
+    [element, asset, inView]
+  )
   useEffect(() => {
-    if (!asset || !source || !width || !height) {
+    if (!inView || !asset || !source || !width || !height) {
       return
     }
     let generation = 0
-    let displayed = false
     let timer: ReturnType<typeof setTimeout> | undefined
-    let leases: ReturnType<typeof svgDetailCache.acquire>[] = []
+    let pending: ReturnType<typeof svgDetailCache.acquire>[] = []
     const clear = () => {
       generation++
       clearTimeout(timer)
-      leases.forEach((lease) => lease.release())
-      leases = []
+      pending.forEach((lease) => lease.release())
+      pending = []
+    }
+    const discard = () => {
+      displayedLeases.current.forEach((lease) => lease.release())
+      displayedLeases.current = []
+      latest.current = null
+      setDetail(null)
     }
     const render = async () => {
       const state = useCameraStore.getState()
@@ -52,39 +86,56 @@ export function useImageDetail(
         height
       })
       if (!regions.length) {
+        discard()
         return
       }
       const current = generation
       const priority = useDocumentStore.getState().document.order.indexOf(element.id)
-      leases = regions.map((region) =>
+      pending = regions.map((region) =>
         svgDetailCache.acquire(asset, element.width / element.height, region, priority)
       )
-      const results = await Promise.all(leases.map((lease) => lease.ready))
+      const results = await Promise.all(pending.map((lease) => lease.ready))
       if (current !== generation) {
         return
       }
-      // Replace the entire visible crop atomically so transparency is never composited twice.
       if (results.every((result) => result.canvas)) {
-        displayed = true
-        setDetail({
+        const previous = displayedLeases.current
+        displayedLeases.current = pending
+        pending = []
+        const next = {
           element,
-          source,
+          asset,
           camera: state.camera,
           viewport: state.viewport,
           density,
           tiles: regions.map((region, index) => ({ ...region, canvas: results[index]!.canvas! }))
-        })
+        }
+        latest.current = next
+        setDetail(next)
+        previous.forEach((lease) => lease.release())
       } else {
         clear()
       }
     }
-    const schedule = () => {
+    const schedule = (viewChanged = false) => {
       clear()
-      if (displayed) {
-        displayed = false
-        setDetail(null)
+      const state = useCameraStore.getState()
+      // Cancellation may start a return flight next; keep tiles until its destination is known.
+      const destination = state.animationActive
+        ? state.flightTarget
+        : viewChanged
+          ? state.camera
+          : null
+      // Drop unrelated crops before their canvases add work to the departure relayout.
+      if (latest.current && destination && !matches(latest.current, destination, state.viewport)) {
+        discard()
       }
-      if (!useCameraStore.getState().animationActive && !useDocumentStore.getState().editBaseline) {
+      // A preview returns to the view already displayed; retain its tiles instead of rendering again.
+      if (
+        !state.animationActive &&
+        !useDocumentStore.getState().editBaseline &&
+        !matches(latest.current, state.camera, state.viewport)
+      ) {
         timer = setTimeout(() => void render(), IMAGE_DETAIL_SETTLE_MS)
       }
     }
@@ -92,9 +143,10 @@ export function useImageDetail(
       if (
         state.camera !== previous.camera ||
         state.viewport !== previous.viewport ||
+        state.flightTarget !== previous.flightTarget ||
         state.animationActive !== previous.animationActive
       ) {
-        schedule()
+        schedule(state.camera !== previous.camera || state.viewport !== previous.viewport)
       }
     })
     const unsubscribeEdits = useDocumentStore.subscribe((state, previous) => {
@@ -116,13 +168,9 @@ export function useImageDetail(
       unsubscribeEdits()
       density.removeEventListener('change', watchDensity)
     }
-  }, [element, asset, source, width, height])
-  const state = useCameraStore.getState()
-  return detail?.element === element &&
-    detail.source === source &&
-    detail.camera === state.camera &&
-    detail.viewport === state.viewport &&
-    detail.density === window.devicePixelRatio
-    ? detail.tiles
-    : undefined
+  }, [element, asset, source, width, height, inView])
+  return {
+    tiles: detail?.tiles,
+    visible: !editing && atDetail && detail?.element === element && detail.asset === asset
+  }
 }

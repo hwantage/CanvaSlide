@@ -1,3 +1,4 @@
+import { imageLayoutScale } from '@shared/canvas/image-rendering'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   layoutZoomFor,
@@ -8,6 +9,7 @@ import type { Camera } from '@shared/canvas/element-types'
 import { useSettledZoom } from '@/hooks/use-settled-zoom'
 import { useCameraStore } from '@/store/camera-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
+import { usePresentationStore } from '@/store/presentation-store'
 import { selectEditingTextId, useToolStore } from '@/store/tool-store'
 import { ElementView } from './element-view'
 
@@ -17,6 +19,8 @@ const COMPOSITE_VECTOR_COUNT = 256
 export function WorldLayer() {
   const outerRef = useRef<HTMLDivElement>(null)
   const baseZoom = useSettledZoom()
+  const previewing = usePresentationStore((s) => s.previewFrameId !== null)
+  const flightZoom = useCameraStore((s) => (previewing ? s.flightZoom : null))
   const document = useDocumentStore(selectDocument)
   const selectedIds = useDocumentStore(selectSelectedIds)
   const editingTextId = useToolStore(selectEditingTextId)
@@ -82,6 +86,9 @@ export function WorldLayer() {
         element={element}
         editing={editingTextId === id}
         selected={selectedIds.includes(id)}
+        layoutScale={
+          element.type === 'image' ? imageLayoutScale(element, baseZoom, flightZoom ?? baseZoom) : 1
+        }
       />
     )
   }

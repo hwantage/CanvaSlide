@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createCameraAnimator } from './camera-animator'
+import { createCameraAnimator, type CameraAnimatorDeps } from './camera-animator'
 import type { Camera } from './element-types'
 
 function fakeClock() {
@@ -14,6 +14,34 @@ function fakeClock() {
       const cbs = queue.splice(0)
       for (const cb of cbs) {
         cb(time)
+      }
+    }
+  }
+}
+
+/** Timers the animator rests on, driven by hand so a hold can be stepped past exactly. */
+function fakeTimers() {
+  type Entry = { at: number; cb: () => void }
+  const pending: Entry[] = []
+  let time = 0
+  return {
+    setTimeout: (cb: () => void, ms: number) => {
+      const entry = { at: time + ms, cb }
+      pending.push(entry)
+      return entry
+    },
+    clearTimeout: (handle: unknown) => {
+      const index = pending.indexOf(handle as Entry)
+      if (index >= 0) {
+        pending.splice(index, 1)
+      }
+    },
+    advance: (ms: number) => {
+      time += ms
+      const due = pending.filter((entry) => entry.at <= time).sort((a, b) => a.at - b.at)
+      for (const entry of due) {
+        pending.splice(pending.indexOf(entry), 1)
+        entry.cb()
       }
     }
   }
@@ -181,6 +209,230 @@ describe('camera-animator', () => {
     animator.animateTo({ x: 10, y: 20, zoom: 2 }, 500)
     clock.step(500)
     expect(camera).toEqual({ x: 10, y: 20, zoom: 2 })
+    expect(animator.isAnimating()).toBe(false)
+  })
+})
+
+describe('camera-animator hold', () => {
+  const setup = (prepare?: CameraAnimatorDeps['prepare']) => {
+    const clock = fakeClock()
+    const timers = fakeTimers()
+    const state = { camera: { x: 0, y: 0, zoom: 1 } as Camera }
+    const onDone = vi.fn()
+    const animator = createCameraAnimator({
+      getCamera: () => state.camera,
+      setCamera: (c) => {
+        state.camera = c
+      },
+      getViewport: () => ({ width: 1000, height: 600 }),
+      ...(prepare ? { prepare } : {}),
+      ...clock,
+      ...timers
+    })
+    return { clock, timers, state, onDone, animator }
+  }
+  const target = { x: -500, y: -200, zoom: 2 }
+
+  it('applies prepared effects before an immediate cut lands', () => {
+    const { animator } = setup()
+    const events: string[] = []
+    animator.animateTo(target, 0, {
+      onPrepared: () => events.push('prepared'),
+      onProgress: () => events.push('progress'),
+      onDone: () => events.push('done')
+    })
+    expect(events).toEqual(['prepared', 'progress', 'done'])
+  })
+
+  it('does not overwrite a replacement requested by an immediate preparation callback', () => {
+    const { state, animator, onDone } = setup()
+    const replacement = { x: 100, y: 50, zoom: 3 }
+    animator.animateTo(target, 0, {
+      onPrepared: () => animator.animateTo(replacement, 0),
+      onDone
+    })
+    expect(state.camera).toBe(replacement)
+    expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('cancels a departure cut while waiting for its paint', () => {
+    const { clock, timers, state, animator, onDone } = setup()
+    const departure = { x: 10, y: 20, zoom: 2 }
+    animator.animateTo(target, 100, { departure, holdMs: 500, onDone })
+    clock.step(16)
+    animator.cancel()
+    clock.step(16)
+    timers.advance(1000)
+    clock.step(1000)
+    expect(state.camera).toBe(departure)
+    expect(animator.isAnimating()).toBe(false)
+    expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('rests on the departure for the whole hold, counting as in flight, then flies', () => {
+    const { clock, timers, state, onDone, animator } = setup()
+    const departure = state.camera
+    animator.animateTo(target, 100, { holdMs: 500, onDone })
+    expect(animator.isAnimating()).toBe(true)
+    timers.advance(499)
+    clock.step(50)
+    expect(state.camera).toBe(departure)
+    timers.advance(1)
+    clock.step(50)
+    expect(state.camera).not.toBe(departure)
+    expect(state.camera).not.toEqual(target)
+    clock.step(60)
+    expect(state.camera).toEqual(target)
+    expect(onDone).toHaveBeenCalledOnce()
+    expect(animator.isAnimating()).toBe(false)
+  })
+
+  it('never flies a held flight that was cancelled', () => {
+    const { clock, timers, state, onDone, animator } = setup()
+    const departure = state.camera
+    animator.animateTo(target, 100, { holdMs: 500, onDone })
+    animator.cancel()
+    expect(animator.isAnimating()).toBe(false)
+    timers.advance(1000)
+    clock.step(1000)
+    expect(state.camera).toBe(departure)
+    expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('replaces a held flight with the next request instead of flying both', () => {
+    const { clock, timers, state, onDone, animator } = setup()
+    const departure = state.camera
+    animator.animateTo(target, 100, { holdMs: 500, onDone })
+    timers.advance(300)
+    const other = { x: 100, y: 100, zoom: 1 }
+    animator.animateTo(other, 100, { holdMs: 500 })
+    timers.advance(300)
+    clock.step(50)
+    expect(state.camera).toBe(departure)
+    timers.advance(200)
+    clock.step(200)
+    expect(state.camera).toEqual(other)
+    expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('lands a held cut when the hold runs out, without a tween', () => {
+    const { timers, state, onDone, animator } = setup()
+    animator.animateTo(target, 0, { holdMs: 500, onDone })
+    expect(animator.isAnimating()).toBe(true)
+    timers.advance(499)
+    expect(state.camera).toEqual({ x: 0, y: 0, zoom: 1 })
+    timers.advance(1)
+    expect(state.camera).toEqual(target)
+    expect(onDone).toHaveBeenCalledOnce()
+    expect(animator.isAnimating()).toBe(false)
+  })
+
+  it('starts the hold only once the flight is prepared', async () => {
+    let ready!: () => void
+    const release = vi.fn()
+    const { clock, timers, state, animator } = setup(() => ({
+      ready: new Promise<void>((resolve) => {
+        ready = resolve
+      }),
+      release
+    }))
+    const departure = state.camera
+    animator.animateTo(target, 100, { holdMs: 500 })
+    timers.advance(5000)
+    clock.step(5000)
+    expect(state.camera).toBe(departure)
+    ready()
+    await Promise.resolve()
+    timers.advance(499)
+    clock.step(50)
+    expect(state.camera).toBe(departure)
+    timers.advance(1)
+    clock.step(200)
+    expect(state.camera).toEqual(target)
+    expect(release).toHaveBeenCalledOnce()
+  })
+})
+
+describe('prepared departure cuts', () => {
+  it('keeps the current camera until preparation, then holds the prepared departure for 500ms', async () => {
+    const clock = fakeClock()
+    const timers = fakeTimers()
+    const original = { x: 1, y: 2, zoom: 3 }
+    const departure = { x: 10, y: 20, zoom: 2 }
+    const target = { x: 100, y: 200, zoom: 4 }
+    let camera = original
+    let ready!: () => void
+    const prepare = vi.fn(() => ({
+      ready: new Promise<void>((r) => {
+        ready = r
+      }),
+      release: vi.fn()
+    }))
+    const onStationaryChange = vi.fn()
+    const animator = createCameraAnimator({
+      getCamera: () => camera,
+      setCamera: (c) => {
+        camera = c
+      },
+      getViewport: () => ({ width: 800, height: 600 }),
+      prepare,
+      onStationaryChange,
+      ...clock,
+      ...timers
+    })
+    animator.animateTo(target, 100, { departure, holdMs: 500 })
+    expect(prepare).toHaveBeenCalledWith(departure, target, { width: 800, height: 600 })
+    timers.advance(2000)
+    expect(camera).toBe(original)
+    expect(onStationaryChange).toHaveBeenLastCalledWith(original)
+    ready()
+    await Promise.resolve()
+    expect(camera).toBe(departure)
+    expect(onStationaryChange).toHaveBeenLastCalledWith(departure)
+    // A delayed departure paint must not consume any of the visible hold.
+    timers.advance(2000)
+    clock.step(2000)
+    expect(camera).toBe(departure)
+    clock.step(16)
+    timers.advance(499)
+    clock.step(100)
+    expect(camera).toBe(departure)
+    timers.advance(1)
+    clock.step(100)
+    expect(camera).toBe(target)
+    expect(onStationaryChange).toHaveBeenLastCalledWith(null)
+  })
+
+  it('never cuts to a cancelled departure when its late preparation finishes', async () => {
+    const clock = fakeClock()
+    const original = { x: 1, y: 2, zoom: 3 }
+    let camera = original
+    let ready!: () => void
+    const release = vi.fn()
+    const animator = createCameraAnimator({
+      getCamera: () => camera,
+      setCamera: (c) => {
+        camera = c
+      },
+      getViewport: () => ({ width: 800, height: 600 }),
+      ...clock,
+      prepare: () => ({
+        ready: new Promise<void>((r) => {
+          ready = r
+        }),
+        release
+      })
+    })
+    animator.animateTo({ x: 100, y: 200, zoom: 4 }, 100, {
+      departure: { x: 10, y: 20, zoom: 2 },
+      holdMs: 500
+    })
+    animator.cancel()
+    ready()
+    await Promise.resolve()
+    clock.step(2000)
+    expect(camera).toBe(original)
+    expect(release).toHaveBeenCalledOnce()
     expect(animator.isAnimating()).toBe(false)
   })
 })

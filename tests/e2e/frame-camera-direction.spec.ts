@@ -63,6 +63,61 @@ async function openDeck(page: Page, frames: ReturnType<typeof frame>[], extras: 
 const motionControl = (page: Page, field: string) =>
   page.locator(`[data-testid="motion-control"][data-field="${field}"]`)
 
+/** The tilt the stage is drawn with, in whole degrees; 0 when it is not transformed at all. */
+const stageRollOf = (page: Page) =>
+  page.getByTestId('presentation-stage').evaluate((node) => {
+    const m = /matrix\(([-\d.]+),\s*([-\d.]+)/.exec(getComputedStyle(node).transform)
+    return m ? Math.round((Math.atan2(Number(m[2]), Number(m[1])) * 180) / Math.PI) : 0
+  })
+
+const cameraState = (page: Page) =>
+  page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/store/camera-store.ts'))
+      .at(-1)!
+    const { useCameraStore } = await import(url)
+    const { camera, animationActive } = useCameraStore.getState()
+    return { x: camera.x as number, animationActive: animationActive as boolean }
+  })
+
+const cameraX = async (page: Page) => (await cameraState(page)).x
+
+const observeDepartureHold = (page: Page) =>
+  page.evaluateHandle(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/store/camera-store.ts'))
+      .at(-1)!
+    const { useCameraStore } = await import(url)
+    const initialX = useCameraStore.getState().camera.x
+    const stage = document.querySelector('[data-testid="presentation-stage"]')!
+    // Sample inside the page so click handling and Playwright polling do not count as hold time.
+    return {
+      result: new Promise<{ departureX: number; roll: number; holdMs: number }>((resolve) => {
+        let departure: { x: number; at: number; roll: number } | undefined
+        const sample = (now: number) => {
+          const x = useCameraStore.getState().camera.x as number
+          if (!departure && x !== initialX) {
+            const matrix = new DOMMatrixReadOnly(getComputedStyle(stage).transform)
+            departure = {
+              x,
+              at: now,
+              roll: Math.round((Math.atan2(matrix.b, matrix.a) * 180) / Math.PI)
+            }
+          } else if (departure && x !== departure.x) {
+            resolve({ departureX: departure.x, roll: departure.roll, holdMs: now - departure.at })
+            return
+          }
+          requestAnimationFrame(sample)
+        }
+        requestAnimationFrame(sample)
+      })
+    }
+  })
+
 test('a frame inherits the document defaults until a step overrides one', async ({ page }) => {
   await openDeck(page, [frame(0, 'Plain'), frame(1, 'Directed', { ms: 2500 })])
   const duration = page.getByRole('combobox', { name: 'Duration' })
@@ -192,11 +247,7 @@ test('a document beyond the friendly ranges keeps its values when the sliders op
 test('a preview waits on the frame so the flight can be tuned and replayed', async ({ page }) => {
   await openDeck(page, [frame(0, 'One'), frame(1, 'Two', { ms: 200, roll: 12 })])
   await page.getByTestId('frame-row').nth(1).click()
-  const stageRoll = () =>
-    page.getByTestId('presentation-stage').evaluate((node) => {
-      const m = /matrix\(([-\d.]+),\s*([-\d.]+)/.exec(getComputedStyle(node).transform)
-      return m ? Math.round((Math.atan2(Number(m[2]), Number(m[1])) * 180) / Math.PI) : 0
-    })
+  const stageRoll = () => stageRollOf(page)
 
   await page.getByRole('button', { name: 'Play the flight into this frame' }).click()
   // The editor stays put: its panels are what the author is here to adjust.
@@ -212,6 +263,30 @@ test('a preview waits on the frame so the flight can be tuned and replayed', asy
   await page.getByRole('button', { name: 'Close the preview' }).click()
   await expect(page.getByTestId('preview-controls')).toHaveCount(0)
   await expect.poll(stageRoll, { timeout: 4000 }).toBe(0)
+})
+
+test('a preview rests on the departure frame before it flies', async ({ page }) => {
+  await openDeck(page, [frame(0, 'One', { roll: 10 }), frame(1, 'Two', { ms: 200, roll: 12 })])
+  await page.getByTestId('frame-row').nth(1).click()
+  await expect.poll(async () => (await cameraState(page)).animationActive).toBe(false)
+  const editor = await cameraX(page)
+  let departure: number | undefined
+  for (const name of ['Play the flight into this frame', 'Play it again']) {
+    const observation = await observeDepartureHold(page)
+    await page.getByRole('button', { name }).click()
+    await expect(page.getByTestId('preview-controls')).toBeVisible()
+    const measured = await observation.evaluate(({ result }) => result)
+    await observation.dispose()
+    expect(measured.departureX).not.toBe(editor)
+    expect(measured.roll).toBe(10)
+    expect(measured.holdMs).toBeGreaterThanOrEqual(500)
+    if (departure !== undefined) {
+      expect(measured.departureX).toBe(departure)
+    }
+    departure = measured.departureX
+    await expect.poll(async () => (await cameraState(page)).animationActive).toBe(false)
+    expect(await stageRollOf(page)).toBe(12)
+  }
 })
 
 test('picking another frame ends the preview instead of fighting it', async ({ page }) => {

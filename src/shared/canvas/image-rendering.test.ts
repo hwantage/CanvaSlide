@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { imageIntersectsViewport, imagesAlongCameraPath, svgPreviewSize } from './image-rendering'
+import {
+  imageIntersectsViewport,
+  imageLayoutScale,
+  imagesAlongCameraPath,
+  svgPreviewSize
+} from './image-rendering'
 
 describe('image rendering bounds', () => {
   const viewport = { width: 1400, height: 900 }
@@ -67,5 +72,36 @@ describe('image rendering bounds', () => {
     expect(imagesAlongCameraPath([image], camera, { ...camera, zoom: 50 }, viewport)).toEqual([
       image
     ])
+  })
+})
+
+describe('image layout scale', () => {
+  it('renders a tiny image at enough pixels for the maximum camera zoom', () => {
+    const image = { width: 32, height: 18 }
+    expect(imageLayoutScale(image, 1, 64)).toBe(64)
+    for (const zoom of [1, 11, 44, 64]) {
+      expect(image.width * imageLayoutScale(image, zoom, 64) * zoom).toBeCloseTo(2048)
+    }
+  })
+
+  it('bounds the backing size and leaves large or already enlarged layouts alone', () => {
+    expect(imageLayoutScale({ width: 400, height: 200 }, 1, 64)).toBeCloseTo(5.12)
+    expect(imageLayoutScale({ width: 400, height: 200 }, 8, 64)).toBe(1)
+    expect(imageLayoutScale({ width: 66000, height: 40000 }, 1, 64)).toBe(1)
+    expect(imageLayoutScale({ width: 14, height: 4 }, 1, 64)).toBe(64)
+  })
+
+  it('does not allocate for zoom levels the flight never visits', () => {
+    const image = { width: 32, height: 18 }
+    expect(imageLayoutScale(image, 1, 1)).toBe(1)
+    expect(imageLayoutScale(image, 1, 4)).toBe(4)
+    expect(imageLayoutScale(image, 4, 4)).toBe(1)
+  })
+
+  it('handles portrait and degenerate sizes without producing invalid transforms', () => {
+    expect(imageLayoutScale({ width: 18, height: 32 }, 1, 64)).toBe(64)
+    expect(imageLayoutScale({ width: 0, height: 0 }, 1, 64)).toBe(1)
+    expect(imageLayoutScale({ width: Infinity, height: 1 }, 1, 64)).toBe(1)
+    expect(imageLayoutScale({ width: 32, height: 18 }, 0, 64)).toBe(1)
   })
 })

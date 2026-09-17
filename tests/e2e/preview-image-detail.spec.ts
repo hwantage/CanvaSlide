@@ -115,7 +115,7 @@ test('reuses the displayed arrival tiles without starting preview-only detail wo
   const departure = (await state(page)).camera
   await page.waitForTimeout(250)
   expect((await state(page)).camera).toEqual(departure)
-  expect((await state(page)).layoutZoom).toBeCloseTo(departure.zoom)
+  expect((await state(page)).layoutZoom).toBe(1)
   await expect(tiles.first()).toBeHidden()
   await expect
     .poll(async () => (await state(page)).camera, { intervals: [10] })
@@ -126,14 +126,14 @@ test('reuses the displayed arrival tiles without starting preview-only detail wo
     const world = document.querySelector<HTMLElement>('[data-testid="world-layer"]')!
     const matrix = new DOMMatrix(getComputedStyle(world).transform)
     const rect = img.getBoundingClientRect()
-    return { layoutWidth: img.width, worldWidth: rect.width / matrix.a }
+    return { layoutWidth: img.width, pixels: img.naturalWidth, worldWidth: rect.width / matrix.a }
   })
-  expect(image.layoutWidth).toBe(2048)
+  expect(image.layoutWidth).toBe(image.pixels)
   expect(image.worldWidth).toBeCloseTo(64)
   await expect.poll(async () => (await state(page)).active).toBe(false)
   await expect(tiles.first()).toBeVisible()
   expect((await state(page)).camera).toEqual(before)
-  expect((await state(page)).layoutZoom).toBeCloseTo(before.zoom)
+  expect((await state(page)).layoutZoom).toBe(1)
   expect(await original!.evaluate((node) => node.isConnected)).toBe(true)
   expect(await tiles.first().evaluate((node) => (node as HTMLCanvasElement).toDataURL())).toBe(
     pixels

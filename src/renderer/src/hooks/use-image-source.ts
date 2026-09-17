@@ -64,5 +64,21 @@ export function useImageSource(
   if (!inView || !asset) {
     return undefined
   }
-  return svg ? (preview?.asset === asset ? preview.image : undefined) : { src: asset.data }
+  if (!svg) {
+    return { src: asset.data }
+  }
+  if (preview?.asset !== asset) {
+    return undefined
+  }
+  // Why: an SVG shown as-is is rasterized by WebKit at its layout size, so that is the resolution
+  // the detail renderer compares the screen against.
+  return preview.image.size
+    ? preview.image
+    : {
+        src: preview.image.src,
+        size: {
+          width: element.width * window.devicePixelRatio,
+          height: element.height * window.devicePixelRatio
+        }
+      }
 }

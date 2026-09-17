@@ -103,15 +103,15 @@ test('pastes an image from the clipboard into the viewport', async ({ page }) =>
   await pasteImage()
   const image = page.locator('[data-element-type="image"]')
   await expect(image).toHaveCount(1)
-  await expect(image).toHaveCSS('width', '300px')
+  await expect.poll(() => image.evaluate((el) => el.getBoundingClientRect().width)).toBe(300)
   // A second paste of the same image must not stack exactly on the first.
   await pasteImage()
   await expect(image).toHaveCount(2)
   const [first, second] = await image.evaluateAll((nodes) =>
-    nodes.map((n) => [
-      Number.parseFloat((n as HTMLElement).style.left),
-      Number.parseFloat((n as HTMLElement).style.top)
-    ])
+    nodes.map((n) => {
+      const { x, y } = n.getBoundingClientRect()
+      return [x, y]
+    })
   )
   expect(second?.[0]).toBeCloseTo((first?.[0] ?? 0) + 24, 5)
   expect(second?.[1]).toBeCloseTo((first?.[1] ?? 0) + 24, 5)
@@ -275,7 +275,9 @@ test('creation preview follows the cursor, not the top-left corner', async ({ pa
   await page.mouse.up()
 })
 
-test('zooming lays elements out at real scale (no bitmap upscaling)', async ({ page }) => {
+test('zooming scales a painted world through its transform, with no layer to upscale', async ({
+  page
+}) => {
   await page.keyboard.press('r')
   await dragOnCanvas(page, [300, 300], [400, 400])
   const shape = page.locator('[data-element-type="shape"]').first()
@@ -287,11 +289,13 @@ test('zooming lays elements out at real scale (no bitmap upscaling)', async ({ p
   await expect
     .poll(async () => (await shape.boundingBox())?.width ?? 0)
     .toBeGreaterThan((before?.width ?? 0) * 1.5)
-  // Layout size (not just visual transform) grew: once the zoom settles, the world layer carries
-  // no scale() transform.
-  await expect
-    .poll(() => page.getByTestId('world-layer').evaluate((el) => el.style.transform))
-    .not.toContain('scale')
+  // Why: a light world is never composited, so its scale() is painted at the real resolution
+  // rather than upscaling a bitmap; it therefore never needs a CSS zoom re-layout either.
+  const world = page.getByTestId('world-layer')
+  await expect(world).toHaveCSS('will-change', 'auto')
+  await expect.poll(() => world.evaluate((el) => el.style.transform)).toContain('scale')
+  await page.waitForTimeout(300)
+  expect(await world.evaluate((el) => (el.firstElementChild as HTMLElement).style.zoom)).toBe('1')
 })
 
 test('box-selected group moves together, even when grabbed between objects', async ({ page }) => {

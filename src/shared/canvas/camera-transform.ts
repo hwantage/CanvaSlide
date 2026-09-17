@@ -87,12 +87,38 @@ export function cameraPanCssTransform(camera: Camera): string {
 export const ZOOM_SETTLE_MS = 120
 
 /**
- * CSS `zoom` to lay the world out at for a settled camera zoom. Why: WebKit clamps zoomed text to a
- * "smart minimum" font size (6px), so zooming out with CSS `zoom` leaves glyphs 3× too large and
- * spilling out of their boxes. Below 100% the layout stays at 1 and only the transform shrinks it.
+ * CSS `zoom` a composited world is laid out at for a settled camera zoom. Why: a composited layer
+ * is rasterized at its layout scale, so scaling it up on the compositor shows an upscaled bitmap;
+ * re-laying it out at the real scale keeps vectors and text sharp. Why never below 1: WebKit
+ * clamps zoomed text to a "smart minimum" font size (6px), so zooming out with CSS `zoom` leaves
+ * glyphs 3× too large and spilling out of their boxes.
  */
 export function layoutZoomFor(zoom: number): number {
   return Math.max(1, zoom)
+}
+
+/**
+ * CSS `zoom` the world is laid out at when the camera is at rest. A world that is not composited
+ * is painted through its transform at the real scale, as sharp as a re-layout would be, so it is
+ * laid out once at 1 and only ever transformed: text and emoji keep the same metrics at every
+ * zoom and nothing reflows when a flight lands or a wheel zoom settles. Only a composited world
+ * (dense vector documents) needs the layout to follow the zoom, see layoutZoomFor.
+ */
+export function worldLayoutZoom(zoom: number, composited: boolean): number {
+  return composited ? layoutZoomFor(zoom) : 1
+}
+
+/**
+ * CSS `zoom` a composited world holds for the whole of a flight, given the layout it departs at.
+ * A flight that lands at or below the departure layout is laid out at its arrival scale from the
+ * first frame, so landing commits nothing and nothing reflows twice (once at departure, once at
+ * arrival) on a deck of equally sized frames. A flight that lands above it drops to 1 instead:
+ * laying a composited world out at a large scale while the camera is far below it makes WebKit
+ * rasterize newly visible content at that scale before shrinking it (#14).
+ */
+export function flightLayoutZoom(departureLayoutZoom: number, target: Camera): number {
+  const arrival = layoutZoomFor(target.zoom)
+  return arrival <= departureLayoutZoom ? arrival : 1
 }
 
 /**

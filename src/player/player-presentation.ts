@@ -1,10 +1,6 @@
 import { createCameraAnimator } from '@shared/canvas/camera-animator'
-import {
-  ZOOM_SETTLE_MS,
-  layoutZoomFor,
-  worldLayerCssTransform
-} from '@shared/canvas/camera-transform'
-import { worldRectToScreen } from '@shared/canvas/camera-transform'
+import { worldLayerCssTransform, worldRectToScreen } from '@shared/canvas/camera-transform'
+import { zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'
 import { contentBounds, elementRect, interpolateRect } from '@shared/canvas/element-bounds'
 import type { Camera, CanvasDocument, Rect, Size } from '@shared/canvas/element-types'
 import { cameraForOverview, fitRectToViewport } from '@shared/canvas/frame-fit'
@@ -38,10 +34,10 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
     height: Math.max(1, mount.viewport.clientHeight)
   })
 
-  // Why: CSS zoom re-lays out the whole document; during a fly the layer is scaled on the
-  // compositor instead, and the zoom is committed once the camera has settled.
-  let baseZoom = 1
-  let settle: ReturnType<typeof setTimeout> | null = null
+  // Why: the player's world is never composited, so it is painted through its transform at the
+  // real scale — as sharp as a CSS zoom re-layout, without ever reflowing (see worldLayoutZoom).
+  const LAYOUT_ZOOM = 1
+  Object.assign(mount.zoomLayer.style, zoomLayerCssStyle(LAYOUT_ZOOM, navigator.userAgent))
   let roll = 0
   let spotlight = 0
   /** The cut-out in world units; it travels with the flight rather than jumping to the target. */
@@ -87,19 +83,10 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
 
   const paint = () => {
     mount.world.style.transformOrigin = '0 0'
-    mount.world.style.transform = worldLayerCssTransform(camera, baseZoom)
+    mount.world.style.transform = worldLayerCssTransform(camera, LAYOUT_ZOOM)
     // Why: frame outlines are in world units; keep them ~2px on screen at any zoom.
     mount.zoomLayer.style.setProperty('--stroke-px', `${2 / camera.zoom}px`)
     paintShot()
-    if (settle !== null) {
-      clearTimeout(settle)
-    }
-    settle = setTimeout(() => {
-      settle = null
-      baseZoom = layoutZoomFor(camera.zoom)
-      mount.zoomLayer.style.zoom = String(baseZoom)
-      mount.world.style.transform = worldLayerCssTransform(camera, baseZoom)
-    }, ZOOM_SETTLE_MS)
   }
 
   const animator = createCameraAnimator({

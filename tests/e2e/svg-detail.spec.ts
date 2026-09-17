@@ -117,14 +117,14 @@ test('uses previews throughout a flight and refreshes bounded crops at the new p
   const base = page.locator('[data-element-id="photo"]')
   const tiles = page.locator('[data-image-detail-id="photo"]')
   await expect(tiles.first()).toBeVisible()
-  const oldPosition = await tiles.first().evaluate((node) => (node as HTMLElement).style.left)
+  const oldPosition = await tiles.first().evaluate((node) => (node as HTMLElement).style.transform)
   await camera(page, { x: -32000 * 8, y: -16000 * 8, zoom: 8 }, 1000)
   await expect(tiles.first()).toBeHidden()
   await expect(base).toHaveCSS('visibility', 'visible')
   await page.waitForTimeout(300)
   await expect(tiles.first()).toBeHidden()
   await expect(tiles.first()).toBeVisible()
-  expect(await tiles.first().evaluate((node) => (node as HTMLElement).style.left)).not.toBe(
+  expect(await tiles.first().evaluate((node) => (node as HTMLElement).style.transform)).not.toBe(
     oldPosition
   )
   const stats = await tiles.evaluateAll((nodes) =>
@@ -138,10 +138,13 @@ test('uses previews throughout a flight and refreshes bounded crops at the new p
       }
     })
   )
-  expect(stats.length).toBeGreaterThan(0)
+  // One surface per image, bounded by what is visible: the tiles it was rendered from are the
+  // memory bound, the surface just covers the viewport at device resolution.
+  expect(stats).toHaveLength(1)
+  const viewport = page.viewportSize()!
   for (const tile of stats) {
-    expect(tile.width).toBeLessThanOrEqual(2048)
-    expect(tile.height).toBeLessThanOrEqual(2048)
+    expect(tile.width).toBeLessThanOrEqual(viewport.width * 2 + 2)
+    expect(tile.height).toBeLessThanOrEqual(viewport.height * 2 + 2)
     expect(tile.density).toBeCloseTo(2, 1)
   }
   await camera(page, { x: -32000 * 8 - 450, y: -16000 * 8, zoom: 8 })
@@ -337,4 +340,78 @@ test('pauses background detail during edits even when the camera and image stay 
     useDocumentStore.getState().endEdit()
   }, documentUrl)
   await expect(tiles.first()).toBeVisible()
+})
+
+test('replaces translucent previews and detail in the same paint @webkit', async ({ page }) => {
+  await openDetailDocument(page)
+  await expect(page.locator('[data-image-detail-id="photo"]')).toBeVisible()
+  const states = await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/store/camera-store.ts'))
+      .at(-1)!
+    const { useCameraStore } = await import(url)
+    useCameraStore.getState().animateTo({ x: 80.3, y: 60.7, zoom: 0.023 }, 200)
+    const states: { preview: boolean; detail: boolean }[] = []
+    await new Promise<void>((resolve) => {
+      const start = performance.now()
+      const tick = () => {
+        const preview = document.querySelector('[data-element-id="photo"]')!
+        const detail = document.querySelector('[data-image-detail-id="photo"]')
+        const style = detail && getComputedStyle(detail)
+        states.push({
+          preview: getComputedStyle(preview).visibility === 'visible',
+          detail: !!style && style.visibility === 'visible' && Number(style.opacity) > 0
+        })
+        if (performance.now() - start > 1600) {
+          resolve()
+        } else {
+          requestAnimationFrame(tick)
+        }
+      }
+      requestAnimationFrame(tick)
+    })
+    return states
+  })
+  expect(states.some((s) => s.preview && !s.detail)).toBe(true)
+  expect(states.some((s) => !s.preview && s.detail)).toBe(true)
+  expect(states.filter((s) => s.preview === s.detail)).toEqual([])
+})
+
+test('preserves translucent bitmap alpha at fractional crop edges @webkit', async ({ page }) => {
+  const asset = await openDetailDocument(page)
+  const alpha = await page.evaluate(async (asset) => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/lib/svg-image-preview.ts'))
+      .at(-1)!
+    const { createSvgImagePreview } = await import(url)
+    const root = new DOMParser().parseFromString(atob(asset.data.split(',')[1]!), 'image/svg+xml')
+    root.querySelectorAll('mask rect[fill="black"]').forEach((rect) => rect.remove())
+    const data = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
+    const detail = await createSvgImagePreview(
+      { ...asset, data },
+      2,
+      {
+        crop: { x: 0.123456789, y: 0.287654321, width: 0.006543219, height: 0.004321987 },
+        pixels: { width: 257, height: 193 }
+      },
+      undefined,
+      'canvas'
+    )
+    const canvas = detail.canvas as HTMLCanvasElement
+    const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+    let min = 255,
+      max = 0
+    for (let i = 3; i < pixels.length; i += 4) {
+      min = Math.min(min, pixels[i]!)
+      max = Math.max(max, pixels[i]!)
+    }
+    detail.dispose()
+    return { min, max }
+  }, asset)
+  expect(alpha.min).toBeGreaterThanOrEqual(127)
+  expect(alpha.max).toBeLessThanOrEqual(128)
 })

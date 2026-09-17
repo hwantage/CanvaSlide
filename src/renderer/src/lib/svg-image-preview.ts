@@ -103,6 +103,36 @@ export function staticMaskedSvg(data: string): SVGSVGElement | null {
   return root as unknown as SVGSVGElement
 }
 
+/**
+ * Any well-formed, still SVG for a detail render. Why: WebKit rasterizes an SVG `<img>` at its
+ * layout size, and the world is laid out at zoom 1, so a vector image zoomed in on is as blurry
+ * as a bitmap of its own size; the visible crop is re-rendered at screen resolution at rest
+ * instead. Animation and scripts keep their live renderer.
+ */
+function stillSvg(data: string): SVGSVGElement | null {
+  const doc = new DOMParser().parseFromString(decodeSvg(data), 'image/svg+xml')
+  const root = doc.documentElement
+  if (root.localName !== 'svg' || doc.querySelector('parsererror')) {
+    return null
+  }
+  const viewBox = (root.getAttribute('viewBox') ?? '')
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number)
+  if (
+    viewBox.length !== 4 ||
+    !viewBox.every(Number.isFinite) ||
+    viewBox[2]! <= 0 ||
+    viewBox[3]! <= 0
+  ) {
+    return null
+  }
+  if (doc.querySelector('animate, animateMotion, animateTransform, set, discard, script')) {
+    return null
+  }
+  return root as unknown as SVGSVGElement
+}
+
 export async function createSvgImagePreview(
   asset: ImageAsset,
   aspect: number,
@@ -111,9 +141,10 @@ export async function createSvgImagePreview(
   surface: 'png' | 'canvas' = 'png'
 ): Promise<ImagePreview> {
   signal?.throwIfAborted()
-  const svg = staticMaskedSvg(asset.data)
+  // A second SVG image renderer regresses WebKit panning, so previews stay the original unless the
+  // SVG is a bounded photo; a detail render at rest can re-render any still SVG's visible crop.
+  const svg = staticMaskedSvg(asset.data) ?? (detail ? stillSvg(asset.data) : null)
   if (!svg) {
-    // A second SVG image renderer regresses WebKit panning; only decode the bounded PNG previews.
     return originalImagePreview(asset)
   }
   const viewBox = (svg.getAttribute('viewBox') ?? '')

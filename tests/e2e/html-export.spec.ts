@@ -15,7 +15,10 @@ async function dragOnCanvas(page: Page, from: [number, number], to: [number, num
   await page.mouse.up()
 }
 
-test('exports a self-contained HTML player that presents the frames', async ({ page }) => {
+test('exports a self-contained HTML player that presents the frames @webkit', async ({
+  page,
+  browserName
+}) => {
   await page.goto('/')
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 150], [400, 320])
@@ -61,6 +64,11 @@ test('exports a self-contained HTML player that presents the frames', async ({ p
   await expect(player.locator('.uc-img')).toHaveCount(1)
   await expect(player.locator('.uc-text', { hasText: 'Exported text' })).toHaveCount(1)
   const world = player.getByTestId('world-layer')
+  // The player makes the same per-engine text-metrics choice as the editor.
+  await expect(world.locator('> div')).toHaveCSS(
+    'font-optical-sizing',
+    browserName === 'webkit' ? 'none' : 'auto'
+  )
   const before = await world.evaluate((el) => el.style.transform)
   await player.keyboard.press('ArrowRight')
   await expect(counter).toContainText('2 / 2')

@@ -1,5 +1,5 @@
 import type { Rect, Size } from '@shared/canvas/element-types'
-import { imageDetailSourceRect } from '@shared/canvas/image-detail'
+import { imageDetailSamplingRect, imageDetailSourceRect } from '@shared/canvas/image-detail'
 
 export type ImagePreview = {
   src: string
@@ -68,17 +68,31 @@ export async function rasterizeSvg(
         height: bitmap.image.naturalHeight
       })
       context.globalCompositeOperation = 'source-in'
+      // Why integral rects under a fractional transform: WebKit rounds a fractional source rect
+      // to whole source pixels and snaps a fractional destination rect to device pixels, and
+      // either shifts a tile by up to a pixel against its neighbours — a step at every seam once a
+      // source pixel spans several screen pixels. With the crop's fraction carried by the canvas
+      // transform, both rects stay integral and the sampling is exact.
+      const scaleX = size.width / source.width
+      const scaleY = size.height / source.height
+      const sample = imageDetailSamplingRect(source, {
+        width: bitmap.image.naturalWidth,
+        height: bitmap.image.naturalHeight
+      })
+      context.save()
+      context.setTransform(scaleX, 0, 0, scaleY, -source.x * scaleX, -source.y * scaleY)
       context.drawImage(
         bitmap.image,
-        source.x,
-        source.y,
-        source.width,
-        source.height,
-        0,
-        0,
-        size.width,
-        size.height
+        sample.x,
+        sample.y,
+        sample.width,
+        sample.height,
+        sample.x,
+        sample.y,
+        sample.width,
+        sample.height
       )
+      context.restore()
     }
     if (surface === 'canvas') {
       // Avoid the synchronous pixel readback and PNG encoding used by image previews.

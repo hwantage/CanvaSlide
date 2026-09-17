@@ -146,13 +146,24 @@ test('bounds masked SVG previews, preserves alpha, reuses them offscreen, and sa
   if (!viewport) {
     throw new Error('Viewport was not laid out')
   }
+  const initial = (await first.boundingBox())!
   await page.mouse.move(viewport.x + 350, viewport.y + 350)
   await page.mouse.down()
   await page.mouse.move(viewport.x + 450, viewport.y + 400, { steps: 8 })
   await page.mouse.up()
-  await expect(first).not.toHaveCSS('left', '0px')
+  await expect
+    .poll(() => first.evaluate((el) => el.getBoundingClientRect().x))
+    .toBeCloseTo(initial.x + 100, 3)
+  await expect
+    .poll(() => first.evaluate((el) => el.getBoundingClientRect().y))
+    .toBeCloseTo(initial.y + 50, 3)
   await page.keyboard.press(`${await primaryModifier(page)}+z`)
-  await expect(first).toHaveCSS('left', '0px')
+  await expect
+    .poll(() => first.evaluate((el) => el.getBoundingClientRect().x))
+    .toBeCloseTo(initial.x, 3)
+  await expect
+    .poll(() => first.evaluate((el) => el.getBoundingClientRect().y))
+    .toBeCloseTo(initial.y, 3)
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: /^Save as/ }).click()
   const path = await (await download).path()
@@ -333,7 +344,8 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
   await page.waitForFunction(
     () => !(window as unknown as FlightWindow).flightTest.camera.getState().isAnimating()
   )
-  await expect(page.getByTestId('world-layer').locator('> div')).toHaveCSS('zoom', '4')
+  // A painted world is never re-laid out: it stays at 1 and is scaled through its transform.
+  await expect(page.getByTestId('world-layer').locator('> div')).toHaveCSS('zoom', '1')
   await expect(page.getByTestId('world-layer')).toHaveCSS('will-change', 'auto')
   const zooms = await page.evaluate(() => {
     const f = (window as unknown as FlightWindow).flightTest
@@ -353,13 +365,14 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
   await expect(page.locator('[data-element-id="distant"]')).toHaveAttribute('src', /^blob:/)
 })
 
-test('drops a large departure layout scale during zoom-out and restores it after a same-zoom flight', async ({
+test('keeps a painted world at layout 1 across a large zoom-out and a same-zoom flight', async ({
   page
 }) => {
   await openMaskedImage(page)
   const layer = page.getByTestId('world-layer').locator('> div')
   await setCamera(page, { x: -32000 * 32, y: -16000 * 32, zoom: 32 })
-  await expect(layer).toHaveCSS('zoom', '32')
+  // Even at rest the light world is not re-laid out at 32: its transform scales it, sharply.
+  await expect(layer).toHaveCSS('zoom', '1')
   const url = await page.evaluate(() =>
     performance
       .getEntriesByType('resource')
@@ -367,16 +380,24 @@ test('drops a large departure layout scale during zoom-out and restores it after
       .filter((name) => name.includes('/src/store/camera-store.ts'))
       .at(-1)!
   )
-  await page.evaluate(async (url) => {
+  const layouts = await page.evaluate(async (url) => {
     const { useCameraStore } = await import(url)
+    const layer = document.querySelector('[data-testid="world-layer"] > div') as HTMLElement
+    const seen = new Set<string>()
+    const stop = useCameraStore.subscribe(() => seen.add(layer.style.zoom))
+    const landed = () =>
+      new Promise<void>((resolve) => {
+        const tick = () =>
+          useCameraStore.getState().isAnimating() ? requestAnimationFrame(tick) : resolve()
+        requestAnimationFrame(tick)
+      })
     useCameraStore.getState().animateTo({ x: -32000 * 2, y: -16000 * 2, zoom: 2 }, 600)
-  }, url)
-  await expect(layer).toHaveCSS('zoom', '1')
-  await expect(layer).toHaveCSS('zoom', '2')
-  await page.evaluate(async (url) => {
-    const { useCameraStore } = await import(url)
+    await landed()
     useCameraStore.getState().animateTo(useCameraStore.getState().camera, 600)
+    await landed()
+    stop()
+    return [...seen]
   }, url)
+  expect(layouts).toEqual(['1'])
   await expect(layer).toHaveCSS('zoom', '1')
-  await expect(layer).toHaveCSS('zoom', '2')
 })

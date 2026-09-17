@@ -58,13 +58,19 @@ test('dropping a PDF adds one image and one frame per page, laid out as a grid',
   await expect(images).toHaveCount(2, { timeout: 15_000 })
   await expect(frames).toHaveCount(2)
   // Pages scale to the default frame width; the second page is landscape.
-  await expect(images.nth(0)).toHaveCSS('width', '960px')
-  await expect(images.nth(1)).toHaveCSS('height', '540px')
+  await expect
+    .poll(() => images.nth(0).evaluate((el) => el.getBoundingClientRect().width))
+    .toBeCloseTo(960, 3)
+  await expect
+    .poll(() => images.nth(1).evaluate((el) => el.getBoundingClientRect().height))
+    .toBeCloseTo(540, 3)
   // Why: Chromium rounds synthetic event coordinates to whole pixels; allow sub-pixel drift.
+  const viewport = (await page.getByTestId('canvas-viewport').boundingBox())!
   const position = (index: number) =>
-    images
-      .nth(index)
-      .evaluate((el) => [Number.parseFloat(el.style.left), Number.parseFloat(el.style.top)])
+    images.nth(index).evaluate((el, origin) => {
+      const bounds = el.getBoundingClientRect()
+      return [bounds.x - origin.x, bounds.y - origin.y]
+    }, viewport)
   const [firstLeft, firstTop] = await position(0)
   const [secondLeft, secondTop] = await position(1)
   expect(Math.abs((firstLeft ?? 0) - 100)).toBeLessThan(1)

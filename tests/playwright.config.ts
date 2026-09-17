@@ -23,7 +23,18 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1400, height: 900 } }
-    }
+    },
+    // Why: some regressions (system-font text metrics) only show in WebKit on macOS, which CI does
+    // not run. Opt in locally with CANVASLIDE_E2E_WEBKIT=1 to run the specs tagged @webkit there.
+    ...(process.env.CANVASLIDE_E2E_WEBKIT
+      ? [
+          {
+            name: 'webkit',
+            grep: /@webkit/,
+            use: { ...devices['Desktop Safari'], viewport: { width: 1400, height: 900 } }
+          }
+        ]
+      : [])
   ],
   webServer: {
     // Why: the port is this checkout's own, so a dev server on 1420 is left alone and a sibling

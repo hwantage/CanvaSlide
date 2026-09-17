@@ -3,6 +3,7 @@ import {
   imageIntersectsViewport,
   imageLayoutScale,
   imagesAlongCameraPath,
+  svgImageLayoutScale,
   svgPreviewSize
 } from './image-rendering'
 
@@ -72,6 +73,14 @@ describe('image rendering bounds', () => {
     expect(imagesAlongCameraPath([image], camera, { ...camera, zoom: 50 }, viewport)).toEqual([
       image
     ])
+  })
+
+  it('lays a small SVG image out up to the maximum zoom larger, a big one only up to the raster edge', () => {
+    expect(svgImageLayoutScale({ width: 14.56, height: 3.71 })).toBe(64)
+    expect(svgImageLayoutScale({ width: 32, height: 18 })).toBe(32)
+    expect(svgImageLayoutScale({ width: 720, height: 405 })).toBeCloseTo(1024 / 720, 9)
+    expect(svgImageLayoutScale({ width: 4000, height: 100 })).toBe(1)
+    expect(svgImageLayoutScale({ width: 0, height: 0 })).toBe(1)
   })
 })
 

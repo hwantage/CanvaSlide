@@ -1,13 +1,28 @@
 import { useEffect, useState } from 'react'
-import { ZOOM_SETTLE_MS, layoutZoomFor } from '@shared/canvas/camera-transform'
+import {
+  ZOOM_SETTLE_MS,
+  flightLayoutZoom,
+  layoutZoomFor,
+  worldLayoutZoom
+} from '@shared/canvas/camera-transform'
 import { useCameraStore } from '@/store/camera-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
-/** Defer gesture relayout while preserving the prepared still of a preview. */
-export function useSettledZoom(): number {
+/**
+ * The CSS zoom the world is laid out at. A painted (non-composited) world stays at 1 for good and
+ * is only ever transformed, so nothing in it reflows (see worldLayoutZoom). A composited world
+ * follows the camera zoom, lagging behind gestures: it updates only after the zoom has held still
+ * for ZOOM_SETTLE_MS, and a flight holds one layout scale until arrival — the arrival scale
+ * itself where the flight allows it (see flightLayoutZoom), so landing has nothing left to reflow.
+ */
+export function useSettledZoom(composited: boolean): number {
   const stationary = useCameraStore((s) => s.stationaryCamera)
+  // The composited world's settled zoom; a painted world ignores it and reads 1 below.
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
   useEffect(() => {
+    if (!composited) {
+      return
+    }
     let timer: ReturnType<typeof setTimeout> | null = null
     const settle = () => {
       // A delayed animation frame is not the end of a camera flight.
@@ -18,10 +33,13 @@ export function useSettledZoom(): number {
       timer = null
       setZoom(layoutZoomFor(useCameraStore.getState().camera.zoom))
     }
+    // Why: the camera may have moved while the world was painted; catch up like after a gesture.
+    timer = setTimeout(settle, ZOOM_SETTLE_MS)
     const unsubscribe = useCameraStore.subscribe((state, previous) => {
-      // A large departure scale makes WebKit rasterize newly visible SVGs before downscaling them.
       if (state.animationActive && !previous.animationActive) {
-        setZoom(1)
+        setZoom((layout) =>
+          state.animationTarget ? flightLayoutZoom(layout, state.animationTarget) : 1
+        )
       }
       if (
         state.camera.zoom === previous.camera.zoom &&
@@ -49,6 +67,6 @@ export function useSettledZoom(): number {
         clearTimeout(timer)
       }
     }
-  }, [])
-  return stationary ? layoutZoomFor(stationary.zoom) : zoom
+  }, [composited])
+  return worldLayoutZoom(stationary?.zoom ?? zoom, composited)
 }

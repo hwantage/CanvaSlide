@@ -11,7 +11,9 @@ import {
   zoomAtScreenPoint,
   zoomByWheel,
   worldLayerCssTransform,
-  layoutZoomFor
+  layoutZoomFor,
+  flightLayoutZoom,
+  worldLayoutZoom
 } from './camera-transform'
 
 describe('camera-transform', () => {
@@ -75,5 +77,21 @@ describe('camera-transform', () => {
     expect(layoutZoomFor(0.13)).toBe(1)
     expect(layoutZoomFor(1)).toBe(1)
     expect(layoutZoomFor(2.5)).toBe(2.5)
+  })
+
+  it('lays a painted world out at 1 and a composited one at its zoom', () => {
+    expect(worldLayoutZoom(4, false)).toBe(1)
+    expect(worldLayoutZoom(0.3, false)).toBe(1)
+    expect(worldLayoutZoom(4, true)).toBe(4)
+    expect(worldLayoutZoom(0.3, true)).toBe(1)
+  })
+
+  it('holds the arrival layout through a flight unless it would raise the departure layout', () => {
+    const at = (zoom: number) => ({ x: 0, y: 0, zoom })
+    expect(flightLayoutZoom(1.174, at(1.174))).toBe(1.174)
+    expect(flightLayoutZoom(4, at(1.5))).toBe(1.5)
+    expect(flightLayoutZoom(4, at(0.3))).toBe(1)
+    expect(flightLayoutZoom(1, at(4))).toBe(1)
+    expect(flightLayoutZoom(1.5, at(1.5001))).toBe(1)
   })
 })

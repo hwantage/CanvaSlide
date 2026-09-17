@@ -330,3 +330,49 @@ test('a frame is not offered as something to wrap in another frame', async ({ pa
   await page.keyboard.press('Shift+F')
   await expect(page.getByTestId('frame-row')).toHaveCount(2)
 })
+
+test('a slider drag collapses into one undo step', async ({ page }) => {
+  await openDeck(page, [frame(0, 'One'), frame(1, 'Two')])
+  await page.getByTestId('frame-row').nth(1).click()
+  // An edit before the drag: undoing past the drag has to reach this one, not the middle of it.
+  await page.getByRole('combobox', { name: 'Spotlight' }).selectOption({ label: 'High' })
+  await page.getByRole('button', { name: 'Advanced' }).click()
+  const roll = page.getByRole('slider', { name: 'Roll' })
+  await expect(roll).toHaveValue('0')
+
+  // Count what the drag really fires, so this cannot pass on a drag that never moved the handle.
+  await roll.evaluate((node) => {
+    Object.assign(window, { motionEdits: 0 })
+    node.addEventListener('input', () => {
+      Object.assign(window, { motionEdits: (window as { motionEdits?: number }).motionEdits! + 1 })
+    })
+  })
+  const track = (await roll.boundingBox())!
+  const y = track.y + track.height / 2
+  await page.mouse.move(track.x + track.width / 2, y)
+  await page.mouse.down()
+  for (let step = 1; step <= 8; step += 1) {
+    await page.mouse.move(track.x + track.width / 2 + step * 4, y)
+  }
+  await page.mouse.up()
+
+  const edits = await page.evaluate(() => (window as { motionEdits?: number }).motionEdits ?? 0)
+  expect(edits).toBeGreaterThan(1)
+  expect(Number(await roll.inputValue())).toBeGreaterThan(0)
+
+  // Why: the shortcut is ignored while an input holds focus, so the author has moved on first.
+  await roll.blur()
+  const undo = async () => {
+    await page.keyboard.press('Meta+z')
+    await page.keyboard.press('Control+z')
+  }
+  await undo()
+  await expect(roll).toHaveValue('0')
+  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-overridden', 'true')
+
+  // The whole sweep is behind us after one step: the next undo reaches the edit before it, not a
+  // snapshot from the middle of the drag.
+  await undo()
+  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-overridden', 'false')
+  await expect(motionControl(page, 'roll')).toHaveAttribute('data-overridden', 'false')
+})

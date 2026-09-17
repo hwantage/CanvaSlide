@@ -1,91 +1,54 @@
 import { create } from 'zustand'
-import { elementRect, interpolateRect } from '@shared/canvas/element-bounds'
+import { elementRect } from '@shared/canvas/element-bounds'
 import { camerasEqual } from '@shared/canvas/camera-transform'
-import { cameraForOverview, fitRectToViewport } from '@shared/canvas/frame-fit'
+import { cameraForOverview } from '@shared/canvas/frame-fit'
 import { frameIndexById, orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
-import { resolveFrameTransition } from '@shared/canvas/frame-transition'
-import type { Camera, ElementId, Rect } from '@shared/canvas/element-types'
+import type { Rect } from '@shared/canvas/element-types'
 import { useCameraStore } from './camera-store'
 import { setWindowFullscreen } from '@/platform/window-fullscreen'
 import { useDocumentStore } from './document-store'
+import { frameCamera, frameShotAt, shotTween } from './presentation-shot'
+import type { PresentationStore } from './presentation-state'
+
+export type {
+  PresentationActions,
+  PresentationState,
+  PresentationStore
+} from './presentation-state'
 
 /** Correction hop after a flight lands on a viewport that changed underneath it. */
 const SETTLE_MS = 250
 
-export type PresentationState = {
-  active: boolean
-  index: number
-  /** Camera to restore on exit. */
-  cameraBeforeStart: Camera | null
-  /** Zoomed out to the whole board; frames become clickable jump targets. */
-  overview: boolean
-  /** Camera roll in degrees. Presentation only; the editor never rolls. */
-  roll: number
-  /** Dim strength outside `spotlightRect`, 0 = off. */
-  spotlight: number
-  /** The cut-out, in world units. It travels with the flight instead of jumping to the target. */
-  spotlightRect: Rect | null
-  /** Frame the preview flies into; null during an ordinary slide show. Held by id, since the deck
-   * can be reordered from the list while the preview is parked. */
-  previewFrameId: ElementId | null
-}
-
-export type PresentationActions = {
-  start: (fromIndex?: number) => void
-  /** Plays the flight into a frame from the one before it; call again to replay it. */
-  previewTransition: (frameId: ElementId) => void
-  /** Drops a parked preview where it stands, for when the editor is about to move the camera itself. */
-  cancelPreview: () => void
-  /** Called by the viewport once it has re-measured after chrome hides. */
-  flyToCurrent: () => void
-  exit: () => void
-  next: () => void
-  previous: () => void
-  goTo: (index: number) => void
-  showOverview: () => void
-  toggleOverview: () => void
-  /** Viewport changed (fullscreen transition, window resize): keep the current target fitted. */
-  refitToViewport: () => void
-}
-
-export type PresentationStore = PresentationState & PresentationActions
-
 export const usePresentationStore = create<PresentationStore>()((set, get) => {
-  const motionAt = (index: number) => {
-    const document = useDocumentStore.getState().document
-    const frame = orderedFrames(document)[index]
-    return frame ? { frame, motion: resolveFrameTransition(frame, document.settings) } : null
-  }
-  const frameTarget = (index: number): Camera | null => {
-    const at = motionAt(index)
-    return at
-      ? fitRectToViewport(
-          elementRect(at.frame),
-          useCameraStore.getState().viewport,
-          undefined,
-          at.motion.roll
-        )
-      : null
+  const motionAt = (index: number) => frameShotAt(useDocumentStore.getState().document, index)
+  const frameTarget = (index: number) =>
+    frameCamera(useDocumentStore.getState().document, index, useCameraStore.getState().viewport)
+  /** Runs the shot on the camera's eased clock; undefined when the two frames look the same. */
+  const shotProgress = (to: { roll: number; spotlight: number; rect?: Rect }) => {
+    const tween = shotTween(get(), to)
+    return tween && ((t: number) => set(tween(t)))
   }
   /**
-   * Lerps the whole shot — roll, dimming and the cut-out — on the camera's own eased clock, so it
-   * lands with the move. The rect travels too: handing the hole to the target frame up front makes
-   * a lit frame black out the instant the flight starts.
+   * Where the camera belongs now. A parked preview is held by id because the deck stays editable
+   * underneath it — the list can reorder it and Delete can cut it — so every later move has to ask
+   * again instead of trusting the index its flight took off with. Null means the frame is gone.
    */
-  const shotProgress = (to: { roll: number; spotlight: number; rect?: Rect }) => {
-    const { roll: fromRoll, spotlight: fromSpotlight, spotlightRect } = get()
-    const fromRect = spotlightRect ?? to.rect ?? null
-    const toRect = to.rect ?? fromRect
-    if (fromRoll === to.roll && fromSpotlight === to.spotlight && fromRect === toRect) {
-      return undefined
+  const presentedIndex = (): number | null => {
+    const { index, previewFrameId } = get()
+    if (previewFrameId === null) {
+      return index
     }
-    return (t: number) =>
-      set({
-        roll: fromRoll + (to.roll - fromRoll) * t,
-        spotlight: fromSpotlight + (to.spotlight - fromSpotlight) * t,
-        spotlightRect:
-          fromRect && toRect ? interpolateRect(fromRect, toRect, t) : (toRect ?? fromRect)
-      })
+    const found = frameIndexById(
+      orderedFrames(useDocumentStore.getState().document),
+      previewFrameId
+    )
+    if (found === -1) {
+      return null
+    }
+    if (found !== index) {
+      set({ index: found })
+    }
+    return found
   }
   /**
    * Why: the viewport can change while a flight is in the air (macOS fullscreen finishes on its
@@ -93,14 +56,23 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
    * flight lands, compare against the viewport as it is now and correct with a short hop.
    */
   const settle = (index: number) => {
-    const { active, overview } = get()
-    if (!active || overview || get().index !== index) {
+    const { active, overview, previewFrameId } = get()
+    if (!active || overview) {
       return
     }
-    const target = frameTarget(index)
+    const current = presentedIndex()
+    if (current === null) {
+      return
+    }
+    // Why: a slide show that has stepped on since this flight took off must not be dragged back,
+    // while a preview follows its own frame wherever the list has moved it in the meantime.
+    if (previewFrameId === null && current !== index) {
+      return
+    }
+    const target = frameTarget(current)
     const camera = useCameraStore.getState()
     if (target && !camerasEqual(camera.camera, target, 0.5)) {
-      camera.animateTo(target, SETTLE_MS, { onDone: () => settle(index) })
+      camera.animateTo(target, SETTLE_MS, { onDone: () => settle(current) })
     }
   }
   /** `durationMs` overrides the frame's own timing; correction hops pass one, normal steps do not. */
@@ -279,8 +251,15 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
     },
     showOverview,
     refitToViewport: () => {
-      const { active, overview, index } = get()
+      const { active, overview } = get()
       if (!active) {
+        return
+      }
+      const index = presentedIndex()
+      if (index === null) {
+        // Why: the previewed frame was deleted while parked, so there is nothing left to hold the
+        // roll and the dimming for — let go of the camera rather than refit onto whoever took its place.
+        get().cancelPreview()
         return
       }
       // Why: mid-flight (e.g. the macOS fullscreen animation) keep the full transition; once settled,

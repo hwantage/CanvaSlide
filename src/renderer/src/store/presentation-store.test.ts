@@ -213,4 +213,50 @@ describe('presentation refit', () => {
     presentation.refitToViewport()
     expect(useCameraStore.getState().camera.zoom).toBeCloseTo(large.zoom, 6)
   })
+
+  it('re-fits the frame a parked preview owns after the list reorders underneath it', () => {
+    const doc = useDocumentStore.getState()
+    doc.loadDocument(createEmptyDocument(), null)
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.insertElement(frame('c', 3, 10_000))
+    doc.updateSettings({ transitionMs: 0 })
+    useCameraStore.getState().setViewport({ width: 1000, height: 800 })
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('c')
+    const parked = useCameraStore.getState().camera
+
+    // The deck stays editable under a parked preview, so the index it flew on goes stale.
+    doc.moveFrameTo('c', 0)
+    presentation.refitToViewport()
+
+    expect(usePresentationStore.getState()).toMatchObject({ index: 0, previewFrameId: 'c' })
+    expect(useCameraStore.getState().camera.x).toBeCloseTo(parked.x, 6)
+    presentation.exit()
+  })
+
+  it('drops a parked preview whose frame was deleted instead of refitting onto its successor', () => {
+    const doc = useDocumentStore.getState()
+    doc.loadDocument(createEmptyDocument(), null)
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.updateSettings({ transitionMs: 0 })
+    useCameraStore.getState().setViewport({ width: 1000, height: 800 })
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    const parked = useCameraStore.getState().camera
+
+    // Only Escape is reserved during a preview, so Delete reaches the editor and cuts the frame.
+    doc.setSelection(['b'])
+    doc.deleteSelected()
+    presentation.refitToViewport()
+
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: false,
+      previewFrameId: null,
+      roll: 0,
+      spotlight: 0
+    })
+    expect(useCameraStore.getState().camera).toEqual(parked)
+  })
 })

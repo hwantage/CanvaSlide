@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, Play, RotateCcw } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cameraEasings, type CameraEasing } from '@shared/canvas/camera-easing'
 import {
   MAX_CAMERA_ARC,
@@ -100,6 +100,42 @@ function StepSelect({
   )
 }
 
+/**
+ * A drag fires `change` on every step it crosses, and recording each one would push a slider's worth
+ * of whole-document snapshots — burying the edit before it, since history keeps only the last
+ * `HISTORY_LIMIT`. The session opens on the first change and closes when whatever drove it lets go;
+ * the pointer is routinely released off the input, so the release is watched on the window.
+ */
+function useSliderEditSession(): { begin: () => void; end: () => void } {
+  const open = useRef(false)
+  const end = useCallback(() => {
+    if (open.current) {
+      open.current = false
+      useDocumentStore.getState().endEdit()
+    }
+  }, [])
+  const begin = useCallback(() => {
+    if (!open.current) {
+      open.current = true
+      useDocumentStore.getState().beginEdit()
+    }
+  }, [])
+  useEffect(() => {
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+    window.addEventListener('keyup', end)
+    return () => {
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      window.removeEventListener('keyup', end)
+      // Why: collapsing Advanced mid-drag unmounts the slider, and an open session would swallow
+      // every later edit into the one undo step it is still holding.
+      end()
+    }
+  }, [end])
+  return { begin, end }
+}
+
 /** The numeric control Advanced puts in the step select's place, in the same column. */
 function MotionSlider({
   field,
@@ -122,6 +158,7 @@ function MotionSlider({
   readout: string
   onChange: (value: number) => void
 }) {
+  const session = useSliderEditSession()
   return (
     <span
       title={stateTitle(overridden)}
@@ -137,7 +174,11 @@ function MotionSlider({
         max={max}
         step={step}
         value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
+        onChange={(event) => {
+          session.begin()
+          onChange(Number(event.target.value))
+        }}
+        onBlur={session.end}
         className="min-w-0 flex-1 accent-primary"
       />
       <span
@@ -164,10 +205,15 @@ export function FrameTransitionFields({ frame }: { frame: FrameElement }) {
   const own: FrameTransition = frame.transition ?? {}
   const resolved = resolveFrameTransition(frame, settings)
 
-  const patch = (change: FrameTransition) => {
-    useDocumentStore.getState().patchElements([frame.id], {
-      transition: pruneFrameTransition({ ...own, ...change }, settings)
-    })
+  /** The sliders patch unrecorded: their whole drag collapses into the step `endEdit` pushes. */
+  const patch = (change: FrameTransition, record = true) => {
+    useDocumentStore
+      .getState()
+      .patchElements(
+        [frame.id],
+        { transition: pruneFrameTransition({ ...own, ...change }, settings) },
+        record
+      )
   }
   const custom = (field: MotionField) => motionValueLabel(field, resolved)
 
@@ -221,7 +267,7 @@ export function FrameTransitionFields({ frame }: { frame: FrameElement }) {
             step={50}
             value={resolved.ms}
             readout={t('settings.seconds', { n: (resolved.ms / 1000).toFixed(1) })}
-            onChange={(ms) => patch({ ms })}
+            onChange={(ms) => patch({ ms }, false)}
           />
         ) : (
           <StepSelect
@@ -266,7 +312,7 @@ export function FrameTransitionFields({ frame }: { frame: FrameElement }) {
             step={0.05}
             value={resolved.arc}
             readout={resolved.arc.toFixed(2)}
-            onChange={(arc) => patch({ arc })}
+            onChange={(arc) => patch({ arc }, false)}
           />
         ) : (
           <StepSelect
@@ -292,7 +338,7 @@ export function FrameTransitionFields({ frame }: { frame: FrameElement }) {
             step={1}
             value={resolved.roll}
             readout={`${Math.round(resolved.roll)}°`}
-            onChange={(roll) => patch({ roll })}
+            onChange={(roll) => patch({ roll }, false)}
           />
         ) : (
           <StepSelect
@@ -318,7 +364,7 @@ export function FrameTransitionFields({ frame }: { frame: FrameElement }) {
             step={0.05}
             value={resolved.spotlight}
             readout={`${Math.round(resolved.spotlight * 100)}%`}
-            onChange={(spotlight) => patch({ spotlight })}
+            onChange={(spotlight) => patch({ spotlight }, false)}
           />
         ) : (
           <StepSelect

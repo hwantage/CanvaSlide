@@ -368,7 +368,7 @@ export const ko: UiStrings = {
     '{start}로 시작해 {next}로 다음 장면, {previous}로 이전 장면을 보세요. {escape}를 누르면 슬라이드 쇼가 끝납니다. 카메라는 프레임을 화면에 맞추고 장면 사이를 부드럽게 이동합니다.',
   'site.docs.frames.timingHeading': '전환 속도 조정',
   'site.docs.frames.timingBody':
-    '{settings}로 설정을 열고 전환 시간을 {range} 범위에서 조정하세요. 각 전환의 시간이 같으므로 먼 프레임으로는 빠르게, 가까운 프레임으로는 천천히 움직입니다. 0으로 설정하면 즉시 전환됩니다.',
+    '{settings}로 설정을 열고 전환 시간을 {range} 범위에서 조정하세요. 이 값은 문서 기본값이며, 따로 지정하지 않은 프레임은 모두 이 값을 씁니다. 프레임을 선택하면 속성 패널의 카메라 절에서 그 프레임으로 들어오는 전환의 전환 시간, 가속 곡선, 궤적, 기울기, 스포트라이트를 따로 지정할 수 있습니다. 0으로 설정하면 즉시 전환됩니다.',
   'site.docs.sharing.saveHeading': '편집 가능한 원본 보관',
   'site.docs.sharing.saveBody':
     '{save}로 {format} 파일을 저장하세요. {saveAs}로 다른 이름의 복사본을 만들고 {open}으로 다시 열 수 있습니다. 파일에는 캔버스, 프레임 순서, 설정, 이미지 데이터가 들어 있습니다.',

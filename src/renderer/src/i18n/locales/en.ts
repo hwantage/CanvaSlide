@@ -366,7 +366,7 @@ export const en = {
     'Start with {start}. Advance with {next}; go back with {previous}. Press {escape} to leave the slideshow. The camera fits each frame into the window and animates the move between frames.',
   'site.docs.frames.timingHeading': 'Set the pace',
   'site.docs.frames.timingBody':
-    'Open Settings with {settings} and adjust the transition duration from {range}. Each transition uses the same duration: a distant frame moves faster, while a nearby frame feels more gradual. Set the duration to zero for instant changes.',
+    'Open Settings with {settings} and adjust the transition duration from {range}. That is the document default, and every frame uses it until you give one its own: select a frame and the Camera section of the properties panel overrides the duration, easing, arc, roll and spotlight for the move into that frame. Set a duration to zero for an instant change.',
   'site.docs.sharing.saveHeading': 'Keep the editable original',
   'site.docs.sharing.saveBody':
     'Save with {save} as a {format} file. Use {saveAs} to save a copy under a new name, and {open} to reopen a document. The file contains the canvas, frame sequence, settings, and embedded image data.',

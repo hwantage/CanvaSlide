@@ -115,6 +115,7 @@ test('right-click menu keeps its width and stays inside the viewport near the ed
     throw new Error('canvas not laid out')
   }
   const menu = page.getByTestId('context-menu')
+  /** Opens and closes the context menu at a canvas position, returning its rendered bounds. */
   const openMenuAt = async (x: number, y: number) => {
     await canvas.click({ position: { x, y }, button: 'right' })
     await expect(menu).toBeVisible()

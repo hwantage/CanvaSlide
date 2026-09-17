@@ -8,7 +8,11 @@ type FlightCamera = {
   animationActive: boolean
   isAnimating: () => boolean
   panBy: (dx: number, dy: number) => void
-  animateTo: (camera: Camera, duration: number, onDone?: () => void) => void
+  animateTo: (
+    camera: Camera,
+    duration: number,
+    options?: { onDone?: () => void; onProgress?: (eased: number) => void }
+  ) => void
 }
 
 type FlightWindow = {
@@ -320,8 +324,10 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
         f.flightHints.push((layer.parentElement as HTMLElement).style.willChange)
       }
     })
-    f.camera.getState().animateTo({ x: -3999900, y: 120, zoom: 4 }, 500, () => {
-      f.hintAtArrival = (layer.parentElement as HTMLElement).style.willChange
+    f.camera.getState().animateTo({ x: -3999900, y: 120, zoom: 4 }, 500, {
+      onDone: () => {
+        f.hintAtArrival = (layer.parentElement as HTMLElement).style.willChange
+      }
     })
   })
   await page.waitForFunction(

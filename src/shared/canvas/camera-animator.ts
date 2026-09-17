@@ -1,7 +1,13 @@
 import type { Camera, Size } from './element-types'
-import { createCameraTween } from './zoom-pan-interpolation'
+import { createCameraTween, type CameraTweenOptions } from './zoom-pan-interpolation'
 
 export type CameraPreparation = { ready: Promise<unknown>; release: () => void }
+
+export type CameraFlightOptions = CameraTweenOptions & {
+  onDone?: (() => void) | undefined
+  /** Eased progress each frame, so a caller can animate roll or dimming on the camera's clock. */
+  onProgress?: ((eased: number) => void) | undefined
+}
 
 export type CameraAnimatorDeps = {
   getCamera: () => Camera
@@ -16,7 +22,7 @@ export type CameraAnimatorDeps = {
 
 export type CameraAnimator = {
   /** Retargets from the current camera; an in-flight animation is replaced, never queued. */
-  animateTo: (target: Camera, durationMs: number, onDone?: () => void) => void
+  animateTo: (target: Camera, durationMs: number, options?: CameraFlightOptions) => void
   cancel: () => void
   isAnimating: () => boolean
 }
@@ -51,10 +57,13 @@ export function createCameraAnimator(deps: CameraAnimatorDeps): CameraAnimator {
   return {
     cancel,
     isAnimating: () => active,
-    animateTo: (target, durationMs, onDone) => {
+    animateTo: (target, durationMs, options = {}) => {
+      const { onDone, onProgress, ...tweenOptions } = options
       cancel()
-      if (durationMs <= 0) {
+      // Why: a NaN duration makes every progress check NaN, so the flight would never land.
+      if (!(durationMs > 0)) {
         deps.setCamera(target)
+        onProgress?.(1)
         onDone?.()
         return
       }
@@ -63,11 +72,12 @@ export function createCameraAnimator(deps: CameraAnimatorDeps): CameraAnimator {
         if (flight !== generation) {
           return
         }
-        const tween = createCameraTween(deps.getCamera(), target, deps.getViewport())
+        const tween = createCameraTween(deps.getCamera(), target, deps.getViewport(), tweenOptions)
         const start = now()
         const tick = () => {
           const progress = Math.min(1, (now() - start) / durationMs)
           deps.setCamera(progress >= 1 ? target : tween.at(progress))
+          onProgress?.(progress >= 1 ? 1 : tween.ease(progress))
           if (flight !== generation) {
             return
           }

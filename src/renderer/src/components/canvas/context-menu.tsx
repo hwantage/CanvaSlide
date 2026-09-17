@@ -6,6 +6,7 @@ import { t } from '@/i18n/ui-strings'
 import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/external-content'
 import { copySelection, cutSelection } from '@/lib/object-clipboard'
 import { shiftLabel, shortcutLabel } from '@/lib/platform-keys'
+import { selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import {
   frameSelection,
   presentFromSelection,
@@ -40,6 +41,8 @@ function selectionItems(world: Point | null): MenuItem[] {
   const store = useDocumentStore.getState()
   const { document, selectedIds } = store
   const only = selectedIds.length === 1 ? document.elements[selectedIds[0] as string] : undefined
+  // Why: z-order moves nothing a user can see for frames, and wrapping one adds a duplicate slide.
+  const onlyFrames = selectionIsOnlyFrames(document, selectedIds)
   const items: MenuItem[] = []
   if (only && only.type !== 'image') {
     items.push(
@@ -81,20 +84,25 @@ function selectionItems(world: Point | null): MenuItem[] {
     }),
     separator,
     item(t('order.front'), () => store.reorderSelected('front'), {
-      shortcut: shortcutLabel(']', { shift: true })
+      shortcut: shortcutLabel(']', { shift: true }),
+      disabled: onlyFrames
     }),
     item(t('order.forward'), () => store.reorderSelected('forward'), {
-      shortcut: shortcutLabel(']')
+      shortcut: shortcutLabel(']'),
+      disabled: onlyFrames
     }),
     item(t('order.backward'), () => store.reorderSelected('backward'), {
-      shortcut: shortcutLabel('[')
+      shortcut: shortcutLabel('['),
+      disabled: onlyFrames
     }),
     item(t('order.back'), () => store.reorderSelected('back'), {
-      shortcut: shortcutLabel('[', { shift: true })
+      shortcut: shortcutLabel('[', { shift: true }),
+      disabled: onlyFrames
     }),
     separator,
     item(t('selection.frame'), () => frameSelection(), {
-      shortcut: shortcutLabel('F', { shift: true })
+      shortcut: shortcutLabel('F', { shift: true }),
+      disabled: onlyFrames
     }),
     item(t('selection.zoom'), () => zoomToSelection(), { shortcut: `${shiftLabel()}2` })
   )

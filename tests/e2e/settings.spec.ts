@@ -11,7 +11,9 @@ async function dragOnCanvas(page: Page, from: [number, number], to: [number, num
   await page.mouse.up()
 }
 
-test('settings dialog controls transition, background and frame border', async ({ page }) => {
+test('settings dialog controls background, the default transition and the frame border', async ({
+  page
+}) => {
   await page.goto('/')
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 100], [400, 300])
@@ -21,7 +23,7 @@ test('settings dialog controls transition, background and frame border', async (
   const dialog = page.getByRole('dialog', { name: 'Settings' })
   await expect(dialog).toBeVisible()
 
-  await dialog.getByLabel('Transition duration').fill('2500')
+  await dialog.getByLabel('Default transition duration').fill('2500')
   await expect(dialog.getByTestId('transition-value')).toHaveText('2.5s')
 
   const background = page.getByTestId('canvas-background')
@@ -67,12 +69,14 @@ test('theme preference overrides the OS and survives a reload', async ({ page })
 
   await page.getByRole('button', { name: /^Settings/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Settings' })
-  await dialog.getByRole('radio', { name: 'Light' }).click()
-  await expect(dialog.getByRole('radio', { name: 'Light' })).toBeChecked()
+  // Why: Theme and Language both offer a System step, so the group has to be named.
+  const theme = dialog.getByRole('radiogroup', { name: 'Theme preference' })
+  await theme.getByRole('radio', { name: 'Light' }).click()
+  await expect(theme.getByRole('radio', { name: 'Light' })).toBeChecked()
   await expect(html).toHaveAttribute('data-theme', 'light')
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
 
-  await dialog.getByRole('radio', { name: 'Dark' }).click()
+  await theme.getByRole('radio', { name: 'Dark' }).click()
   await expect(html).toHaveAttribute('data-theme', 'dark')
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(24, 24, 27)')
 
@@ -84,8 +88,8 @@ test('theme preference overrides the OS and survives a reload', async ({ page })
   await expect(html).toHaveAttribute('data-theme', 'dark')
 
   await page.getByRole('button', { name: /^Settings/ }).click()
-  await dialog.getByRole('radio', { name: 'System' }).click()
-  await expect(dialog.getByRole('radio', { name: 'System' })).toBeChecked()
+  await theme.getByRole('radio', { name: 'System' }).click()
+  await expect(theme.getByRole('radio', { name: 'System' })).toBeChecked()
   await expect(html).toHaveAttribute('data-theme', 'light')
   await page.emulateMedia({ colorScheme: 'dark' })
   await expect(html).toHaveAttribute('data-theme', 'dark')
@@ -113,4 +117,30 @@ test('dark mode darkens the canvas and grid but leaves the frame paper alone', a
   await expect(background).toHaveCSS('background-image', /rgb\(47, 47, 53\)/)
   // Frames are document data: the sheet must keep reading as paper on the dark workspace.
   await expect(frame).toHaveCSS('background-color', 'rgb(252, 252, 252)')
+})
+
+test('language switches the whole interface and survives a reload', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Settings' })
+  await expect(dialog.getByRole('heading', { name: 'Settings' })).toBeVisible()
+
+  await dialog.getByRole('radio', { name: '한국어' }).click()
+  // Not just the dialog: the panels behind it read the same strings.
+  await expect(page.getByRole('dialog', { name: '설정' })).toBeVisible()
+  const framesHeading = page.getByTestId('frames-pane').getByRole('heading', { name: '프레임' })
+  await expect(framesHeading).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
+
+  await page.reload()
+  await expect(framesHeading).toBeVisible()
+
+  // System hands it back to the browser language, which this run pins to en-US.
+  await page.getByRole('button', { name: /^설정/ }).click()
+  await page
+    .getByRole('dialog', { name: '설정' })
+    .getByRole('radiogroup', { name: '언어 설정' })
+    .getByRole('radio', { name: '시스템' })
+    .click()
+  await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
 })

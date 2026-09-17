@@ -96,17 +96,36 @@ function mount(): void {
   const viewport = document.createElement('div')
   viewport.className = 'uc-viewport'
   viewport.dataset.testid = 'canvas-viewport'
+  const stage = document.createElement('div')
+  stage.className = 'uc-stage'
   const world = document.createElement('div')
   world.className = 'uc-world'
   world.dataset.testid = 'world-layer'
   const zoomLayer = document.createElement('div')
   zoomLayer.className = 'uc-zoom'
+  const spotlight = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  spotlight.setAttribute('class', 'uc-spot')
+  spotlight.setAttribute('aria-hidden', 'true')
+  const spotlightPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  spotlightPath.setAttribute('fill-rule', 'evenodd')
+  spotlightPath.setAttribute('fill', '#000')
+  spotlightPath.setAttribute('fill-opacity', '0')
+  spotlight.append(spotlightPath)
   world.append(zoomLayer)
-  viewport.append(world)
+  stage.append(world, spotlight)
+  viewport.append(stage)
   document.body.append(viewport)
 
   const { frameNodes } = renderDocument(doc, zoomLayer)
-  const presentation = createPlayerPresentation(doc, { viewport, world, zoomLayer, frameNodes })
+  const presentation = createPlayerPresentation(doc, {
+    viewport,
+    stage,
+    world,
+    zoomLayer,
+    spotlight,
+    spotlightPath,
+    frameNodes
+  })
   for (const { node, index } of frameNodes) {
     node.addEventListener('click', () => presentation.goTo(index))
   }

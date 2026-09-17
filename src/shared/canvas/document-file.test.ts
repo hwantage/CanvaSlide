@@ -79,9 +79,35 @@ describe('document-file', () => {
     const parsed = parseDocument(JSON.stringify(json))
     expect(parsed.ok && parsed.document.settings).toEqual({
       transitionMs: 700,
+      transitionEasing: 'smooth',
+      transitionArc: Math.SQRT2,
+      spotlight: 0,
       background: 'dots',
       frameBorder: 'solid'
     })
+  })
+
+  it('leaves a frame saved without camera direction untouched', () => {
+    const doc = createEmptyDocument('d')
+    const json = JSON.parse(serializeDocument(doc)) as {
+      elements: Record<string, unknown>
+      order: string[]
+    }
+    json.elements.f = {
+      id: 'f',
+      type: 'frame',
+      name: 'F',
+      order: 1,
+      x: 0,
+      y: 0,
+      width: 4,
+      height: 3
+    }
+    json.order.push('f')
+    const parsed = parseDocument(JSON.stringify(json))
+    const frame = parsed.ok ? parsed.document.elements.f : null
+    expect(frame?.type).toBe('frame')
+    expect(frame?.type === 'frame' ? frame.transition : 'missing').toBeUndefined()
   })
 
   it('repairs a broken order list', () => {

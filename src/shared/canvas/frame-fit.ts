@@ -8,14 +8,33 @@ export const FRAME_FIT_PADDING_RATIO = 0.04
 /** Margin on each side of the frame bounds; increase for a smaller overview. */
 export const OVERVIEW_FIT_PADDING_RATIO = 0.08
 
+/**
+ * Screen-axis extent of `rect` once the view is rolled by `rollDeg`. A rolled frame needs more
+ * room than its own width and height, or its corners leave the viewport.
+ */
+export function rolledSpan(rect: Rect, rollDeg: number): Size {
+  if (!rollDeg) {
+    return { width: rect.width, height: rect.height }
+  }
+  const radians = (rollDeg * Math.PI) / 180
+  const cos = Math.abs(Math.cos(radians))
+  const sin = Math.abs(Math.sin(radians))
+  return {
+    width: rect.width * cos + rect.height * sin,
+    height: rect.width * sin + rect.height * cos
+  }
+}
+
 /** Camera that shows `rect` fully inside `viewport` (contain fit), centered. */
 export function fitRectToViewport(
   rect: Rect,
   viewport: Size,
-  paddingRatio: number = FRAME_FIT_PADDING_RATIO
+  paddingRatio: number = FRAME_FIT_PADDING_RATIO,
+  rollDeg = 0
 ): Camera {
-  const paddedWidth = rect.width * (1 + 2 * paddingRatio)
-  const paddedHeight = rect.height * (1 + 2 * paddingRatio)
+  const span = rolledSpan(rect, rollDeg)
+  const paddedWidth = span.width * (1 + 2 * paddingRatio)
+  const paddedHeight = span.height * (1 + 2 * paddingRatio)
   const zoom = clampZoom(Math.min(viewport.width / paddedWidth, viewport.height / paddedHeight))
   return cameraForWorldCenter(
     { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },

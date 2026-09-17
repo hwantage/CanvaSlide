@@ -12,6 +12,14 @@ function handlePresentationKeys(event: KeyboardEvent): boolean {
   if (!presentation.active) {
     return false
   }
+  // Why: a preview leaves the editor usable, so it claims its own key and nothing else.
+  if (presentation.previewFrameId !== null) {
+    if (event.key !== 'Escape') {
+      return false
+    }
+    presentation.exit()
+    return true
+  }
   switch (event.key) {
     case 'ArrowRight':
     case 'ArrowDown':

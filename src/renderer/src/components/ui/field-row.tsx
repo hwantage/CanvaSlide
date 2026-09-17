@@ -10,5 +10,8 @@ export function FieldRow({ label, children }: { label: string; children: ReactNo
   )
 }
 
-export const inputClass =
-  'h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+/** Why: fields that colour their border to mark a state need the base without `border-input`. */
+export const inputBaseClass =
+  'h-7 rounded-md border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+
+export const inputClass = `${inputBaseClass} border-input`

@@ -8,8 +8,8 @@ import {
   zoomAtScreenPoint,
   zoomByWheel
 } from '@shared/canvas/camera-transform'
-import { createCameraAnimator } from '@shared/canvas/camera-animator'
-import { prepareCameraImages } from '@/lib/camera-image-preparation'
+import { createCameraAnimator, type CameraFlightOptions } from '@shared/canvas/camera-animator'
+import { prepareCameraFlight } from '@/lib/camera-flight-preparation'
 import type { Camera, Point, Rect, Size } from '@shared/canvas/element-types'
 import {
   fitContentToViewport,
@@ -34,7 +34,7 @@ export type CameraActions = {
   zoomByWheel: (anchor: Point, deltaY: number, multiplier?: number) => void
   zoomStep: (direction: 1 | -1) => void
   resetZoom: () => void
-  animateTo: (camera: Camera, durationMs: number, onDone?: () => void) => void
+  animateTo: (camera: Camera, durationMs: number, options?: CameraFlightOptions) => void
   fitRect: (rect: Rect, durationMs?: number) => void
   fitContent: (rect: Rect) => void
   fitSelection: (rect: Rect) => void
@@ -49,7 +49,7 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
     getCamera: () => get().camera,
     setCamera: (camera) => set({ camera }),
     getViewport: () => get().viewport,
-    prepare: prepareCameraImages,
+    prepare: prepareCameraFlight,
     onActiveChange: (animationActive) => set({ animationActive })
   })
   const stopAndSet = (camera: Camera) => {
@@ -77,7 +77,7 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
       const center = viewportCenterWorld(camera, viewport)
       animator.animateTo(cameraForWorldCenter(center, 1, viewport), UI_ANIMATION_MS)
     },
-    animateTo: (camera, durationMs, onDone) => animator.animateTo(camera, durationMs, onDone),
+    animateTo: (camera, durationMs, options) => animator.animateTo(camera, durationMs, options),
     fitRect: (rect, durationMs = UI_ANIMATION_MS) =>
       animator.animateTo(fitRectToViewport(rect, get().viewport), durationMs),
     fitContent: (rect) =>

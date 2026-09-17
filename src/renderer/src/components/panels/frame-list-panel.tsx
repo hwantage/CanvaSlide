@@ -1,18 +1,68 @@
-import { Play } from 'lucide-react'
-import { useCallback, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
+import { Gauge, Lightbulb, Play, Spline, Square, Timer } from 'lucide-react'
+import {
+  useCallback,
+  useRef,
+  useState,
+  type DragEvent,
+  type KeyboardEvent,
+  type ReactNode
+} from 'react'
 import { elementRect } from '@shared/canvas/element-bounds'
-import type { FrameElement } from '@shared/canvas/element-types'
+import type { DocumentSettings, FrameElement } from '@shared/canvas/element-types'
 import { gapAtPointer } from '@shared/canvas/list-drop-gap'
 import { frameIndexById, gapToIndex, orderedFrames } from '@shared/canvas/presentation-sequence'
+import {
+  frameMotionDiff,
+  resolveFrameTransition,
+  type MotionField
+} from '@shared/canvas/frame-transition'
 import { useDragAutoScroll } from '@/hooks/use-drag-auto-scroll'
 import { inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
+import { motionSummary } from '@/lib/motion-presets'
 import { useCameraStore } from '@/store/camera-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
 const DRAG_TYPE = 'application/x-canvaslide-frame'
+
+const motionIcons: Record<MotionField, ReactNode> = {
+  ms: <Timer size={11} />,
+  easing: <Gauge size={11} />,
+  arc: <Spline size={11} />,
+  // Why: a tilted square says tilt; a circular arrow reads as undo or refresh.
+  roll: <Square size={11} className="rotate-[18deg]" />,
+  spotlight: <Lightbulb size={11} />
+}
+
+/**
+ * A mark per part of this frame's flight that will not look like the rest of the deck. Most rows
+ * stay empty, which is the point: the contrast is what says "something was directed here", and the
+ * icons say what, in a row that has no space for a number.
+ */
+function MotionMarks({ frame, settings }: { frame: FrameElement; settings: DocumentSettings }) {
+  const fields = frameMotionDiff(frame, settings)
+  if (fields.length === 0) {
+    return null
+  }
+  const summary = motionSummary(fields, resolveFrameTransition(frame, settings))
+  return (
+    <span
+      role="img"
+      data-testid="frame-motion-marks"
+      title={`${t('motion.marks')} — ${summary}`}
+      aria-label={`${t('motion.marks')} — ${summary}`}
+      className="flex shrink-0 items-center gap-0.5 text-muted-foreground"
+    >
+      {fields.map((field) => (
+        <span key={field} aria-hidden className="flex">
+          {motionIcons[field]}
+        </span>
+      ))}
+    </span>
+  )
+}
 
 function FrameName({ frame }: { frame: FrameElement }) {
   const [draft, setDraft] = useState<string | null>(null)
@@ -32,9 +82,10 @@ function FrameName({ frame }: { frame: FrameElement }) {
     event.stopPropagation()
   }
   if (draft === null) {
+    // Why: the whole gap up to the marks is the rename target, not just the glyphs.
     return (
       <span
-        className="truncate"
+        className="min-w-0 flex-1 truncate"
         title={t('frames.renameHint')}
         onDoubleClick={() => setDraft(frame.name)}
       >
@@ -46,7 +97,7 @@ function FrameName({ frame }: { frame: FrameElement }) {
     <input
       autoFocus
       aria-label={t('frames.name')}
-      className={`${inputClass} h-7 w-full`}
+      className={`${inputClass} h-6 min-w-0 flex-1`}
       value={draft}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
@@ -70,6 +121,9 @@ export function FrameListPanel() {
 
   // Why: one click both highlights the frame on the canvas and brings it into view.
   const focusFrame = (frame: FrameElement) => {
+    // Why: picking a frame is an editing move, so a parked preview lets go of the camera first
+    // instead of holding the roll and dimming over wherever the list sends it.
+    usePresentationStore.getState().cancelPreview()
     setSelection([frame.id])
     fitRect(elementRect(frame))
   }
@@ -180,6 +234,7 @@ export function FrameListPanel() {
                   {index + 1}
                 </span>
                 <FrameName frame={frame} />
+                <MotionMarks frame={frame} settings={document.settings} />
               </button>
               <IconButton
                 label={t('present.fromFrame')}

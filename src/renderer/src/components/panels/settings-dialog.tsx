@@ -7,9 +7,16 @@ import {
   type DocumentSettings,
   type FrameBorderStyle
 } from '@shared/canvas/element-types'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import { TextButton } from '@/components/ui/text-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
+import {
+  languagePreferences,
+  selectLanguagePreference,
+  useLanguageStore,
+  type LanguagePreference
+} from '@/store/language-store'
 import { useSettingsDialogStore } from '@/store/settings-dialog-store'
 import {
   selectThemePreference,
@@ -32,39 +39,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-function Choice<T extends string>({
-  name,
-  value,
-  options,
-  onChange
-}: {
-  name: string
-  value: T
-  options: readonly { value: T; label: string }[]
-  onChange: (value: T) => void
-}) {
-  return (
-    <div role="radiogroup" aria-label={name} className="flex gap-1">
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          role="radio"
-          aria-checked={value === option.value}
-          className={`h-7 rounded-md border px-2.5 text-xs transition-colors ${
-            value === option.value
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-input bg-background hover:bg-accent'
-          }`}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 const backgroundLabels: Record<CanvasBackground, UiStringKey> = {
   dots: 'settings.background.dots',
   grid: 'settings.background.grid',
@@ -74,6 +48,11 @@ const themeLabels: Record<ThemePreference, UiStringKey> = {
   system: 'settings.theme.system',
   light: 'settings.theme.light',
   dark: 'settings.theme.dark'
+}
+const languageLabels: Record<LanguagePreference, UiStringKey> = {
+  system: 'settings.language.system',
+  en: 'settings.language.en',
+  ko: 'settings.language.ko'
 }
 const frameBorderLabels: Record<FrameBorderStyle, UiStringKey> = {
   solid: 'settings.frameBorder.solid',
@@ -88,11 +67,12 @@ export function SettingsDialog() {
   const updateSettings = useDocumentStore((s) => s.updateSettings)
   const themePreference = useThemeStore(selectThemePreference)
   const setThemePreference = useThemeStore((s) => s.setPreference)
+  const languagePreference = useLanguageStore(selectLanguagePreference)
+  const setLanguagePreference = useLanguageStore((s) => s.setPreference)
   if (!open) {
     return null
   }
   const set = (patch: Partial<DocumentSettings>) => updateSettings(patch)
-  const seconds = (settings.transitionMs / 1000).toFixed(1)
 
   return (
     <div
@@ -111,9 +91,11 @@ export function SettingsDialog() {
         <h2 className="text-sm font-semibold">{t('settings.title')}</h2>
         <Section title={t('settings.appearance')}>
           <div className="flex items-center gap-3 text-xs">
-            <span className="w-24 text-muted-foreground">{t('settings.theme')}</span>
-            <Choice
-              name={t('settings.themePreference')}
+            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
+              {t('settings.theme')}
+            </span>
+            <SegmentedControl
+              label={t('settings.themePreference')}
               value={themePreference}
               options={themePreferences.map((value) => ({
                 value,
@@ -122,10 +104,42 @@ export function SettingsDialog() {
               onChange={setThemePreference}
             />
           </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
+              {t('settings.language')}
+            </span>
+            <SegmentedControl
+              label={t('settings.languagePreference')}
+              value={languagePreference}
+              options={languagePreferences.map((value) => ({
+                value,
+                label: t(languageLabels[value])
+              }))}
+              onChange={setLanguagePreference}
+            />
+          </div>
         </Section>
-        <Section title={t('settings.slideShow')}>
+        <Section title={t('settings.canvas')}>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
+              {t('settings.background')}
+            </span>
+            <SegmentedControl
+              label={t('settings.canvasBackground')}
+              value={settings.background}
+              options={canvasBackgrounds.map((value) => ({
+                value,
+                label: t(backgroundLabels[value])
+              }))}
+              onChange={(background) => set({ background })}
+            />
+          </div>
+        </Section>
+        <Section title={t('settings.frames')}>
           <label className="flex items-center gap-3 text-xs">
-            <span className="w-24 text-muted-foreground">{t('settings.transition')}</span>
+            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
+              {t('settings.transition')}
+            </span>
             <input
               type="range"
               aria-label={t('settings.transitionDuration')}
@@ -137,30 +151,16 @@ export function SettingsDialog() {
               className="flex-1 accent-primary"
             />
             <span className="w-10 text-right tabular-nums" data-testid="transition-value">
-              {t('settings.seconds', { n: seconds })}
+              {t('settings.seconds', { n: (settings.transitionMs / 1000).toFixed(1) })}
             </span>
           </label>
           <p className="text-[11px] text-muted-foreground">{t('settings.transitionHint')}</p>
-        </Section>
-        <Section title={t('settings.canvas')}>
           <div className="flex items-center gap-3 text-xs">
-            <span className="w-24 text-muted-foreground">{t('settings.background')}</span>
-            <Choice
-              name={t('settings.canvasBackground')}
-              value={settings.background}
-              options={canvasBackgrounds.map((value) => ({
-                value,
-                label: t(backgroundLabels[value])
-              }))}
-              onChange={(background) => set({ background })}
-            />
-          </div>
-        </Section>
-        <Section title={t('settings.frames')}>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="w-24 text-muted-foreground">{t('settings.border')}</span>
-            <Choice
-              name={t('settings.frameBorder')}
+            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
+              {t('settings.border')}
+            </span>
+            <SegmentedControl
+              label={t('settings.frameBorder')}
               value={settings.frameBorder}
               options={frameBorderStyles.map((value) => ({
                 value,

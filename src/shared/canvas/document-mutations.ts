@@ -1,6 +1,7 @@
 import { remapConnectorHosts, translateConnector } from './connector-geometry'
 import { pruneUnreferencedAssets } from './document-assets'
 import { remapGroupIds } from './element-groups'
+import { selectionIsOnlyFrames } from './frame-from-selection'
 import type { CanvasDocument, CanvasElement, ElementId, Point } from './element-types'
 
 /** Pure document transforms; every function returns a new document and never mutates. */
@@ -104,6 +105,12 @@ export function reorderZ(
   ids: readonly ElementId[],
   direction: ZDirection
 ): CanvasDocument {
+  // Why: frames are always painted beneath content and carry the deck order, not the paint order,
+  // so restacking a frames-only selection changes nothing anyone can see. Refusing here covers the
+  // ] and [ shortcuts too, which never learned what the panel and the context menu already hide.
+  if (selectionIsOnlyFrames(document, ids)) {
+    return document
+  }
   if (direction === 'forward' || direction === 'backward') {
     return stepZ(document, ids, direction)
   }

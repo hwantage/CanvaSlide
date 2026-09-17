@@ -9,6 +9,9 @@ import { DragOverlays } from './drag-overlays'
 import { GridBackground } from './grid-background'
 import { PresentationFramePicker } from './presentation-frame-picker'
 import { PresentationOverlay } from './presentation-overlay'
+import { PresentationStage } from './presentation-stage'
+import { PreviewControls } from './preview-controls'
+import { SpotlightOverlay } from './spotlight-overlay'
 import { SelectionOverlay } from './selection-overlay'
 import { WorldLayer } from './world-layer'
 import { FrameChromeOverlay } from './frame-chrome-overlay'
@@ -56,7 +59,10 @@ export function CanvasViewport() {
       onDrop={handlers.onDrop}
     >
       <GridBackground />
-      <WorldLayer />
+      <PresentationStage>
+        <WorldLayer />
+        <SpotlightOverlay />
+      </PresentationStage>
       <FrameChromeOverlay />
       <SelectionOverlay
         onResizeHandleDown={handlers.onResizeHandleDown}
@@ -65,6 +71,7 @@ export function CanvasViewport() {
       <DragOverlays />
       <PresentationFramePicker />
       <PresentationOverlay />
+      <PreviewControls />
       {!presenting && <ContextMenu />}
     </div>
   )

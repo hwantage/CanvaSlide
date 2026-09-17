@@ -20,7 +20,13 @@ describe('presentation-store', () => {
     useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     useCameraStore.getState().setViewport({ width: 1000, height: 800 })
     useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
-    usePresentationStore.setState({ active: false, index: 0, cameraBeforeStart: null })
+    usePresentationStore.setState({
+      active: false,
+      index: 0,
+      cameraBeforeStart: null,
+      previewFrameId: null,
+      spotlightRect: null
+    })
   })
 
   it('refuses to start without frames', () => {
@@ -47,6 +53,104 @@ describe('presentation-store', () => {
     expect(second.x).toBeLessThan(first.x)
     presentation.next()
     expect(usePresentationStore.getState().index).toBe(1)
+  })
+
+  it('previews the flight into a frame and stays there so it can be replayed', () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.updateSettings({ transitionMs: 0 })
+    doc.setSelection(['b'])
+    useCameraStore.getState().setCamera({ x: 123, y: 456, zoom: 2 })
+    const presentation = usePresentationStore.getState()
+
+    presentation.previewTransition('b')
+    // It has already flown, and it waits there rather than snapping the editor back.
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: true,
+      index: 1,
+      previewFrameId: 'b'
+    })
+    // The frame stays selected: its properties are what the author is here to adjust.
+    expect(useDocumentStore.getState().selectedIds).toEqual(['b'])
+
+    // Replaying keeps the camera to return to, rather than recording the preview's own.
+    presentation.previewTransition('b')
+    expect(usePresentationStore.getState().cameraBeforeStart).toMatchObject({ x: 123, y: 456 })
+
+    presentation.exit()
+    expect(usePresentationStore.getState()).toMatchObject({ active: false, previewFrameId: null })
+  })
+
+  it('drops a preview where it stands when the editor takes the camera', () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.updateSettings({ transitionMs: 0 })
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    const parked = useCameraStore.getState().camera
+
+    presentation.cancelPreview()
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: false,
+      previewFrameId: null,
+      roll: 0,
+      spotlight: 0
+    })
+    // No flight home: the caller is about to move the camera itself.
+    expect(useCameraStore.getState().camera).toEqual(parked)
+  })
+
+  it('follows the frame it was asked about, not its place in the deck', () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.insertElement(frame('c', 3, 10_000))
+    doc.updateSettings({ transitionMs: 0 })
+    const presentation = usePresentationStore.getState()
+
+    presentation.previewTransition('c')
+    expect(usePresentationStore.getState()).toMatchObject({ index: 2, previewFrameId: 'c' })
+
+    // The list can be reordered while the preview is parked; replaying still means "into c".
+    doc.moveFrameTo('c', 0)
+    presentation.previewTransition('c')
+    expect(usePresentationStore.getState()).toMatchObject({ index: 0, previewFrameId: 'c' })
+  })
+
+  it('keeps the spotlight cut-out on the frame a flight departs from', () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.updateSettings({ transitionMs: 800, spotlight: 0 })
+    doc.patchElements(['a'], { transition: { spotlight: 0.5 } })
+    const rectA = { x: 0, y: 0, width: 400, height: 300 }
+    usePresentationStore.setState({
+      active: true,
+      index: 0,
+      spotlight: 0.5,
+      spotlightRect: rectA
+    })
+
+    // Why: handing the hole to the target up front blacks the screen out the instant it starts.
+    usePresentationStore.getState().next()
+    expect(usePresentationStore.getState().spotlightRect).toEqual(rectA)
+
+    // A cut has no room to travel, so it arrives on the target's own rect.
+    doc.updateSettings({ transitionMs: 0 })
+    usePresentationStore.setState({ index: 0, spotlight: 0.5, spotlightRect: rectA })
+    usePresentationStore.getState().next()
+    expect(usePresentationStore.getState().spotlightRect).toMatchObject({ x: 5000 })
+  })
+
+  it('refuses to preview while a slide show is running', () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.updateSettings({ transitionMs: 0 })
+    usePresentationStore.getState().start()
+    usePresentationStore.getState().previewTransition('a')
+    expect(usePresentationStore.getState().previewFrameId).toBeNull()
   })
 
   it('restores the pre-presentation camera on exit', () => {

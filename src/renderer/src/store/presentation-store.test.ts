@@ -324,7 +324,7 @@ describe('preview departure hold', () => {
     await prepare()
     expect(useCameraStore.getState().camera).toEqual(landingOn(0))
     expect(usePresentationStore.getState().roll).toBe(10)
-    await vi.advanceTimersByTimeAsync(500)
+    await vi.advanceTimersByTimeAsync(PREVIEW_DEPARTURE_HOLD_MS)
     expect(useCameraStore.getState().camera).toEqual(landingOn(1))
   })
 

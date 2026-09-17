@@ -70,8 +70,7 @@ const stageRollOf = (page: Page) =>
     return m ? Math.round((Math.atan2(Number(m[2]), Number(m[1])) * 180) / Math.PI) : 0
   })
 
-/** Where the camera is, read from the app's own camera store; `x` alone tells a still from a move. */
-const cameraX = (page: Page) =>
+const cameraState = (page: Page) =>
   page.evaluate(async () => {
     const url = performance
       .getEntriesByType('resource')
@@ -79,7 +78,44 @@ const cameraX = (page: Page) =>
       .filter((name) => name.includes('/src/store/camera-store.ts'))
       .at(-1)!
     const { useCameraStore } = await import(url)
-    return useCameraStore.getState().camera.x as number
+    const { camera, animationActive } = useCameraStore.getState()
+    return { x: camera.x as number, animationActive: animationActive as boolean }
+  })
+
+const cameraX = async (page: Page) => (await cameraState(page)).x
+
+const observeDepartureHold = (page: Page) =>
+  page.evaluateHandle(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/store/camera-store.ts'))
+      .at(-1)!
+    const { useCameraStore } = await import(url)
+    const initialX = useCameraStore.getState().camera.x
+    const stage = document.querySelector('[data-testid="presentation-stage"]')!
+    // Sample inside the page so click handling and Playwright polling do not count as hold time.
+    return {
+      result: new Promise<{ departureX: number; roll: number; holdMs: number }>((resolve) => {
+        let departure: { x: number; at: number; roll: number } | undefined
+        const sample = (now: number) => {
+          const x = useCameraStore.getState().camera.x as number
+          if (!departure && x !== initialX) {
+            const matrix = new DOMMatrixReadOnly(getComputedStyle(stage).transform)
+            departure = {
+              x,
+              at: now,
+              roll: Math.round((Math.atan2(matrix.b, matrix.a) * 180) / Math.PI)
+            }
+          } else if (departure && x !== departure.x) {
+            resolve({ departureX: departure.x, roll: departure.roll, holdMs: now - departure.at })
+            return
+          }
+          requestAnimationFrame(sample)
+        }
+        requestAnimationFrame(sample)
+      })
+    }
   })
 
 test('a frame inherits the document defaults until a step overrides one', async ({ page }) => {
@@ -232,30 +268,25 @@ test('a preview waits on the frame so the flight can be tuned and replayed', asy
 test('a preview rests on the departure frame before it flies', async ({ page }) => {
   await openDeck(page, [frame(0, 'One', { roll: 10 }), frame(1, 'Two', { ms: 200, roll: 12 })])
   await page.getByTestId('frame-row').nth(1).click()
-  await page.waitForTimeout(500)
+  await expect.poll(async () => (await cameraState(page)).animationActive).toBe(false)
   const editor = await cameraX(page)
-
-  const pressed = Date.now()
-  await page.getByRole('button', { name: 'Play the flight into this frame' }).click()
-  // Preparation keeps the editor camera until the departure is ready.
-  await expect.poll(() => cameraX(page), { intervals: [10] }).not.toBe(editor)
-  const departure = await cameraX(page)
-  expect(departure).not.toBe(editor)
-  expect(await stageRollOf(page)).toBe(10)
-  await expect(page.getByTestId('preview-controls')).toBeVisible()
-  expect(await cameraX(page)).toBe(departure)
-
-  await expect.poll(() => cameraX(page), { timeout: 4000 }).not.toBe(departure)
-  // The hold is a timer, so the flight cannot have taken off before it ran out.
-  expect(Date.now() - pressed).toBeGreaterThanOrEqual(500)
-  await expect.poll(() => stageRollOf(page), { timeout: 4000 }).toBe(12)
-
-  // Replaying takes the same path, hold included.
-  const replayed = Date.now()
-  await page.getByRole('button', { name: 'Play it again' }).click()
-  await expect.poll(() => cameraX(page), { intervals: [10] }).toBe(departure)
-  await expect.poll(() => cameraX(page), { timeout: 4000 }).not.toBe(departure)
-  expect(Date.now() - replayed).toBeGreaterThanOrEqual(500)
+  let departure: number | undefined
+  for (const name of ['Play the flight into this frame', 'Play it again']) {
+    const observation = await observeDepartureHold(page)
+    await page.getByRole('button', { name }).click()
+    await expect(page.getByTestId('preview-controls')).toBeVisible()
+    const measured = await observation.evaluate(({ result }) => result)
+    await observation.dispose()
+    expect(measured.departureX).not.toBe(editor)
+    expect(measured.roll).toBe(10)
+    expect(measured.holdMs).toBeGreaterThanOrEqual(500)
+    if (departure !== undefined) {
+      expect(measured.departureX).toBe(departure)
+    }
+    departure = measured.departureX
+    await expect.poll(async () => (await cameraState(page)).animationActive).toBe(false)
+    expect(await stageRollOf(page)).toBe(12)
+  }
 })
 
 test('picking another frame ends the preview instead of fighting it', async ({ page }) => {

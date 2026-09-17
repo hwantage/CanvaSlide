@@ -20,10 +20,12 @@ export function PresentationOverlay() {
   const frames = orderedFrames(document)
   const current = frames[index]
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
+    <div className="pointer-events-none absolute inset-x-0 bottom-4">
+      {/* Why: anchors the arrow pair at the viewport centre; 19.5 spacing = px-2 + overview + gap + half the arrow pair, plus the 1px border. */}
       <div
         data-canvas-ui
-        className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-popover/90 px-2 py-1 text-popover-foreground shadow-lg backdrop-blur"
+        data-testid="presentation-controls"
+        className="pointer-events-auto absolute bottom-0 left-1/2 flex -translate-x-[calc(var(--spacing)*19.5+1px)] items-center gap-1 rounded-full border border-border bg-popover/90 px-2 py-1 text-popover-foreground shadow-lg backdrop-blur"
       >
         <IconButton
           label={`${t('present.overview')} (O)`}
@@ -39,13 +41,6 @@ export function PresentationOverlay() {
         >
           <ChevronLeft size={16} />
         </IconButton>
-        <span
-          data-testid="presentation-counter"
-          className="min-w-24 px-2 text-center text-xs tabular-nums"
-        >
-          {index + 1} / {frames.length}
-          <span className="ml-2 text-muted-foreground">{current?.name}</span>
-        </span>
         <IconButton
           label={`${t('present.next')} (→)`}
           onClick={next}
@@ -53,6 +48,15 @@ export function PresentationOverlay() {
         >
           <ChevronRight size={16} />
         </IconButton>
+        <span
+          data-testid="presentation-counter"
+          className="flex min-w-0 items-center px-2 text-xs tabular-nums"
+        >
+          {index + 1} / {frames.length}
+          <span className="ml-2 max-w-48 truncate text-muted-foreground" title={current?.name}>
+            {current?.name}
+          </span>
+        </span>
         <IconButton label={`${t('present.exit')} (Esc)`} onClick={exit}>
           <X size={16} />
         </IconButton>

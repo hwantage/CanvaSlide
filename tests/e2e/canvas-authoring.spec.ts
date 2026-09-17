@@ -352,6 +352,59 @@ test('presentation nav buttons work and overview lets you click a frame', async 
   await expect(counter).toHaveCount(0)
 })
 
+test('slideshow controls keep the arrow pair centred whatever the frame name length', async ({
+  page
+}) => {
+  await page.keyboard.press('f')
+  await dragOnCanvas(page, [100, 150], [400, 320])
+  await page.keyboard.press('f')
+  await dragOnCanvas(page, [700, 500], [1000, 800])
+  await page.getByTestId('frame-row').nth(0).getByText('Frame 1').dblclick()
+  const input = page.getByRole('textbox', { name: 'Frame name' })
+  await input.fill('Quarterly business review and roadmap')
+  await input.press('Enter')
+  await page.getByRole('button', { name: 'Slide Show', exact: true }).click()
+  const bar = page.getByTestId('presentation-controls')
+  const counter = page.getByTestId('presentation-counter')
+  await expect(counter).toContainText('1 / 2')
+  await expect(counter).toContainText('Quarterly business review and roadmap')
+  // Order: overview · previous · next · counter + name · exit.
+  const order = await bar
+    .locator('button, [data-testid="presentation-counter"]')
+    .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? el.dataset.testid))
+  expect(order).toEqual([
+    'Overview (O)',
+    'Previous frame (←)',
+    'Next frame (→)',
+    'presentation-counter',
+    'Exit presentation (Esc)'
+  ])
+  const arrowCentre = async () => {
+    const prev = await page.getByRole('button', { name: 'Previous frame (←)' }).boundingBox()
+    const next = await page.getByRole('button', { name: 'Next frame (→)' }).boundingBox()
+    if (!prev || !next) {
+      throw new Error('arrows not laid out')
+    }
+    return (prev.x + next.x + next.width) / 2
+  }
+  // The overview button stays glued to the arrows; only the name side of the bar grows.
+  const overviewBox = await page.getByRole('button', { name: 'Overview (O)' }).boundingBox()
+  const prevBox = await page.getByRole('button', { name: 'Previous frame (←)' }).boundingBox()
+  if (!overviewBox || !prevBox) {
+    throw new Error('controls not laid out')
+  }
+  expect(prevBox.x - (overviewBox.x + overviewBox.width)).toBeLessThan(8)
+  const viewportCentre = (page.viewportSize()?.width ?? 0) / 2
+  const longName = await arrowCentre()
+  expect(Math.abs(longName - viewportCentre)).toBeLessThan(1)
+  await page.getByRole('button', { name: 'Next frame (→)' }).click()
+  await expect(counter).toContainText('2 / 2')
+  await expect(counter).toContainText('Frame 2')
+  const shortName = await arrowCentre()
+  expect(Math.abs(shortName - viewportCentre)).toBeLessThan(1)
+  expect(Math.abs(shortName - longName)).toBeLessThan(1)
+})
+
 test('overview keeps a frame nested inside a bigger one clickable', async ({ page }) => {
   await page.keyboard.press('f')
   await dragOnCanvas(page, [450, 380], [650, 500])

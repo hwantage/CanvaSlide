@@ -63,6 +63,25 @@ async function openDeck(page: Page, frames: ReturnType<typeof frame>[], extras: 
 const motionControl = (page: Page, field: string) =>
   page.locator(`[data-testid="motion-control"][data-field="${field}"]`)
 
+/** The tilt the stage is drawn with, in whole degrees; 0 when it is not transformed at all. */
+const stageRollOf = (page: Page) =>
+  page.getByTestId('presentation-stage').evaluate((node) => {
+    const m = /matrix\(([-\d.]+),\s*([-\d.]+)/.exec(getComputedStyle(node).transform)
+    return m ? Math.round((Math.atan2(Number(m[2]), Number(m[1])) * 180) / Math.PI) : 0
+  })
+
+/** Where the camera is, read from the app's own camera store; `x` alone tells a still from a move. */
+const cameraX = (page: Page) =>
+  page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((r) => r.name)
+      .filter((name) => name.includes('/src/store/camera-store.ts'))
+      .at(-1)!
+    const { useCameraStore } = await import(url)
+    return useCameraStore.getState().camera.x as number
+  })
+
 test('a frame inherits the document defaults until a step overrides one', async ({ page }) => {
   await openDeck(page, [frame(0, 'Plain'), frame(1, 'Directed', { ms: 2500 })])
   const duration = page.getByRole('combobox', { name: 'Duration' })
@@ -192,11 +211,7 @@ test('a document beyond the friendly ranges keeps its values when the sliders op
 test('a preview waits on the frame so the flight can be tuned and replayed', async ({ page }) => {
   await openDeck(page, [frame(0, 'One'), frame(1, 'Two', { ms: 200, roll: 12 })])
   await page.getByTestId('frame-row').nth(1).click()
-  const stageRoll = () =>
-    page.getByTestId('presentation-stage').evaluate((node) => {
-      const m = /matrix\(([-\d.]+),\s*([-\d.]+)/.exec(getComputedStyle(node).transform)
-      return m ? Math.round((Math.atan2(Number(m[2]), Number(m[1])) * 180) / Math.PI) : 0
-    })
+  const stageRoll = () => stageRollOf(page)
 
   await page.getByRole('button', { name: 'Play the flight into this frame' }).click()
   // The editor stays put: its panels are what the author is here to adjust.
@@ -212,6 +227,35 @@ test('a preview waits on the frame so the flight can be tuned and replayed', asy
   await page.getByRole('button', { name: 'Close the preview' }).click()
   await expect(page.getByTestId('preview-controls')).toHaveCount(0)
   await expect.poll(stageRoll, { timeout: 4000 }).toBe(0)
+})
+
+test('a preview rests on the departure frame before it flies', async ({ page }) => {
+  await openDeck(page, [frame(0, 'One', { roll: 10 }), frame(1, 'Two', { ms: 200, roll: 12 })])
+  await page.getByTestId('frame-row').nth(1).click()
+  await page.waitForTimeout(500)
+  const editor = await cameraX(page)
+
+  const pressed = Date.now()
+  await page.getByRole('button', { name: 'Play the flight into this frame' }).click()
+  // Preparation keeps the editor camera until the departure is ready.
+  await expect.poll(() => cameraX(page), { intervals: [10] }).not.toBe(editor)
+  const departure = await cameraX(page)
+  expect(departure).not.toBe(editor)
+  expect(await stageRollOf(page)).toBe(10)
+  await expect(page.getByTestId('preview-controls')).toBeVisible()
+  expect(await cameraX(page)).toBe(departure)
+
+  await expect.poll(() => cameraX(page), { timeout: 4000 }).not.toBe(departure)
+  // The hold is a timer, so the flight cannot have taken off before it ran out.
+  expect(Date.now() - pressed).toBeGreaterThanOrEqual(500)
+  await expect.poll(() => stageRollOf(page), { timeout: 4000 }).toBe(12)
+
+  // Replaying takes the same path, hold included.
+  const replayed = Date.now()
+  await page.getByRole('button', { name: 'Play it again' }).click()
+  await expect.poll(() => cameraX(page), { intervals: [10] }).toBe(departure)
+  await expect.poll(() => cameraX(page), { timeout: 4000 }).not.toBe(departure)
+  expect(Date.now() - replayed).toBeGreaterThanOrEqual(500)
 })
 
 test('picking another frame ends the preview instead of fighting it', async ({ page }) => {

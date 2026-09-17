@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
 import { ZOOM_SETTLE_MS, layoutZoomFor } from '@shared/canvas/camera-transform'
 import { useCameraStore } from '@/store/camera-store'
+import { usePresentationStore } from '@/store/presentation-store'
 
-/**
- * The CSS zoom the world is laid out at, lagging behind gestures: it updates only after the camera
- * zoom has held still for ZOOM_SETTLE_MS, and never drops below 1 (see layoutZoomFor). The world
- * layer covers the difference with a compositor-only transform, so wheel zoom and slide
- * transitions hold one layout scale until arrival.
- */
+/** Defer gesture relayout while preserving the prepared still of a preview. */
 export function useSettledZoom(): number {
+  const stationary = useCameraStore((s) => s.stationaryCamera)
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
@@ -35,7 +32,16 @@ export function useSettledZoom(): number {
       if (timer !== null) {
         clearTimeout(timer)
       }
-      timer = setTimeout(settle, ZOOM_SETTLE_MS)
+      // Preview landings can reveal retained detail immediately; ordinary flights keep their delay.
+      if (
+        !state.animationActive &&
+        previous.animationActive &&
+        usePresentationStore.getState().previewFrameId !== null
+      ) {
+        settle()
+      } else {
+        timer = setTimeout(settle, ZOOM_SETTLE_MS)
+      }
     })
     return () => {
       unsubscribe()
@@ -44,5 +50,5 @@ export function useSettledZoom(): number {
       }
     }
   }, [])
-  return zoom
+  return stationary ? layoutZoomFor(stationary.zoom) : zoom
 }

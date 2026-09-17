@@ -2,7 +2,11 @@ import { useLayoutEffect, useRef } from 'react'
 import { useCanvasInteraction } from '@/hooks/use-canvas-interaction'
 import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { useWheelZoom } from '@/hooks/use-wheel-zoom'
-import { selectPresentationActive, usePresentationStore } from '@/store/presentation-store'
+import {
+  selectPresentationActive,
+  selectSlideShowActive,
+  usePresentationStore
+} from '@/store/presentation-store'
 import { selectEffectiveTool, useToolStore } from '@/store/tool-store'
 import { ContextMenu } from './context-menu'
 import { DragOverlays } from './drag-overlays'
@@ -31,17 +35,18 @@ export function CanvasViewport() {
   const ref = useRef<HTMLDivElement>(null)
   const tool = useToolStore(selectEffectiveTool)
   const presenting = usePresentationStore(selectPresentationActive)
+  const slideShow = usePresentationStore(selectSlideShowActive)
   useViewportSize(ref)
   useWheelZoom(ref)
   const handlers = useCanvasInteraction(ref)
 
-  // Why: chrome unmounts when presenting; re-measure before the first fly so the frame is centered.
+  // Only slide shows hide editor chrome, so only they need a new viewport before the first flight.
   useLayoutEffect(() => {
-    if (presenting && ref.current) {
+    if (slideShow && ref.current) {
       measureViewport(ref.current)
       usePresentationStore.getState().flyToCurrent()
     }
-  }, [presenting])
+  }, [slideShow])
 
   return (
     <div

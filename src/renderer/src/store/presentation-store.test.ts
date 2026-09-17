@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { prepareCameraFlight } from '@/lib/camera-flight-preparation'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { PREVIEW_DEPARTURE_HOLD_MS } from '@shared/canvas/departure-hold'
 import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-types'
 import { useCameraStore } from './camera-store'
 import { useDocumentStore } from './document-store'
+import { frameCamera } from './presentation-shot'
 import { usePresentationStore } from './presentation-store'
 
 const frame = (id: string, order: number, x: number): CanvasElement => ({
@@ -15,20 +18,43 @@ const frame = (id: string, order: number, x: number): CanvasElement => ({
   height: 300
 })
 
-describe('presentation-store', () => {
-  beforeEach(() => {
-    useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
-    useCameraStore.getState().setViewport({ width: 1000, height: 800 })
-    useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
-    usePresentationStore.setState({
-      active: false,
-      index: 0,
-      cameraBeforeStart: null,
-      previewFrameId: null,
-      spotlightRect: null
-    })
-  })
+// Keep image preparation independent of the store's departure paint and hold clock.
+vi.mock('@/lib/camera-flight-preparation', () => ({
+  prepareCameraFlight: vi.fn(() => ({ ready: Promise.resolve(), release: () => {} }))
+}))
 
+const prepare = () => vi.advanceTimersByTimeAsync(32)
+const land = async () => {
+  await prepare()
+  await vi.advanceTimersByTimeAsync(PREVIEW_DEPARTURE_HOLD_MS)
+}
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+    setTimeout(() => callback(performance.now()), 16)
+  )
+  vi.stubGlobal('cancelAnimationFrame', clearTimeout)
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
+  useCameraStore.getState().setViewport({ width: 1000, height: 800 })
+  useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
+  usePresentationStore.setState({
+    active: false,
+    index: 0,
+    cameraBeforeStart: null,
+    previewFrameId: null,
+    spotlightRect: null
+  })
+})
+
+afterEach(() => {
+  usePresentationStore.getState().exit()
+  useCameraStore.getState().cancelAnimation()
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
+
+describe('presentation-store', () => {
   it('refuses to start without frames', () => {
     usePresentationStore.getState().start()
     expect(usePresentationStore.getState().active).toBe(false)
@@ -55,7 +81,7 @@ describe('presentation-store', () => {
     expect(usePresentationStore.getState().index).toBe(1)
   })
 
-  it('previews the flight into a frame and stays there so it can be replayed', () => {
+  it('previews the flight into a frame and stays there so it can be replayed', async () => {
     const doc = useDocumentStore.getState()
     doc.insertElement(frame('a', 1, 0))
     doc.insertElement(frame('b', 2, 5000))
@@ -65,7 +91,8 @@ describe('presentation-store', () => {
     const presentation = usePresentationStore.getState()
 
     presentation.previewTransition('b')
-    // It has already flown, and it waits there rather than snapping the editor back.
+    await land()
+    // It has flown, and it waits there rather than snapping the editor back.
     expect(usePresentationStore.getState()).toMatchObject({
       active: true,
       index: 1,
@@ -82,13 +109,14 @@ describe('presentation-store', () => {
     expect(usePresentationStore.getState()).toMatchObject({ active: false, previewFrameId: null })
   })
 
-  it('drops a preview where it stands when the editor takes the camera', () => {
+  it('drops a preview where it stands when the editor takes the camera', async () => {
     const doc = useDocumentStore.getState()
     doc.insertElement(frame('a', 1, 0))
     doc.insertElement(frame('b', 2, 5000))
     doc.updateSettings({ transitionMs: 0 })
     const presentation = usePresentationStore.getState()
     presentation.previewTransition('b')
+    await land()
     const parked = useCameraStore.getState().camera
 
     presentation.cancelPreview()
@@ -102,7 +130,7 @@ describe('presentation-store', () => {
     expect(useCameraStore.getState().camera).toEqual(parked)
   })
 
-  it('follows the frame it was asked about, not its place in the deck', () => {
+  it('follows the frame it was asked about, not its place in the deck', async () => {
     const doc = useDocumentStore.getState()
     doc.insertElement(frame('a', 1, 0))
     doc.insertElement(frame('b', 2, 5000))
@@ -111,6 +139,7 @@ describe('presentation-store', () => {
     const presentation = usePresentationStore.getState()
 
     presentation.previewTransition('c')
+    await land()
     expect(usePresentationStore.getState()).toMatchObject({ index: 2, previewFrameId: 'c' })
 
     // The list can be reordered while the preview is parked; replaying still means "into c".
@@ -214,7 +243,7 @@ describe('presentation refit', () => {
     expect(useCameraStore.getState().camera.zoom).toBeCloseTo(large.zoom, 6)
   })
 
-  it('re-fits the frame a parked preview owns after the list reorders underneath it', () => {
+  it('re-fits the frame a parked preview owns after the list reorders underneath it', async () => {
     const doc = useDocumentStore.getState()
     doc.loadDocument(createEmptyDocument(), null)
     doc.insertElement(frame('a', 1, 0))
@@ -224,6 +253,7 @@ describe('presentation refit', () => {
     useCameraStore.getState().setViewport({ width: 1000, height: 800 })
     const presentation = usePresentationStore.getState()
     presentation.previewTransition('c')
+    await land()
     const parked = useCameraStore.getState().camera
 
     // The deck stays editable under a parked preview, so the index it flew on goes stale.
@@ -235,7 +265,7 @@ describe('presentation refit', () => {
     presentation.exit()
   })
 
-  it('drops a parked preview whose frame was deleted instead of refitting onto its successor', () => {
+  it('drops a parked preview whose frame was deleted instead of refitting onto its successor', async () => {
     const doc = useDocumentStore.getState()
     doc.loadDocument(createEmptyDocument(), null)
     doc.insertElement(frame('a', 1, 0))
@@ -244,6 +274,7 @@ describe('presentation refit', () => {
     useCameraStore.getState().setViewport({ width: 1000, height: 800 })
     const presentation = usePresentationStore.getState()
     presentation.previewTransition('b')
+    await land()
     const parked = useCameraStore.getState().camera
 
     // Only Escape is reserved during a preview, so Delete reaches the editor and cuts the frame.
@@ -258,5 +289,147 @@ describe('presentation refit', () => {
       spotlight: 0
     })
     expect(useCameraStore.getState().camera).toEqual(parked)
+  })
+})
+
+describe('preview departure hold', () => {
+  const viewport = { width: 1000, height: 800 }
+  const deck = () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.insertElement(frame('b', 2, 5000))
+    doc.insertElement(frame('c', 3, 10_000))
+    doc.updateSettings({ transitionMs: 0 })
+    // The departing frame's own tilt is what the hold has to show.
+    doc.patchElements(['a'], { transition: { roll: 10 } })
+  }
+  const landingOn = (index: number) =>
+    frameCamera(useDocumentStore.getState().document, index, viewport)
+
+  it('keeps the editor camera and shot until the departure images are ready', async () => {
+    deck()
+    let ready!: () => void
+    vi.mocked(prepareCameraFlight).mockImplementationOnce(() => ({
+      ready: new Promise<void>((resolve) => {
+        ready = resolve
+      }),
+      release: vi.fn()
+    }))
+    const before = useCameraStore.getState().camera
+    usePresentationStore.getState().previewTransition('b')
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(useCameraStore.getState().camera).toBe(before)
+    expect(usePresentationStore.getState().roll).toBe(0)
+    ready()
+    await prepare()
+    expect(useCameraStore.getState().camera).toEqual(landingOn(0))
+    expect(usePresentationStore.getState().roll).toBe(10)
+    await vi.advanceTimersByTimeAsync(500)
+    expect(useCameraStore.getState().camera).toEqual(landingOn(1))
+  })
+
+  it('rests on the departure frame for the whole hold, then flies', async () => {
+    deck()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    await prepare()
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: true,
+      index: 1,
+      roll: 10,
+      previewFrameId: 'b'
+    })
+    expect(useCameraStore.getState().camera).toEqual(landingOn(0))
+    expect(useCameraStore.getState().isAnimating()).toBe(true)
+    await vi.advanceTimersByTimeAsync(PREVIEW_DEPARTURE_HOLD_MS - 1)
+    expect(useCameraStore.getState().camera).toEqual(landingOn(0))
+    expect(usePresentationStore.getState().roll).toBe(10)
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(useCameraStore.getState().camera).toEqual(landingOn(1))
+    expect(usePresentationStore.getState().roll).toBe(0)
+    expect(useCameraStore.getState().isAnimating()).toBe(false)
+  })
+
+  it('flies the opening frame at once, since it departs from the editor itself', () => {
+    deck()
+    usePresentationStore.getState().previewTransition('a')
+    expect(usePresentationStore.getState()).toMatchObject({ index: 0, roll: 10 })
+    expect(useCameraStore.getState().camera).toEqual(landingOn(0))
+    expect(useCameraStore.getState().isAnimating()).toBe(false)
+  })
+
+  it('clears the previous shot when cutting to a neutral opening frame', async () => {
+    deck()
+    const doc = useDocumentStore.getState()
+    doc.patchElements(['a'], { transition: { roll: 0, spotlight: 0 } })
+    doc.patchElements(['b'], { transition: { roll: 10, spotlight: 0.6 } })
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    await land()
+    expect(usePresentationStore.getState()).toMatchObject({ roll: 10, spotlight: 0.6 })
+    presentation.previewTransition('a')
+    expect(usePresentationStore.getState()).toMatchObject({
+      roll: 0,
+      spotlight: 0,
+      spotlightRect: null
+    })
+    expect(useCameraStore.getState().camera).toEqual(landingOn(0))
+  })
+
+  it('drops the pending flight when the preview is closed during the hold', async () => {
+    deck()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    await prepare()
+    presentation.exit()
+    await land()
+    expect(usePresentationStore.getState()).toMatchObject({ active: false, previewFrameId: null })
+    expect(useCameraStore.getState().camera).not.toEqual(landingOn(1))
+  })
+
+  it('drops the pending flight when the editor takes the camera during the hold', async () => {
+    deck()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    await prepare()
+    presentation.cancelPreview()
+    expect(useCameraStore.getState().isAnimating()).toBe(false)
+    await land()
+    expect(usePresentationStore.getState()).toMatchObject({ active: false })
+    expect(useCameraStore.getState().camera).toEqual(landingOn(0))
+  })
+
+  it('restarts the clock on the new frame when another preview is asked for mid-hold', async () => {
+    deck()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('b')
+    await prepare()
+    await vi.advanceTimersByTimeAsync(PREVIEW_DEPARTURE_HOLD_MS / 2)
+    presentation.previewTransition('c')
+    expect(usePresentationStore.getState()).toMatchObject({ index: 2, previewFrameId: 'c' })
+    await prepare()
+    expect(useCameraStore.getState().camera).toEqual(landingOn(1))
+    // The first hold would have run out by now; it must not fly into b.
+    await vi.advanceTimersByTimeAsync(PREVIEW_DEPARTURE_HOLD_MS / 2)
+    expect(useCameraStore.getState().camera).toEqual(landingOn(1))
+    await vi.advanceTimersByTimeAsync(PREVIEW_DEPARTURE_HOLD_MS / 2)
+    expect(useCameraStore.getState().camera).toEqual(landingOn(2))
+  })
+
+  it('lets a slide show that starts during the hold keep the camera', async () => {
+    deck()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('c')
+    await prepare()
+    presentation.start()
+    expect(useCameraStore.getState().isAnimating()).toBe(false)
+    await land()
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: true,
+      index: 0,
+      previewFrameId: null
+    })
+    expect(useCameraStore.getState().camera).not.toEqual(landingOn(2))
   })
 })

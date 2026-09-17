@@ -13,14 +13,13 @@ export type PresentationState = {
   spotlight: number
   /** The cut-out, in world units. It travels with the flight instead of jumping to the target. */
   spotlightRect: Rect | null
-  /** Frame the preview flies into; null during an ordinary slide show. Held by id, since the deck
-   * can be reordered from the list while the preview is parked. */
+  /** Keep previews anchored through reordering; null for ordinary slide shows. */
   previewFrameId: ElementId | null
 }
 
 export type PresentationActions = {
   start: (fromIndex?: number) => void
-  /** Plays the flight into a frame from the one before it; call again to replay it. */
+  /** Show the preceding frame before flying in; the opening frame needs no departure hold. */
   previewTransition: (frameId: ElementId) => void
   /** Drops a parked preview where it stands, for when the editor is about to move the camera itself. */
   cancelPreview: () => void

@@ -6,14 +6,17 @@ import { useDocumentStore } from '@/store/document-store'
 
 export function ImageElement({
   element,
-  selected
+  selected,
+  layoutScale
 }: {
   element: ImageElementModel
   selected: boolean
+  layoutScale: number
 }) {
   const asset = useDocumentStore((s) => s.document.assets[element.assetId])
+  const scale = asset?.mime === 'image/svg+xml' ? layoutScale : 1
   const preview = useImageSource(element, asset, selected)
-  const detail = useImageDetail(element, asset, preview)
+  const { tiles: detail, visible } = useImageDetail(element, asset, preview)
   const tiles = useRef<(HTMLCanvasElement | null)[]>([])
   const [painted, setPainted] = useState<typeof detail>()
   useLayoutEffect(() => {
@@ -37,7 +40,7 @@ export function ImageElement({
     })
     return () => cancelAnimationFrame(frame)
   }, [detail])
-  const showDetail = detail && painted === detail
+  const showDetail = visible && detail && painted === detail
   return (
     <>
       <img
@@ -50,8 +53,11 @@ export function ImageElement({
         style={{
           left: element.x,
           top: element.y,
-          width: element.width,
-          height: element.height,
+          width: element.width * scale,
+          height: element.height * scale,
+          transform: scale > 1 ? `scale(${1 / scale})` : undefined,
+          transformOrigin: '0 0',
+          willChange: scale > 1 ? 'transform' : undefined,
           visibility: preview && !showDetail ? 'visible' : 'hidden'
         }}
       />

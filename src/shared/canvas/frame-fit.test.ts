@@ -10,7 +10,8 @@ import {
   fitContentToViewport,
   fitOverviewToViewport,
   fitRectToViewport,
-  fitSelectionToViewport
+  fitSelectionToViewport,
+  rolledSpan
 } from './frame-fit'
 
 describe('frame-fit', () => {
@@ -156,5 +157,41 @@ describe('frame-fit', () => {
     expect(visible.x).toBeLessThanOrEqual(5000)
     expect(visible.x + visible.width).toBeGreaterThanOrEqual(5800)
     expect(camera.zoom).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('rolled frames', () => {
+  it('leaves an unrolled rect at its own span', () => {
+    expect(rolledSpan({ x: 0, y: 0, width: 400, height: 300 }, 0)).toEqual({
+      width: 400,
+      height: 300
+    })
+  })
+
+  it('needs a square rotated 45° to be a diagonal wide', () => {
+    const span = rolledSpan({ x: 0, y: 0, width: 100, height: 100 }, 45)
+    expect(span.width).toBeCloseTo(Math.SQRT2 * 100, 6)
+    expect(span.height).toBeCloseTo(Math.SQRT2 * 100, 6)
+  })
+
+  it('is symmetric in the direction of the roll', () => {
+    const rect = { x: 0, y: 0, width: 300, height: 120 }
+    expect(rolledSpan(rect, 20)).toEqual(rolledSpan(rect, -20))
+  })
+
+  it('zooms further out so a rolled frame still fits', () => {
+    const rect = { x: 0, y: 0, width: 1600, height: 900 }
+    const viewport = { width: 1600, height: 900 }
+    const straight = fitRectToViewport(rect, viewport)
+    const rolled = fitRectToViewport(rect, viewport, undefined, 15)
+    expect(rolled.zoom).toBeLessThan(straight.zoom)
+  })
+
+  it('keeps the frame centred whatever the roll', () => {
+    const rect = { x: 100, y: 40, width: 400, height: 200 }
+    const viewport = { width: 800, height: 600 }
+    const rolled = fitRectToViewport(rect, viewport, undefined, 30)
+    expect(rolled.x + 300 * rolled.zoom).toBeCloseTo(viewport.width / 2, 6)
+    expect(rolled.y + 140 * rolled.zoom).toBeCloseTo(viewport.height / 2, 6)
   })
 })

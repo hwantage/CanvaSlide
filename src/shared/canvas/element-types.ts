@@ -1,4 +1,12 @@
 import { z } from 'zod'
+import { cameraEasings, DEFAULT_CAMERA_EASING } from './camera-easing'
+
+/** van Wijk ρ bounds. √2 is the paper's optimum and stays the default. */
+export const MIN_CAMERA_ARC = 0.6
+export const MAX_CAMERA_ARC = 3
+export const DEFAULT_CAMERA_ARC = Math.SQRT2
+export const MAX_ROLL_DEGREES = 180
+export const MAX_TRANSITION_MS = 10_000
 
 export type Point = { x: number; y: number }
 export type Size = { width: number; height: number }
@@ -88,11 +96,29 @@ export const legacyImageElementV1Schema = elementBaseSchema.extend({
 })
 export type LegacyImageElementV1 = z.infer<typeof legacyImageElementV1Schema>
 
+/**
+ * Per-frame camera direction. Every field is optional and falls back to `document.settings`, so a
+ * frame that sets nothing behaves exactly as it did before this existed.
+ */
+export const frameTransitionSchema = z.object({
+  /** Flight duration to this frame. */
+  ms: z.number().int().min(0).max(MAX_TRANSITION_MS).optional(),
+  easing: z.enum(cameraEasings).optional(),
+  /** van Wijk arc height (ρ): low skims across the board, high rises and dives. */
+  arc: z.number().min(MIN_CAMERA_ARC).max(MAX_CAMERA_ARC).optional(),
+  /** Camera roll in degrees while this frame is on screen. Presentation only; editing never rolls. */
+  roll: z.number().min(-MAX_ROLL_DEGREES).max(MAX_ROLL_DEGREES).optional(),
+  /** Dim strength outside the frame, 0 = off. */
+  spotlight: z.number().min(0).max(1).optional()
+})
+export type FrameTransition = z.infer<typeof frameTransitionSchema>
+
 export const frameElementSchema = elementBaseSchema.extend({
   type: z.literal('frame'),
   name: z.string(),
   // Why: presentation order is explicit so the user can reorder without moving frames.
-  order: z.number().int().nonnegative()
+  order: z.number().int().nonnegative(),
+  transition: frameTransitionSchema.optional()
 })
 export type FrameElement = z.infer<typeof frameElementSchema>
 
@@ -162,7 +188,11 @@ export type FrameBorderStyle = (typeof frameBorderStyles)[number]
 
 // Why: every new setting gets a `.default()` so older files keep opening unchanged.
 export const documentSettingsSchema = z.object({
-  transitionMs: z.number().int().min(0).max(10_000),
+  transitionMs: z.number().int().min(0).max(MAX_TRANSITION_MS),
+  // Why: these three are the document-wide defaults a frame's own `transition` overrides.
+  transitionEasing: z.enum(cameraEasings).default(DEFAULT_CAMERA_EASING),
+  transitionArc: z.number().min(MIN_CAMERA_ARC).max(MAX_CAMERA_ARC).default(DEFAULT_CAMERA_ARC),
+  spotlight: z.number().min(0).max(1).default(0),
   background: z.enum(canvasBackgrounds).default('dots'),
   frameBorder: z.enum(frameBorderStyles).default('solid')
 })
@@ -170,6 +200,9 @@ export type DocumentSettings = z.infer<typeof documentSettingsSchema>
 
 export const defaultDocumentSettings: DocumentSettings = {
   transitionMs: 1000,
+  transitionEasing: DEFAULT_CAMERA_EASING,
+  transitionArc: DEFAULT_CAMERA_ARC,
+  spotlight: 0,
   background: 'dots',
   frameBorder: 'solid'
 }

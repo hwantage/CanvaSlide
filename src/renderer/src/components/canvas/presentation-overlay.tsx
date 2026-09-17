@@ -3,10 +3,12 @@ import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
-import { usePresentationStore } from '@/store/presentation-store'
+import { selectPreviewing, usePresentationStore } from '@/store/presentation-store'
 
 export function PresentationOverlay() {
   const active = usePresentationStore((s) => s.active)
+  // Why: a preview is one flight long; nav controls would outlive it and invite a stray click.
+  const previewing = usePresentationStore(selectPreviewing)
   const index = usePresentationStore((s) => s.index)
   const next = usePresentationStore((s) => s.next)
   const previous = usePresentationStore((s) => s.previous)
@@ -14,7 +16,7 @@ export function PresentationOverlay() {
   const overview = usePresentationStore((s) => s.overview)
   const toggleOverview = usePresentationStore((s) => s.toggleOverview)
   const document = useDocumentStore(selectDocument)
-  if (!active) {
+  if (!active || previewing) {
     return null
   }
   const frames = orderedFrames(document)

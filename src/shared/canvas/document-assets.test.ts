@@ -9,7 +9,11 @@ import {
   upsertAsset
 } from './document-assets'
 import { insertElement, removeElements, duplicateElements } from './document-mutations'
-import { createEmptyDocument, type CanvasDocumentV1 } from './element-types'
+import {
+  createEmptyDocument,
+  defaultDocumentSettings,
+  type CanvasDocumentV1
+} from './element-types'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk'
 const JPG = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsL'
@@ -104,7 +108,7 @@ describe('document-assets', () => {
         }
       },
       order: ['a', 'b', 't'],
-      settings: { transitionMs: 500, background: 'dots', frameBorder: 'solid' }
+      settings: { ...defaultDocumentSettings, transitionMs: 500 }
     }
     const migrated = migrateDocumentV1(legacy)
     expect(migrated.version).toBe(2)

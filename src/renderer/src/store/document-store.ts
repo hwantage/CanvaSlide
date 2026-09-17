@@ -217,7 +217,14 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     ungroupSelected: () => recorded((d) => ungroupElements(d, get().selectedIds)),
     alignSelected: (mode) => recorded((d) => alignElements(d, get().selectedIds, mode)),
     distributeSelected: (axis) => recorded((d) => distributeElements(d, get().selectedIds, axis)),
-    updateSettings: (patch) => recorded((d) => ({ ...d, settings: { ...d.settings, ...patch } })),
+    updateSettings: (patch, record = true) => {
+      const apply = (d: CanvasDocument) => ({ ...d, settings: { ...d.settings, ...patch } })
+      if (record) {
+        recorded(apply)
+      } else {
+        get().applyLive(apply)
+      }
+    },
     renameDocument: (name) => recorded((d) => ({ ...d, name })),
 
     undo: () => {

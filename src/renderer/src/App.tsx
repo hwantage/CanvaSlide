@@ -13,11 +13,16 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useLaunchDocument } from '@/hooks/use-launch-document'
 import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
-import { selectPresentationActive, usePresentationStore } from '@/store/presentation-store'
+import { selectLocale, useLanguageStore } from '@/store/language-store'
+import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
 
 export function App() {
   const commands = useDocumentCommands()
-  const presenting = usePresentationStore(selectPresentationActive)
+  // Why: only a full slide show takes the editor away; a preview keeps the panels so the values
+  // it is showing off can be adjusted between replays.
+  const presenting = usePresentationStore(selectSlideShowActive)
+  // Why: t() reads the active locale as it renders, so the tree has to re-render when it changes.
+  const locale = useLanguageStore(selectLocale)
   useKeyboardShortcuts(commands)
   useClipboard()
   useWindowTitle()
@@ -27,7 +32,7 @@ export function App() {
   useSystemTheme()
 
   return (
-    <div className="flex h-full flex-col bg-background text-foreground">
+    <div lang={locale} className="flex h-full flex-col bg-background text-foreground">
       {!presenting && <TopBar commands={commands} />}
       <div className="relative flex min-h-0 flex-1">
         <main className="relative min-w-0 flex-1">

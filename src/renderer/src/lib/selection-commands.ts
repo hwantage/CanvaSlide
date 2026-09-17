@@ -1,5 +1,5 @@
 import { elementRect, selectionBounds } from '@shared/canvas/element-bounds'
-import { frameRectAround } from '@shared/canvas/frame-from-selection'
+import { frameRectAround, selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import { insertElement } from '@shared/canvas/document-mutations'
 import { frameIndexById, orderedFrames } from '@shared/canvas/presentation-sequence'
 import { createFrameElement } from '@/lib/element-factory'
@@ -23,6 +23,10 @@ export function zoomToSelection(): boolean {
 /** Wraps the selected elements in a new presentation frame and selects it. */
 export function frameSelection(): boolean {
   const store = useDocumentStore.getState()
+  // Why: wrapping frames in a frame only adds a duplicate slide to the deck, never what was meant.
+  if (selectionIsOnlyFrames(store.document, store.selectedIds)) {
+    return false
+  }
   const bounds = selectionBounds(store.document, store.selectedIds)
   if (!bounds) {
     return false

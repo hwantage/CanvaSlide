@@ -6,6 +6,20 @@ export function elementRect(element: CanvasElement): Rect {
 }
 
 /** Rect from two arbitrary corners (drag boxes can have negative extents). */
+/**
+ * Rect partway from one to another. The spotlight's cut-out travels with the camera this way, so a
+ * lit frame hands the hole to the next one instead of the mask jumping there before the move.
+ */
+export function interpolateRect(from: Rect, to: Rect, t: number): Rect {
+  const at = (a: number, b: number) => a + (b - a) * t
+  return {
+    x: at(from.x, to.x),
+    y: at(from.y, to.y),
+    width: at(from.width, to.width),
+    height: at(from.height, to.height)
+  }
+}
+
 export function rectFromPoints(a: Point, b: Point): Rect {
   return {
     x: Math.min(a.x, b.x),

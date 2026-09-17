@@ -4,6 +4,7 @@ import { insertElement } from './document-mutations'
 import {
   contentBounds,
   elementsInBox,
+  interpolateRect,
   frameContainingPoint,
   hitTestTopmost,
   rectFromPoints,
@@ -210,5 +211,19 @@ describe('frameContainingPoint', () => {
     })
     expect(frameContainingPoint(doc, { x: 150, y: 150 })?.id).toBe('f')
     expect(frameContainingPoint(doc, { x: 50, y: 50 })).toBeNull()
+  })
+})
+
+describe('interpolateRect', () => {
+  const a = { x: 0, y: 0, width: 100, height: 50 }
+  const b = { x: 200, y: 100, width: 300, height: 150 }
+
+  it('lands on each end exactly', () => {
+    expect(interpolateRect(a, b, 0)).toEqual(a)
+    expect(interpolateRect(a, b, 1)).toEqual(b)
+  })
+
+  it('moves and resizes together halfway', () => {
+    expect(interpolateRect(a, b, 0.5)).toEqual({ x: 100, y: 50, width: 200, height: 100 })
   })
 })

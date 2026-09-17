@@ -65,6 +65,30 @@ describe('document-mutations', () => {
     expect(reorderZ(doc, ['a', 'c'], 'forward').order).toEqual(['b', 'a', 'd', 'c'])
   })
 
+  it('leaves a frames-only selection alone, whichever command asks', () => {
+    let doc = insertElement(createEmptyDocument(), text('a'))
+    for (const id of ['f1', 'f2']) {
+      doc = insertElement(doc, {
+        id,
+        type: 'frame',
+        name: id,
+        order: 1,
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 300
+      })
+    }
+    // Why: frames always paint under content, so restacking them is an invisible edit and an undo
+    // step for nothing — the ] and [ shortcuts reach this the same way the panel does.
+    for (const direction of ['forward', 'backward', 'front', 'back'] as const) {
+      expect(reorderZ(doc, ['f1'], direction)).toBe(doc)
+      expect(reorderZ(doc, ['f1', 'f2'], direction)).toBe(doc)
+    }
+    // A selection that also holds content still restacks.
+    expect(reorderZ(doc, ['a', 'f1'], 'front').order).toEqual(['f2', 'a', 'f1'])
+  })
+
   it('reorders z and applies frame orders', () => {
     let doc = insertElement(createEmptyDocument(), text('a'))
     doc = insertElement(doc, text('b'))

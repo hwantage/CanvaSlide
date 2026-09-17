@@ -1,3 +1,4 @@
+import { cameraEasingFn, easeInOutCubic, type CameraEasing } from './camera-easing'
 import type { Camera, Point, Size } from './element-types'
 
 /**
@@ -32,8 +33,11 @@ function tanh(x: number): number {
 export function createZoomPanInterpolator(
   from: ZoomView,
   to: ZoomView,
-  rho: number = DEFAULT_RHO
+  rhoInput: number = DEFAULT_RHO
 ): ZoomPanInterpolator {
+  // Why: ρ of 0, NaN or a huge number makes the maths below produce a NaN camera, which blanks the
+  // page. The player parses its document without zod, so this is the only guard that path gets.
+  const rho = Number.isFinite(rhoInput) && rhoInput > 0 ? Math.min(rhoInput, 4) : DEFAULT_RHO
   const { cx: ux0, cy: uy0, w: w0 } = from
   const { cx: ux1, cy: uy1, w: w1 } = to
   const dx = ux1 - ux0
@@ -94,22 +98,38 @@ export function zoomViewToCamera(view: ZoomView, viewport: Size): Camera {
   }
 }
 
-export function easeInOutCubic(t: number): number {
-  const c = Math.min(1, Math.max(0, t))
-  return c < 0.5 ? 4 * c * c * c : 1 - (-2 * c + 2) ** 3 / 2
+export { easeInOutCubic }
+
+export type CameraTween = {
+  at: (progress: number) => Camera
+  /** The eased progress, so callers animating alongside the camera share its timing exactly. */
+  ease: (progress: number) => number
+  pathLength: number
 }
 
-export type CameraTween = { at: (progress: number) => Camera; pathLength: number }
+export type CameraTweenOptions = {
+  /** van Wijk arc: low skims along the ground, high rises and dives. Defaults to √2. */
+  rho?: number | undefined
+  easing?: CameraEasing | undefined
+}
 
 /** Builds a camera tween between two cameras sharing one viewport. */
-export function createCameraTween(from: Camera, to: Camera, viewport: Size): CameraTween {
+export function createCameraTween(
+  from: Camera,
+  to: Camera,
+  viewport: Size,
+  options: CameraTweenOptions = {}
+): CameraTween {
   const interpolator = createZoomPanInterpolator(
     cameraToZoomView(from, viewport),
-    cameraToZoomView(to, viewport)
+    cameraToZoomView(to, viewport),
+    options.rho
   )
+  const ease = cameraEasingFn(options.easing)
   return {
     pathLength: interpolator.pathLength,
-    at: (progress) => zoomViewToCamera(interpolator.at(easeInOutCubic(progress)), viewport)
+    ease,
+    at: (progress) => zoomViewToCamera(interpolator.at(ease(progress)), viewport)
   }
 }
 

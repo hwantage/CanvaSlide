@@ -32,7 +32,7 @@ describe('camera-animator', () => {
       ...clock
     })
     let done = 0
-    animator.animateTo({ x: -500, y: -200, zoom: 2 }, 1000, () => (done += 1))
+    animator.animateTo({ x: -500, y: -200, zoom: 2 }, 1000, { onDone: () => (done += 1) })
     expect(animator.isAnimating()).toBe(true)
     clock.step(500)
     expect(camera.zoom).not.toBe(1)
@@ -98,7 +98,7 @@ describe('camera-animator', () => {
       ...clock
     })
     const target = { x: -1000, y: -300, zoom: 4 }
-    animator.animateTo(target, 1000, onDone)
+    animator.animateTo(target, 1000, { onDone })
     clock.step(5000)
     expect(camera).toBe(initial)
     expect(animator.isAnimating()).toBe(true)
@@ -141,7 +141,7 @@ describe('camera-animator', () => {
       prepare,
       ...clock
     })
-    animator.animateTo({ x: -10000, y: 0, zoom: 10 }, 1000, onDone)
+    animator.animateTo({ x: -10000, y: 0, zoom: 10 }, 1000, { onDone })
     animator.animateTo({ x: -500, y: 0, zoom: 2 }, 500)
     expect(release).toHaveBeenCalledOnce()
     ready()

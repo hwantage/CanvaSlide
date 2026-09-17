@@ -16,10 +16,12 @@ import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { TextButton } from '@/components/ui/text-button'
 import { t, tn } from '@/i18n/ui-strings'
 import { shortcutLabel } from '@/lib/platform-keys'
+import { selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import { frameSelection } from '@/lib/selection-commands'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
 import { AlignmentToolbar } from './alignment-toolbar'
 import { ConnectorFields } from './connector-fields'
+import { FrameTransitionFields } from './frame-transition-fields'
 import { NumberInput, ShapeStyleFields, TextStyleFields } from './style-fields'
 
 function firstOfType<T extends CanvasElement['type']>(
@@ -42,6 +44,8 @@ export function PropertiesPanel() {
   const connector = firstOfType(elements, 'connector')
   const textStyle = (firstOfType(elements, 'text') ?? shape ?? connector)?.textStyle ?? null
   const first = elements[0] as CanvasElement
+  // Why: z-order moves nothing a user can see for frames, and wrapping one adds a duplicate slide.
+  const onlyFrames = selectionIsOnlyFrames(document, selectedIds)
 
   return (
     <section className="flex flex-col gap-1">
@@ -78,36 +82,39 @@ export function PropertiesPanel() {
           />
         </FieldRow>
       )}
+      {frame && elements.length === 1 && <FrameTransitionFields frame={frame} />}
       <AlignmentToolbar count={elements.length} />
       {connector && <ConnectorFields ids={selectedIds} sample={connector} />}
       {shape && <ShapeStyleFields ids={selectedIds} style={shape.style} />}
       {textStyle && <TextStyleFields ids={selectedIds} style={textStyle} />}
-      <div className="mt-2 flex flex-wrap gap-1">
-        <TextButton
-          title={`${t('order.front')} (${shortcutLabel(']', { shift: true })})`}
-          onClick={() => store.reorderSelected('front')}
-        >
-          <BringToFront size={12} /> {t('props.front')}
-        </TextButton>
-        <TextButton
-          title={`${t('order.forward')} (${shortcutLabel(']')})`}
-          onClick={() => store.reorderSelected('forward')}
-        >
-          <ChevronUp size={12} /> {t('props.forward')}
-        </TextButton>
-        <TextButton
-          title={`${t('order.backward')} (${shortcutLabel('[')})`}
-          onClick={() => store.reorderSelected('backward')}
-        >
-          <ChevronDown size={12} /> {t('props.backward')}
-        </TextButton>
-        <TextButton
-          title={`${t('order.back')} (${shortcutLabel('[', { shift: true })})`}
-          onClick={() => store.reorderSelected('back')}
-        >
-          <SendToBack size={12} /> {t('props.back')}
-        </TextButton>
-      </div>
+      {!onlyFrames && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          <TextButton
+            title={`${t('order.front')} (${shortcutLabel(']', { shift: true })})`}
+            onClick={() => store.reorderSelected('front')}
+          >
+            <BringToFront size={12} /> {t('props.front')}
+          </TextButton>
+          <TextButton
+            title={`${t('order.forward')} (${shortcutLabel(']')})`}
+            onClick={() => store.reorderSelected('forward')}
+          >
+            <ChevronUp size={12} /> {t('props.forward')}
+          </TextButton>
+          <TextButton
+            title={`${t('order.backward')} (${shortcutLabel('[')})`}
+            onClick={() => store.reorderSelected('backward')}
+          >
+            <ChevronDown size={12} /> {t('props.backward')}
+          </TextButton>
+          <TextButton
+            title={`${t('order.back')} (${shortcutLabel('[', { shift: true })})`}
+            onClick={() => store.reorderSelected('back')}
+          >
+            <SendToBack size={12} /> {t('props.back')}
+          </TextButton>
+        </div>
+      )}
       <div className="flex flex-wrap gap-1">
         {canGroup(document, selectedIds) && (
           <TextButton
@@ -125,12 +132,14 @@ export function PropertiesPanel() {
             <Ungroup size={12} /> {t('edit.ungroup')}
           </TextButton>
         )}
-        <TextButton
-          title={`${t('selection.frame')} (${shortcutLabel('F', { shift: true })})`}
-          onClick={frameSelection}
-        >
-          <Frame size={12} /> {t('selection.frame')}
-        </TextButton>
+        {!onlyFrames && (
+          <TextButton
+            title={`${t('selection.frame')} (${shortcutLabel('F', { shift: true })})`}
+            onClick={frameSelection}
+          >
+            <Frame size={12} /> {t('selection.frame')}
+          </TextButton>
+        )}
         <TextButton
           title={`${t('props.duplicate')} (${shortcutLabel('D')})`}
           onClick={store.duplicateSelected}

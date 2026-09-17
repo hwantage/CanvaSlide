@@ -49,10 +49,28 @@ describe('selection-commands', () => {
       width: 300 + FRAME_FROM_SELECTION_PADDING * 2,
       height: 150 + FRAME_FROM_SELECTION_PADDING * 2
     })
-    expect(frameSelection()).toBe(true)
-    store.undo()
+    // The new frame is now the selection, and wrapping that would only add a duplicate slide.
+    expect(frameSelection()).toBe(false)
     store.undo()
     expect(useDocumentStore.getState().document.order).toEqual(['a', 'b'])
+  })
+
+  it('refuses to wrap a selection that is nothing but frames', () => {
+    const store = useDocumentStore.getState()
+    store.insertElement(frame('f1', 1, 0), false)
+    store.insertElement(frame('f2', 2, 900), false)
+    const before = useDocumentStore.getState().document.order
+
+    store.setSelection(['f1'])
+    expect(frameSelection()).toBe(false)
+    store.setSelection(['f1', 'f2'])
+    expect(frameSelection()).toBe(false)
+    expect(useDocumentStore.getState().document.order).toEqual(before)
+
+    // A frame alongside content is still worth wrapping.
+    store.insertElement(shape('a', 100, 100), false)
+    store.setSelection(['f1', 'a'])
+    expect(frameSelection()).toBe(true)
   })
 
   it('finds the frame to present from: selected frame, else the one containing the selection', () => {

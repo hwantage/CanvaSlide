@@ -4,11 +4,24 @@ import { imagesAlongCameraPath } from '@shared/canvas/image-rendering'
 import { useDocumentStore } from '@/store/document-store'
 import { svgPreviewCache } from './svg-preview-cache'
 
-export function prepareCameraImages(
+/**
+ * Why: marking the camera as animating re-lays the world out at the flight's layout scale, and
+ * that commit is not free on a dense document. Starting the tween in the same frame makes the
+ * first tenth of a second of the move stutter — most visibly when replaying a transition from a
+ * frame the world had already settled crisp at. Two frames hand the browser a painted layout first.
+ */
+function afterNextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  })
+}
+
+/** Everything a flight wants in place before it starts moving: raster caches, and a settled layout. */
+export function prepareCameraFlight(
   from: Camera,
   target: Camera,
   viewport: Size
-): CameraPreparation | undefined {
+): CameraPreparation {
   const { document } = useDocumentStore.getState()
   const images = Object.values(document.elements).filter(
     (element): element is ImageElement =>
@@ -17,11 +30,8 @@ export function prepareCameraImages(
   const leases = imagesAlongCameraPath(images, from, target, viewport).map((image) =>
     svgPreviewCache.acquire(document.assets[image.assetId]!, image.width / image.height)
   )
-  if (!leases.length) {
-    return undefined
-  }
   return {
-    ready: Promise.all(leases.map((lease) => lease.ready)),
+    ready: Promise.all([afterNextPaint(), ...leases.map((lease) => lease.ready)]),
     release: () => leases.forEach((lease) => lease.release())
   }
 }

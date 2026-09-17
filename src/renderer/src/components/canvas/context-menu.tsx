@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Point } from '@shared/canvas/element-types'
 import { contentBounds } from '@shared/canvas/element-bounds'
 import { canGroup, canUngroup } from '@shared/canvas/element-groups'
+import { clampMenuToViewport } from '@shared/canvas/menu-placement'
 import { t } from '@/i18n/ui-strings'
 import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/external-content'
 import { copySelection, cutSelection } from '@/lib/object-clipboard'
@@ -155,7 +156,7 @@ function MenuButton({ entry, onDone }: { entry: MenuItem; onDone: () => void }):
   )
 }
 
-/** Right-click menu anchored inside the viewport; flips to stay fully visible near the edges. */
+/** Right-click menu anchored inside the viewport; shifted left/up to stay fully visible near the edges. */
 export function ContextMenu() {
   const position = useContextMenuStore((s) => s.position)
   const world = useContextMenuStore((s) => s.world)
@@ -173,10 +174,7 @@ export function ContextMenu() {
       return
     }
     const { offsetWidth, offsetHeight } = ref.current
-    setPlaced({
-      x: Math.max(0, Math.min(position.x, viewport.width - offsetWidth - 4)),
-      y: Math.max(0, Math.min(position.y, viewport.height - offsetHeight - 4))
-    })
+    setPlaced(clampMenuToViewport(position, { width: offsetWidth, height: offsetHeight }, viewport))
   }, [position, viewport])
 
   if (!position) {
@@ -196,12 +194,13 @@ export function ContextMenu() {
           hide()
         }}
       />
+      {/* Why w-max: an absolute box otherwise shrinks to the space left of the edge and wraps labels. */}
       <div
         ref={ref}
         role="menu"
         data-testid="context-menu"
         data-canvas-ui
-        className="absolute z-30 min-w-52 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
+        className="absolute z-30 w-max min-w-52 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
         style={{ left: at.x, top: at.y, visibility: placed ? 'visible' : 'hidden' }}
         onContextMenu={(event) => event.preventDefault()}
       >

@@ -28,7 +28,7 @@
   --canvas-grid: #d4d4d8;
   /* Why: continuous lines read much heavier than dots; keep them barely visible. */
   --canvas-grid-line: #ececef;
-  /* Why: frames are the artefact, not chrome — the sheet keeps its paper colour in every theme. */
+  /* Why: the sheet is translucent so the grid faintly shows through, like paper laid on a board. */
   --frame-fill: rgb(255 255 255 / 0.6);
   --selection: #2563eb;
   --frame-stroke: #a1a1aa;
@@ -64,11 +64,12 @@
   --canvas: #121215;
   --canvas-grid: #2f2f35;
   --canvas-grid-line: #232328;
-  /* Why: the light sheet is translucent, which would turn paper grey here — use what it blends to. */
-  --frame-fill: #fcfcfc;
+  /* Why: a paper-white sheet glares on the dark board, so the frame is a slab one step above the
+     canvas with a cooler cast; the stroke keeps the ~4.8:1 it had against paper so edges stay crisp. */
+  --frame-fill: #1e1f28;
   --selection: #60a5fa;
-  --frame-stroke: #71717a;
-  --frame-label: #d4d4d8;
+  --frame-stroke: #8b8b95;
+  --frame-label: #e4e4e7;
   --snap: #f87171;
   --frame-selected: #f472b6;
 }

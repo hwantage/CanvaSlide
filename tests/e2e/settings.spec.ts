@@ -91,7 +91,7 @@ test('theme preference overrides the OS and survives a reload', async ({ page })
   await expect(html).toHaveAttribute('data-theme', 'dark')
 })
 
-test('dark mode darkens the canvas and grid but leaves the frame paper alone', async ({ page }) => {
+test('dark mode darkens the canvas, grid and frame sheet together', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await page.goto('/')
   await page.keyboard.press('f')
@@ -100,9 +100,11 @@ test('dark mode darkens the canvas and grid but leaves the frame paper alone', a
 
   const background = page.getByTestId('canvas-background')
   const frame = page.locator('[data-element-type="frame"]')
+  const outline = page.getByTestId('frame-outline')
   await expect(background).toHaveCSS('background-color', 'rgb(247, 247, 248)')
   await expect(background).toHaveCSS('background-image', /rgb\(212, 212, 216\)/)
   await expect(frame).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.6)')
+  await expect(outline).toHaveCSS('border-color', 'rgb(161, 161, 170)')
 
   await page.getByRole('button', { name: /^Settings/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Settings' })
@@ -111,6 +113,7 @@ test('dark mode darkens the canvas and grid but leaves the frame paper alone', a
 
   await expect(background).toHaveCSS('background-color', 'rgb(18, 18, 21)')
   await expect(background).toHaveCSS('background-image', /rgb\(47, 47, 53\)/)
-  // Frames are document data: the sheet must keep reading as paper on the dark workspace.
-  await expect(frame).toHaveCSS('background-color', 'rgb(252, 252, 252)')
+  // A white sheet would glare on the dark board: the frame becomes a dark slab with a crisper edge.
+  await expect(frame).toHaveCSS('background-color', 'rgb(30, 31, 40)')
+  await expect(outline).toHaveCSS('border-color', 'rgb(139, 139, 149)')
 })

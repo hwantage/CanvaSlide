@@ -34,7 +34,7 @@ export function PreviewControls() {
         {t('preview.title')}
         {frame ? ` · ${frame.name}` : ''}
       </span>
-      {previewFrameIds.length > 1 && (
+      {ids.length > 1 && (
         <>
           <span className="px-1 text-muted-foreground tabular-nums">
             {Math.max(0, ids.indexOf(previewFrameId) + 1)} / {ids.length}

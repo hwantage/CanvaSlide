@@ -68,9 +68,10 @@ export function EditableText({
   const cssStyle = {
     color: style.color,
     fontSize: style.fontSize,
-    lineHeight: 1.4,
+    lineHeight: style.lineHeight ?? 1.4,
     textAlign: style.align,
     fontWeight: style.bold ? 700 : 400,
+    fontStyle: style.italic ? 'italic' : undefined,
     fontFamily: fontStackFor(style.fontFamily)
   } as const
 

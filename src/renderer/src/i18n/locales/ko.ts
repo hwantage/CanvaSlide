@@ -10,7 +10,40 @@ export const ko: UiStrings = {
   'tool.diamond': '마름모',
   'tool.frame': '프레젠테이션 프레임',
   'tool.connector': '연결선',
-  'import.files': '이미지·PDF 가져오기…',
+  'import.files': '파일 가져오기…',
+  'fig.title': '{product} 파일 가져오기',
+  'fig.reading': '페이지를 읽는 중…',
+  'fig.converting': '레이어를 변환하는 중…',
+  'fig.pages': '가져올 페이지',
+  'fig.selectAll': '전체 선택 전환',
+  'fig.layers': '최상위 레이어 {n}개',
+  'fig.mode': '변환 방식',
+  'fig.editable': '텍스트·도형 편집',
+  'fig.editableHint':
+    '프레임 안의 텍스트 레이어도 편집할 수 있습니다. 부분 서식은 단순화합니다. 스크린샷·이미지에 포함된 글자는 편집할 수 없습니다.',
+  'fig.appearance': '원본 모양 유지',
+  'fig.appearanceHint':
+    '최상위 레이어별로 벡터 이미지로 변환합니다. 글자 윤곽선이 있으면 그대로 사용합니다.',
+  'fig.limitations':
+    '페이지를 나란히 배치합니다. 효과·컴포넌트 인스턴스·고급 채우기는 일부 지원하며, 변환 결과에서 제한 사항을 안내합니다.',
+  'fig.confirm': '선택한 페이지 가져오기',
+  'fig.close': '닫기',
+  'fig.done': '페이지 {pages}개 · 요소 {elements}개 가져옴',
+  'fig.doneHint':
+    '현재 캔버스에 추가했습니다. 실행 취소 한 번으로 가져온 내용을 모두 제거할 수 있습니다.',
+  'fig.doneText': '편집 가능한 텍스트 {n}개. 글자를 두 번 클릭하면 수정할 수 있습니다.',
+  'fig.error.limit': '가져올 수 있는 파일 크기 또는 복잡도 제한을 초과했습니다.',
+  'fig.error.empty': '선택한 페이지에 표시할 내용이 없습니다.',
+  'fig.error.changed': '가져오는 동안 현재 문서가 바뀌었습니다. 파일을 다시 가져오세요.',
+  'fig.error.invalid':
+    '파일을 읽지 못했습니다. 파일이 손상되었거나 지원하지 않는 형식일 수 있습니다.',
+  'fig.warning.unsupported':
+    '지원하지 않는 레이어 또는 누락된 벡터 경로 {n}개를 생략하거나 일부 변환했습니다.',
+  'fig.warning.effects': '레이어 {n}개의 효과를 생략했습니다.',
+  'fig.warning.paint': '고급 채우기 또는 혼합 모드 {n}개를 유사하게 변환하거나 생략했습니다.',
+  'fig.warning.missingImage': '이미지 참조 {n}개를 찾지 못했습니다.',
+  'fig.warning.text': '텍스트 레이어 {n}개에 유사한 서식 또는 대체 글꼴을 사용했습니다.',
+  'fig.warning.mask': '마스크 {n}개를 유사하게 변환했습니다.',
 
   'connector.route': '경로',
   'connector.route.straight': '직선',

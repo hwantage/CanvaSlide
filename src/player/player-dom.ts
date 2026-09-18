@@ -21,6 +21,7 @@ import {
 } from '@shared/canvas/shape-svg'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { fontStackFor } from '@shared/canvas/font-family'
+import { textClipPath } from '@shared/canvas/text-clip'
 
 /** Static DOM for a document; mirrors the app's renderer without React. */
 
@@ -47,6 +48,8 @@ function applyTextStyle(node: HTMLElement, style: TextStyle): void {
   node.style.fontSize = `${style.fontSize}px`
   node.style.textAlign = style.align
   node.style.fontWeight = style.bold ? '700' : '400'
+  node.style.fontStyle = style.italic ? 'italic' : ''
+  node.style.lineHeight = String(style.lineHeight ?? 1.4)
   node.style.fontFamily = fontStackFor(style.fontFamily) ?? ''
 }
 
@@ -86,6 +89,7 @@ function renderElement(element: CanvasElement, doc: CanvasDocument): HTMLElement
       place(node, element)
       node.style.height = 'auto'
       node.style.minHeight = `${element.height}px`
+      node.style.clipPath = textClipPath(element.clip) ?? ''
       applyTextStyle(node, element.textStyle)
       node.textContent = element.text
       return node

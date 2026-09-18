@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { TextElement as TextElementModel } from '@shared/canvas/element-types'
 import { removeElements } from '@shared/canvas/document-mutations'
+import { textClipPath } from '@shared/canvas/text-clip'
 import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
 import { EditableText } from './editable-text'
@@ -31,7 +32,13 @@ export function TextElement({ element, editing }: { element: TextElementModel; e
       className="absolute"
       data-element-id={element.id}
       data-element-type="text"
-      style={{ left: element.x, top: element.y, width: element.width, minHeight: element.height }}
+      style={{
+        left: element.x,
+        top: element.y,
+        width: element.width,
+        minHeight: element.height,
+        clipPath: editing ? undefined : textClipPath(element.clip)
+      }}
     >
       <EditableText
         elementId={element.id}

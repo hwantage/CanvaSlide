@@ -1,5 +1,6 @@
 import { CanvasViewport } from '@/components/canvas/canvas-viewport'
 import { ExportDialog } from '@/components/panels/export-dialog'
+import { FigImportDialog } from '@/components/panels/fig-import-dialog'
 import { SidePanel } from '@/components/panels/side-panel'
 import { SettingsDialog } from '@/components/panels/settings-dialog'
 import { ShortcutHelpDialog } from '@/components/panels/shortcut-help-dialog'
@@ -49,6 +50,7 @@ export function App() {
           )}
         </main>
         {!presenting && <ExportDialog />}
+        {!presenting && <FigImportDialog />}
         {!presenting && <SettingsDialog />}
         {!presenting && <ShortcutHelpDialog />}
         {!presenting && <SidePanel />}

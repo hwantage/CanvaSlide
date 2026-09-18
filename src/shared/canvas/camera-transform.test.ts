@@ -79,11 +79,26 @@ describe('camera-transform', () => {
     expect(layoutZoomFor(2.5)).toBe(2.5)
   })
 
-  it('lays a painted world out at 1 and a composited one at its zoom', () => {
-    expect(worldLayoutZoom(4, false)).toBe(1)
-    expect(worldLayoutZoom(0.3, false)).toBe(1)
-    expect(worldLayoutZoom(4, true)).toBe(4)
-    expect(worldLayoutZoom(0.3, true)).toBe(1)
+  it.each([false, true])(
+    'settles editing and preview layout at the camera zoom (composited=%s)',
+    (composited) => {
+      for (const zoom of [0.3, 1, 1.6, 2.4, 4]) {
+        const layout = worldLayoutZoom(zoom, composited)
+        expect(layout).toBe(Math.max(1, zoom))
+        if (zoom >= 1) {
+          expect(worldLayerCssTransform({ x: 10, y: -5, zoom }, layout)).toBe(
+            'translate(10px, -5px)'
+          )
+        }
+      }
+    }
+  )
+
+  it('keeps light slideshows at a fixed layout while dense ones follow the zoom', () => {
+    expect(worldLayoutZoom(4, false, true)).toBe(1)
+    expect(worldLayoutZoom(0.3, false, true)).toBe(1)
+    expect(worldLayoutZoom(4, true, true)).toBe(4)
+    expect(worldLayoutZoom(0.3, true, true)).toBe(1)
   })
 
   it('holds the arrival layout through a flight unless it would raise the departure layout', () => {

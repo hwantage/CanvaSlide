@@ -6,24 +6,26 @@ import {
   worldLayoutZoom
 } from '@shared/canvas/camera-transform'
 import { useCameraStore } from '@/store/camera-store'
-import { usePresentationStore } from '@/store/presentation-store'
+import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
 
 /**
- * The CSS zoom the world is laid out at. A painted (non-composited) world stays at 1 for good and
- * is only ever transformed, so nothing in it reflows (see worldLayoutZoom). A composited world
- * follows the camera zoom, lagging behind gestures: it updates only after the zoom has held still
+ * The CSS zoom the world is laid out at. Light slideshows keep a fixed layout to avoid text
+ * reflow (see worldLayoutZoom). Editing, previews and composited slideshows follow the camera zoom,
+ * lagging behind gestures: the layout updates only after the zoom has held still
  * for ZOOM_SETTLE_MS, and a flight holds one layout scale until arrival — the arrival scale
  * itself where the flight allows it (see flightLayoutZoom), so landing has nothing left to reflow.
  */
 export function useSettledZoom(composited: boolean): number {
   const stationary = useCameraStore((s) => s.stationaryCamera)
-  // The composited world's settled zoom; a painted world ignores it and reads 1 below.
+  const slideShowActive = usePresentationStore(selectSlideShowActive)
+  const fixedLayout = slideShowActive && !composited
+  // A light slideshow resets the settled zoom so returning to editing catches up once at rest.
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
-  if (!composited && zoom !== 1) {
+  if (fixedLayout && zoom !== 1) {
     setZoom(1)
   }
   useEffect(() => {
-    if (!composited) {
+    if (fixedLayout) {
       return
     }
     let timer: ReturnType<typeof setTimeout> | null = null
@@ -36,7 +38,7 @@ export function useSettledZoom(composited: boolean): number {
       timer = null
       setZoom(layoutZoomFor(useCameraStore.getState().camera.zoom))
     }
-    // Why: the camera may have moved while the world was painted; catch up like after a gesture.
+    // Why: the camera may have moved during a light slideshow; catch up like after a gesture.
     timer = setTimeout(settle, ZOOM_SETTLE_MS)
     const unsubscribe = useCameraStore.subscribe((state, previous) => {
       if (state.animationActive && !previous.animationActive) {
@@ -70,6 +72,6 @@ export function useSettledZoom(composited: boolean): number {
         clearTimeout(timer)
       }
     }
-  }, [composited])
-  return worldLayoutZoom(stationary?.zoom ?? zoom, composited)
+  }, [fixedLayout])
+  return worldLayoutZoom(stationary?.zoom ?? zoom, composited, slideShowActive)
 }

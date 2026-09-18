@@ -87,7 +87,7 @@ export function cameraPanCssTransform(camera: Camera): string {
 export const ZOOM_SETTLE_MS = 120
 
 /**
- * CSS `zoom` a composited world is laid out at for a settled camera zoom. Why: a composited layer
+ * CSS `zoom` the editor world is laid out at for a settled camera zoom. Why: a composited layer
  * is rasterized at its layout scale, so scaling it up on the compositor shows an upscaled bitmap;
  * re-laying it out at the real scale keeps vectors and text sharp. Why never below 1: WebKit
  * clamps zoomed text to a "smart minimum" font size (6px), so zooming out with CSS `zoom` leaves
@@ -98,14 +98,17 @@ export function layoutZoomFor(zoom: number): number {
 }
 
 /**
- * CSS `zoom` the world is laid out at when the camera is at rest. A world that is not composited
- * is painted through its transform at the real scale, as sharp as a re-layout would be, so it is
- * laid out once at 1 and only ever transformed: text and emoji keep the same metrics at every
- * zoom and nothing reflows when a flight lands or a wheel zoom settles. Only a composited world
- * (dense vector documents) needs the layout to follow the zoom, see layoutZoomFor.
+ * Editing and previews need native layout resolution even without an explicit compositing hint:
+ * the WebView can still rasterize transformed text and vectors at layout scale. Light slideshows
+ * keep a fixed layout so text and emoji do not reflow between shots; dense slideshows need
+ * native layout resolution for their composited layer (see layoutZoomFor).
  */
-export function worldLayoutZoom(zoom: number, composited: boolean): number {
-  return composited ? layoutZoomFor(zoom) : 1
+export function worldLayoutZoom(
+  zoom: number,
+  composited: boolean,
+  slideShowActive = false
+): number {
+  return slideShowActive && !composited ? 1 : layoutZoomFor(zoom)
 }
 
 /**

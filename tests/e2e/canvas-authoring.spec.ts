@@ -258,7 +258,7 @@ test('creation preview follows the cursor, not the top-left corner', async ({ pa
   await page.mouse.up()
 })
 
-test('zooming scales a painted world through its transform, with no layer to upscale', async ({
+test('zooming settles a light editor world at native layout resolution @webkit', async ({
   page
 }) => {
   await page.keyboard.press('r')
@@ -272,13 +272,15 @@ test('zooming scales a painted world through its transform, with no layer to ups
   await expect
     .poll(async () => (await shape.boundingBox())?.width ?? 0)
     .toBeGreaterThan((before?.width ?? 0) * 1.5)
-  // Why: a light world is never composited, so its scale() is painted at the real resolution
-  // rather than upscaling a bitmap; it therefore never needs a CSS zoom re-layout either.
+  // Why: WebViews can rasterize transformed content at layout scale without a compositing hint.
   const world = page.getByTestId('world-layer')
   await expect(world).toHaveCSS('will-change', 'auto')
-  await expect.poll(() => world.evaluate((el) => el.style.transform)).toContain('scale')
-  await page.waitForTimeout(300)
-  expect(await world.evaluate((el) => (el.firstElementChild as HTMLElement).style.zoom)).toBe('1')
+  await expect.poll(() => world.evaluate((el) => el.style.transform)).not.toContain('scale')
+  const zoom = await world.evaluate((el) =>
+    Number((el.firstElementChild as HTMLElement).style.zoom)
+  )
+  expect(zoom).toBeGreaterThan(1.5)
+  expect((await shape.boundingBox())!.width).toBeCloseTo(before!.width * zoom, 0)
 })
 
 test('box-selected group moves together, even when grabbed between objects', async ({ page }) => {

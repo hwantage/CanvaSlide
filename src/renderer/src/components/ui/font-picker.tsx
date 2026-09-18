@@ -38,7 +38,13 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
   const status = useFontStore((s) => s.status)
   const load = useFontStore((s) => s.load)
   const dismiss = useCallback(() => setOpen(false), [])
-  const placement = useAnchoredPopover(open, rootRef, popoverRef, dismiss)
+  const placement = useAnchoredPopover(
+    open,
+    rootRef,
+    popoverRef,
+    dismiss,
+    `${status}:${families.length}:${query}`
+  )
 
   useEffect(() => {
     if (open) {

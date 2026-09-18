@@ -55,8 +55,37 @@ describe('shape-svg', () => {
     })
   })
 
-  it('never lets a fat stroke turn a rect inside out', () => {
-    expect(shapeGeometry(shape('rectangle', 200))).toMatchObject({ width: 0, height: 0 })
+  it('keeps ellipse radii nonnegative when a valid stroke exceeds one edge', () => {
+    expect(shapeGeometry(shape('ellipse', 64))).toEqual({
+      tag: 'ellipse',
+      cx: 50,
+      cy: 30,
+      rx: 18,
+      ry: 0
+    })
+  })
+
+  it('keeps every primitive centred inside a box smaller than a valid stroke', () => {
+    const small = (kind: ShapeElement['shape']) => ({ ...shape(kind, 64), width: 20, height: 10 })
+    expect(shapeGeometry(small('rectangle'))).toEqual({
+      tag: 'rect',
+      x: 10,
+      y: 5,
+      width: 0,
+      height: 0,
+      rx: 8
+    })
+    expect(shapeGeometry(small('ellipse'))).toEqual({
+      tag: 'ellipse',
+      cx: 10,
+      cy: 5,
+      rx: 0,
+      ry: 0
+    })
+    expect(shapeGeometry(small('diamond'))).toEqual({
+      tag: 'polygon',
+      points: '10,5 10,5 10,5 10,5'
+    })
   })
 
   it('dashes in proportion to the stroke and pads the drawing box for arrowheads', () => {

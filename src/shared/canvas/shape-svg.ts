@@ -11,22 +11,25 @@ export type ShapeGeometry =
 export function shapeGeometry(element: ShapeElement): ShapeGeometry {
   const { width: w, height: h, style } = element
   const inset = style.strokeWidth / 2
+  // Why: a valid stroke may exceed either edge, but SVG radii and polygon edges must not invert.
+  const insetX = Math.min(inset, w / 2)
+  const insetY = Math.min(inset, h / 2)
   switch (element.shape) {
     case 'rectangle':
       return {
         tag: 'rect',
-        x: inset,
-        y: inset,
-        width: Math.max(0, w - inset * 2),
-        height: Math.max(0, h - inset * 2),
+        x: insetX,
+        y: insetY,
+        width: w - insetX * 2,
+        height: h - insetY * 2,
         rx: style.cornerRadius
       }
     case 'ellipse':
-      return { tag: 'ellipse', cx: w / 2, cy: h / 2, rx: w / 2 - inset, ry: h / 2 - inset }
+      return { tag: 'ellipse', cx: w / 2, cy: h / 2, rx: w / 2 - insetX, ry: h / 2 - insetY }
     case 'diamond':
       return {
         tag: 'polygon',
-        points: `${w / 2},${inset} ${w - inset},${h / 2} ${w / 2},${h - inset} ${inset},${h / 2}`
+        points: `${w / 2},${insetY} ${w - insetX},${h / 2} ${w / 2},${h - insetY} ${insetX},${h / 2}`
       }
   }
 }

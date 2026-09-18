@@ -1,5 +1,56 @@
 import { expect, test } from '@playwright/test'
 
+test('the font popover stays in view as installed fonts arrive and search changes @webkit', async ({
+  page
+}) => {
+  await page.goto('/')
+  await page.evaluate(() => {
+    Object.defineProperty(window, 'queryLocalFonts', {
+      value: () =>
+        new Promise((resolve) => {
+          window.addEventListener(
+            'test-fonts-ready',
+            () =>
+              resolve(
+                Array.from({ length: 20 }, (_, i) => ({
+                  family: `Review font ${String(i).padStart(2, '0')}`
+                }))
+              ),
+            { once: true }
+          )
+        })
+    })
+  })
+  await page.keyboard.press('t')
+  await page.getByTestId('canvas-viewport').click({ position: { x: 400, y: 300 } })
+  await page.keyboard.type('Font menu')
+  await page.keyboard.press('Escape')
+  await page.getByTestId('canvas-viewport').click({ position: { x: 410, y: 310 } })
+  const picker = page.getByTestId('font-picker')
+  // Place the control near the viewport edge to exercise both sides of the anchor.
+  await picker.evaluate((element) => {
+    Object.assign(element.parentElement!.style, {
+      position: 'fixed',
+      bottom: '120px',
+      right: '20px'
+    })
+  })
+  await picker.click()
+  const popover = page.getByTestId('font-popover')
+  const search = page.getByTestId('font-search')
+  const anchor = (await picker.boundingBox())!
+  await search.fill('Review font')
+  await expect.poll(async () => (await popover.boundingBox())!.y).toBeGreaterThan(anchor.y)
+  await page.evaluate(() => window.dispatchEvent(new Event('test-fonts-ready')))
+  await expect(popover.getByRole('option')).toHaveCount(20)
+  await expect.poll(async () => (await popover.boundingBox())!.y).toBeLessThan(anchor.y)
+  await search.fill('Review font 01')
+  await expect(popover.getByRole('option')).toHaveCount(1)
+  await expect.poll(async () => (await popover.boundingBox())!.y).toBeGreaterThan(anchor.y)
+  const bounds = (await popover.boundingBox())!
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(page.viewportSize()!.height - 8)
+})
+
 test('the font picker lists presets, filters by search and remembers the last font', async ({
   page
 }) => {

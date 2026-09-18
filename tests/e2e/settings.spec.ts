@@ -121,7 +121,9 @@ test('language switches the whole interface and survives a reload', async ({ pag
   await dialog.getByRole('radio', { name: '한국어' }).click()
   // Not just the dialog: the panels behind it read the same strings.
   await expect(page.getByRole('dialog', { name: '설정' })).toBeVisible()
-  const framesHeading = page.getByTestId('frames-pane').getByRole('heading', { name: '프레임' })
+  const framesHeading = page
+    .getByTestId('frames-pane')
+    .getByRole('heading', { name: '프레임', includeHidden: true })
   await expect(framesHeading).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
 

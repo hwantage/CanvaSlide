@@ -16,6 +16,13 @@ export function drawScaled(
   maxEdge: number,
   contextError: () => string
 ): ScaledBitmap {
+  if (
+    [maxEdge, img.naturalWidth, img.naturalHeight].some(
+      (edge) => !Number.isFinite(edge) || edge <= 0
+    )
+  ) {
+    throw new RangeError(contextError())
+  }
   const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight))
   const width = Math.max(1, Math.round(img.naturalWidth * scale))
   const height = Math.max(1, Math.round(img.naturalHeight * scale))

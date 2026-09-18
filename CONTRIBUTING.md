@@ -22,7 +22,7 @@ to get it merged.
 
 Requirements:
 
-- Node.js 22+ and pnpm 11 (`corepack enable` picks up the pinned version from `package.json`)
+- Node.js 22.20+ and pnpm 11 (`corepack enable` picks up the pinned version from `package.json`)
 - Rust stable toolchain (only for the Tauri window and `src-tauri/` changes)
 - Tauri prerequisites for your OS: <https://v2.tauri.app/start/prerequisites/>
 

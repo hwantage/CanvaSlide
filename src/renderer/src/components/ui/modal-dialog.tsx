@@ -1,8 +1,6 @@
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import { focusOnMount } from '@/lib/focus-on-mount'
 
-// Why: initial focus inside the panel lets Escape and Tab reach the open dialog.
 export function ModalDialog({
   label,
   onClose,
@@ -15,25 +13,81 @@ export function ModalDialog({
   className: string
   children: ReactNode
 }) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current!
+    const opener = document.activeElement
+    // Why: a native modal makes the background inert for keyboard and assistive technology.
+    dialog.showModal()
+    panelRef.current?.focus({ preventScroll: true })
+    return () => {
+      dialog.close()
+      if (opener instanceof HTMLElement && opener.isConnected) {
+        opener.focus({ preventScroll: true })
+      }
+    }
+  }, [])
+
   return (
-    <div
-      role="dialog"
+    <dialog
+      ref={dialogRef}
       aria-modal
       aria-label={label}
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-0 backdrop:bg-black/40 open:flex"
       onClick={onClose}
+      onCancel={(event) => {
+        event.preventDefault()
+        onClose()
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Tab') {
+          return
+        }
+        const candidates = Array.from(
+          event.currentTarget.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]'
+          )
+        ).filter(
+          (element) =>
+            element.tabIndex >= 0 &&
+            !element.matches(':disabled') &&
+            element.getClientRects().length > 0
+        )
+        const controls = candidates.filter((element) => {
+          if (!(element instanceof HTMLInputElement) || element.type !== 'radio' || !element.name) {
+            return true
+          }
+          const group = candidates.filter(
+            (candidate) =>
+              candidate instanceof HTMLInputElement &&
+              candidate.type === 'radio' &&
+              candidate.name === element.name &&
+              candidate.form === element.form
+          ) as HTMLInputElement[]
+          return element === (group.find((radio) => radio.checked) ?? group[0])
+        })
+        // Why: cycle explicitly so Safari's keyboard preference cannot skip the dialog's buttons.
+        event.preventDefault()
+        const current = controls.indexOf(document.activeElement as HTMLElement)
+        const next = event.shiftKey
+          ? controls[current <= 0 ? controls.length - 1 : current - 1]
+          : controls[(current + 1) % controls.length]
+        ;(next ?? panelRef.current)?.focus()
+      }}
     >
       <div
         className={cn(
           'rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl',
           className
         )}
-        ref={focusOnMount}
+        ref={panelRef}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         {children}
       </div>
-    </div>
+    </dialog>
   )
 }

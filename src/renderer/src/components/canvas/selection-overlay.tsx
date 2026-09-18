@@ -86,21 +86,22 @@ export function SelectionOverlay({
 
   return (
     <div className="pointer-events-none absolute inset-0">
-      {selectedIds.map((id) => {
-        const element = document.elements[id]
-        if (!element) {
-          return null
-        }
-        const rect = element.type === 'text' ? visibleTextRect(element) : elementRect(element)
-        return (
-          <div
-            key={id}
-            data-selection-id={id}
-            className="absolute border border-selection"
-            style={rectToCssPosition(worldRectToScreen(camera, rect))}
-          />
-        )
-      })}
+      {(selecting || selectedIds.length > 1) &&
+        selectedIds.map((id) => {
+          const element = document.elements[id]
+          if (!element) {
+            return null
+          }
+          const rect = element.type === 'text' ? visibleTextRect(element) : elementRect(element)
+          return (
+            <div
+              key={id}
+              data-selection-id={id}
+              className="absolute border border-selection"
+              style={rectToCssPosition(worldRectToScreen(camera, rect))}
+            />
+          )
+        })}
       {!selecting && only?.type !== 'connector' && (
         <div
           data-testid="selection-bounds"

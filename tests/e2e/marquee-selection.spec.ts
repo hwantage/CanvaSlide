@@ -92,7 +92,7 @@ async function selectedIds(page: Page): Promise<string[]> {
   })
 }
 
-async function expectSelection(page: Page, ids: string[]) {
+async function expectSelection(page: Page, ids: string[], outlinedIds = ids) {
   const sorted = [...ids].sort()
   await expect.poll(() => selectedIds(page)).toEqual(sorted)
   await expect
@@ -101,7 +101,7 @@ async function expectSelection(page: Page, ids: string[]) {
         .locator('[data-selection-id]')
         .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-selection-id')).sort())
     )
-    .toEqual(sorted)
+    .toEqual([...outlinedIds].sort())
 }
 
 test('marquee outlines each intersecting object live and releases the same selection @webkit', async ({
@@ -139,6 +139,25 @@ test('marquee outlines each intersecting object live and releases the same selec
   expect(state).toEqual({ dirty: false, past: 0 })
 })
 
+test('a finalized single selection uses one resize box while multi-selection keeps individual outlines @webkit', async ({
+  page
+}) => {
+  await loadScene(page)
+  await start(page, 70, 70)
+  await move(page, 130, 130)
+  await expectSelection(page, ['a'])
+  await page.mouse.up()
+  await expectSelection(page, ['a'], [])
+  await expect(page.getByTestId('selection-bounds')).toHaveCount(1)
+  await expect(page.getByTestId('selection-handle')).toHaveCount(8)
+  const canvas = page.getByTestId('canvas-viewport')
+  await canvas.click({ position: { x: 310, y: 130 }, modifiers: ['Shift'] })
+  await expectSelection(page, ['a', 'b'])
+  await canvas.click({ position: { x: 130, y: 130 }, modifiers: ['Shift'] })
+  await expectSelection(page, ['b'], [])
+  await expect(page.getByTestId('selection-bounds')).toHaveCount(1)
+})
+
 test('frames require full enclosure while nested contents are selected independently @webkit', async ({
   page
 }) => {
@@ -170,7 +189,7 @@ test('hover does not select frames and intentional title clicks still move their
   await move(page, 430, 220)
   await expectSelection(page, [])
   await page.getByTestId('canvas-viewport').click({ position: { x: 430, y: 190 } })
-  await expectSelection(page, ['frame'])
+  await expectSelection(page, ['frame'], [])
   await start(page, 430, 190)
   await move(page, 430, 230)
   await page.mouse.up()
@@ -251,11 +270,11 @@ for (const cancel of ['Escape', 'pointercancel', 'lostpointercapture', 'blur'] a
     await move(page, 350, 190)
     await page.mouse.up()
     await expect(page.getByTestId('selection-marquee')).toHaveCount(0)
-    await expectSelection(page, cancel === 'Escape' ? [] : ['c'])
+    await expectSelection(page, cancel === 'Escape' ? [] : ['c'], [])
     await start(page, 70, 70)
     await move(page, 130, 130)
     await page.mouse.up()
-    await expectSelection(page, ['a'])
+    await expectSelection(page, ['a'], [])
   })
 }
 
@@ -323,6 +342,7 @@ test('text, images and connectors get individual feedback with their existing bo
   await move(page, 220, 370)
   await expectSelection(page, ['text'])
   await page.mouse.up()
+  await expectSelection(page, ['text'], [])
   await expect(page.getByTestId('selection-bounds')).toHaveCSS('left', '100px')
   await expect(page.getByTestId('selection-bounds')).toHaveCSS('width', '160px')
   await start(page, 70, 280)
@@ -337,7 +357,8 @@ test('text, images and connectors get individual feedback with their existing bo
   await expectSelection(page, ['line'])
   await expect(page.getByTestId('connector-start-handle')).toHaveCount(0)
   await page.mouse.up()
-  await expectSelection(page, ['line'])
+  await expectSelection(page, ['line'], [])
+  await expect(page.getByTestId('selection-bounds')).toHaveCount(0)
   await expect(page.getByTestId('connector-start-handle')).toBeVisible()
   await expect(page.getByTestId('connector-end-handle')).toBeVisible()
 })

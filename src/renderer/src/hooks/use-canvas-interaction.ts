@@ -29,6 +29,7 @@ export type CanvasPointerHandlers = {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void
   onPointerMove: (event: PointerEvent<HTMLElement>) => void
   onPointerUp: (event: PointerEvent<HTMLElement>) => void
+  onPointerCancel: () => void
   onDoubleClick: (event: MouseEvent<HTMLElement>) => void
   onContextMenu: (event: MouseEvent<HTMLElement>) => void
   onDragOver: (event: DragEvent<HTMLElement>) => void
@@ -69,9 +70,17 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
 
   useEffect(() => {
     const onCancel = () => interaction.cancel()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && interaction.isActive()) {
+        interaction.cancel()
+      }
+    }
     window.addEventListener('blur', onCancel)
+    // Cancel before the normal Escape shortcut clears selection, so a held pointer cannot select again.
+    window.addEventListener('keydown', onKeyDown, true)
     return () => {
       window.removeEventListener('blur', onCancel)
+      window.removeEventListener('keydown', onKeyDown, true)
       interaction.cancel()
     }
   }, [interaction])
@@ -89,11 +98,12 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
       },
       onPointerMove: (event) => interaction.pointerMove(toInfo(event)),
       onPointerUp: (event) => {
+        interaction.pointerUp(toInfo(event))
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId)
         }
-        interaction.pointerUp(toInfo(event))
       },
+      onPointerCancel: () => interaction.cancel(),
       onDoubleClick: (event) => interaction.doubleClick(toInfo(event)),
       onContextMenu: (event) => {
         event.preventDefault()

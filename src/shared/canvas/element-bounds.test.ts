@@ -107,6 +107,68 @@ describe('element-bounds', () => {
     ])
   })
 
+  it('selects nested frames independently and requires every edge to be enclosed', () => {
+    const doc = docWith(
+      frame('outer', 0, 0, 1000, 1000),
+      frame('inner', 100, 100, 200, 200),
+      shape('content', 150, 150, 50, 50)
+    )
+    expect(elementsInBox(doc, { x: 100, y: 100, width: 200, height: 200 })).toEqual([
+      'inner',
+      'content'
+    ])
+    for (const box of [
+      { x: 101, y: 100, width: 199, height: 200 },
+      { x: 100, y: 101, width: 200, height: 199 },
+      { x: 100, y: 100, width: 199, height: 200 },
+      { x: 100, y: 100, width: 200, height: 199 }
+    ]) {
+      expect(elementsInBox(doc, box)).toEqual(['content'])
+    }
+  })
+
+  it('drops objects when the box shrinks and normalizes all drag directions', () => {
+    const doc = docWith(shape('a', -100, -100), shape('b', 100, 100))
+    for (const [start, end] of [
+      [
+        { x: -50, y: -50 },
+        { x: 150, y: 150 }
+      ],
+      [
+        { x: 150, y: 150 },
+        { x: -50, y: -50 }
+      ],
+      [
+        { x: -50, y: 150 },
+        { x: 150, y: -50 }
+      ],
+      [
+        { x: 150, y: -50 },
+        { x: -50, y: 150 }
+      ]
+    ] as const) {
+      expect(elementsInBox(doc, rectFromPoints(start, end))).toEqual(['a', 'b'])
+    }
+    expect(elementsInBox(doc, { x: -50, y: -50, width: 100, height: 100 })).toEqual(['a'])
+    expect(elementsInBox(doc, { x: 1, y: 1, width: 98, height: 98 })).toEqual([])
+  })
+
+  it('ignores clipped-away text when the marquee only touches its hidden bounds', () => {
+    const doc = docWith({
+      id: 'text',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 100,
+      text: 'Clipped text',
+      textStyle: defaultTextStyle,
+      clip: { left: 0.5, right: 0, top: 0, bottom: 0 }
+    })
+    expect(elementsInBox(doc, { x: 10, y: 10, width: 80, height: 80 })).toEqual([])
+    expect(elementsInBox(doc, { x: 90, y: 10, width: 20, height: 80 })).toEqual(['text'])
+  })
+
   it('computes selection and content bounds', () => {
     const doc = docWith(shape('a', 0, 0), shape('b', 200, 300, 50, 50))
     expect(selectionBounds(doc, ['a', 'missing'])).toEqual({ x: 0, y: 0, width: 100, height: 100 })

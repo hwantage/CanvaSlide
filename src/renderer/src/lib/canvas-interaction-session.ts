@@ -153,6 +153,9 @@ export function createCanvasInteraction(): CanvasInteraction {
       docStore.getState().endEdit()
     } else if (session?.kind === 'connector-create') {
       docStore.getState().cancelEdit()
+    } else if (session?.kind === 'box') {
+      const doc = docStore.getState()
+      doc.setSelection(session.baseSelection.filter((id) => doc.document.elements[id]))
     }
     overlay.getState().setAnchorPreview(null)
     session = null
@@ -374,7 +377,7 @@ function beginSelectSession(info: PointerInfo): PressSession | BoxSession | null
   if (bounds && !info.shiftKey && rectContainsPoint(bounds, info.world)) {
     return { kind: 'press', start: info, targetId: null, additive: false, targets: [] }
   }
-  const baseSelection = additive ? selectedIds : []
+  const baseSelection = selectedIds
   if (!additive) {
     clearSelection()
   }

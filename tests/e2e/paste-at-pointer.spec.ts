@@ -200,6 +200,40 @@ test('context-menu object paste keeps the original source offset @webkit', async
   await expectTop(shapes.nth(1), 224)
 })
 
+for (const selection of ['marquee', 'frame border'] as const) {
+  test(`copies a frame and its contents selected through ${selection} @webkit`, async ({
+    page
+  }) => {
+    await page.keyboard.press('f')
+    await dragOnCanvas(page, [200, 200], [500, 450])
+    await page.keyboard.press('r')
+    await dragOnCanvas(page, [250, 250], [350, 320])
+    await page.keyboard.press('Escape')
+    await (selection === 'marquee'
+      ? dragOnCanvas(page, [150, 150], [550, 500])
+      : page.getByTestId('canvas-viewport').click({ position: { x: 230, y: 200 } }))
+    const mod = await primaryModifier(page)
+    await page.keyboard.press(`${mod}+c`)
+    await moveOnCanvas(page, 800, 500)
+    await page.keyboard.press(`${mod}+v`)
+    const frames = page.locator('[data-element-type="frame"]')
+    const shapes = page.locator('[data-element-type="shape"]')
+    await expect(frames).toHaveCount(2)
+    await expect(shapes).toHaveCount(2)
+    await expect(frames.nth(1)).toHaveCSS('left', '650px')
+    await expectTop(frames.nth(1), 375)
+    await expect(shapes.nth(1)).toHaveCSS('left', '700px')
+    await expectTop(shapes.nth(1), 425)
+    await expect(shapes.first()).toHaveCSS('left', '250px')
+    await page.keyboard.press(`${mod}+z`)
+    await expect(frames).toHaveCount(1)
+    await expect(shapes).toHaveCount(1)
+    await page.keyboard.press(`${mod}+Shift+z`)
+    await expect(frames).toHaveCount(2)
+    await expect(shapes).toHaveCount(2)
+  })
+}
+
 test('keeps native paste inside a text editor after copying an object @webkit', async ({
   page
 }) => {

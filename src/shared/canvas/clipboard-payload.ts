@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { upsertAsset } from './document-assets'
 import { cloneElements } from './document-mutations'
+import { withFrameContents } from './element-bounds'
 import {
   canvasElementSchema,
   imageAssetSchema,
@@ -31,12 +32,12 @@ export function clipboardPayloadKey(payload: ClipboardPayload): string {
   })
 }
 
-/** Selected elements in z-order plus the image assets they reference. */
+/** Selected elements and frame contents in z-order, with their referenced image assets. */
 export function buildClipboardPayload(
   document: CanvasDocument,
   ids: readonly ElementId[]
 ): ClipboardPayload | null {
-  const wanted = new Set(ids)
+  const wanted = new Set(withFrameContents(document, ids))
   const elements: CanvasElement[] = []
   const assets: Record<string, ImageAsset> = {}
   for (const id of document.order) {

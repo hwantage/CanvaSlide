@@ -4,6 +4,7 @@ import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-
 import { useDocumentStore } from '@/store/document-store'
 import {
   copySelection,
+  cutSelection,
   memoryPayload,
   nativePasteArrived,
   pasteObjects,
@@ -117,6 +118,61 @@ describe('object clipboard placement', () => {
       x: 24,
       y: 24
     })
+  })
+
+  it('copies a selected frame with its contents without changing the visible selection', () => {
+    const store = useDocumentStore.getState()
+    store.insertElement({
+      id: 'f',
+      type: 'frame',
+      name: 'Frame',
+      order: 1,
+      x: -10,
+      y: -10,
+      width: 100,
+      height: 100
+    })
+    const payload = copySelection()!
+    expect(payload.elements.map((element) => element.id)).toEqual(['a', 'f'])
+    expect(useDocumentStore.getState().selectedIds).toEqual(['f'])
+    pasteObjects(payload, { x: 500, y: 400 })
+    const state = useDocumentStore.getState()
+    expect(state.selectedIds).toHaveLength(2)
+    expect(state.document.elements[state.selectedIds[0]!]).toMatchObject({
+      type: 'text',
+      x: 460,
+      y: 360
+    })
+    expect(state.document.elements[state.selectedIds[1]!]).toMatchObject({
+      type: 'frame',
+      x: 450,
+      y: 350
+    })
+    state.undo()
+    expect(useDocumentStore.getState().document.order).toEqual(['a', 'f'])
+    useDocumentStore.getState().redo()
+    expect(elementCount()).toBe(4)
+  })
+
+  it('cuts the same frame contents it copies and restores everything in one undo step', () => {
+    const store = useDocumentStore.getState()
+    store.insertElement({ ...text('outside'), x: 200 })
+    store.insertElement({
+      id: 'f',
+      type: 'frame',
+      name: 'Frame',
+      order: 1,
+      x: -10,
+      y: -10,
+      width: 100,
+      height: 100
+    })
+    expect(cutSelection()!.elements.map((element) => element.id)).toEqual(['a', 'f'])
+    expect(useDocumentStore.getState().document.order).toEqual(['outside'])
+    useDocumentStore.getState().undo()
+    expect(useDocumentStore.getState().document.order).toEqual(['a', 'outside', 'f'])
+    useDocumentStore.getState().redo()
+    expect(useDocumentStore.getState().document.order).toEqual(['outside'])
   })
 
   it('captures the keyboard destination before the delayed fallback reads the clipboard', () => {

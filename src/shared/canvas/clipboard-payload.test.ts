@@ -50,6 +50,35 @@ function sample(): CanvasDocument {
 }
 
 describe('clipboard-payload', () => {
+  it('copies frame contents and image assets once, excluding objects crossing the frame edge', () => {
+    let doc = sample()
+    doc = insertElement(doc, { ...doc.elements.t!, id: 'crossing', x: 490 })
+    doc = insertElement(doc, { ...doc.elements.t!, id: 'outside', x: 600 })
+    const payload = buildClipboardPayload(doc, ['f', 't'])!
+    expect(payload.elements.map((element) => element.id)).toEqual(['f', 'i', 't'])
+    expect(payload.assets).toEqual(doc.assets)
+    expect(buildClipboardPayload(doc, ['t'])!.elements.map((element) => element.id)).toEqual(['t'])
+  })
+
+  it('deduplicates contents shared by multiple selected frames and keeps their stacking order', () => {
+    const doc = insertElement(sample(), {
+      id: 'f2',
+      type: 'frame',
+      name: 'Second',
+      order: 2,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100
+    })
+    expect(buildClipboardPayload(doc, ['f', 'f2'])!.elements.map((element) => element.id)).toEqual([
+      'f',
+      'i',
+      't',
+      'f2'
+    ])
+  })
+
   it('identifies the same contents across parsing and object property order', () => {
     const payload = buildClipboardPayload(sample(), ['f', 'i', 't'])!
     const parsed = parseClipboardPayload(JSON.stringify(payload))!

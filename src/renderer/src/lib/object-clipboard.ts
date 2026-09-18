@@ -72,7 +72,9 @@ export function copySelection(): ClipboardPayload | null {
 export function cutSelection(): ClipboardPayload | null {
   const payload = copySelection()
   if (payload) {
-    useDocumentStore.getState().deleteSelected()
+    const store = useDocumentStore.getState()
+    store.setSelection(payload.elements.map((element) => element.id))
+    store.deleteSelected()
   }
   return payload
 }

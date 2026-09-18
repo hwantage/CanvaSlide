@@ -4,6 +4,7 @@ import {
   cloneElements,
   duplicateElements,
   insertElement,
+  insertElements,
   patchElements,
   removeElements,
   reorderZ,
@@ -24,6 +25,30 @@ const text = (id: string, x = 0): CanvasElement => ({
 })
 
 describe('document-mutations', () => {
+  it('batch inserts retain last-occurrence order, existing assets, and the original document', () => {
+    const asset = { id: 'a', mime: 'image/png', data: 'original', width: 1, height: 1 }
+    const original = {
+      ...insertElement(createEmptyDocument(), text('existing')),
+      assets: { a: asset }
+    }
+    const result = insertElements(
+      original,
+      [text('a'), text('existing', 5), text('b'), text('a', 10)],
+      [
+        { ...asset, data: 'duplicate' },
+        { ...asset, id: 'new' }
+      ]
+    )
+    expect(result.order).toEqual(['existing', 'b', 'a'])
+    expect(result.elements.existing?.x).toBe(5)
+    expect(result.elements.a?.x).toBe(10)
+    expect(result.assets.a).toBe(asset)
+    expect(result.assets.new).toEqual({ ...asset, id: 'new' })
+    expect(original.order).toEqual(['existing'])
+    expect(original.elements.existing?.x).toBe(0)
+    expect(original.assets).toEqual({ a: asset })
+    expect(insertElements(original, [])).toBe(original)
+  })
   it('inserts on top and removes cleanly without mutating input', () => {
     const empty = createEmptyDocument()
     const one = insertElement(empty, text('a'))

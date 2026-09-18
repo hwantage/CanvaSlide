@@ -1,7 +1,6 @@
 import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { syncConnectorGeometry } from '@shared/canvas/connector-geometry'
-import { upsertAsset } from '@shared/canvas/document-assets'
 import { groupElements, ungroupElements } from '@shared/canvas/element-groups'
 import {
   alignElements,
@@ -14,6 +13,7 @@ import {
   applyFrameOrders,
   duplicateElements,
   insertElement,
+  insertElements,
   patchElements,
   removeElements,
   reorderZ,
@@ -237,13 +237,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
       if (elements.length === 0) {
         return
       }
-      recorded((d) => {
-        let next = assets.reduce((doc, asset) => upsertAsset(doc, asset), d)
-        for (const element of elements) {
-          next = insertElement(next, element)
-        }
-        return next
-      })
+      recorded((d) => insertElements(d, elements, assets))
       set({ selectedIds: select })
     },
     patchElements: (ids, patch, record = true) =>

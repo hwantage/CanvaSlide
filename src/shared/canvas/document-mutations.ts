@@ -3,7 +3,7 @@ import { pruneUnreferencedAssets } from './document-assets'
 import { remapGroupIds } from './element-groups'
 import { selectionIsOnlyFrames } from './frame-from-selection'
 import { nextFrameOrder } from './presentation-sequence'
-import type { CanvasDocument, CanvasElement, ElementId, Point } from './element-types'
+import type { CanvasDocument, CanvasElement, ElementId, ImageAsset, Point } from './element-types'
 
 /** Pure document transforms; every function returns a new document and never mutates. */
 
@@ -13,6 +13,31 @@ export function insertElement(document: CanvasDocument, element: CanvasElement):
     elements: { ...document.elements, [element.id]: element },
     order: [...document.order.filter((id) => id !== element.id), element.id]
   }
+}
+
+/** Copy the document tables once for imports, pastes and duplicates with many layers. */
+export function insertElements(
+  document: CanvasDocument,
+  incoming: readonly CanvasElement[],
+  assets: readonly ImageAsset[] = []
+): CanvasDocument {
+  if (incoming.length === 0 && assets.length === 0) {
+    return document
+  }
+  const nextAssets = { ...document.assets }
+  for (const asset of assets) {
+    nextAssets[asset.id] ??= asset
+  }
+  const elements = { ...document.elements }
+  const lastIndex = new Map(incoming.map((element, index) => [element.id, index]))
+  const order = document.order.filter((id) => !lastIndex.has(id))
+  for (const [index, element] of incoming.entries()) {
+    elements[element.id] = element
+    if (lastIndex.get(element.id) === index) {
+      order.push(element.id)
+    }
+  }
+  return { ...document, assets: nextAssets, elements, order }
 }
 
 export function removeElements(
@@ -93,7 +118,7 @@ export function cloneElements(
   )
   // Why: all copied IDs must exist before connectors and groups can be remapped.
   const idMap = new Map(cloneable.map((source) => [source.id, makeId()] as const))
-  let next = document
+  const copies: CanvasElement[] = []
   let frameOrder = nextFrameOrder(document)
   const newIds: ElementId[] = []
   for (const source of remapGroupIds(cloneable, makeId)) {
@@ -106,10 +131,10 @@ export function cloneElements(
     if (copy.type === 'frame' && options.renumberFrames) {
       copy = { ...copy, order: (frameOrder += 1) - 1 }
     }
-    next = insertElement(next, copy)
+    copies.push(copy)
     newIds.push(copy.id)
   }
-  return { document: next, newIds }
+  return { document: insertElements(document, copies), newIds }
 }
 
 /** Copies of `ids` in z-order, a step down-right, still attached to hosts that stayed behind. */

@@ -40,7 +40,7 @@ export function createTextElement(origin: Point, width = DEFAULT_TEXT_WIDTH): Te
     x: origin.x,
     y: origin.y,
     width,
-    height: textLineHeight(textStyle.fontSize),
+    height: textLineHeight(textStyle.fontSize, textStyle.lineHeight),
     textStyle
   }
 }

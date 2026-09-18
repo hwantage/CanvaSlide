@@ -43,6 +43,14 @@ function documentWithText(): CanvasDocument {
 }
 
 describe('syncTextHeight', () => {
+  it('uses imported line spacing instead of inflating short text to the default spacing', () => {
+    const document = documentWithText()
+    const element = document.elements.text!
+    if (element.type === 'text') {
+      element.textStyle.lineHeight = 1
+    }
+    expect(syncTextHeight(document, 'text', 20).elements.text?.height).toBe(20)
+  })
   it('rounds measured bounds and updates attached connectors without mutating the source', () => {
     const original = documentWithText()
     const result = syncTextHeight(original, 'text', 55.4)

@@ -13,6 +13,7 @@ import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/na
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
+import { importFigFile } from '@/store/fig-import-store'
 
 /** Content arriving from outside the app (clipboard text, dropped files) becomes elements here. */
 
@@ -67,16 +68,26 @@ export function isPdfFile(file: File): boolean {
   return file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
 }
 
-/** Dropped files we can turn into elements: images and PDFs, in the order they were dropped. */
+export function isFigFile(file: File): boolean {
+  return /\.fig$/i.test(file.name)
+}
+
+/** Dropped files we can turn into elements, in the order they were dropped. */
 export function importableFilesFrom(data: DataTransfer | null): File[] {
   if (!data) {
     return []
   }
-  return [...data.files].filter((file) => file.type.startsWith('image/') || isPdfFile(file))
+  return [...data.files].filter(
+    (file) => file.type.startsWith('image/') || isPdfFile(file) || isFigFile(file)
+  )
 }
 
 /** Routes one dropped/pasted file to the right importer. */
 export async function insertFile(file: File, at?: Point): Promise<void> {
+  if (isFigFile(file)) {
+    await importFigFile(file, at)
+    return
+  }
   if (isPdfFile(file)) {
     const { importPdfFile } = await import('./pdf-import')
     await importPdfFile(file, at)
@@ -112,9 +123,9 @@ export async function pasteFromSystemClipboard(at?: Point): Promise<void> {
   }
 }
 
-export const IMPORT_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,application/pdf,.pdf'
+export const IMPORT_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,application/pdf,.pdf,.fig'
 
-/** Toolbar / menu / ⌘I: choose image or PDF files and insert them around the visible centre. */
+/** Toolbar / menu / ⌘I: choose files and insert them around the visible centre. */
 export async function importPickedFiles(at?: Point): Promise<void> {
   const files = await pickFiles(IMPORT_ACCEPT)
   for (const file of files) {

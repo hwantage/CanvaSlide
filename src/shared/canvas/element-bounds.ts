@@ -1,5 +1,6 @@
 import { connectorDistance, connectorObstacles } from './connector-geometry'
 import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
+import { visibleTextRect } from './text-clip'
 
 export function elementRect(element: CanvasElement): Rect {
   return { x: element.x, y: element.y, width: element.width, height: element.height }
@@ -179,7 +180,12 @@ export function hitTestTopmost(
       }
       continue
     }
-    if (rectContainsPoint(elementRect(element), point)) {
+    if (
+      rectContainsPoint(
+        element.type === 'text' ? visibleTextRect(element) : elementRect(element),
+        point
+      )
+    ) {
       return element
     }
   }
@@ -203,7 +209,10 @@ export function withFrameContents(
       if (
         candidate &&
         candidate.type !== 'frame' &&
-        rectContainsRect(frameRect, elementRect(candidate))
+        rectContainsRect(
+          frameRect,
+          candidate.type === 'text' ? visibleTextRect(candidate) : elementRect(candidate)
+        )
       ) {
         result.add(candidateId)
       }
@@ -220,7 +229,7 @@ export function elementsInBox(document: CanvasDocument, box: Rect): ElementId[] 
     if (!element) {
       continue
     }
-    const rect = elementRect(element)
+    const rect = element.type === 'text' ? visibleTextRect(element) : elementRect(element)
     const hit = element.type === 'frame' ? rectContainsRect(box, rect) : rectsIntersect(box, rect)
     if (hit) {
       picked.push(id)

@@ -46,6 +46,8 @@ export const textStyleSchema = z.object({
   fontSize: z.number().min(4).max(1024),
   align: z.enum(textAligns),
   bold: z.boolean(),
+  italic: z.boolean().optional(),
+  lineHeight: z.number().finite().min(0.1).max(10).optional(),
   // Why: optional so documents saved before font selection existed keep loading unchanged;
   // absent means the app's default sans stack (see font-family.ts).
   fontFamily: z.string().optional()
@@ -64,7 +66,17 @@ export type ShapeElement = z.infer<typeof shapeElementSchema>
 export const textElementSchema = elementBaseSchema.extend({
   type: z.literal('text'),
   text: z.string(),
-  textStyle: textStyleSchema
+  textStyle: textStyleSchema,
+  // Imported frame clipping follows the text when it is moved or resized.
+  clip: z
+    .object({
+      top: z.number().min(0).max(1),
+      right: z.number().min(0).max(1),
+      bottom: z.number().min(0).max(1),
+      left: z.number().min(0).max(1)
+    })
+    .refine((clip) => clip.left + clip.right < 1 && clip.top + clip.bottom < 1)
+    .optional()
 })
 export type TextElement = z.infer<typeof textElementSchema>
 

@@ -41,6 +41,48 @@ describe('document-store', () => {
     expect(useDocumentStore.getState().document.order).toEqual(['a'])
   })
 
+  it('bulk imports preserve existing content, replace duplicate ids, and undo assets together', () => {
+    const store = useDocumentStore.getState()
+    store.insertElement(text('existing'))
+    const baseline = useDocumentStore.getState().document
+    const asset = {
+      id: 'asset',
+      mime: 'image/png',
+      data: 'data:image/png;base64,AA==',
+      width: 10,
+      height: 10
+    }
+    store.insertImported(
+      [asset],
+      [
+        text('a'),
+        text('b'),
+        { ...text('a'), x: 12 },
+        {
+          id: 'img',
+          type: 'image',
+          assetId: 'asset',
+          naturalWidth: 10,
+          naturalHeight: 10,
+          x: 0,
+          y: 0,
+          width: 10,
+          height: 10
+        }
+      ],
+      ['a']
+    )
+    const document = useDocumentStore.getState().document
+    expect(document.order).toEqual(['existing', 'b', 'a', 'img'])
+    expect(document.elements.a?.x).toBe(12)
+    expect(document.assets.asset).toEqual(asset)
+    expect(baseline.order).toEqual(['existing'])
+    store.undo()
+    expect(useDocumentStore.getState().document).toEqual(baseline)
+    store.redo()
+    expect(useDocumentStore.getState().document).toEqual(document)
+  })
+
   it('collapses a drag (beginEdit → live patches → endEdit) into one undo step', () => {
     const store = useDocumentStore.getState()
     store.insertElement(text('a'))

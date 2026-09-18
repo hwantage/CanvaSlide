@@ -1,4 +1,5 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
+import { useFigImportStore } from './fig-import-store'
 
 export type DialogStore = {
   open: boolean
@@ -21,7 +22,12 @@ export const useSettingsDialogStore = createDialogStore()
 export const useShortcutHelpStore = createDialogStore()
 
 /** Every modal that blocks canvas shortcuts while open, and that Escape closes. */
-const modalDialogs = [useExportDialogStore, useSettingsDialogStore, useShortcutHelpStore]
+const modalDialogs = [
+  useExportDialogStore,
+  useSettingsDialogStore,
+  useShortcutHelpStore,
+  useFigImportStore
+]
 
 export function isModalDialogOpen(): boolean {
   return modalDialogs.some((dialog) => dialog.getState().open)

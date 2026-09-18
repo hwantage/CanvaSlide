@@ -12,6 +12,7 @@ import type { HandlePosition } from '@shared/canvas/resize-handles'
 import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
 import { importableFilesFrom, insertFile } from '@/lib/external-content'
 import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
+import { hasNativeTextMenu } from '@/lib/native-context-menu'
 import { reportError } from '@/platform/document-file-access'
 import { useCameraStore } from '@/store/camera-store'
 
@@ -106,6 +107,9 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
       onPointerCancel: () => interaction.cancel(),
       onDoubleClick: (event) => interaction.doubleClick(toInfo(event)),
       onContextMenu: (event) => {
+        if (hasNativeTextMenu(event.target)) {
+          return
+        }
         event.preventDefault()
         if (isEditableTarget(event.target) || isOverlayUiTarget(event.target)) {
           return

@@ -14,6 +14,7 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useLaunchDocument } from '@/hooks/use-launch-document'
 import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
+import { preventPageContextMenu } from '@/lib/native-context-menu'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
 import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
 
@@ -33,7 +34,11 @@ export function App() {
   useSystemTheme()
 
   return (
-    <div lang={locale} className="flex h-full flex-col bg-background text-foreground">
+    <div
+      lang={locale}
+      className="flex h-full flex-col bg-background text-foreground"
+      onContextMenuCapture={preventPageContextMenu}
+    >
       {!presenting && <TopBar commands={commands} />}
       <div className="relative flex min-h-0 flex-1">
         <main className="relative min-w-0 flex-1">

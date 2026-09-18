@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 import { connectorMidpoint, connectorPath } from '@shared/canvas/connector-geometry'
 import { elementRect } from '@shared/canvas/element-bounds'
-import type { ConnectorElement as ConnectorElementModel } from '@shared/canvas/element-types'
+import {
+  defaultTextStyle,
+  type ConnectorElement as ConnectorElementModel
+} from '@shared/canvas/element-types'
 import {
   ARROW_MARKER,
   arrowMarkerSize,
@@ -37,6 +40,14 @@ export function ConnectorElement({
   const markerId = `uc-arrow-end-${element.id}`
   const box = connectorCanvasRect(element)
   const hasLabel = editing || element.label !== ''
+  // Labels sit on a themed surface; resolve the default ink without changing saved colours.
+  const labelStyle = {
+    ...element.textStyle,
+    color:
+      element.textStyle.color.toLowerCase() === defaultTextStyle.color
+        ? 'var(--foreground)'
+        : element.textStyle.color
+  }
   return (
     <div
       className="absolute"
@@ -89,7 +100,7 @@ export function ConnectorElement({
           <EditableText
             elementId={element.id}
             text={element.label}
-            style={element.textStyle}
+            style={labelStyle}
             editing={editing}
             placeholder={t('connector.labelPlaceholder')}
             textField="label"

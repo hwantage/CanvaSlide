@@ -1,62 +1,78 @@
-// Why: a second guard independent of oxlint so max-lines can't be silenced by inline disables.
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { readFileSync, realpathSync } from 'node:fs'
+import { dirname, matchesGlob, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const root = new URL('../../', import.meta.url).pathname
-const limits = { ts: 300, tsx: 400, test: 800 }
-const skipDirs = new Set(['node_modules', 'dist', 'target', 'coverage', '.git'])
+const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url))
+const oxlint = resolve(
+  dirname(fileURLToPath(import.meta.resolve('oxlint/package.json'))),
+  'bin/oxlint'
+)
 
-function* walk(dir) {
-  for (const entry of readdirSync(dir)) {
-    if (skipDirs.has(entry)) {
-      continue
-    }
-    const full = join(dir, entry)
-    if (statSync(full).isDirectory()) {
-      yield* walk(full)
-    } else {
-      yield full
-    }
-  }
+// Share discovery and policy with oxlint; count independently so inline disables cannot bypass it.
+export function lintedFiles(root) {
+  return execFileSync(process.execPath, [oxlint, '--debug', 'files'], {
+    cwd: root,
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024
+  })
+    .trim()
+    .split(/\r?\n/)
+    .filter((file) => /\.tsx?$/.test(file))
+    .map((file) => file.replaceAll('\\', '/'))
 }
 
-function limitFor(file) {
-  // Why: language resources are flat key/value tables; splitting them would only hide keys.
-  if (/\/i18n\/locales\/[a-z-]+\.ts$/.test(file)) {
+export function limitFor(file, config) {
+  let rule = config.rules?.['max-lines']
+  for (const override of config.overrides ?? []) {
+    if (override.files.some((pattern) => matchesGlob(file, pattern))) {
+      rule = override.rules?.['max-lines'] ?? rule
+    }
+  }
+  if (rule === undefined || rule === 'off') {
     return null
   }
-  if (/\.test\.tsx?$/.test(file)) {
-    return limits.test
+  const [severity, options] = rule
+  if (
+    severity !== 'error' ||
+    !Number.isInteger(options?.max) ||
+    options.max < 0 ||
+    options.skipBlankLines !== false ||
+    options.skipComments !== false
+  ) {
+    throw new Error('max-lines must use an error limit and count blank lines and comments')
   }
-  if (file.endsWith('.tsx')) {
-    return limits.tsx
-  }
-  if (file.endsWith('.ts')) {
-    return limits.ts
-  }
-  return null
+  return options.max
 }
 
-const failures = []
-for (const file of walk(join(root, 'src'))) {
-  const limit = limitFor(file)
-  if (limit === null) {
-    continue
-  }
-  const source = readFileSync(file, 'utf8')
-  if (/max-lines/.test(source)) {
-    failures.push(`${relative(root, file)}: contains a max-lines disable`)
-  }
-  const lines = source
-    .split('\n')
-    .filter((line) => line.trim() !== '' && !line.trim().startsWith('//')).length
-  if (lines > limit) {
-    failures.push(`${relative(root, file)}: ${lines} lines > ${limit}`)
-  }
+// Match oxlint: LF and CRLF count alike; a final newline adds no extra line; empty files count as one.
+export function countLines(source) {
+  const newlines = source.split('\n').length - 1
+  return Math.max(1, newlines + (source.endsWith('\n') ? 0 : 1))
 }
 
-if (failures.length > 0) {
-  console.error(failures.join('\n'))
-  process.exit(1)
+export function checkMaxLines(root = repositoryRoot) {
+  const config = JSON.parse(readFileSync(resolve(root, '.oxlintrc.json'), 'utf8'))
+  const failures = []
+  for (const file of lintedFiles(root)) {
+    const limit = limitFor(file, config)
+    if (limit === null) {
+      continue
+    }
+    const lines = countLines(readFileSync(resolve(root, file), 'utf8'))
+    if (lines > limit) {
+      failures.push(`${file}: ${lines} lines > ${limit}`)
+    }
+  }
+  return failures
 }
-console.log('max-lines: ok')
+
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const failures = checkMaxLines()
+  if (failures.length > 0) {
+    console.error(failures.join('\n'))
+    process.exitCode = 1
+  } else {
+    console.log('max-lines: ok')
+  }
+}

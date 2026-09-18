@@ -1,21 +1,16 @@
 import {
   ArrowRight,
-  ArrowRightLeft,
   Circle,
-  CornerDownRight,
   Diamond,
   Frame,
   Hand,
   ImagePlus,
-  Minus,
   MousePointer2,
-  Spline,
   Square,
-  TrendingUp,
   Type
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { ArrowHead, ConnectorRoute } from '@shared/canvas/element-types'
+import { connectorHeadOptions, connectorRouteOptions } from '@/components/ui/connector-options'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { importPickedFiles } from '@/lib/external-content'
@@ -33,22 +28,6 @@ const tools: { id: ToolId; label: UiStringKey; key: string; icon: ReactNode }[] 
   { id: 'connector', label: 'tool.connector', key: 'L', icon: <ArrowRight size={16} /> }
 ]
 
-const routes: { value: ConnectorRoute; label: UiStringKey; icon: ReactNode }[] = [
-  { value: 'straight', label: 'connector.route.straight', icon: <TrendingUp size={14} /> },
-  { value: 'orthogonal', label: 'connector.route.orthogonal', icon: <CornerDownRight size={14} /> },
-  { value: 'curved', label: 'connector.route.curved', icon: <Spline size={14} /> }
-]
-
-const heads: { value: [ArrowHead, ArrowHead]; label: UiStringKey; icon: ReactNode }[] = [
-  { value: ['none', 'none'], label: 'connector.ends.line', icon: <Minus size={14} /> },
-  { value: ['none', 'arrow'], label: 'connector.ends.arrow', icon: <ArrowRight size={14} /> },
-  {
-    value: ['arrow', 'arrow'],
-    label: 'connector.ends.doubleArrow',
-    icon: <ArrowRightLeft size={14} />
-  }
-]
-
 /** Sub-options for the connector tool: route shape and arrowheads for the next line drawn. */
 function ConnectorFlyout() {
   const preset = useToolStore((s) => s.connectorPreset)
@@ -59,27 +38,27 @@ function ConnectorFlyout() {
       className="absolute left-full top-0 ml-2 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1 shadow-md"
     >
       <div className="flex gap-0.5">
-        {routes.map((route) => (
+        {connectorRouteOptions.map(({ value, label, icon: Icon }) => (
           <IconButton
-            key={route.value}
-            label={t(route.label)}
-            active={preset.route === route.value}
-            onClick={() => setPreset({ route: route.value })}
+            key={value}
+            label={t(label)}
+            active={preset.route === value}
+            onClick={() => setPreset({ route: value })}
           >
-            {route.icon}
+            <Icon size={14} />
           </IconButton>
         ))}
       </div>
       <div className="h-px bg-border" />
       <div className="flex gap-0.5">
-        {heads.map((head) => (
+        {connectorHeadOptions.map(({ value, label, icon: Icon }) => (
           <IconButton
-            key={head.label}
-            label={t(head.label)}
-            active={preset.startHead === head.value[0] && preset.endHead === head.value[1]}
-            onClick={() => setPreset({ startHead: head.value[0], endHead: head.value[1] })}
+            key={label}
+            label={t(label)}
+            active={preset.startHead === value[0] && preset.endHead === value[1]}
+            onClick={() => setPreset({ startHead: value[0], endHead: value[1] })}
           >
-            {head.icon}
+            <Icon size={14} />
           </IconButton>
         ))}
       </div>

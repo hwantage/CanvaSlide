@@ -1,5 +1,5 @@
 import { cameraEasingFn, easeInOutCubic, type CameraEasing } from './camera-easing'
-import type { Camera, Point, Size } from './element-types'
+import type { Camera, Size } from './element-types'
 
 /**
  * Smooth zoom-and-pan interpolation after van Wijk & Nuij (2003),
@@ -131,8 +131,4 @@ export function createCameraTween(
     ease,
     at: (progress) => zoomViewToCamera(interpolator.at(ease(progress)), viewport)
   }
-}
-
-export function worldCenterOf(view: ZoomView): Point {
-  return { x: view.cx, y: view.cy }
 }

@@ -154,7 +154,8 @@ world  = (screen - (x, y)) / zoom
 
 ## 6. 품질 기준
 
-- `pnpm lint` (oxlint, max-lines 300/400) · `pnpm tc` (tsc strict) · `pnpm test` (vitest) 모두 green.
+- `pnpm lint` (oxlint + 독립 줄 수 검사, TS/TSX 800줄·테스트 1000줄 상한) · `pnpm tc` (tsc strict) ·
+  `pnpm test` (검사 도구 회귀 테스트 + vitest) 모두 green. 세부 정책은 [기여 가이드](../CONTRIBUTING.md#code-rules)를 따른다.
 - `src/shared/**` 순수 모듈은 단위 테스트 필수(카메라 수학, 보간, 피팅, 히트테스트, 직렬화, 히스토리).
 - 스토어 로직(undo/redo, 선택, 프레임 순서)은 happy-dom 환경에서 테스트.
 - husky pre-commit: oxlint + oxfmt.

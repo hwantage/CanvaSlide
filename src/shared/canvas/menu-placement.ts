@@ -1,4 +1,4 @@
-import type { Point, Size } from './element-types'
+import type { Point, Rect, Size } from './element-types'
 
 export const MENU_EDGE_MARGIN = 4
 
@@ -17,4 +17,25 @@ export function clampMenuToViewport(
     x: Math.max(0, Math.min(anchor.x, viewport.width - size.width - margin)),
     y: Math.max(0, Math.min(anchor.y, viewport.height - size.height - margin))
   }
+}
+
+/** Space between a popover and the control it hangs off. */
+export const POPOVER_GAP = 4
+export const POPOVER_EDGE_MARGIN = 8
+
+// Why: popovers flip above their anchor near the bottom edge to stay visible.
+export function placePopoverBelow(
+  anchor: Rect,
+  size: Size,
+  viewport: Size,
+  margin = POPOVER_EDGE_MARGIN,
+  gap = POPOVER_GAP
+): Point {
+  const left = Math.max(
+    margin,
+    Math.min(anchor.x + anchor.width - size.width, viewport.width - size.width - margin)
+  )
+  const below = anchor.y + anchor.height + gap
+  const top = below + size.height + margin > viewport.height ? anchor.y - size.height - gap : below
+  return { x: left, y: Math.max(margin, top) }
 }

@@ -1,6 +1,7 @@
 import { Ban } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { isNoColor, NO_COLOR, normalizeHexColor } from '@shared/canvas/color-input'
+import { popoverStyle, useAnchoredPopover } from '@/hooks/use-anchored-popover'
 import { t } from '@/i18n/ui-strings'
 import { cn } from '@/lib/cn'
 import { useRecentColorsStore } from '@/store/recent-colors-store'
@@ -46,57 +47,15 @@ export function ColorField({ label, value, onChange, allowNone = false }: ColorF
   }
   const rootRef = useRef<HTMLSpanElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
-  const [placement, setPlacement] = useState<{ left: number; top: number } | null>(null)
   const recent = useRecentColorsStore((s) => s.colors)
   const pushRecent = useRecentColorsStore((s) => s.push)
   const none = isNoColor(value)
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-    const close = () => {
-      setOpen(false)
-      pushRecent(value)
-    }
-    const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        close()
-      }
-    }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        close()
-      }
-    }
-    document.addEventListener('pointerdown', onPointerDown, true)
-    window.addEventListener('keydown', onKeyDown, true)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown, true)
-      window.removeEventListener('keydown', onKeyDown, true)
-    }
-  }, [open, value, pushRecent])
-
-  // Why: the panel scrolls, which also clips horizontally; a fixed popover anchored to the button
-  // and clamped to the window stays fully visible no matter where the row sits.
-  useLayoutEffect(() => {
-    if (!open || !rootRef.current || !popoverRef.current) {
-      setPlacement(null)
-      return
-    }
-    const anchor = rootRef.current.getBoundingClientRect()
-    const { offsetWidth, offsetHeight } = popoverRef.current
-    const margin = 8
-    const left = Math.max(
-      margin,
-      Math.min(anchor.right - offsetWidth, window.innerWidth - offsetWidth - margin)
-    )
-    const below = anchor.bottom + 4
-    const top =
-      below + offsetHeight + margin > window.innerHeight ? anchor.top - offsetHeight - 4 : below
-    setPlacement({ left, top: Math.max(margin, top) })
-  }, [open, recent.length])
+  // Why: leaving the popover by any route remembers the colour it was left on.
+  const dismiss = useCallback(() => {
+    setOpen(false)
+    pushRecent(value)
+  }, [pushRecent, value])
+  const placement = useAnchoredPopover(open, rootRef, popoverRef, dismiss, recent.length)
 
   const commitHex = () => {
     const normalized = normalizeHexColor(draft)
@@ -132,7 +91,7 @@ export function ColorField({ label, value, onChange, allowNone = false }: ColorF
           aria-label={label}
           data-testid="color-popover"
           className="fixed z-30 flex w-52 flex-col gap-2 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-md"
-          style={placement ?? { left: 0, top: 0, visibility: 'hidden' }}
+          style={popoverStyle(placement)}
         >
           <div className="flex items-center gap-1.5">
             <input

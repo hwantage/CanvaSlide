@@ -1,34 +1,11 @@
-import {
-  ArrowRight,
-  ArrowRightLeft,
-  CornerDownRight,
-  Minus,
-  Spline,
-  TrendingUp
-} from 'lucide-react'
-import type {
-  ArrowHead,
-  ConnectorElement,
-  ConnectorRoute,
-  ConnectorStyle
-} from '@shared/canvas/element-types'
+import type { ConnectorElement, ConnectorStyle } from '@shared/canvas/element-types'
 import { ColorField } from '@/components/ui/color-field'
+import { connectorHeadOptions, connectorRouteOptions } from '@/components/ui/connector-options'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
-import { t, type UiStringKey } from '@/i18n/ui-strings'
+import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
-import { useStyleMemoryStore } from '@/store/style-memory-store'
-
-const routes: { value: ConnectorRoute; label: UiStringKey; icon: typeof TrendingUp }[] = [
-  { value: 'straight', label: 'connector.route.straight', icon: TrendingUp },
-  { value: 'orthogonal', label: 'connector.route.orthogonal', icon: CornerDownRight },
-  { value: 'curved', label: 'connector.route.curved', icon: Spline }
-]
-const heads: { value: [ArrowHead, ArrowHead]; label: UiStringKey; icon: typeof Minus }[] = [
-  { value: ['none', 'none'], label: 'connector.ends.line', icon: Minus },
-  { value: ['none', 'arrow'], label: 'connector.ends.arrow', icon: ArrowRight },
-  { value: ['arrow', 'arrow'], label: 'connector.ends.doubleArrow', icon: ArrowRightLeft }
-]
+import { rememberSelectionStyle } from '@/store/style-memory-store'
 
 export function ConnectorFields({ ids, sample }: { ids: string[]; sample: ConnectorElement }) {
   const patch = (partial: Partial<ConnectorElement>) =>
@@ -41,15 +18,12 @@ export function ConnectorFields({ ids, sample }: { ids: string[]; sample: Connec
       .patchElements(ids, (element) =>
         element.type === 'connector' ? { style: { ...element.style, ...partial } } : {}
       )
-    const first = useDocumentStore.getState().document.elements[ids[0] as string]
-    if (first) {
-      useStyleMemoryStore.getState().rememberFrom(first)
-    }
+    rememberSelectionStyle(ids)
   }
   return (
     <>
       <FieldRow label={t('connector.route')}>
-        {routes.map(({ value, label, icon: Icon }) => (
+        {connectorRouteOptions.map(({ value, label, icon: Icon }) => (
           <IconButton
             key={value}
             label={t(label)}
@@ -62,7 +36,7 @@ export function ConnectorFields({ ids, sample }: { ids: string[]; sample: Connec
         ))}
       </FieldRow>
       <FieldRow label={t('connector.ends')}>
-        {heads.map(({ value, label, icon: Icon }) => (
+        {connectorHeadOptions.map(({ value, label, icon: Icon }) => (
           <IconButton
             key={label}
             label={t(label)}

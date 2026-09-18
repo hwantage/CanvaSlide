@@ -90,6 +90,20 @@ describe('clipboard-payload', () => {
     expect(Object.keys(document.assets)).toHaveLength(1)
     expect(document.elements.x?.type).toBe('image')
   })
+
+  it('still skips pasted images when their assets did not travel along', () => {
+    const payload = buildClipboardPayload({ ...sample(), assets: {} }, ['i', 't'])!
+    let n = 0
+    const { document, newIds } = pasteClipboardPayload(
+      createEmptyDocument(),
+      payload,
+      () => `copy${++n}`,
+      { x: 24, y: 24 }
+    )
+    expect(newIds).toEqual(['copy2'])
+    expect(document.order).toEqual(['copy2'])
+    expect(document.elements.copy2).toMatchObject({ type: 'text', text: 'hi', x: 44, y: 44 })
+  })
 })
 
 describe('pasting connectors', () => {

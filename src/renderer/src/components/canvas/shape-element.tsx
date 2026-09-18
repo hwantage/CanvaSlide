@@ -1,36 +1,22 @@
 import type { ShapeElement as ShapeElementModel } from '@shared/canvas/element-types'
+import { shapeGeometry } from '@shared/canvas/shape-svg'
 import { EditableText } from './editable-text'
 
 function ShapePath({ element }: { element: ShapeElementModel }) {
-  const { width: w, height: h, style } = element
-  const inset = style.strokeWidth / 2
-  const common = {
-    fill: style.fill,
-    stroke: style.stroke,
-    strokeWidth: style.strokeWidth
-  }
-  switch (element.shape) {
-    case 'rectangle':
-      return (
-        <rect
-          x={inset}
-          y={inset}
-          width={Math.max(0, w - inset * 2)}
-          height={Math.max(0, h - inset * 2)}
-          rx={style.cornerRadius}
-          {...common}
-        />
-      )
-    case 'ellipse':
-      return <ellipse cx={w / 2} cy={h / 2} rx={w / 2 - inset} ry={h / 2 - inset} {...common} />
-    case 'diamond':
-      return (
-        <polygon
-          points={`${w / 2},${inset} ${w - inset},${h / 2} ${w / 2},${h - inset} ${inset},${h / 2}`}
-          strokeLinejoin="round"
-          {...common}
-        />
-      )
+  const { style } = element
+  const paint = { fill: style.fill, stroke: style.stroke, strokeWidth: style.strokeWidth }
+  const geometry = shapeGeometry(element)
+  switch (geometry.tag) {
+    case 'rect': {
+      const { tag: _tag, ...rect } = geometry
+      return <rect {...rect} {...paint} />
+    }
+    case 'ellipse': {
+      const { tag: _tag, ...ellipse } = geometry
+      return <ellipse {...ellipse} {...paint} />
+    }
+    case 'polygon':
+      return <polygon points={geometry.points} strokeLinejoin="round" {...paint} />
   }
 }
 

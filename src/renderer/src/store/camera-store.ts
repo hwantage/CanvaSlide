@@ -73,6 +73,12 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
     animator.cancel()
     set({ camera })
   }
+  /** Animates to `zoom` about the viewport centre, so what is in the middle stays there. */
+  const zoomTo = (zoom: number) => {
+    const { camera, viewport } = get()
+    const center = viewportCenterWorld(camera, viewport)
+    animator.animateTo(cameraForWorldCenter(center, zoom, viewport), UI_ANIMATION_MS)
+  }
   return {
     camera: DEFAULT_CAMERA,
     viewport: { width: 1, height: 1 },
@@ -88,16 +94,10 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
     zoomByWheel: (anchor, deltaY, multiplier = 1) =>
       stopAndSet(zoomByWheel(get().camera, anchor, deltaY, multiplier)),
     zoomStep: (direction) => {
-      const { camera, viewport } = get()
-      const center = viewportCenterWorld(camera, viewport)
-      const zoom = clampZoom(direction === 1 ? camera.zoom * ZOOM_STEP : camera.zoom / ZOOM_STEP)
-      animator.animateTo(cameraForWorldCenter(center, zoom, viewport), UI_ANIMATION_MS)
+      const { zoom } = get().camera
+      zoomTo(clampZoom(direction === 1 ? zoom * ZOOM_STEP : zoom / ZOOM_STEP))
     },
-    resetZoom: () => {
-      const { camera, viewport } = get()
-      const center = viewportCenterWorld(camera, viewport)
-      animator.animateTo(cameraForWorldCenter(center, 1, viewport), UI_ANIMATION_MS)
-    },
+    resetZoom: () => zoomTo(1),
     animateTo: (camera, durationMs, options) => animator.animateTo(camera, durationMs, options),
     fitRect: (rect, durationMs = UI_ANIMATION_MS) =>
       animator.animateTo(fitRectToViewport(rect, get().viewport), durationMs),

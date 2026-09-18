@@ -4,7 +4,7 @@ import { PREVIEW_DEPARTURE_HOLD_MS } from '@shared/canvas/departure-hold'
 import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-types'
 import { useCameraStore } from './camera-store'
 import { useDocumentStore } from './document-store'
-import { frameCamera } from './presentation-shot'
+import { frameCamera } from '@shared/canvas/presentation-shot'
 import { usePresentationStore } from './presentation-store'
 
 const frame = (id: string, order: number, x: number): CanvasElement => ({

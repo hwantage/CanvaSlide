@@ -1,15 +1,11 @@
 import { useLayoutEffect, useRef } from 'react'
-import { worldRectToScreen } from '@shared/canvas/camera-transform'
+import { spotlightMaskPath } from '@shared/canvas/presentation-shot'
 import { useCameraStore } from '@/store/camera-store'
 import {
   selectPresentationActive,
-  selectPresentationSpotlight,
-  selectSpotlightRect,
+  selectPresentationShot,
   usePresentationStore
 } from '@/store/presentation-store'
-
-/** Times the viewport so the dim still covers every corner once the stage rolls. */
-const COVER = 3
 
 /**
  * Dims everything outside the shot's cut-out. It lives inside `PresentationStage`, so the hole rolls
@@ -31,24 +27,16 @@ export function SpotlightOverlay() {
       if (!path || !svg) {
         return
       }
-      const presentation = usePresentationStore.getState()
-      const strength = selectPresentationSpotlight(presentation)
-      const rect = selectSpotlightRect(presentation)
+      const shot = selectPresentationShot(usePresentationStore.getState())
       const { camera, viewport } = useCameraStore.getState()
-      if (strength <= 0.001 || !rect) {
+      const mask = spotlightMaskPath(shot, camera, viewport)
+      if (!mask) {
         svg.style.display = 'none'
         return
       }
-      const hole = worldRectToScreen(camera, rect)
-      const spanX = viewport.width * COVER
-      const spanY = viewport.height * COVER
       svg.style.display = ''
-      path.setAttribute(
-        'd',
-        `M${-spanX},${-spanY}H${spanX}V${spanY}H${-spanX}Z` +
-          `M${hole.x},${hole.y}h${hole.width}v${hole.height}h${-hole.width}Z`
-      )
-      path.setAttribute('fill-opacity', String(strength))
+      path.setAttribute('d', mask)
+      path.setAttribute('fill-opacity', String(shot.spotlight))
     }
     apply()
     const unsubscribeCamera = useCameraStore.subscribe(apply)

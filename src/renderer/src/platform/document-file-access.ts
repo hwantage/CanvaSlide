@@ -7,6 +7,7 @@ import {
 } from '@shared/canvas/document-file'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
+import { downloadTextFile } from './browser-download'
 import { displayFilePath, type FilePath } from './file-path'
 import { isTauriRuntime } from './tauri-runtime'
 
@@ -30,7 +31,7 @@ export async function saveDocumentFile(
   if (isTauriRuntime()) {
     return saveWithTauri(document, contents, forcePrompt ? null : filePath)
   }
-  downloadInBrowser(contents, documentFileName(document))
+  downloadTextFile(contents, documentFileName(document), 'application/json')
   return { filePath: null }
 }
 
@@ -41,6 +42,16 @@ export async function confirmDiscardChanges(): Promise<boolean> {
     return ask(question, { title: t('file.discardTitle'), kind: 'warning' })
   }
   return window.confirm(question)
+}
+
+/** The message a thrown value carries; non-Error throws are shown as they are. */
+export function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+/** Shows whatever was thrown; for the tail of a user-started action that cannot recover. */
+export function reportError(error: unknown): Promise<void> {
+  return showErrorMessage(errorText(error))
 }
 
 export async function showErrorMessage(message: string): Promise<void> {
@@ -118,14 +129,4 @@ function openWithBrowser(): Promise<OpenedDocument | null> {
     input.oncancel = () => resolve(null)
     input.click()
   })
-}
-
-function downloadInBrowser(contents: string, fileName: string): void {
-  const blob = new Blob([contents], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = fileName
-  anchor.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo } from 'react'
+import { createEmptyDocument } from '@shared/canvas/element-types'
 import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import {
   confirmDiscardChanges,
   openDocumentAtPath,
   openDocumentFile,
+  reportError,
   saveDocumentFile,
-  showErrorMessage,
   type OpenedDocument
 } from '@/platform/document-file-access'
 import type { FilePath } from '@/platform/file-path'
@@ -27,12 +28,12 @@ async function guarded(action: () => Promise<void>): Promise<void> {
   try {
     await action()
   } catch (error) {
-    await showErrorMessage(error instanceof Error ? error.message : String(error))
+    await reportError(error)
   }
 }
 
-/** Shared by the Open command and by a document handed to us: confirm, load, then frame it. */
-async function openInto(read: () => Promise<OpenedDocument | null>): Promise<void> {
+// Why: every document replacement must confirm edits and leave presentation before loading.
+async function replaceWith(read: () => Promise<OpenedDocument | null>): Promise<void> {
   if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
     return
   }
@@ -67,16 +68,12 @@ export function useDocumentCommands(): DocumentCommands {
       saveDocument: () => save(false),
       saveDocumentAs: () => save(true),
       newDocument: () =>
-        guarded(async () => {
-          if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
-            return
-          }
-          usePresentationStore.getState().exit()
-          useDocumentStore.getState().newDocument()
-          useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
-        }),
-      openDocument: () => guarded(() => openInto(openDocumentFile)),
-      openDocumentPath: (path: FilePath) => guarded(() => openInto(() => openDocumentAtPath(path)))
+        guarded(() =>
+          replaceWith(async () => ({ document: createEmptyDocument(), filePath: null }))
+        ),
+      openDocument: () => guarded(() => replaceWith(openDocumentFile)),
+      openDocumentPath: (path: FilePath) =>
+        guarded(() => replaceWith(() => openDocumentAtPath(path)))
     }),
     [save]
   )

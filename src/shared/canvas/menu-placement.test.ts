@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampMenuToViewport } from './menu-placement'
+import { clampMenuToViewport, placePopoverBelow } from './menu-placement'
 
 describe('clampMenuToViewport', () => {
   const viewport = { width: 1000, height: 600 }
@@ -25,5 +25,25 @@ describe('clampMenuToViewport', () => {
 
   it('honours a custom margin', () => {
     expect(clampMenuToViewport({ x: 990, y: 50 }, size, viewport, 10)).toEqual({ x: 770, y: 50 })
+  })
+})
+
+describe('placePopoverBelow', () => {
+  const viewport = { width: 1000, height: 600 }
+  const size = { width: 200, height: 100 }
+
+  it('hangs right-aligned under the anchor with the default gap', () => {
+    const anchor = { x: 500, y: 100, width: 80, height: 28 }
+    expect(placePopoverBelow(anchor, size, viewport)).toEqual({ x: 380, y: 132 })
+  })
+
+  it('flips above the anchor when the bottom edge is too close', () => {
+    const anchor = { x: 500, y: 520, width: 80, height: 28 }
+    expect(placePopoverBelow(anchor, size, viewport)).toEqual({ x: 380, y: 416 })
+  })
+
+  it('keeps the margin from the left and right edges', () => {
+    expect(placePopoverBelow({ x: 0, y: 0, width: 40, height: 28 }, size, viewport).x).toBe(8)
+    expect(placePopoverBelow({ x: 990, y: 0, width: 40, height: 28 }, size, viewport).x).toBe(792)
   })
 })

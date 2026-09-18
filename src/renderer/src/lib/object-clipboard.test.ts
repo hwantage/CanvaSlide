@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { parseClipboardPayload } from '@shared/canvas/clipboard-payload'
 import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-types'
 import { useDocumentStore } from '@/store/document-store'
 import {
   copySelection,
   memoryPayload,
   nativePasteArrived,
-  payloadFromClipboardText,
   requestKeyboardPaste
 } from './object-clipboard'
 
@@ -66,8 +66,8 @@ describe('object-clipboard keyboard fallback', () => {
 
   it('never substitutes the in-memory copy for foreign clipboard text', () => {
     expect(memoryPayload()).not.toBeNull()
-    expect(payloadFromClipboardText('')).toBeNull()
-    expect(payloadFromClipboardText('hello')).toBeNull()
-    expect(payloadFromClipboardText(JSON.stringify(memoryPayload()))).not.toBeNull()
+    expect(parseClipboardPayload('')).toBeNull()
+    expect(parseClipboardPayload('hello')).toBeNull()
+    expect(parseClipboardPayload(JSON.stringify(memoryPayload()))).not.toBeNull()
   })
 })

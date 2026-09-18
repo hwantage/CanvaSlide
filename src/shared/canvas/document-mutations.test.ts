@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   applyFrameOrders,
+  cloneElements,
   duplicateElements,
   insertElement,
   patchElements,
@@ -9,6 +10,7 @@ import {
   translateElements
 } from './document-mutations'
 import { createEmptyDocument, type CanvasElement } from './element-types'
+import { parseDocument, serializeDocument } from './document-file'
 
 const text = (id: string, x = 0): CanvasElement => ({
   id,
@@ -49,6 +51,95 @@ describe('document-mutations', () => {
     expect(newIds).toEqual(['dup1', 'dup2'])
     expect(document.order).toEqual(['a', 'b', 'dup1', 'dup2'])
     expect(document.elements.dup2).toMatchObject({ x: 124, y: 24, text: 'b' })
+  })
+
+  it('preserves an existing image when its asset is missing during duplication', () => {
+    const image: CanvasElement = {
+      id: 'image',
+      type: 'image',
+      assetId: 'missing',
+      naturalWidth: 100,
+      naturalHeight: 80,
+      x: 10,
+      y: 20,
+      width: 100,
+      height: 80
+    }
+    const doc = insertElement(createEmptyDocument(), image)
+    expect(parseDocument(serializeDocument(doc)).ok).toBe(true)
+    const copy = duplicateElements(doc, ['image'], () => 'copy')
+    expect(copy.newIds).toEqual(['copy'])
+    expect(copy.document.elements.copy).toEqual({ ...image, id: 'copy', x: 34, y: 44 })
+    expect(doc.order).toEqual(['image'])
+  })
+
+  it('clones with the connector, group and frame rules the caller picks', () => {
+    const host = (id: string, x: number): CanvasElement => ({
+      id,
+      type: 'shape',
+      shape: 'rectangle',
+      x,
+      y: 0,
+      width: 100,
+      height: 100,
+      style: { fill: '#fff', stroke: '#000', strokeWidth: 1, cornerRadius: 0 },
+      text: '',
+      textStyle: { color: '#000', fontSize: 12, align: 'left', bold: false }
+    })
+    const link: CanvasElement = {
+      id: 'c',
+      type: 'connector',
+      x: 100,
+      y: 50,
+      width: 200,
+      height: 1,
+      route: 'straight',
+      startHead: 'none',
+      endHead: 'arrow',
+      style: { stroke: '#000', strokeWidth: 1, dashed: false },
+      label: '',
+      textStyle: { color: '#000', fontSize: 12, align: 'center', bold: false },
+      start: { x: 100, y: 50, elementId: 'a', side: 'right' },
+      end: { x: 300, y: 50, elementId: 'b', side: 'left' }
+    }
+    let doc = createEmptyDocument()
+    for (const element of [host('a', 0), host('b', 300), link]) {
+      doc = insertElement(doc, { ...element, groupId: 'g' })
+    }
+    doc = insertElement(doc, {
+      id: 'f',
+      type: 'frame',
+      name: 'F',
+      order: 1,
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1
+    })
+    let n = 0
+    const makeId = () => `n${(n += 1)}`
+    const kept = cloneElements(doc, [doc.elements.a!, doc.elements.c!, doc.elements.f!], makeId, {
+      offset: { x: 10, y: 0 },
+      keepMissingHosts: true,
+      renumberFrames: false
+    })
+    // Why: the copied host is re-pointed, the one left behind stays attached, and the group is new.
+    expect(kept.document.elements.n2).toMatchObject({
+      start: { elementId: 'n1' },
+      end: { elementId: 'b' },
+      groupId: 'n4'
+    })
+    expect(kept.document.elements.n3).toMatchObject({ type: 'frame', order: 1, x: 10 })
+    expect(kept.document.elements.n1).toMatchObject({ x: 10, groupId: 'n4' })
+    const detached = cloneElements(doc, [doc.elements.c!, doc.elements.f!], makeId, {
+      offset: { x: 0, y: 5 },
+      keepMissingHosts: false,
+      renumberFrames: true
+    })
+    const copy = detached.document.elements.n5
+    expect(copy?.type === 'connector' && copy.start).toEqual({ x: 100, y: 55 })
+    expect(copy?.type === 'connector' && copy.end).toEqual({ x: 300, y: 55 })
+    expect(detached.document.elements.n6).toMatchObject({ type: 'frame', order: 2 })
   })
 
   it('steps z one position, keeping selected runs together and stopping at the edges', () => {

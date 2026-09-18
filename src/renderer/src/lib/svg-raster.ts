@@ -1,6 +1,26 @@
 import type { Rect, Size } from '@shared/canvas/element-types'
 import { imageDetailSamplingRect, imageDetailSourceRect } from '@shared/canvas/image-detail'
 
+const XLINK_NS = 'http://www.w3.org/1999/xlink'
+
+/** The four `viewBox` numbers, or null when absent, malformed or not a positive box. */
+export function parseViewBox(svg: Element): [number, number, number, number] | null {
+  const box = (svg.getAttribute('viewBox') ?? '')
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number)
+  const [x, y, width, height] = box
+  if (box.length !== 4 || !box.every(Number.isFinite) || width! <= 0 || height! <= 0) {
+    return null
+  }
+  return [x!, y!, width!, height!]
+}
+
+/** An SVG `<image>`'s source, whichever of the two href spellings it uses. */
+export function imageHref(node: Element): string {
+  return node.getAttribute('href') ?? node.getAttributeNS(XLINK_NS, 'href') ?? ''
+}
+
 export type ImagePreview = {
   src: string
   size?: Size

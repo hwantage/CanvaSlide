@@ -1,6 +1,6 @@
 import type { FilePath } from './file-path'
 import { t } from '@/i18n/ui-strings'
-import { showErrorMessage } from './document-file-access'
+import { errorText, showErrorMessage } from './document-file-access'
 import { isTauriRuntime } from './tauri-runtime'
 
 /** Mirrors `OPEN_FILE_EVENT` in `src-tauri/src/launch_document.rs`. */
@@ -73,7 +73,5 @@ export function onLaunchDocument(open: (path: FilePath) => void | Promise<void>)
 
 /** Why: the app would otherwise just sit there empty, with no hint the document was ever asked for. */
 function reportFailure(error: unknown): void {
-  void showErrorMessage(
-    t('error.launchDocument', { message: error instanceof Error ? error.message : String(error) })
-  )
+  void showErrorMessage(t('error.launchDocument', { message: errorText(error) }))
 }

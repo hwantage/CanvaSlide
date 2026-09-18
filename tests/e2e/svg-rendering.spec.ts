@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
+import { primaryModifier } from './canvas-gestures'
 import type { Camera } from '../../src/shared/canvas/element-types'
 import type { StoreApi } from 'zustand'
 
@@ -25,10 +26,6 @@ type FlightWindow = {
     hintAtArrival?: string
     unsubscribe?: () => void
   }
-}
-
-async function primaryModifier(page: Page): Promise<'Meta' | 'Control'> {
-  return (await page.evaluate(() => /Mac/.test(navigator.userAgent))) ? 'Meta' : 'Control'
 }
 
 async function setCamera(page: Page, camera: Camera) {

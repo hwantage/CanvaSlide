@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { focusOnMount } from '@/lib/focus-on-mount'
 import { assetsByteLength } from '@shared/canvas/document-assets'
 import { fileNameStem } from '@shared/canvas/document-file'
 import { collectFontUsage, embeddedFontBytes, fontFaceCss } from '@shared/canvas/font-embedding'
 import { buildStandaloneHtml, estimateHtmlBytes, formatBytes } from '@shared/canvas/html-export'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import { ModalDialog } from '@/components/ui/modal-dialog'
 import { TextButton } from '@/components/ui/text-button'
 import playerScript from '@/generated/player.iife.js?raw'
 import { t, tn, type UiStringKey } from '@/i18n/ui-strings'
@@ -16,9 +16,9 @@ import {
 } from '@/lib/export-image-recompress'
 import { canEmbedFonts, subsetFonts } from '@/platform/font-embedding'
 import { saveHtmlExport } from '@/platform/html-export-file'
-import { showErrorMessage } from '@/platform/document-file-access'
+import { reportError } from '@/platform/document-file-access'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
-import { useExportDialogStore } from '@/store/export-dialog-store'
+import { useExportDialogStore } from '@/store/modal-dialogs'
 
 type Preview = {
   html: string
@@ -76,9 +76,7 @@ export function ExportDialog() {
           source: document
         })
       })
-      .catch((error: unknown) =>
-        showErrorMessage(error instanceof Error ? error.message : String(error))
-      )
+      .catch(reportError)
     return () => {
       cancelled = true
     }
@@ -107,91 +105,78 @@ export function ExportDialog() {
       await saveHtmlExport(preview.html, `${fileNameStem(document.name)}.html`)
       hide()
     } catch (error) {
-      await showErrorMessage(error instanceof Error ? error.message : String(error))
+      await reportError(error)
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal
-      aria-label={t('export.dialog')}
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/40"
-      onClick={hide}
-    >
-      <div
-        className="w-96 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl"
-        ref={focusOnMount}
-        tabIndex={-1}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 className="text-sm font-semibold">{t('export.title')}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t('export.summary', {
-            frames: tn('export.frames', frameCount),
-            images: tn('export.images', assetCount),
-            bytes: formatBytes(assetsByteLength(document))
-          })}
-        </p>
-        <fieldset className="mt-3 flex flex-col gap-1.5">
-          <legend className="mb-1 text-xs font-medium">{t('export.imageQuality')}</legend>
-          {exportQualities.map((value) => (
-            <label key={value} className="flex cursor-pointer items-center gap-2 text-xs">
-              <input
-                type="radio"
-                name="export-quality"
-                value={value}
-                checked={quality === value}
-                onChange={() => setQuality(value)}
-              />
-              <span className="font-medium">{t(qualityLabels[value].label)}</span>
-              <span className="text-muted-foreground">{t(qualityLabels[value].hint)}</span>
-            </label>
-          ))}
-        </fieldset>
-        {fontUsage.length > 0 && (
-          <div className="mt-3 flex flex-col gap-1 text-xs" data-testid="export-fonts">
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={embedFonts && canEmbedFonts()}
-                disabled={!canEmbedFonts()}
-                onChange={(event) => setEmbedFonts(event.target.checked)}
-              />
-              <span className="font-medium">
-                {t('export.embedFonts', { fonts: tn('export.fonts', fontUsage.length) })}
-              </span>
-            </label>
-            <p className="pl-5 text-muted-foreground">
-              {canEmbedFonts() ? t('export.embedFontsHint') : t('export.embedFontsUnavailable')}
-            </p>
-          </div>
-        )}
-        <div className="mt-3 text-xs" data-testid="export-size">
-          {t('export.estimatedSize')}{' '}
-          <span className="font-medium tabular-nums">
-            {preview ? formatBytes(preview.bytes) : t('export.calculating')}
-          </span>
-          {preview && preview.fontCount > 0 && (
-            <span className="ml-1 text-muted-foreground">
-              {t('export.fontsIncluded', {
-                fonts: tn('export.fonts', preview.fontCount),
-                bytes: formatBytes(preview.fontBytes)
-              })}
+    <ModalDialog label={t('export.dialog')} onClose={hide} className="w-96">
+      <h2 className="text-sm font-semibold">{t('export.title')}</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {t('export.summary', {
+          frames: tn('export.frames', frameCount),
+          images: tn('export.images', assetCount),
+          bytes: formatBytes(assetsByteLength(document))
+        })}
+      </p>
+      <fieldset className="mt-3 flex flex-col gap-1.5">
+        <legend className="mb-1 text-xs font-medium">{t('export.imageQuality')}</legend>
+        {exportQualities.map((value) => (
+          <label key={value} className="flex cursor-pointer items-center gap-2 text-xs">
+            <input
+              type="radio"
+              name="export-quality"
+              value={value}
+              checked={quality === value}
+              onChange={() => setQuality(value)}
+            />
+            <span className="font-medium">{t(qualityLabels[value].label)}</span>
+            <span className="text-muted-foreground">{t(qualityLabels[value].hint)}</span>
+          </label>
+        ))}
+      </fieldset>
+      {fontUsage.length > 0 && (
+        <div className="mt-3 flex flex-col gap-1 text-xs" data-testid="export-fonts">
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={embedFonts && canEmbedFonts()}
+              disabled={!canEmbedFonts()}
+              onChange={(event) => setEmbedFonts(event.target.checked)}
+            />
+            <span className="font-medium">
+              {t('export.embedFonts', { fonts: tn('export.fonts', fontUsage.length) })}
             </span>
-          )}
+          </label>
+          <p className="pl-5 text-muted-foreground">
+            {canEmbedFonts() ? t('export.embedFontsHint') : t('export.embedFontsUnavailable')}
+          </p>
         </div>
-        <div className="mt-4 flex justify-end gap-2">
-          <TextButton variant="ghost" onClick={hide}>
-            {t('export.cancel')}
-          </TextButton>
-          <TextButton variant="primary" disabled={!preview || busy} onClick={() => void save()}>
-            {t('export.confirm')}
-          </TextButton>
-        </div>
+      )}
+      <div className="mt-3 text-xs" data-testid="export-size">
+        {t('export.estimatedSize')}{' '}
+        <span className="font-medium tabular-nums">
+          {preview ? formatBytes(preview.bytes) : t('export.calculating')}
+        </span>
+        {preview && preview.fontCount > 0 && (
+          <span className="ml-1 text-muted-foreground">
+            {t('export.fontsIncluded', {
+              fonts: tn('export.fonts', preview.fontCount),
+              bytes: formatBytes(preview.fontBytes)
+            })}
+          </span>
+        )}
       </div>
-    </div>
+      <div className="mt-4 flex justify-end gap-2">
+        <TextButton variant="ghost" onClick={hide}>
+          {t('export.cancel')}
+        </TextButton>
+        <TextButton variant="primary" disabled={!preview || busy} onClick={() => void save()}>
+          {t('export.confirm')}
+        </TextButton>
+      </div>
+    </ModalDialog>
   )
 }

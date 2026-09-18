@@ -1,8 +1,8 @@
+import { ModalDialog } from '@/components/ui/modal-dialog'
 import { TextButton } from '@/components/ui/text-button'
 import { t } from '@/i18n/ui-strings'
-import { focusOnMount } from '@/lib/focus-on-mount'
 import { altLabel, primaryModifierLabel, shiftLabel, shortcutLabel } from '@/lib/platform-keys'
-import { useShortcutHelpStore } from '@/store/shortcut-help-store'
+import { useShortcutHelpStore } from '@/store/modal-dialogs'
 
 type Row = [label: string, keys: string]
 type Section = { title: string; rows: Row[] }
@@ -110,48 +110,36 @@ export function ShortcutHelpDialog() {
     return null
   }
   return (
-    <div
-      role="dialog"
-      aria-modal
-      aria-label={t('help.title')}
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/40"
-      onClick={hide}
+    <ModalDialog
+      label={t('help.title')}
+      onClose={hide}
+      className="flex max-h-[85vh] w-[44rem] max-w-[95vw] flex-col gap-3 overflow-y-auto"
     >
-      <div
-        className="flex max-h-[85vh] w-[44rem] max-w-[95vw] flex-col gap-3 overflow-y-auto rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl"
-        ref={focusOnMount}
-        tabIndex={-1}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 className="text-sm font-semibold">{t('help.title')}</h2>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          {sections().map((section) => (
-            <section key={section.title} className="flex flex-col gap-1">
-              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {section.title}
-              </h3>
-              <dl className="flex flex-col">
-                {section.rows.map(([label, keys]) => (
-                  <div
-                    key={label}
-                    className="flex items-center justify-between gap-3 py-0.5 text-xs"
-                  >
-                    <dt>{label}</dt>
-                    <dd className="whitespace-nowrap rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-                      {keys}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          ))}
-        </div>
-        <div className="flex justify-end">
-          <TextButton variant="primary" onClick={hide}>
-            {t('settings.done')}
-          </TextButton>
-        </div>
+      <h2 className="text-sm font-semibold">{t('help.title')}</h2>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        {sections().map((section) => (
+          <section key={section.title} className="flex flex-col gap-1">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {section.title}
+            </h3>
+            <dl className="flex flex-col">
+              {section.rows.map(([label, keys]) => (
+                <div key={label} className="flex items-center justify-between gap-3 py-0.5 text-xs">
+                  <dt>{label}</dt>
+                  <dd className="whitespace-nowrap rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                    {keys}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
       </div>
-    </div>
+      <div className="flex justify-end">
+        <TextButton variant="primary" onClick={hide}>
+          {t('settings.done')}
+        </TextButton>
+      </div>
+    </ModalDialog>
   )
 }

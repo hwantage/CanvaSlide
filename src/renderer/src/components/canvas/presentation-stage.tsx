@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { stageRollStyle } from '@shared/canvas/presentation-shot'
 import { selectPresentationRoll, usePresentationStore } from '@/store/presentation-store'
 
 /**
@@ -16,8 +17,7 @@ export function PresentationStage({ children }: { children: ReactNode }) {
       if (!node) {
         return
       }
-      node.style.transform = roll === 0 ? '' : `rotate(${roll}deg)`
-      node.style.willChange = roll === 0 ? 'auto' : 'transform'
+      Object.assign(node.style, stageRollStyle(roll))
     }
     apply(selectPresentationRoll(usePresentationStore.getState()))
     return usePresentationStore.subscribe((state, previous) => {

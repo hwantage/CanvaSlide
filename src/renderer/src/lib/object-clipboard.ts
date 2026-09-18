@@ -1,10 +1,8 @@
 import {
   buildClipboardPayload,
-  parseClipboardPayload,
   pasteClipboardPayload,
   type ClipboardPayload
 } from '@shared/canvas/clipboard-payload'
-import { removeElements } from '@shared/canvas/document-mutations'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 
 const PASTE_OFFSET = 24
@@ -86,15 +84,7 @@ export function pasteObjects(payload: ClipboardPayload): void {
   useDocumentStore.getState().setSelection(newIds)
 }
 
-export function payloadFromClipboardText(text: string | null | undefined): ClipboardPayload | null {
-  return parseClipboardPayload(text)
-}
-
 /** Last in-app copy; only for paste events whose clipboard data the engine withheld. */
 export function memoryPayload(): ClipboardPayload | null {
   return memory
-}
-
-export function deleteElementsUnrecorded(ids: string[]): void {
-  useDocumentStore.getState().applyLive((d) => removeElements(d, ids))
 }

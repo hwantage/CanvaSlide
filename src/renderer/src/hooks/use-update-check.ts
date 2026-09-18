@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { onCheckUpdatesRequested } from '@/platform/app-update'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
-import { useSettingsDialogStore } from '@/store/settings-dialog-store'
+import { useSettingsDialogStore } from '@/store/modal-dialogs'
 import { useUpdateStore } from '@/store/update-store'
 
 /** How long after launch to check, so the first paint and document load are never delayed. */

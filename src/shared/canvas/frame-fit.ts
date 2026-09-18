@@ -1,7 +1,6 @@
-import { cameraForWorldCenter, clampZoom, MAX_ZOOM } from './camera-transform'
+import { DEFAULT_CAMERA, MAX_ZOOM, clampZoom } from './camera-transform'
 import { contentBounds, elementRect, unionRects } from './element-bounds'
 import { orderedFrames } from './presentation-sequence'
-import { DEFAULT_CAMERA } from './camera-transform'
 import type { CanvasDocument, Camera, Rect, Size } from './element-types'
 
 export const FRAME_FIT_PADDING_RATIO = 0.04
@@ -25,6 +24,25 @@ export function rolledSpan(rect: Rect, rollDeg: number): Size {
   }
 }
 
+/** Zoom at which `rect`, padded on every side and rolled, just fits inside `viewport`. */
+function fitZoom(rect: Rect, viewport: Size, paddingRatio: number, rollDeg: number): number {
+  const span = rolledSpan(rect, rollDeg)
+  const paddingScale = 1 + 2 * Math.max(0, paddingRatio)
+  return Math.min(
+    viewport.width / (span.width * paddingScale),
+    viewport.height / (span.height * paddingScale)
+  )
+}
+
+/** Camera with `rect`'s centre in the middle of the viewport at `zoom`, whatever the zoom is. */
+function centredOn(rect: Rect, zoom: number, viewport: Size): Camera {
+  return {
+    zoom,
+    x: viewport.width / 2 - (rect.x + rect.width / 2) * zoom,
+    y: viewport.height / 2 - (rect.y + rect.height / 2) * zoom
+  }
+}
+
 /** Camera that shows `rect` fully inside `viewport` (contain fit), centered. */
 export function fitRectToViewport(
   rect: Rect,
@@ -32,30 +50,14 @@ export function fitRectToViewport(
   paddingRatio: number = FRAME_FIT_PADDING_RATIO,
   rollDeg = 0
 ): Camera {
-  const span = rolledSpan(rect, rollDeg)
-  const paddedWidth = span.width * (1 + 2 * paddingRatio)
-  const paddedHeight = span.height * (1 + 2 * paddingRatio)
-  const zoom = clampZoom(Math.min(viewport.width / paddedWidth, viewport.height / paddedHeight))
-  return cameraForWorldCenter(
-    { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
-    zoom,
-    viewport
-  )
+  const zoom = fitZoom(rect, viewport, paddingRatio, rollDeg)
+  return centredOn(rect, clampZoom(zoom), viewport)
 }
 
 /** Overview must contain the whole board even below the manual zoom minimum. */
 export function fitOverviewToViewport(rect: Rect, viewport: Size): Camera {
-  const paddingScale = 1 + 2 * Math.max(0, OVERVIEW_FIT_PADDING_RATIO)
-  const zoom = Math.min(
-    MAX_ZOOM,
-    viewport.width / (rect.width * paddingScale),
-    viewport.height / (rect.height * paddingScale)
-  )
-  return {
-    zoom,
-    x: viewport.width / 2 - (rect.x + rect.width / 2) * zoom,
-    y: viewport.height / 2 - (rect.y + rect.height / 2) * zoom
-  }
+  const zoom = fitZoom(rect, viewport, OVERVIEW_FIT_PADDING_RATIO, 0)
+  return centredOn(rect, Math.min(MAX_ZOOM, zoom), viewport)
 }
 
 /** Large backdrops outside the slides must not shrink or shift the frame picker. */
@@ -67,14 +69,7 @@ export function cameraForOverview(document: CanvasDocument, viewport: Size): Cam
 /** Fit-all: like a frame fit but never zooms in past 100% so small content stays readable. */
 export function fitContentToViewport(rect: Rect, viewport: Size, maxZoom = 1): Camera {
   const fitted = fitRectToViewport(rect, viewport, 0.08)
-  if (fitted.zoom <= maxZoom) {
-    return fitted
-  }
-  return cameraForWorldCenter(
-    { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
-    maxZoom,
-    viewport
-  )
+  return fitted.zoom <= maxZoom ? fitted : centredOn(rect, clampZoom(maxZoom), viewport)
 }
 
 /** Zoom-to-selection never magnifies past this so a lone small element stays recognisable. */

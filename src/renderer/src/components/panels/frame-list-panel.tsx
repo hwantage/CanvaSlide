@@ -1,12 +1,5 @@
 import { Gauge, Lightbulb, Play, Spline, Square, Timer } from 'lucide-react'
-import {
-  useCallback,
-  useRef,
-  useState,
-  type DragEvent,
-  type KeyboardEvent,
-  type ReactNode
-} from 'react'
+import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { elementRect } from '@shared/canvas/element-bounds'
 import type { DocumentSettings, FrameElement } from '@shared/canvas/element-types'
 import { gapAtPointer } from '@shared/canvas/list-drop-gap'
@@ -16,6 +9,7 @@ import {
   resolveFrameTransition,
   type MotionField
 } from '@shared/canvas/frame-transition'
+import { FrameNameEditor } from '@/components/canvas/frame-name-editor'
 import { useDragAutoScroll } from '@/hooks/use-drag-auto-scroll'
 import { inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
@@ -65,45 +59,25 @@ function MotionMarks({ frame, settings }: { frame: FrameElement; settings: Docum
 }
 
 function FrameName({ frame }: { frame: FrameElement }) {
-  const [draft, setDraft] = useState<string | null>(null)
-  const patchElements = useDocumentStore((s) => s.patchElements)
-  const commit = () => {
-    if (draft !== null && draft.trim() !== '' && draft !== frame.name) {
-      patchElements([frame.id], { name: draft.trim() })
-    }
-    setDraft(null)
-  }
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      commit()
-    } else if (event.key === 'Escape') {
-      setDraft(null)
-    }
-    event.stopPropagation()
-  }
-  if (draft === null) {
-    // Why: the whole gap up to the marks is the rename target, not just the glyphs.
+  const [renaming, setRenaming] = useState(false)
+  if (renaming) {
     return (
-      <span
-        className="min-w-0 flex-1 truncate"
-        title={t('frames.renameHint')}
-        onDoubleClick={() => setDraft(frame.name)}
-      >
-        {frame.name}
-      </span>
+      <FrameNameEditor
+        frame={frame}
+        onFinish={() => setRenaming(false)}
+        className={`${inputClass} h-6 min-w-0 flex-1`}
+      />
     )
   }
+  // Why: the whole gap up to the marks is the rename target, not just the glyphs.
   return (
-    <input
-      autoFocus
-      aria-label={t('frames.name')}
-      className={`${inputClass} h-6 min-w-0 flex-1`}
-      value={draft}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={commit}
-      onKeyDown={onKeyDown}
-      onFocus={(event) => event.target.select()}
-    />
+    <span
+      className="min-w-0 flex-1 truncate"
+      title={t('frames.renameHint')}
+      onDoubleClick={() => setRenaming(true)}
+    >
+      {frame.name}
+    </span>
   )
 }
 

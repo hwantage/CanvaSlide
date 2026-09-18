@@ -17,8 +17,12 @@ Releases follow [`docs/RELEASE.md`](./docs/RELEASE.md).
 ## Rules
 
 - Keep math and document transforms in `src/shared/canvas` and unit-test them; UI files should be thin.
-- Files: `.ts` ≤ 300 lines, `.tsx` ≤ 400, tests ≤ 800. Never disable `max-lines`; split the file instead.
+- File-size hard limits: `.ts`/`.tsx` ≤ 800 lines; `.test.ts(x)`/`.spec.ts(x)` ≤ 1000.
+  Count all lines, including blanks and comments; a final newline adds no extra line. Both checks
+  cover the repository's non-ignored TypeScript, including tests, examples, config and website.
   Only `src/renderer/src/i18n/locales/*.ts` are exempt (flat resource tables, one file per language).
+  Keep cohesive logic together; split at responsibility, dependency or lifecycle boundaries, never
+  just to hit a smaller line count. Never disable `max-lines`.
 - User-visible strings come from `t()`/`tn()` in `src/renderer/src/i18n/ui-strings.ts`; add the key to
   `i18n/locales/en.ts` first (the type forces every other locale to follow). Keep product names, key
   names (Esc, ⌘), file formats and units out of resources; compose shortcuts with `shortcutLabel()`.

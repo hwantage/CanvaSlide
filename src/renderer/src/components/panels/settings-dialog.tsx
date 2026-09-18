@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { focusOnMount } from '@/lib/focus-on-mount'
 import {
   canvasBackgrounds,
   frameBorderStyles,
@@ -7,6 +6,7 @@ import {
   type DocumentSettings,
   type FrameBorderStyle
 } from '@shared/canvas/element-types'
+import { ModalDialog } from '@/components/ui/modal-dialog'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { TextButton } from '@/components/ui/text-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
@@ -18,7 +18,7 @@ import {
   useLanguageStore,
   type LanguagePreference
 } from '@/store/language-store'
-import { useSettingsDialogStore } from '@/store/settings-dialog-store'
+import { useSettingsDialogStore } from '@/store/modal-dialogs'
 import {
   selectThemePreference,
   themePreferences,
@@ -37,6 +37,24 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       </h3>
       {children}
     </section>
+  )
+}
+
+/** One labelled row; a `label` element when the control is a single input the label may own. */
+function Row({
+  label,
+  children,
+  as: Tag = 'div'
+}: {
+  label: string
+  children: ReactNode
+  as?: 'div' | 'label'
+}) {
+  return (
+    <Tag className="flex items-center gap-3 text-xs">
+      <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">{label}</span>
+      {children}
+    </Tag>
   )
 }
 
@@ -77,114 +95,90 @@ export function SettingsDialog() {
   const set = (patch: Partial<DocumentSettings>, record = true) => updateSettings(patch, record)
 
   return (
-    <div
-      role="dialog"
-      aria-modal
-      aria-label={t('settings.title')}
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/40"
-      onClick={hide}
+    <ModalDialog
+      label={t('settings.title')}
+      onClose={hide}
+      className="flex w-[26rem] flex-col gap-4"
     >
-      <div
-        className="flex w-[26rem] flex-col gap-4 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl"
-        ref={focusOnMount}
-        tabIndex={-1}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 className="text-sm font-semibold">{t('settings.title')}</h2>
-        <Section title={t('settings.appearance')}>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
-              {t('settings.theme')}
-            </span>
-            <SegmentedControl
-              label={t('settings.themePreference')}
-              value={themePreference}
-              options={themePreferences.map((value) => ({
-                value,
-                label: t(themeLabels[value])
-              }))}
-              onChange={setThemePreference}
-            />
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
-              {t('settings.language')}
-            </span>
-            <SegmentedControl
-              label={t('settings.languagePreference')}
-              value={languagePreference}
-              options={languagePreferences.map((value) => ({
-                value,
-                label: t(languageLabels[value])
-              }))}
-              onChange={setLanguagePreference}
-            />
-          </div>
-        </Section>
-        <Section title={t('settings.canvas')}>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
-              {t('settings.background')}
-            </span>
-            <SegmentedControl
-              label={t('settings.canvasBackground')}
-              value={settings.background}
-              options={canvasBackgrounds.map((value) => ({
-                value,
-                label: t(backgroundLabels[value])
-              }))}
-              onChange={(background) => set({ background })}
-            />
-          </div>
-        </Section>
-        <Section title={t('settings.frames')}>
-          <label className="flex items-center gap-3 text-xs">
-            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
-              {t('settings.transition')}
-            </span>
-            <input
-              type="range"
-              aria-label={t('settings.transitionDuration')}
-              min={0}
-              max={3000}
-              step={100}
-              value={settings.transitionMs}
-              onChange={(event) => {
-                transitionSession.begin()
-                set({ transitionMs: Number(event.target.value) }, false)
-              }}
-              onBlur={transitionSession.end}
-              className="flex-1 accent-primary"
-            />
-            <span className="w-10 text-right tabular-nums" data-testid="transition-value">
-              {t('settings.seconds', { n: (settings.transitionMs / 1000).toFixed(1) })}
-            </span>
-          </label>
-          <p className="text-[11px] text-muted-foreground">{t('settings.transitionHint')}</p>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">
-              {t('settings.border')}
-            </span>
-            <SegmentedControl
-              label={t('settings.frameBorder')}
-              value={settings.frameBorder}
-              options={frameBorderStyles.map((value) => ({
-                value,
-                label: t(frameBorderLabels[value])
-              }))}
-              onChange={(frameBorder) => set({ frameBorder })}
-            />
-          </div>
-        </Section>
-        <Section title={t('update.title')}>
-          <UpdateSection />
-        </Section>
-        <div className="flex justify-end">
-          <TextButton variant="primary" onClick={hide}>
-            {t('settings.done')}
-          </TextButton>
-        </div>
+      <h2 className="text-sm font-semibold">{t('settings.title')}</h2>
+      <Section title={t('settings.appearance')}>
+        <Row label={t('settings.theme')}>
+          <SegmentedControl
+            label={t('settings.themePreference')}
+            value={themePreference}
+            options={themePreferences.map((value) => ({
+              value,
+              label: t(themeLabels[value])
+            }))}
+            onChange={setThemePreference}
+          />
+        </Row>
+        <Row label={t('settings.language')}>
+          <SegmentedControl
+            label={t('settings.languagePreference')}
+            value={languagePreference}
+            options={languagePreferences.map((value) => ({
+              value,
+              label: t(languageLabels[value])
+            }))}
+            onChange={setLanguagePreference}
+          />
+        </Row>
+      </Section>
+      <Section title={t('settings.canvas')}>
+        <Row label={t('settings.background')}>
+          <SegmentedControl
+            label={t('settings.canvasBackground')}
+            value={settings.background}
+            options={canvasBackgrounds.map((value) => ({
+              value,
+              label: t(backgroundLabels[value])
+            }))}
+            onChange={(background) => set({ background })}
+          />
+        </Row>
+      </Section>
+      <Section title={t('settings.frames')}>
+        <Row label={t('settings.transition')} as="label">
+          <input
+            type="range"
+            aria-label={t('settings.transitionDuration')}
+            min={0}
+            max={3000}
+            step={100}
+            value={settings.transitionMs}
+            onChange={(event) => {
+              transitionSession.begin()
+              set({ transitionMs: Number(event.target.value) }, false)
+            }}
+            onBlur={transitionSession.end}
+            className="flex-1 accent-primary"
+          />
+          <span className="w-10 text-right tabular-nums" data-testid="transition-value">
+            {t('settings.seconds', { n: (settings.transitionMs / 1000).toFixed(1) })}
+          </span>
+        </Row>
+        <p className="text-[11px] text-muted-foreground">{t('settings.transitionHint')}</p>
+        <Row label={t('settings.border')}>
+          <SegmentedControl
+            label={t('settings.frameBorder')}
+            value={settings.frameBorder}
+            options={frameBorderStyles.map((value) => ({
+              value,
+              label: t(frameBorderLabels[value])
+            }))}
+            onChange={(frameBorder) => set({ frameBorder })}
+          />
+        </Row>
+      </Section>
+      <Section title={t('update.title')}>
+        <UpdateSection />
+      </Section>
+      <div className="flex justify-end">
+        <TextButton variant="primary" onClick={hide}>
+          {t('settings.done')}
+        </TextButton>
       </div>
-    </div>
+    </ModalDialog>
   )
 }

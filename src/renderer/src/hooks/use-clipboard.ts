@@ -29,7 +29,7 @@ function ignoring(event: ClipboardEvent): boolean {
 export function useClipboard(): void {
   useEffect(() => {
     // Why: ⌘V without a `paste` event (WKWebView) falls back to the OS clipboard, not just memory.
-    setKeyboardPasteFallback(() => void pasteFromSystemClipboard())
+    setKeyboardPasteFallback((target) => void pasteFromSystemClipboard(undefined, target))
     const onCopy = (event: ClipboardEvent, cut: boolean) => {
       if (ignoring(event)) {
         return

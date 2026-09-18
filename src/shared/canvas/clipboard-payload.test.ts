@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildClipboardPayload,
+  clipboardPayloadKey,
   parseClipboardPayload,
   pasteClipboardPayload
 } from './clipboard-payload'
@@ -49,6 +50,61 @@ function sample(): CanvasDocument {
 }
 
 describe('clipboard-payload', () => {
+  it('copies frame contents and image assets once, excluding objects crossing the frame edge', () => {
+    let doc = sample()
+    doc = insertElement(doc, { ...doc.elements.t!, id: 'crossing', x: 490 })
+    doc = insertElement(doc, { ...doc.elements.t!, id: 'outside', x: 600 })
+    const payload = buildClipboardPayload(doc, ['f', 't'])!
+    expect(payload.elements.map((element) => element.id)).toEqual(['f', 'i', 't'])
+    expect(payload.assets).toEqual(doc.assets)
+    expect(buildClipboardPayload(doc, ['t'])!.elements.map((element) => element.id)).toEqual(['t'])
+  })
+
+  it('deduplicates contents shared by multiple selected frames and keeps their stacking order', () => {
+    const doc = insertElement(sample(), {
+      id: 'f2',
+      type: 'frame',
+      name: 'Second',
+      order: 2,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100
+    })
+    expect(buildClipboardPayload(doc, ['f', 'f2'])!.elements.map((element) => element.id)).toEqual([
+      'f',
+      'i',
+      't',
+      'f2'
+    ])
+  })
+
+  it('identifies the same contents across parsing and object property order', () => {
+    const payload = buildClipboardPayload(sample(), ['f', 'i', 't'])!
+    const parsed = parseClipboardPayload(JSON.stringify(payload))!
+    expect(clipboardPayloadKey(parsed)).toBe(clipboardPayloadKey(payload))
+    const reordered = {
+      ...payload,
+      elements: payload.elements.map((element) =>
+        Object.fromEntries(Object.entries(element).sort(([a], [b]) => b.localeCompare(a)))
+      )
+    } as typeof payload
+    expect(clipboardPayloadKey(reordered)).toBe(clipboardPayloadKey(payload))
+  })
+
+  it('distinguishes edited contents, asset data and stacking order with unchanged ids', () => {
+    const payload = buildClipboardPayload(sample(), ['i', 't'])!
+    const key = clipboardPayloadKey(payload)
+    const edited = structuredClone(payload)
+    edited.elements[1]!.x += 1
+    expect(clipboardPayloadKey(edited)).not.toBe(key)
+    const newImage = structuredClone(payload)
+    Object.values(newImage.assets)[0]!.data += 'different'
+    expect(clipboardPayloadKey(newImage)).not.toBe(key)
+    const reordered = { ...payload, elements: [payload.elements[1]!, payload.elements[0]!] }
+    expect(clipboardPayloadKey(reordered)).not.toBe(key)
+  })
+
   it('serializes selection in z-order with referenced assets and round-trips', () => {
     const doc = sample()
     const payload = buildClipboardPayload(doc, ['t', 'i'])

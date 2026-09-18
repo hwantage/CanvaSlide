@@ -1,9 +1,17 @@
 import { remapConnectorHosts, translateConnector } from './connector-geometry'
 import { pruneUnreferencedAssets } from './document-assets'
 import { remapGroupIds } from './element-groups'
+import { remapFrameContents } from './frame-contents'
 import { selectionIsOnlyFrames } from './frame-from-selection'
 import { nextFrameOrder } from './presentation-sequence'
-import type { CanvasDocument, CanvasElement, ElementId, ImageAsset, Point } from './element-types'
+import {
+  isFrameElement,
+  type CanvasDocument,
+  type CanvasElement,
+  type ElementId,
+  type ImageAsset,
+  type Point
+} from './element-types'
 
 /** Pure document transforms; every function returns a new document and never mutates. */
 
@@ -119,20 +127,24 @@ export function cloneElements(
   // Why: all copied IDs must exist before connectors and groups can be remapped.
   const idMap = new Map(cloneable.map((source) => [source.id, makeId()] as const))
   const copies: CanvasElement[] = []
-  let frameOrder = nextFrameOrder(document)
   const newIds: ElementId[] = []
-  for (const source of remapGroupIds(cloneable, makeId)) {
+  for (const source of remapGroupIds(remapFrameContents(cloneable, idMap), makeId)) {
     let copy: CanvasElement = { ...source, id: idMap.get(source.id) as ElementId }
     // Why: translating skips attached ends, so detach missing hosts before applying the offset.
     if (copy.type === 'connector') {
       copy = remapConnectorHosts(copy, idMap, options.keepMissingHosts)
     }
     copy = translateElement(copy, options.offset)
-    if (copy.type === 'frame' && options.renumberFrames) {
-      copy = { ...copy, order: (frameOrder += 1) - 1 }
-    }
     copies.push(copy)
     newIds.push(copy.id)
+  }
+  if (options.renumberFrames) {
+    // Slide order is independent of the clipboard's paint order.
+    const frames = copies.filter(isFrameElement).sort((a, b) => a.order - b.order)
+    const firstOrder = nextFrameOrder(document)
+    for (const [index, frame] of frames.entries()) {
+      frame.order = firstOrder + index
+    }
   }
   return { document: insertElements(document, copies), newIds }
 }

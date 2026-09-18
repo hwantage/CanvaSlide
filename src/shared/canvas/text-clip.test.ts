@@ -5,7 +5,8 @@ import {
   type TextElement
 } from './element-types'
 import { textClipPath, visibleTextRect } from './text-clip'
-import { elementsInBox, hitTestTopmost, withFrameContents } from './element-bounds'
+import { elementsInBox, hitTestTopmost } from './element-bounds'
+import { withFrameContents } from './frame-contents'
 
 const text: TextElement = {
   id: 'text',

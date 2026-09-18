@@ -192,35 +192,6 @@ export function hitTestTopmost(
   return topmostFrame(document, point, (rect) => frameChromeContainsPoint(rect, point, frameChrome))
 }
 
-/** Selected ids plus every non-frame element fully inside a selected frame (frames carry contents). */
-export function withFrameContents(
-  document: CanvasDocument,
-  ids: readonly ElementId[]
-): ElementId[] {
-  const result = new Set(ids)
-  for (const id of ids) {
-    const frame = document.elements[id]
-    if (!frame || frame.type !== 'frame') {
-      continue
-    }
-    const frameRect = elementRect(frame)
-    for (const candidateId of document.order) {
-      const candidate = document.elements[candidateId]
-      if (
-        candidate &&
-        candidate.type !== 'frame' &&
-        rectContainsRect(
-          frameRect,
-          candidate.type === 'text' ? visibleTextRect(candidate) : elementRect(candidate)
-        )
-      ) {
-        result.add(candidateId)
-      }
-    }
-  }
-  return [...result]
-}
-
 /** Elements whose rect intersects the drag box. Frames must be fully enclosed to be picked. */
 export function elementsInBox(document: CanvasDocument, box: Rect): ElementId[] {
   const picked: ElementId[] = []

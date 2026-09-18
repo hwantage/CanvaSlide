@@ -7,8 +7,9 @@ import {
 } from './clipboard-payload'
 import { syncConnectorGeometry } from './connector-geometry'
 import { createImageAsset, upsertAsset } from './document-assets'
-import { insertElement } from './document-mutations'
-import { createEmptyDocument, type CanvasDocument } from './element-types'
+import { insertElement, insertElements } from './document-mutations'
+import { createEmptyDocument, type CanvasDocument, type FrameElement } from './element-types'
+import { orderedFrames } from './presentation-sequence'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk'
 
@@ -145,6 +146,49 @@ describe('clipboard-payload', () => {
     })
     expect(Object.keys(document.assets)).toHaveLength(1)
     expect(document.elements.x?.type).toBe('image')
+  })
+
+  it.each([
+    [3, 2, 1],
+    [30, 10, 20],
+    [2, 1, 1]
+  ])('numbers pasted frames in slide order while retaining paint order (%j)', (...orders) => {
+    const frames: FrameElement[] = orders.map((order, index) => ({
+      id: `f${index}`,
+      type: 'frame',
+      name: `Slide ${index}`,
+      order,
+      x: index * 600,
+      y: 0,
+      width: 500,
+      height: 500
+    }))
+    const source = insertElements(sample(), frames)
+    const payload = buildClipboardPayload(source, [...source.order])!
+    const original = structuredClone(source)
+    const beforePayload = structuredClone(payload)
+    const destination = insertElements(createEmptyDocument(), [
+      { ...frames[0]!, id: 'existing', order: 50 }
+    ])
+    let n = 0
+    const result = pasteClipboardPayload(destination, payload, () => `copy${++n}`, { x: 24, y: 24 })
+    const copies = result.newIds.map((id) => result.document.elements[id]!)
+    const copyFor = new Map(payload.elements.map((element, index) => [element.id, copies[index]!]))
+    expect(
+      orderedFrames(result.document)
+        .slice(1)
+        .map((frame) => [frame.id, frame.order])
+    ).toEqual(orderedFrames(source).map((frame, index) => [copyFor.get(frame.id)!.id, 51 + index]))
+    expect(copies.map((element) => element.type)).toEqual(
+      payload.elements.map((element) => element.type)
+    )
+    expect(copies.map((element) => element.x)).toEqual(
+      payload.elements.map((element) => element.x + 24)
+    )
+    expect(result.document.order).toEqual(['existing', ...result.newIds])
+    expect(source).toEqual(original)
+    expect(payload).toEqual(beforePayload)
+    expect(result.document.elements.existing).toBe(destination.elements.existing)
   })
 
   it('still skips pasted images when their assets did not travel along', () => {

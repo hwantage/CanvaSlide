@@ -67,6 +67,10 @@ export const en = {
 
   'props.name': 'Name',
   'props.size': 'Size',
+  'preview.previous': 'Previous selected frame',
+  'preview.next': 'Next selected frame',
+  'motion.mixed': 'Mixed',
+  'motion.previewSelected': 'Preview selected frames',
   'preview.title': 'Preview',
   'preview.replay': 'Play it again',
   'preview.close': 'Close the preview',

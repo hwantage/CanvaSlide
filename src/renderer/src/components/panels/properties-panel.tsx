@@ -82,8 +82,8 @@ export function PropertiesPanel() {
           />
         </FieldRow>
       )}
-      {frame && elements.length === 1 && <FrameTransitionFields frame={frame} />}
-      <AlignmentToolbar count={elements.length} />
+      {onlyFrames && <FrameTransitionFields frameIds={selectedIds} />}
+      {!onlyFrames && <AlignmentToolbar count={elements.length} />}
       {connector && <ConnectorFields ids={selectedIds} sample={connector} />}
       {shape && <ShapeStyleFields ids={selectedIds} style={shape.style} />}
       {textStyle && <TextStyleFields ids={selectedIds} style={textStyle} />}

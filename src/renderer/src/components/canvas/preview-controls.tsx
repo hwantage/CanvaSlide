@@ -1,4 +1,5 @@
-import { RotateCcw, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, RotateCcw, X } from 'lucide-react'
+import { selectedFrameIds, stepSelectedFrame } from '@shared/canvas/frame-selection'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
@@ -11,6 +12,9 @@ import { selectPreviewFrameId, usePresentationStore } from '@/store/presentation
 export function PreviewControls() {
   const previewFrameId = usePresentationStore(selectPreviewFrameId)
   const previewTransition = usePresentationStore((s) => s.previewTransition)
+  const previewFrameIds = usePresentationStore((s) => s.previewFrameIds)
+  const next = usePresentationStore((s) => s.next)
+  const previous = usePresentationStore((s) => s.previous)
   const exit = usePresentationStore((s) => s.exit)
   const document = useDocumentStore(selectDocument)
   if (previewFrameId === null) {
@@ -19,6 +23,7 @@ export function PreviewControls() {
   // Why: the deck can be reordered or the frame deleted while the preview is parked.
   const element = document.elements[previewFrameId]
   const frame = element?.type === 'frame' ? element : undefined
+  const ids = selectedFrameIds(document, previewFrameIds)
   return (
     <div
       data-canvas-ui
@@ -29,11 +34,34 @@ export function PreviewControls() {
         {t('preview.title')}
         {frame ? ` · ${frame.name}` : ''}
       </span>
+      {previewFrameIds.length > 1 && (
+        <>
+          <span className="px-1 text-muted-foreground tabular-nums">
+            {Math.max(0, ids.indexOf(previewFrameId) + 1)} / {ids.length}
+          </span>
+          <IconButton
+            label={t('preview.previous')}
+            className="h-7 w-7"
+            disabled={!stepSelectedFrame(ids, previewFrameId, -1)}
+            onClick={previous}
+          >
+            <ChevronLeft size={14} />
+          </IconButton>
+          <IconButton
+            label={t('preview.next')}
+            className="h-7 w-7"
+            disabled={!stepSelectedFrame(ids, previewFrameId, 1)}
+            onClick={next}
+          >
+            <ChevronRight size={14} />
+          </IconButton>
+        </>
+      )}
       <IconButton
         label={t('preview.replay')}
         className="h-7 w-7"
         disabled={!frame}
-        onClick={() => previewTransition(previewFrameId)}
+        onClick={() => previewTransition(previewFrameId, previewFrameIds)}
       >
         <RotateCcw size={14} />
       </IconButton>

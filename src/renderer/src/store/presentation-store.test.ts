@@ -43,6 +43,7 @@ beforeEach(() => {
     index: 0,
     cameraBeforeStart: null,
     previewFrameId: null,
+    previewFrameIds: [],
     spotlightRect: null
   })
 })
@@ -431,5 +432,99 @@ describe('preview departure hold', () => {
       previewFrameId: null
     })
     expect(useCameraStore.getState().camera).not.toEqual(landingOn(2))
+  })
+})
+
+describe('selected frame previews', () => {
+  function setup() {
+    const doc = useDocumentStore.getState()
+    for (const [index, id] of ['a', 'b', 'c', 'd'].entries()) {
+      doc.insertElement(frame(id, index + 1, index * 5000))
+    }
+    doc.updateSettings({ transitionMs: 0 })
+    doc.setSelection(['a', 'c', 'd'])
+    return doc
+  }
+
+  it('flies between selected frames without cutting to an unselected departure', async () => {
+    setup()
+    const camera = { x: 123, y: 456, zoom: 2 }
+    useCameraStore.getState().setCamera(camera)
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('a', ['d', 'a', 'c'])
+    await land()
+    presentation.previous()
+    expect(usePresentationStore.getState().previewFrameId).toBe('a')
+    const animate = vi.spyOn(useCameraStore.getState(), 'animateTo')
+    presentation.next()
+    expect(usePresentationStore.getState()).toMatchObject({
+      previewFrameId: 'c',
+      index: 2,
+      previewFrameIds: ['a', 'c', 'd'],
+      cameraBeforeStart: camera
+    })
+    expect(animate.mock.calls.at(-1)?.[2]?.departure).toBeUndefined()
+    expect(animate.mock.calls.at(-1)?.[2]?.holdMs).toBeUndefined()
+    await land()
+    expect(useCameraStore.getState().camera).toEqual(
+      frameCamera(useDocumentStore.getState().document, 2, useCameraStore.getState().viewport)
+    )
+    presentation.next()
+    presentation.next()
+    expect(usePresentationStore.getState().previewFrameId).toBe('d')
+    presentation.previous()
+    expect(usePresentationStore.getState().previewFrameId).toBe('c')
+    expect(useDocumentStore.getState().selectedIds).toEqual(['a', 'c', 'd'])
+    presentation.exit()
+    expect(animate.mock.calls.at(-1)?.[0]).toEqual(camera)
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: false,
+      previewFrameId: null,
+      previewFrameIds: [],
+      roll: 0,
+      spotlight: 0
+    })
+    animate.mockRestore()
+  })
+
+  it('keeps membership through replay and uses IDs after reorder or deletion', async () => {
+    const doc = setup()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('a', ['a', 'c', 'd'])
+    await land()
+    presentation.next()
+    const preview = usePresentationStore.getState()
+    presentation.previewTransition(preview.previewFrameId!, preview.previewFrameIds)
+    await land()
+    doc.moveFrameTo('d', 0)
+    presentation.previous()
+    expect(usePresentationStore.getState().previewFrameId).toBe('a')
+    doc.setSelection(['c'])
+    doc.deleteSelected()
+    presentation.next()
+    expect(usePresentationStore.getState().previewFrameId).toBe('a')
+    presentation.previous()
+    expect(usePresentationStore.getState().previewFrameId).toBe('d')
+    doc.setSelection(['d'])
+    doc.deleteSelected()
+    presentation.next()
+    expect(usePresentationStore.getState().active).toBe(false)
+  })
+
+  it('does not allow preview navigation to escape into the whole deck', () => {
+    setup()
+    const presentation = usePresentationStore.getState()
+    presentation.previewTransition('a', ['a', 'c'])
+    presentation.goTo(1)
+    presentation.showOverview()
+    expect(usePresentationStore.getState()).toMatchObject({ previewFrameId: 'a', overview: false })
+    presentation.goTo(2)
+    expect(usePresentationStore.getState()).toMatchObject({ previewFrameId: 'c', index: 2 })
+    presentation.start()
+    expect(usePresentationStore.getState()).toMatchObject({
+      active: true,
+      previewFrameId: null,
+      previewFrameIds: []
+    })
   })
 })

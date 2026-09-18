@@ -53,13 +53,24 @@ function handlePresentationKeys(event: KeyboardEvent): boolean {
   if (!presentation.active) {
     return false
   }
-  // Why: a preview leaves the editor usable, so it claims its own key and nothing else.
+  // Modified keys and editing commands stay available while preview navigation owns plain arrows.
   if (presentation.previewFrameId !== null) {
-    if (event.key !== 'Escape') {
+    if (event.key === 'Escape') {
+      presentation.exit()
+      return true
+    }
+    if (hasPrimaryModifier(event) || event.altKey || event.shiftKey) {
       return false
     }
-    presentation.exit()
-    return true
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(event.key)) {
+      presentation.next()
+      return true
+    }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
+      presentation.previous()
+      return true
+    }
+    return false
   }
   switch (presentationKeyAction(event.key)) {
     case 'next':

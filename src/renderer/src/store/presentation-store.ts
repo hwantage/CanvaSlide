@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { previewDepartureHoldMs } from '@shared/canvas/departure-hold'
+import { selectedFrameIds, stepSelectedFrame } from '@shared/canvas/frame-selection'
 import { frameIndexById, orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
 import { camerasEqual } from '@shared/canvas/camera-transform'
 import { cameraForOverview } from '@shared/canvas/frame-fit'
@@ -32,12 +33,14 @@ export type PresentationState = {
   spotlightRect: Rect | null
   /** Keep previews anchored through reordering; null for ordinary slide shows. */
   previewFrameId: ElementId | null
+  /** Membership stays fixed while the editable deck may change its order. */
+  previewFrameIds: ElementId[]
 }
 
 export type PresentationActions = {
   start: (fromIndex?: number) => void
   /** Show the preceding frame before flying in; the opening frame needs no departure hold. */
-  previewTransition: (frameId: ElementId) => void
+  previewTransition: (frameId: ElementId, frameIds?: readonly ElementId[]) => void
   /** Drops a parked preview where it stands, for when the editor is about to move the camera itself. */
   cancelPreview: () => void
   /** Called by the viewport once it has re-measured after chrome hides. */
@@ -139,11 +142,25 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
   }
 
   const step = (direction: 1 | -1) => {
-    const { active, index } = get()
+    const { active, index, previewFrameId, previewFrameIds } = get()
     if (!active) {
       return
     }
     const document = useDocumentStore.getState().document
+    if (previewFrameId !== null) {
+      const ids = selectedFrameIds(document, previewFrameIds)
+      if (!ids.includes(previewFrameId)) {
+        get().cancelPreview()
+        return
+      }
+      const nextId = stepSelectedFrame(ids, previewFrameId, direction)
+      if (nextId) {
+        const nextIndex = frameIndexById(orderedFrames(document), nextId)
+        set({ index: nextIndex, previewFrameId: nextId, overview: false })
+        flyToFrame(nextIndex)
+      }
+      return
+    }
     const count = orderedFrames(document).length
     const nextIndex = stepFrameIndex(index, count, direction)
     if (nextIndex === index) {
@@ -163,10 +180,11 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
       active: false,
       overview: false,
       cameraBeforeStart: null,
-      previewFrameId: null
+      previewFrameId: null,
+      previewFrameIds: []
     })
   const showOverview = () => {
-    if (!get().active) {
+    if (!get().active || get().previewFrameId !== null) {
       return
     }
     const { transitionMs } = useDocumentStore.getState().document.settings
@@ -182,6 +200,7 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
     cameraBeforeStart: null,
     overview: false,
     previewFrameId: null,
+    previewFrameIds: [],
     start: (fromIndex = 0) => {
       const documentStore = useDocumentStore.getState()
       const count = orderedFrames(documentStore.document).length
@@ -198,12 +217,13 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
         index,
         overview: false,
         previewFrameId: null,
+        previewFrameIds: [],
         cameraBeforeStart: useCameraStore.getState().camera
       })
       // Refit after the OS finishes fullscreen, even if it skipped intermediate resize events.
       void setWindowFullscreen(true).then(() => get().refitToViewport())
     },
-    previewTransition: (frameId) => {
+    previewTransition: (frameId, frameIds = [frameId]) => {
       const { active, previewFrameId } = get()
       // Why: a running slide show owns the camera; a preview replaying itself is the normal case.
       if (active && previewFrameId === null) {
@@ -222,6 +242,10 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
         index: departure.index,
         overview: false,
         previewFrameId: frameId,
+        previewFrameIds: selectedFrameIds(useDocumentStore.getState().document, [
+          ...frameIds,
+          frameId
+        ]),
         // Why: replaying must not record the camera mid-preview as the one to come back to.
         cameraBeforeStart:
           previewFrameId === null ? useCameraStore.getState().camera : get().cameraBeforeStart
@@ -269,11 +293,15 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
     previous: () => step(-1),
     goTo: (index) => {
       const document = useDocumentStore.getState().document
-      const count = orderedFrames(document).length
-      if (!get().active || index < 0 || index >= count) {
+      const frame = orderedFrames(document)[index]
+      const { active, previewFrameId, previewFrameIds } = get()
+      if (!active || !frame) {
         return
       }
-      set({ index, overview: false })
+      if (previewFrameId !== null && !previewFrameIds.includes(frame.id)) {
+        return
+      }
+      set({ index, overview: false, previewFrameId: previewFrameId === null ? null : frame.id })
       flyToFrame(index)
     },
     showOverview,

@@ -6,7 +6,13 @@ import {
   MIN_CAMERA_ARC,
   type FrameElement
 } from './element-types'
-import { frameMotionDiff, pruneFrameTransition, resolveFrameTransition } from './frame-transition'
+import {
+  frameMotionDiff,
+  frameTransitionSelection,
+  mergeFrameTransition,
+  pruneFrameTransition,
+  resolveFrameTransition
+} from './frame-transition'
 
 function frame(id: string, order: number, patch: Partial<FrameElement> = {}): FrameElement {
   return {
@@ -159,5 +165,43 @@ describe('pruneFrameTransition', () => {
   it('keeps a spotlight switched off against a document that dims', () => {
     const settings = { ...defaultDocumentSettings, spotlight: 0.5 }
     expect(pruneFrameTransition({ spotlight: 0 }, settings)).toEqual({ spotlight: 0 })
+  })
+})
+
+describe('batch frame transitions', () => {
+  it('compares resolved values so inherited and explicit defaults are not mixed', () => {
+    const frames = [frame('a', 1), frame('b', 2, { transition: { ms: 1000, roll: 15 } })]
+    expect(frameTransitionSelection(frames, defaultDocumentSettings)).toMatchObject({
+      mixed: ['roll'],
+      overridden: ['ms', 'roll'],
+      resolved: { ms: 1000, roll: 0 }
+    })
+    expect(frameTransitionSelection([], defaultDocumentSettings).mixed).toEqual([])
+  })
+
+  it('merges only edited fields and preserves each frame’s independent overrides', () => {
+    const a = frame('a', 1, { transition: { roll: 15, spotlight: 0.2 } })
+    const b = frame('b', 2, { transition: { roll: -30, easing: 'linear' } })
+    expect(mergeFrameTransition(a, { ms: 2000 }, defaultDocumentSettings)).toEqual({
+      roll: 15,
+      spotlight: 0.2,
+      ms: 2000
+    })
+    expect(mergeFrameTransition(b, { ms: 2000 }, defaultDocumentSettings)).toEqual({
+      roll: -30,
+      easing: 'linear',
+      ms: 2000
+    })
+    expect(a.transition).toEqual({ roll: 15, spotlight: 0.2 })
+    expect(b.transition).toEqual({ roll: -30, easing: 'linear' })
+  })
+
+  it('removes an edited default without losing other overrides or a spotlight switched off', () => {
+    const settings = { ...defaultDocumentSettings, spotlight: 0.5 }
+    const a = frame('a', 1, { transition: { ms: 2000, roll: 15, spotlight: 0 } })
+    expect(mergeFrameTransition(a, { ms: 1000 }, settings)).toEqual({ roll: 15, spotlight: 0 })
+    expect(
+      mergeFrameTransition(frame('b', 2, { transition: { roll: 15 } }), { roll: 0 }, settings)
+    ).toBeUndefined()
   })
 })

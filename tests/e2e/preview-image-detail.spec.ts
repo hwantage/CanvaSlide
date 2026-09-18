@@ -102,7 +102,7 @@ async function requests(page: Page) {
   )
 }
 
-test('reuses the displayed arrival tiles without starting preview-only detail work', async ({
+test('reuses the displayed arrival tiles without starting preview-only detail work @webkit', async ({
   page
 }) => {
   await openPreviewDocument(page)
@@ -115,25 +115,27 @@ test('reuses the displayed arrival tiles without starting preview-only detail wo
   const departure = (await state(page)).camera
   await page.waitForTimeout(250)
   expect((await state(page)).camera).toEqual(departure)
-  expect((await state(page)).layoutZoom).toBe(1)
+  expect((await state(page)).layoutZoom).toBe(Math.max(1, departure.zoom))
   await expect(tiles.first()).toBeHidden()
   await expect
     .poll(async () => (await state(page)).camera, { intervals: [10] })
     .not.toEqual(departure)
-  expect((await state(page)).layoutZoom).toBe(1)
+  // Both shots are at the zoom ceiling, so the flight keeps that layout instead of reflowing twice.
+  expect((await state(page)).layoutZoom).toBe(before.zoom)
   const image = await page.locator('[data-element-id="photo"]').evaluate((node) => {
     const img = node as HTMLImageElement
     const world = document.querySelector<HTMLElement>('[data-testid="world-layer"]')!
     const matrix = new DOMMatrix(getComputedStyle(world).transform)
+    const layoutZoom = Number((world.firstElementChild as HTMLElement).style.zoom)
     const rect = img.getBoundingClientRect()
-    return { layoutWidth: img.width, pixels: img.naturalWidth, worldWidth: rect.width / matrix.a }
+    return { layoutWidth: img.width, worldWidth: rect.width / (matrix.a * layoutZoom) }
   })
-  expect(image.layoutWidth).toBe(image.pixels)
+  expect(image.layoutWidth).toBe(64)
   expect(image.worldWidth).toBeCloseTo(64)
   await expect.poll(async () => (await state(page)).active).toBe(false)
   await expect(tiles.first()).toBeVisible()
   expect((await state(page)).camera).toEqual(before)
-  expect((await state(page)).layoutZoom).toBe(1)
+  expect((await state(page)).layoutZoom).toBe(Math.max(1, before.zoom))
   expect(await original!.evaluate((node) => node.isConnected)).toBe(true)
   expect(await tiles.first().evaluate((node) => (node as HTMLCanvasElement).toDataURL())).toBe(
     pixels

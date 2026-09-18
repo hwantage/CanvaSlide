@@ -83,7 +83,7 @@ test('keeps dense vector frame-list flights composited without changing the docu
   await page.evaluate(() => (window as unknown as RenderingWindow).rendering.stop?.())
 })
 
-test('never composites a light document and keeps it laid out at 1 while panning and zooming', async ({
+test('keeps a light editor document uncomposited and settles its layout after zooming @webkit', async ({
   page
 }) => {
   await page.goto('/')
@@ -116,8 +116,8 @@ test('never composites a light document and keeps it laid out at 1 while panning
     camera.getState().animateTo({ x: 20, y: 30, zoom: 4 }, 350)
   })
   await waitForArrival(page)
-  // …and is not re-laid out at the zoom it lands on either.
-  await expect(layer.locator('> div')).toHaveCSS('zoom', '1')
+  // Even without a compositing hint, the editor needs native layout resolution after landing.
+  await expect(layer.locator('> div')).toHaveCSS('zoom', '4')
   await expect(layer).toHaveCSS('will-change', 'auto')
   await page.evaluate(() => (window as unknown as RenderingWindow).rendering.stop?.())
 })

@@ -43,8 +43,8 @@ export function WorldLayer() {
   }, [baseZoom])
 
   // Why: repainting thousands of SVG roots every frame stalls WebKit, so a dense world is
-  // composited and re-laid out at the zoom once it settles. A lighter one is painted through its
-  // transform instead: as sharp at any zoom, and a layer rasterized at layout scale would blur it.
+  // composited. Light documents avoid that backing store; both settle at native layout resolution
+  // in editing and previews because WebViews may rasterize transformed content at its layout scale.
   useLayoutEffect(() => {
     if (outerRef.current) {
       outerRef.current.style.willChange = compositeVectors ? 'transform' : 'auto'
@@ -79,9 +79,9 @@ export function WorldLayer() {
       className="pointer-events-none absolute left-0 top-0"
       style={{ transformOrigin: '0 0' }}
     >
-      {/* Why: a composited world is re-laid out with CSS zoom once the camera rests, so it stays
-          sharp; a painted one stays at 1 (see worldLayoutZoom). Text metrics must not depend on
-          the zoom either way (see zoomLayerCssStyle). */}
+      {/* Why: editing and previews re-layout with CSS zoom once the camera rests to stay sharp;
+          light slideshows keep their layout (see worldLayoutZoom). Text metrics must not
+          depend on the zoom either way (see zoomLayerCssStyle). */}
       <div
         className="absolute left-0 top-0"
         style={zoomLayerCssStyle(baseZoom, navigator.userAgent)}

@@ -326,9 +326,9 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
   await page.evaluate(() => {
     const f = (window as unknown as FlightWindow).flightTest
     const layer = document.querySelector('[data-testid="world-layer"] > div') as HTMLElement
-    f.unsubscribe = f.camera.subscribe((state) => {
-      f.layoutZooms.push(layer.style.zoom)
-      if (state.animationActive) {
+    f.unsubscribe = f.camera.subscribe((state, previous) => {
+      if (state.animationActive && state.camera !== previous.camera) {
+        f.layoutZooms.push(layer.style.zoom)
         f.flightHints.push((layer.parentElement as HTMLElement).style.willChange)
       }
     })
@@ -341,8 +341,8 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
   await page.waitForFunction(
     () => !(window as unknown as FlightWindow).flightTest.camera.getState().isAnimating()
   )
-  // A painted world is never re-laid out: it stays at 1 and is scaled through its transform.
-  await expect(page.getByTestId('world-layer').locator('> div')).toHaveCSS('zoom', '1')
+  // The editor commits native layout resolution after arrival, keeping layout fixed during flight.
+  await expect(page.getByTestId('world-layer').locator('> div')).toHaveCSS('zoom', '4')
   await expect(page.getByTestId('world-layer')).toHaveCSS('will-change', 'auto')
   const zooms = await page.evaluate(() => {
     const f = (window as unknown as FlightWindow).flightTest
@@ -362,14 +362,14 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
   await expect(page.locator('[data-element-id="distant"]')).toHaveAttribute('src', /^blob:/)
 })
 
-test('keeps a painted world at layout 1 across a large zoom-out and a same-zoom flight', async ({
+test('holds the arrival layout across a large editor zoom-out and a same-zoom flight @webkit', async ({
   page
 }) => {
   await openMaskedImage(page)
   const layer = page.getByTestId('world-layer').locator('> div')
   await setCamera(page, { x: -32000 * 32, y: -16000 * 32, zoom: 32 })
-  // Even at rest the light world is not re-laid out at 32: its transform scales it, sharply.
-  await expect(layer).toHaveCSS('zoom', '1')
+  // Native resolution is needed at rest even when the document has no compositing hint.
+  await expect(layer).toHaveCSS('zoom', '32')
   const url = await page.evaluate(() =>
     performance
       .getEntriesByType('resource')
@@ -381,7 +381,11 @@ test('keeps a painted world at layout 1 across a large zoom-out and a same-zoom 
     const { useCameraStore } = await import(url)
     const layer = document.querySelector('[data-testid="world-layer"] > div') as HTMLElement
     const seen = new Set<string>()
-    const stop = useCameraStore.subscribe(() => seen.add(layer.style.zoom))
+    const stop = useCameraStore.subscribe((state: FlightCamera, previous: FlightCamera) => {
+      if (state.animationActive && state.camera !== previous.camera) {
+        seen.add(layer.style.zoom)
+      }
+    })
     const landed = () =>
       new Promise<void>((resolve) => {
         const tick = () =>
@@ -395,6 +399,6 @@ test('keeps a painted world at layout 1 across a large zoom-out and a same-zoom 
     stop()
     return [...seen]
   }, url)
-  expect(layouts).toEqual(['1'])
-  await expect(layer).toHaveCSS('zoom', '1')
+  expect(layouts).toEqual(['2'])
+  await expect(layer).toHaveCSS('zoom', '2')
 })

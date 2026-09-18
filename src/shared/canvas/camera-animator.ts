@@ -19,7 +19,7 @@ export type CameraAnimatorDeps = {
   setCamera: (camera: Camera) => void
   getViewport: () => Size
   prepare?: (from: Camera, target: Camera, viewport: Size) => CameraPreparation | undefined
-  onActiveChange?: (active: boolean) => void
+  onActiveChange?: (active: boolean, target?: Camera) => void
   onStationaryChange?: (camera: Camera | null) => void
   requestFrame?: (cb: (time: number) => void) => number
   cancelFrame?: (handle: number) => void
@@ -49,10 +49,10 @@ export function createCameraAnimator(deps: CameraAnimatorDeps): CameraAnimator {
   let generation = 0
   let active = false
 
-  const setActive = (value: boolean) => {
+  const setActive = (value: boolean, target?: Camera) => {
     if (active !== value) {
       active = value
-      deps.onActiveChange?.(value)
+      deps.onActiveChange?.(value, target)
     }
   }
 
@@ -167,7 +167,7 @@ export function createCameraAnimator(deps: CameraAnimatorDeps): CameraAnimator {
       if (departure || holdMs > 0) {
         deps.onStationaryChange?.(deps.getCamera())
       }
-      setActive(true)
+      setActive(true, target)
       if (flight !== generation) {
         return
       }

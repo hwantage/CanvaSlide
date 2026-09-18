@@ -83,7 +83,7 @@ test('keeps dense vector frame-list flights composited without changing the docu
   await page.evaluate(() => (window as unknown as RenderingWindow).rendering.stop?.())
 })
 
-test('releases transient compositing on a light document after opening, panning and zooming', async ({
+test('never composites a light document and keeps it laid out at 1 while panning and zooming', async ({
   page
 }) => {
   await page.goto('/')
@@ -108,14 +108,16 @@ test('releases transient compositing on a light document after opening, panning 
     return window.document.querySelector<HTMLElement>('[data-testid="world-layer"]')!.style
       .willChange
   })
-  expect(duringPan).toBe('transform')
+  // A light world is painted through its transform: no transient backing store while panning.
+  expect(duringPan).toBe('auto')
   await expect(layer).toHaveCSS('will-change', 'auto')
   await page.evaluate(() => {
     const { camera } = (window as unknown as RenderingWindow).rendering
     camera.getState().animateTo({ x: 20, y: 30, zoom: 4 }, 350)
   })
   await waitForArrival(page)
-  await expect(layer.locator('> div')).toHaveCSS('zoom', '4')
+  // …and is not re-laid out at the zoom it lands on either.
+  await expect(layer.locator('> div')).toHaveCSS('zoom', '1')
   await expect(layer).toHaveCSS('will-change', 'auto')
   await page.evaluate(() => (window as unknown as RenderingWindow).rendering.stop?.())
 })

@@ -273,10 +273,10 @@ test('drops an image file onto the canvas at the pointer', async ({ page }) => {
   const image = page.locator('[data-element-type="image"]')
   await expect(image).toHaveCount(1)
   // Why: Chromium rounds synthetic event coordinates to whole pixels, so allow sub-pixel drift.
-  const left = await image.evaluate((element) => Number.parseFloat(element.style.left))
-  const top = await image.evaluate((element) => Number.parseFloat(element.style.top))
-  expect(Math.abs(left - 399.5)).toBeLessThan(1)
-  expect(Math.abs(top - 299.5)).toBeLessThan(1)
+  const viewport = (await canvas.boundingBox())!
+  const bounds = (await image.boundingBox())!
+  expect(Math.abs(bounds.x - viewport.x - 399.5)).toBeLessThan(1)
+  expect(Math.abs(bounds.y - viewport.y - 299.5)).toBeLessThan(1)
 })
 
 test('starts the slide show from the selected frame', async ({ page }) => {

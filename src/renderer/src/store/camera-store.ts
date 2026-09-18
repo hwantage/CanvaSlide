@@ -27,6 +27,7 @@ export type CameraState = {
   stationaryCamera: Camera | null
   flightTarget: Camera | null
   flightZoom: number | null
+  animationTarget: Camera | null
 }
 
 export type CameraActions = {
@@ -56,9 +57,10 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
       set({ flightTarget: target, flightZoom: Math.max(from.zoom, target.zoom) })
       return prepareCameraFlight(from, target, viewport)
     },
-    onActiveChange: (animationActive) =>
+    onActiveChange: (animationActive, target) =>
       set({
         animationActive,
+        animationTarget: target ?? null,
         ...(!animationActive ? { flightTarget: null, flightZoom: null } : {})
       }),
     onStationaryChange: (stationaryCamera) => {
@@ -78,6 +80,7 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
     stationaryCamera: null,
     flightTarget: null,
     flightZoom: null,
+    animationTarget: null,
     setCamera: stopAndSet,
     setViewport: (viewport) => set({ viewport }),
     panBy: (dx, dy) => stopAndSet(panBy(get().camera, dx, dy)),

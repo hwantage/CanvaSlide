@@ -13,7 +13,8 @@ function visible(element: ImageElement, selected: boolean): boolean {
 export function useImageSource(
   element: ImageElement,
   asset: ImageAsset | undefined,
-  selected: boolean
+  selected: boolean,
+  layoutScale: number
 ): Pick<ImagePreview, 'src' | 'size'> | undefined {
   const [inView, setInView] = useState(() => visible(element, selected))
   const aspect = element.width / element.height
@@ -64,5 +65,20 @@ export function useImageSource(
   if (!inView || !asset) {
     return undefined
   }
-  return svg ? (preview?.asset === asset ? preview.image : undefined) : { src: asset.data }
+  if (!svg) {
+    return { src: asset.data }
+  }
+  if (preview?.asset !== asset) {
+    return undefined
+  }
+  // Compare detail demand with the original SVG's actual raster dimensions.
+  return preview.image.size
+    ? preview.image
+    : {
+        src: preview.image.src,
+        size: {
+          width: element.width * layoutScale * window.devicePixelRatio,
+          height: element.height * layoutScale * window.devicePixelRatio
+        }
+      }
 }

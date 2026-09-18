@@ -130,7 +130,7 @@ describe('camera-animator', () => {
     clock.step(5000)
     expect(camera).toBe(initial)
     expect(animator.isAnimating()).toBe(true)
-    expect(onActiveChange.mock.calls).toEqual([[true]])
+    expect(onActiveChange.mock.calls).toEqual([[true, target]])
     ready()
     await Promise.resolve()
     clock.step(500)
@@ -142,7 +142,10 @@ describe('camera-animator', () => {
     expect(release).toHaveBeenCalledOnce()
     expect(onDone).toHaveBeenCalledOnce()
     expect(animator.isAnimating()).toBe(false)
-    expect(onActiveChange.mock.calls).toEqual([[true], [false]])
+    expect(onActiveChange.mock.calls).toEqual([
+      [true, target],
+      [false, undefined]
+    ])
   })
 
   it('ignores a cancelled preparation and releases its images when retargeted', async () => {

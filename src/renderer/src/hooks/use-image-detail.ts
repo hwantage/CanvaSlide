@@ -4,6 +4,7 @@ import { imageDetailRegions, type ImageDetailRegion } from '@shared/canvas/image
 import { imageIntersectsViewport } from '@shared/canvas/image-rendering'
 import { camerasEqual, ZOOM_SETTLE_MS } from '@shared/canvas/camera-transform'
 import type { ImagePreview } from '@/lib/svg-image-preview'
+import { expectDetail, withdrawDetail } from '@/lib/image-detail-reveal'
 import { svgDetailCache } from '@/lib/svg-preview-cache'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
@@ -91,11 +92,13 @@ export function useImageDetail(
       }
       const current = generation
       const priority = useDocumentStore.getState().document.order.indexOf(element.id)
+      expectDetail(state.camera, element.id)
       pending = regions.map((region) =>
         svgDetailCache.acquire(asset, element.width / element.height, region, priority)
       )
       const results = await Promise.all(pending.map((lease) => lease.ready))
       if (current !== generation) {
+        withdrawDetail(state.camera, element.id)
         return
       }
       if (results.every((result) => result.canvas)) {
@@ -114,6 +117,7 @@ export function useImageDetail(
         setDetail(next)
         previous.forEach((lease) => lease.release())
       } else {
+        withdrawDetail(state.camera, element.id)
         clear()
       }
     }

@@ -56,7 +56,24 @@ function staticBitmap(data: string): boolean {
   return false
 }
 
-export function staticMaskedSvg(data: string): SVGSVGElement | null {
+function maskedBitmapSvg(root: SVGSVGElement): boolean {
+  if (root.querySelector('text, foreignObject') || !root.querySelector('mask, filter')) {
+    return false
+  }
+  const images = [...root.querySelectorAll('image')]
+  return (
+    images.length > 0 &&
+    images.every((image) =>
+      staticBitmap(
+        image.getAttribute('href') ??
+          image.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ??
+          ''
+      )
+    )
+  )
+}
+
+function stillSvg(data: string): SVGSVGElement | null {
   const doc = new DOMParser().parseFromString(decodeSvg(data), 'image/svg+xml')
   const root = doc.documentElement
   if (root.localName !== 'svg' || doc.querySelector('parsererror')) {
@@ -66,7 +83,6 @@ export function staticMaskedSvg(data: string): SVGSVGElement | null {
     .trim()
     .split(/[\s,]+/)
     .map(Number)
-  // A viewBox is needed to scale coordinates when bounding the preview viewport.
   if (
     viewBox.length !== 4 ||
     !viewBox.every(Number.isFinite) ||
@@ -75,32 +91,27 @@ export function staticMaskedSvg(data: string): SVGSVGElement | null {
   ) {
     return null
   }
-  // Animation and vector text retain their original renderer and resolution.
-  if (
-    doc.querySelector(
-      'animate, animateMotion, animateTransform, set, discard, style, script, text, foreignObject'
-    )
-  ) {
-    return null
-  }
-  if (!doc.querySelector('mask, filter')) {
-    return null
-  }
-  const images = [...doc.querySelectorAll('image')]
-  if (
-    !images.length ||
-    images.some(
-      (image) =>
-        !staticBitmap(
-          image.getAttribute('href') ??
-            image.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ??
-            ''
-        )
-    )
-  ) {
+  // CSS and SMIL animation must keep their live renderer after the camera settles.
+  if (doc.querySelector('animate, animateMotion, animateTransform, set, discard, script, style')) {
     return null
   }
   return root as unknown as SVGSVGElement
+}
+
+export function staticMaskedSvg(data: string): SVGSVGElement | null {
+  const root = stillSvg(data)
+  return root && maskedBitmapSvg(root) ? root : null
+}
+
+type SvgSource = { root: SVGSVGElement; masked: boolean } | null
+const sources = new WeakMap<ImageAsset, SvgSource>()
+
+function svgSource(asset: ImageAsset): SvgSource {
+  if (!sources.has(asset)) {
+    const root = stillSvg(asset.data)
+    sources.set(asset, root ? { root, masked: maskedBitmapSvg(root) } : null)
+  }
+  return sources.get(asset)!
 }
 
 export async function createSvgImagePreview(
@@ -111,9 +122,13 @@ export async function createSvgImagePreview(
   surface: 'png' | 'canvas' = 'png'
 ): Promise<ImagePreview> {
   signal?.throwIfAborted()
-  const svg = staticMaskedSvg(asset.data)
+  // A second SVG image renderer regresses WebKit panning, so previews stay the original unless the
+  // SVG is a bounded photo; a detail render at rest can re-render any still SVG's visible crop.
+  const source = svgSource(asset)
+  // Each crop mutates its own tree while all regions reuse the decoded, validated source.
+  const svg =
+    source && (detail || source.masked) ? (source.root.cloneNode(true) as SVGSVGElement) : null
   if (!svg) {
-    // A second SVG image renderer regresses WebKit panning; only decode the bounded PNG previews.
     return originalImagePreview(asset)
   }
   const viewBox = (svg.getAttribute('viewBox') ?? '')

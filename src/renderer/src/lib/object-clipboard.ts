@@ -1,5 +1,6 @@
 import {
   buildClipboardPayload,
+  clipboardPayloadKey,
   pasteClipboardPayload,
   type ClipboardPayload
 } from '@shared/canvas/clipboard-payload'
@@ -20,7 +21,7 @@ const KEYBOARD_FALLBACK_DELAY_MS = 200
  */
 let memory: ClipboardPayload | null = null
 let copyPointerRevision = 0
-let placement: ObjectPastePlacement | null = null
+let placement: (ObjectPastePlacement & { payloadKey: string }) | null = null
 let pendingFallbacks: ReturnType<typeof setTimeout>[] = []
 
 /** The native `paste` event owns this ⌘V: drop every pending keyboard fallback. */
@@ -82,7 +83,9 @@ export function objectPasteTarget(): Point | null {
 }
 
 export function pasteObjects(payload: ClipboardPayload, target = objectPasteTarget()): void {
-  placement = objectPastePlacement(payload.elements, target, placement)
+  const payloadKey = clipboardPayloadKey(payload)
+  const previous = placement?.payloadKey === payloadKey ? placement : null
+  placement = { ...objectPastePlacement(payload.elements, target, previous), payloadKey }
   const { offset } = placement
   let newIds: string[] = []
   useDocumentStore.getState().applyEdit((d) => {

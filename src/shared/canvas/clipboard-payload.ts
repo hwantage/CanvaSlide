@@ -21,6 +21,16 @@ export const clipboardPayloadSchema = z.object({
 })
 export type ClipboardPayload = z.infer<typeof clipboardPayloadSchema>
 
+export function clipboardPayloadKey(payload: ClipboardPayload): string {
+  // Parsing and in-memory copies can have different property order for the same contents.
+  return JSON.stringify(payload, (_key, value: unknown) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+    }
+    return value
+  })
+}
+
 /** Selected elements in z-order plus the image assets they reference. */
 export function buildClipboardPayload(
   document: CanvasDocument,

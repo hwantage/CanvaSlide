@@ -45,6 +45,50 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks())
 
 describe('clipboard placement routes', () => {
+  it.each([true, false])(
+    'resets offsets for changed contents (pointer target: %s)',
+    (atPointer) => {
+      if (!atPointer) {
+        pointer.world = null
+      }
+      const firstPosition = atPointer ? { x: 750, y: 580 } : { x: 24, y: 24 }
+      insertClipboardText(payload)
+      expect(selected()).toMatchObject(firstPosition)
+      insertClipboardText(payload)
+      expect(selected()).toMatchObject({ x: firstPosition.x + 24, y: firstPosition.y + 24 })
+      insertClipboardText(payload.replace('Source', 'Edited source'))
+      expect(selected()).toMatchObject({ ...firstPosition, text: 'Edited source' })
+    }
+  )
+
+  it('continues the cascade across repeated parsing and the same remembered payload', async () => {
+    insertClipboardText(payload)
+    await pasteFromSystemClipboard()
+    expect(selected()).toMatchObject({ x: 774, y: 604 })
+    vi.mocked(readNativeClipboardText).mockResolvedValueOnce('')
+    vi.stubGlobal('navigator', { clipboard: { readText: async () => '' } })
+    try {
+      await pasteFromSystemClipboard()
+      expect(selected()).toMatchObject({ x: 798, y: 628 })
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('resets placement when the remembered fallback differs from the last system payload', async () => {
+    vi.mocked(readNativeClipboardText).mockResolvedValueOnce(payload.replace('Source', 'Other'))
+    await pasteFromSystemClipboard()
+    expect(selected()).toMatchObject({ text: 'Other', x: 750, y: 580 })
+    vi.mocked(readNativeClipboardText).mockResolvedValueOnce('')
+    vi.stubGlobal('navigator', { clipboard: { readText: async () => '' } })
+    try {
+      await pasteFromSystemClipboard()
+      expect(selected()).toMatchObject({ text: 'Source', x: 750, y: 580 })
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('holds the requested location while the OS clipboard read is pending', async () => {
     let resolveText!: (value: string) => void
     const text = new Promise<string>((resolve) => {

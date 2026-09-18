@@ -159,6 +159,34 @@ test('native clipboard events preserve grouped layout and reconnect copied hosts
   await expectPath(paths.nth(0), [200, 150, 300, 150])
 })
 
+test('resets the cascade for changed native clipboard contents at the same pointer @webkit', async ({
+  page
+}) => {
+  await page.keyboard.press('r')
+  await dragOnCanvas(page, [200, 200], [320, 280])
+  const payload = await page.evaluate(() => {
+    const data = new DataTransfer()
+    document.dispatchEvent(new ClipboardEvent('copy', { clipboardData: data, bubbles: true }))
+    return data.getData('text/plain')
+  })
+  await moveOnCanvas(page, 740, 500)
+  const shapes = page.locator('[data-element-type="shape"]')
+  for (const [index, text] of [
+    payload,
+    payload.replace('rectangle', 'ellipse'),
+    payload.replace('rectangle', 'ellipse')
+  ].entries()) {
+    await page.evaluate((value) => {
+      const data = new DataTransfer()
+      data.setData('text/plain', value)
+      document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true }))
+    }, text)
+    await expect(shapes).toHaveCount(index + 2)
+    await expect(shapes.nth(index + 1)).toHaveCSS('left', index === 2 ? '704px' : '680px')
+    await expectTop(shapes.nth(index + 1), index === 2 ? 484 : 460)
+  }
+})
+
 test('context-menu object paste keeps the original source offset @webkit', async ({ page }) => {
   const mod = await primaryModifier(page)
   await page.keyboard.press('r')

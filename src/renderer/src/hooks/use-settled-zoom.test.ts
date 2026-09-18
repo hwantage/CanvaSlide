@@ -57,6 +57,7 @@ describe('settled layout zoom', () => {
     expect(result.current).toBe(1)
     act(() => useCameraStore.setState({ camera: at(3) }))
     rerender({ composited: true })
+    expect(result.current).toBe(1)
     act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
     expect(result.current).toBe(3)
   })

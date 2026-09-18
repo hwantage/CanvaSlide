@@ -19,6 +19,9 @@ export function useSettledZoom(composited: boolean): number {
   const stationary = useCameraStore((s) => s.stationaryCamera)
   // The composited world's settled zoom; a painted world ignores it and reads 1 below.
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
+  if (!composited && zoom !== 1) {
+    setZoom(1)
+  }
   useEffect(() => {
     if (!composited) {
       return

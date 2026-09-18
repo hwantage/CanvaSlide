@@ -13,7 +13,8 @@ function visible(element: ImageElement, selected: boolean): boolean {
 export function useImageSource(
   element: ImageElement,
   asset: ImageAsset | undefined,
-  selected: boolean
+  selected: boolean,
+  layoutScale: number
 ): Pick<ImagePreview, 'src' | 'size'> | undefined {
   const [inView, setInView] = useState(() => visible(element, selected))
   const aspect = element.width / element.height
@@ -70,15 +71,14 @@ export function useImageSource(
   if (preview?.asset !== asset) {
     return undefined
   }
-  // Why: an SVG shown as-is is rasterized by WebKit at its layout size, so that is the resolution
-  // the detail renderer compares the screen against.
+  // Compare detail demand with the original SVG's actual raster dimensions.
   return preview.image.size
     ? preview.image
     : {
         src: preview.image.src,
         size: {
-          width: element.width * window.devicePixelRatio,
-          height: element.height * window.devicePixelRatio
+          width: element.width * layoutScale * window.devicePixelRatio,
+          height: element.height * layoutScale * window.devicePixelRatio
         }
       }
 }

@@ -9,7 +9,7 @@ type ReflowWindow = {
 }
 
 /** Screen-space line boxes of every text on screen, keyed by element id. */
-type TextLines = Record<string, { x: number; width: number }[]>
+type TextLines = Record<string, { x: number; y: number; width: number }[]>
 
 function text(id: string, x: number, y: number, width: number, fontSize: number, body: string) {
   return {
@@ -43,7 +43,7 @@ function filler(index: number) {
   }
 }
 
-async function openDeck(page: Page) {
+async function openDeck(page: Page, dense: boolean) {
   const elements = [
     { id: 'wide', type: 'frame', name: 'Wide', order: 0, x: 0, y: 0, width: 3200, height: 1800 },
     {
@@ -66,9 +66,8 @@ async function openDeck(page: Page) {
       10,
       'A ten pixel paragraph wrapping across a few lines to see whether a line break flips between the two layouts of the same text.'
     ),
-    // Why: only a composited (dense) world is re-laid out when a flight lands; a painted one
-    // never is, so the deck has to be dense for the landing commit to exist at all.
-    ...Array.from({ length: DENSE_VECTOR_COUNT }, (_, index) => filler(index))
+    // Dense worlds commit a layout zoom after landing; light worlds keep their original layout.
+    ...Array.from({ length: dense ? DENSE_VECTOR_COUNT : 0 }, (_, index) => filler(index))
   ]
   const document = {
     version: 2,
@@ -117,7 +116,16 @@ const measureLines = (page: Page) =>
       const id = box.closest<HTMLElement>('[data-element-id]')!.dataset.elementId!
       const range = document.createRange()
       range.selectNodeContents(box)
-      lines[id] = [...range.getClientRects()].map((r) => ({ x: r.x, width: r.width }))
+      lines[id] = []
+      for (const r of range.getClientRects()) {
+        const previous = lines[id].at(-1)
+        // Blink can return a separate trailing-space fragment on the same line.
+        if (previous?.y === r.y) {
+          previous.width = Math.max(previous.width, r.right - previous.x)
+        } else {
+          lines[id].push({ x: r.x, y: r.y, width: r.width })
+        }
+      }
     }
     return lines
   })
@@ -130,45 +138,60 @@ const waitForArrival = (page: Page) =>
     () => !(window as unknown as ReflowWindow).reflow.camera.getState().isAnimating()
   )
 
-// Why: only WebKit sizes the system font's tracking from the laid-out size; Chromium passes this
-// regardless, so run it there too with CANVASLIDE_E2E_WEBKIT=1 --project=webkit. The deck is
-// dense on purpose: a painted world is never re-laid out, a composited one commits the arrival
-// zoom after landing and must not move a glyph doing so.
-test('text keeps its line breaks and widths from the moment a flight lands until the layout settles @webkit', async ({
-  page,
-  browserName
-}) => {
-  await openDeck(page)
-  await bindStores(page)
+for (const dense of [false, true]) {
+  test(`text keeps its layout after landing in a ${dense ? 'dense' : 'light'} world @webkit`, async ({
+    page,
+    browserName
+  }) => {
+    await openDeck(page, dense)
+    await bindStores(page)
 
-  await page.evaluate(() =>
-    (window as unknown as ReflowWindow).reflow.presentation.getState().start(0)
-  )
-  await waitForArrival(page)
-  await expect.poll(() => layoutZoom(page)).toBe('1')
+    await page.evaluate(() =>
+      (window as unknown as ReflowWindow).reflow.presentation.getState().start(0)
+    )
+    await waitForArrival(page)
+    await expect.poll(() => layoutZoom(page)).toBe('1')
 
-  await page.evaluate(() =>
-    (window as unknown as ReflowWindow).reflow.presentation.getState().goTo(1)
-  )
-  await waitForArrival(page)
-  // The flight has landed but the settle timer has not committed the arrival zoom yet.
-  expect(await layoutZoom(page)).toBe('1')
-  const landed = await measureLines(page)
-  expect(Object.keys(landed).sort()).toEqual(['korean', 'latin', 'paragraph'])
-  expect(landed.paragraph!.length).toBeGreaterThan(1)
+    await page.evaluate(() =>
+      (window as unknown as ReflowWindow).reflow.presentation.getState().goTo(1)
+    )
+    await waitForArrival(page)
+    expect(await layoutZoom(page)).toBe('1')
+    const landed = await measureLines(page)
+    expect(Object.keys(landed).sort()).toEqual(['korean', 'latin', 'paragraph'])
+    expect(landed.paragraph!.length).toBeGreaterThan(1)
 
-  await expect.poll(() => layoutZoom(page)).not.toBe('1')
-  const settled = await measureLines(page)
-  for (const [id, lines] of Object.entries(landed)) {
-    expect(settled[id], id).toHaveLength(lines.length)
-    lines.forEach((line, index) => {
-      expect(settled[id]![index]!.x, `${id} line ${index} x`).toBeCloseTo(line.x, 0)
-      expect(settled[id]![index]!.width, `${id} line ${index} width`).toBeCloseTo(line.width, 0)
-    })
-  }
-  // Blink lays the system font out consistently on its own; only WebKit needs optical sizing off.
-  await expect(page.locator('[data-element-id="latin"]')).toHaveCSS(
-    'font-optical-sizing',
-    browserName === 'webkit' ? 'none' : 'auto'
-  )
-})
+    if (dense) {
+      await expect.poll(() => layoutZoom(page)).not.toBe('1')
+    } else {
+      await page.waitForTimeout(300)
+      expect(await layoutZoom(page)).toBe('1')
+    }
+    const settled = await measureLines(page)
+    const zoom = Number(await layoutZoom(page))
+    for (const [id, lines] of Object.entries(landed)) {
+      expect(settled[id], id).toHaveLength(lines.length)
+      lines.forEach((line, index) => {
+        for (const axis of ['x', 'y', 'width'] as const) {
+          // Blink quantizes glyph advances and font ascent when dense worlds change CSS zoom.
+          const tolerance =
+            dense && browserName === 'chromium'
+              ? axis === 'width'
+                ? Math.max(0.1, line.width * 0.005)
+                : axis === 'y'
+                  ? zoom + 1
+                  : 0.1
+              : 0.1
+          expect(
+            Math.abs(settled[id]![index]![axis] - line[axis]),
+            `${id} line ${index} ${axis}`
+          ).toBeLessThan(tolerance)
+        }
+      })
+    }
+    await expect(page.locator('[data-element-id="latin"]')).toHaveCSS(
+      'font-optical-sizing',
+      browserName === 'webkit' ? 'none' : 'auto'
+    )
+  })
+}

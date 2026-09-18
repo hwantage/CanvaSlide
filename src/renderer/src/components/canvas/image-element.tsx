@@ -19,7 +19,8 @@ export function ImageElement({
   layoutScale: number
 }) {
   const asset = useDocumentStore((s) => s.document.assets[element.assetId])
-  const preview = useImageSource(element, asset, selected)
+  const scale = Math.max(svgImageLayoutScale(element), layoutScale)
+  const preview = useImageSource(element, asset, selected, scale)
   const { tiles: detail, visible } = useImageDetail(element, asset, preview)
   const surface = useRef<HTMLCanvasElement | null>(null)
   const paintedCamera = useRef(useCameraStore.getState().camera)
@@ -57,7 +58,6 @@ export function ImageElement({
   const showDetail = visible && detail && painted === detail && revealed
   // An SVG shown as-is is rasterized at its layout size: lay it out larger and scale it back.
   const vector = asset?.mime === 'image/svg+xml' && preview?.src === asset.data
-  const scale = vector ? Math.max(svgImageLayoutScale(element), layoutScale) : 1
   const previewSize = vector
     ? { width: element.width * scale, height: element.height * scale }
     : (preview?.size ?? asset ?? element)

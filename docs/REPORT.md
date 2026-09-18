@@ -353,9 +353,11 @@ React·Tauri에 의존하지 않는 8개 모듈(총 ~900줄)이 카메라 수학
    transform만으로 축소한다. WebKit이 `zoom`으로 줄어든 글자를 최소 글꼴 크기(6px)에서 멈춰 세워 글자가
    상자 밖으로 삐져나오기 때문이다(`layoutZoomFor`). 레이아웃 배율이 바뀌어도 텍스트 폭이 같도록 월드 레이어는
    WebKit에서 `font-optical-sizing: none`으로 둔다(`zoom-layer-style.ts`, 항목 22). 합성 문서의 비행은 도착 배율이
-   출발 레이아웃 이하면 처음부터 도착 배율로 레이아웃해 착륙 시 재레이아웃이 없다(`flightLayoutZoom`). WKWebView는 SVG `<img>`와 가속 캔버스를
+   출발 레이아웃 이하면 처음부터 도착 배율로 레이아웃해 착륙 시 재레이아웃이 없다(`flightLayoutZoom`). Chromium 합성 문서에서는
+   CSS 배율 변경 시 운영체제 글꼴 반올림이 남는다. 약 3.24배 회귀 장면에서 폭은 CI 최대 1.98px, 세로 위치는 macOS 최대 3.99px
+   차이였다. 가벼운 문서와 WebKit은 x·y·폭 차이 0.1px 미만으로 검사한다. WKWebView는 SVG `<img>`와 가속 캔버스를
    레이아웃 크기로 래스터하므로, 배율 1 월드에서는 벡터 SVG `<img>`를 k배로 레이아웃하고 `scale(1/k)`로 되돌려 비행 중에도
-   읽히는 해상도로 래스터되게 하며(`svgImageLayoutScale`), 정지 시에는 벡터 SVG도 상세 타일로 다시 그리고(`stillSvg`), 이미지의 상세
+   읽히는 해상도로 래스터되게 하며(`svgImageLayoutScale`), 정지 시 그 해상도가 부족한 정적 SVG만 상세 타일로 다시 그리고(`stillSvg`), 이미지의 상세
    타일은 한 장의 CPU 캔버스로 합쳐 표시한다(`mergeDetailTiles`). WKWebView는 CPU 캔버스도 transform 적용 전에
    출력 사각형을 정수로 반올림하므로 작은 월드 크기로 배치하면 오차가 확대된다. 미리보기와 상세는 공통 원점
    아래 픽셀 크기로 레이아웃하고 transform으로 월드 영역에 매핑한다(`imageSurfaceStyle`). 타일은 전체 표면의

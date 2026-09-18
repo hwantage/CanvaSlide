@@ -69,6 +69,10 @@ export const ko: UiStrings = {
 
   'props.name': '이름',
   'props.size': '크기',
+  'preview.previous': '이전 선택 프레임',
+  'preview.next': '다음 선택 프레임',
+  'motion.mixed': '혼합',
+  'motion.previewSelected': '선택한 프레임 미리보기',
   'preview.title': '미리보기',
   'preview.replay': '다시 재생',
   'preview.close': '미리보기 닫기',

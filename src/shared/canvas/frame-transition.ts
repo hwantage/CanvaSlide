@@ -53,6 +53,31 @@ export function resolveFrameTransition(
 export const motionFields = ['ms', 'easing', 'arc', 'roll', 'spotlight'] as const
 export type MotionField = (typeof motionFields)[number]
 
+export function frameTransitionSelection(
+  frames: readonly FrameElement[],
+  settings: DocumentSettings
+): { resolved: ResolvedFrameTransition; mixed: MotionField[]; overridden: MotionField[] } {
+  const motions = frames.map((frame) => resolveFrameTransition(frame, settings))
+  const resolved = motions[0] ?? resolveFrameTransition(undefined, settings)
+  return {
+    resolved,
+    mixed: motionFields.filter((field) =>
+      motions.some((motion) => motion[field] !== resolved[field])
+    ),
+    overridden: motionFields.filter((field) =>
+      frames.some((frame) => frame.transition?.[field] !== undefined)
+    )
+  }
+}
+
+export function mergeFrameTransition(
+  frame: FrameElement,
+  change: FrameTransition,
+  settings: DocumentSettings
+): FrameTransition | undefined {
+  return pruneFrameTransition({ ...frame.transition, ...change }, settings)
+}
+
 /**
  * Which parts of this frame's flight will actually look different from the document default.
  * Compared after resolving, not by looking for override keys: a frame that pins the value the

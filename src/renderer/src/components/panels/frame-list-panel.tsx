@@ -1,5 +1,13 @@
 import { Gauge, Lightbulb, Play, Spline, Square, Timer } from 'lucide-react'
-import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import {
+  useCallback,
+  useRef,
+  useState,
+  type DragEvent,
+  type MouseEvent,
+  type ReactNode
+} from 'react'
+import { selectFrameInList } from '@shared/canvas/frame-selection'
 import { elementRect } from '@shared/canvas/element-bounds'
 import type { DocumentSettings, FrameElement } from '@shared/canvas/element-types'
 import { gapAtPointer } from '@shared/canvas/list-drop-gap'
@@ -15,6 +23,7 @@ import { inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
 import { motionSummary } from '@/lib/motion-presets'
+import { hasPrimaryModifier } from '@/lib/platform-keys'
 import { useCameraStore } from '@/store/camera-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
@@ -92,6 +101,7 @@ export function FrameListPanel() {
   const [dropGap, setDropGap] = useState<number | null>(null)
   const [dragging, setDragging] = useState<number | null>(null)
   const frames = orderedFrames(document)
+  const anchorId = useRef<string | null>(null)
 
   // Why: one click both highlights the frame on the canvas and brings it into view.
   const focusFrame = (frame: FrameElement) => {
@@ -100,6 +110,20 @@ export function FrameListPanel() {
     usePresentationStore.getState().cancelPreview()
     setSelection([frame.id])
     fitRect(elementRect(frame))
+  }
+
+  const selectFrame = (event: MouseEvent, frame: FrameElement) => {
+    const toggle = hasPrimaryModifier(event)
+    const selection = selectFrameInList(frames, selectedIds, frame.id, anchorId.current, {
+      range: event.shiftKey,
+      toggle
+    })
+    anchorId.current = selection.anchorId
+    if (event.shiftKey || toggle) {
+      setSelection(selection.selectedIds)
+    } else {
+      focusFrame(frame)
+    }
   }
 
   const listRef = useRef<HTMLOListElement>(null)
@@ -202,7 +226,8 @@ export function FrameListPanel() {
               <button
                 type="button"
                 className="flex h-full min-w-0 flex-1 items-center gap-2 text-left"
-                onClick={() => focusFrame(frame)}
+                aria-pressed={selected}
+                onClick={(event) => selectFrame(event, frame)}
               >
                 <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded bg-muted px-1 text-[11px] font-medium text-muted-foreground tabular-nums">
                   {index + 1}

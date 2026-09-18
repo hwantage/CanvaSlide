@@ -632,6 +632,7 @@ export const en = {
   'update.install': 'Install and restart',
   'update.downloading': 'Downloading… {p}%',
   'update.openReleases': 'Open download page',
+  'update.openReleasesError': 'Could not open the download page: {message}',
   'update.macHint': 'On macOS, download the new version from the release page and replace the app.',
   'update.error': 'Update check failed: {message}',
   'update.checkOnLaunch': 'Check for updates when the app starts',

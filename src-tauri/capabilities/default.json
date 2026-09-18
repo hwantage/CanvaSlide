@@ -14,7 +14,10 @@
     "dialog:allow-message",
     "updater:default",
     "process:allow-restart",
-    "opener:allow-open-url",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://github.com/hwantage/CanvaSlide/releases" }]
+    },
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-read-image"
   ]

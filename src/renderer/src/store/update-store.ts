@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { errorText } from '@/platform/document-file-access'
+import { t } from '@/i18n/ui-strings'
+import { errorText, showErrorMessage } from '@/platform/document-file-access'
 import {
   checkForAppUpdate,
   installAppUpdate,
@@ -62,7 +63,13 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
       set({ status: 'error', error: errorText(error) })
     }
   },
-  openReleases: () => openReleasesPage(),
+  openReleases: async () => {
+    try {
+      await openReleasesPage()
+    } catch (error) {
+      await showErrorMessage(t('update.openReleasesError', { message: errorText(error) }))
+    }
+  },
   setCheckOnLaunch: (checkOnLaunch) => {
     set({ checkOnLaunch })
     try {

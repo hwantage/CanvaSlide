@@ -1,6 +1,7 @@
 import { remapConnectorHosts, translateConnector } from './connector-geometry'
 import { pruneUnreferencedAssets } from './document-assets'
 import { remapGroupIds } from './element-groups'
+import { remapFrameContents } from './frame-contents'
 import { selectionIsOnlyFrames } from './frame-from-selection'
 import { nextFrameOrder } from './presentation-sequence'
 import type { CanvasDocument, CanvasElement, ElementId, ImageAsset, Point } from './element-types'
@@ -121,7 +122,7 @@ export function cloneElements(
   const copies: CanvasElement[] = []
   let frameOrder = nextFrameOrder(document)
   const newIds: ElementId[] = []
-  for (const source of remapGroupIds(cloneable, makeId)) {
+  for (const source of remapGroupIds(remapFrameContents(cloneable, idMap), makeId)) {
     let copy: CanvasElement = { ...source, id: idMap.get(source.id) as ElementId }
     // Why: translating skips attached ends, so detach missing hosts before applying the offset.
     if (copy.type === 'connector') {

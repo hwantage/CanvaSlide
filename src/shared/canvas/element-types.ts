@@ -30,7 +30,9 @@ const rectSchema = z.object({
 const elementBaseSchema = rectSchema.extend({
   id: z.string().min(1),
   // Why: groups are flat sets of elements sharing an id (Miro-style); optional so older files load.
-  groupId: z.string().min(1).optional()
+  groupId: z.string().min(1).optional(),
+  // Copied frames and contents share a key to disambiguate overlapping source/copy bounds.
+  frameContentKey: z.string().min(1).optional()
 })
 
 export const shapeStyleSchema = z.object({

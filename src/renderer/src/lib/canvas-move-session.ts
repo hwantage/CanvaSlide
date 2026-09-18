@@ -3,7 +3,8 @@ import {
   patchElements,
   translateElement
 } from '@shared/canvas/document-mutations'
-import { elementRect, unionRects, withFrameContents } from '@shared/canvas/element-bounds'
+import { elementRect, unionRects } from '@shared/canvas/element-bounds'
+import { withFrameContents } from '@shared/canvas/frame-contents'
 import { constrainToAxis } from '@shared/canvas/drag-constraints'
 import type { CanvasElement, ElementId, Point, Rect } from '@shared/canvas/element-types'
 import { computeSnap } from '@shared/canvas/snap-guides'

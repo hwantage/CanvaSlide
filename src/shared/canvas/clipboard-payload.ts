@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { upsertAsset } from './document-assets'
 import { cloneElements } from './document-mutations'
-import { withFrameContents } from './element-bounds'
+import { withFrameContents } from './frame-contents'
 import {
   canvasElementSchema,
   imageAssetSchema,

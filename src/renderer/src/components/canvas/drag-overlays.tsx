@@ -102,6 +102,7 @@ export function DragOverlays() {
     <div className="pointer-events-none absolute inset-0">
       {dragBox && (
         <div
+          data-testid="selection-marquee"
           className="absolute border border-selection bg-selection/10"
           style={rectToCssPosition(worldRectToScreen(camera, dragBox))}
         />

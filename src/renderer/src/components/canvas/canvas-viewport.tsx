@@ -57,7 +57,8 @@ export function CanvasViewport() {
       onPointerDown={handlers.onPointerDown}
       onPointerMove={handlers.onPointerMove}
       onPointerUp={handlers.onPointerUp}
-      onPointerCancel={handlers.onPointerUp}
+      onPointerCancel={handlers.onPointerCancel}
+      onLostPointerCapture={handlers.onPointerCancel}
       onDoubleClick={handlers.onDoubleClick}
       onContextMenu={handlers.onContextMenu}
       onDragOver={handlers.onDragOver}

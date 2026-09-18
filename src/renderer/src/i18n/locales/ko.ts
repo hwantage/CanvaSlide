@@ -633,6 +633,7 @@ export const ko: UiStrings = {
   'update.install': '설치 후 다시 시작',
   'update.downloading': '다운로드 중… {p}%',
   'update.openReleases': '다운로드 페이지 열기',
+  'update.openReleasesError': '다운로드 페이지를 열지 못했습니다: {message}',
   'update.macHint': 'macOS에서는 릴리즈 페이지에서 새 버전을 내려받아 앱을 교체하세요.',
   'update.error': '업데이트 확인 실패: {message}',
   'update.checkOnLaunch': '앱을 시작할 때 업데이트 확인',

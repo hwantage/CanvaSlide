@@ -2,7 +2,7 @@ import type { Update } from '@tauri-apps/plugin-updater'
 import { isNewerVersion } from '@shared/canvas/app-version'
 import { isTauriRuntime } from './tauri-runtime'
 
-export const RELEASES_URL = 'https://github.com/hwantage/CanvaSlide/releases/latest'
+export const RELEASES_URL = 'https://github.com/hwantage/CanvaSlide/releases'
 const LATEST_JSON_URL =
   'https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json'
 

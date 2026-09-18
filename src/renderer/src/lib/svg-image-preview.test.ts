@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { createSvgImagePreview, staticMaskedSvg } from './svg-image-preview'
 import { rasterizeSvg } from './svg-raster'
 
-vi.mock('./svg-raster', () => ({ rasterizeSvg: vi.fn() }))
+vi.mock(import('./svg-raster'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  rasterizeSvg: vi.fn()
+}))
 
 const png =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII='

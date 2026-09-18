@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { errorText } from '@/platform/document-file-access'
 import {
   checkForAppUpdate,
   installAppUpdate,
@@ -46,7 +47,7 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
       const update = await checkForAppUpdate()
       set({ status: update ? 'available' : 'upToDate', update })
     } catch (error) {
-      set({ status: 'error', error: error instanceof Error ? error.message : String(error) })
+      set({ status: 'error', error: errorText(error) })
     }
   },
   install: async () => {
@@ -58,7 +59,7 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
     try {
       await installAppUpdate((progress) => set({ progress }))
     } catch (error) {
-      set({ status: 'error', error: error instanceof Error ? error.message : String(error) })
+      set({ status: 'error', error: errorText(error) })
     }
   },
   openReleases: () => openReleasesPage(),

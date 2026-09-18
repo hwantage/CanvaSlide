@@ -1,5 +1,6 @@
 import css from './player.css?inline'
 import type { CanvasDocument } from '@shared/canvas/element-types'
+import { presentationKeyAction } from '@shared/canvas/presentation-keys'
 import { renderDocument } from './player-dom'
 import { createPlayerPresentation, type PlayerPresentation } from './player-presentation'
 
@@ -55,30 +56,23 @@ function buildNav(presentation: PlayerPresentation): HTMLElement {
 
 function bindKeyboard(presentation: PlayerPresentation): void {
   window.addEventListener('keydown', (event) => {
-    switch (event.key) {
-      case 'ArrowRight':
-      case 'ArrowDown':
-      case ' ':
-      case 'PageDown':
-      case 'Enter':
+    switch (presentationKeyAction(event.key)) {
+      case 'next':
         presentation.next()
         break
-      case 'ArrowLeft':
-      case 'ArrowUp':
-      case 'PageUp':
-      case 'Backspace':
+      case 'previous':
         presentation.previous()
         break
-      case 'o':
-      case 'O':
+      case 'toggleOverview':
         presentation.toggleOverview()
         break
-      case 'Escape':
+      case 'escape':
+        // Why: there is no editor to go back to; Escape only leaves the overview.
         if (presentation.overview) {
           presentation.goTo(presentation.index)
         }
         break
-      default:
+      case null:
         return
     }
     event.preventDefault()

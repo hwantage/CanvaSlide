@@ -1,4 +1,5 @@
 import { visibleWorldRect } from '@shared/canvas/camera-transform'
+import { parseClipboardPayload } from '@shared/canvas/clipboard-payload'
 import { createImageAsset } from '@shared/canvas/document-assets'
 import type { Point, Rect } from '@shared/canvas/element-types'
 import { cascadeRect } from '@shared/canvas/paste-placement'
@@ -6,8 +7,8 @@ import { normalizePastedText, pastedTextWidth } from '@shared/canvas/pasted-text
 import { decodeImageFile } from '@/lib/clipboard-image'
 import { pickFiles } from '@/lib/file-picker'
 import { createImageElement, createTextElement, placeImageRect } from '@/lib/element-factory'
-import { memoryPayload, pasteObjects, payloadFromClipboardText } from '@/lib/object-clipboard'
-import { showErrorMessage } from '@/platform/document-file-access'
+import { memoryPayload, pasteObjects } from '@/lib/object-clipboard'
+import { reportError } from '@/platform/document-file-access'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
@@ -54,7 +55,7 @@ export function insertPlainText(raw: string, at?: Point): boolean {
 
 /** Clipboard text: our own object payload first, otherwise plain text. */
 export function insertClipboardText(text: string, at?: Point): boolean {
-  const payload = payloadFromClipboardText(text)
+  const payload = parseClipboardPayload(text)
   if (payload) {
     pasteObjects(payload)
     return true
@@ -120,7 +121,7 @@ export async function importPickedFiles(at?: Point): Promise<void> {
     try {
       await insertFile(file, at)
     } catch (error) {
-      await showErrorMessage(error instanceof Error ? error.message : String(error))
+      await reportError(error)
     }
   }
 }

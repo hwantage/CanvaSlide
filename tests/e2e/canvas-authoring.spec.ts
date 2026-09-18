@@ -1,22 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
-
-// Why: shortcuts follow the page's platform (userAgent), not the test runner's OS.
-async function primaryModifier(page: Page): Promise<'Meta' | 'Control'> {
-  const isMac = await page.evaluate(() => /Mac/.test(navigator.userAgent))
-  return isMac ? 'Meta' : 'Control'
-}
-
-async function dragOnCanvas(page: Page, from: [number, number], to: [number, number]) {
-  const canvas = page.getByTestId('canvas-viewport')
-  const box = await canvas.boundingBox()
-  if (!box) {
-    throw new Error('canvas not laid out')
-  }
-  await page.mouse.move(box.x + from[0], box.y + from[1])
-  await page.mouse.down()
-  await page.mouse.move(box.x + to[0], box.y + to[1], { steps: 8 })
-  await page.mouse.up()
-}
+import { expect, test } from '@playwright/test'
+import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')

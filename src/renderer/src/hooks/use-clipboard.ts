@@ -13,7 +13,7 @@ import {
   setKeyboardPasteFallback
 } from '@/lib/object-clipboard'
 import { isEditableTarget } from '@/lib/platform-keys'
-import { showErrorMessage } from '@/platform/document-file-access'
+import { reportError } from '@/platform/document-file-access'
 import { usePresentationStore } from '@/store/presentation-store'
 
 /** A PDF copied from the file manager arrives as a file item on engines that expose it. */
@@ -54,7 +54,7 @@ export function useClipboard(): void {
         try {
           await insertFile(file)
         } catch (error) {
-          await showErrorMessage(error instanceof Error ? error.message : String(error))
+          await reportError(error)
         }
         return
       }

@@ -1,6 +1,7 @@
 import { createImageAsset, mimeOfDataUrl } from '@shared/canvas/document-assets'
 import type { CanvasDocument, ImageAsset } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
+import { drawScaled, loadBitmap } from './scaled-bitmap'
 
 export const exportQualities = ['original', 'balanced', 'small'] as const
 export type ExportQuality = (typeof exportQualities)[number]
@@ -13,15 +14,6 @@ export const exportQualityPresets: Record<
   original: null,
   balanced: { maxEdge: 1600, quality: 0.85 },
   small: { maxEdge: 1200, quality: 0.75 }
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error(t('error.decodeAsset')))
-    img.src = src
-  })
 }
 
 /** Prefers WebP (alpha-safe, smallest); falls back when the engine cannot encode it. */
@@ -39,18 +31,15 @@ export async function recompressAsset(
   asset: ImageAsset,
   preset: { maxEdge: number; quality: number }
 ): Promise<ImageAsset> {
-  const img = await loadImage(asset.data)
-  const scale = Math.min(1, preset.maxEdge / Math.max(img.naturalWidth, img.naturalHeight))
-  const width = Math.max(1, Math.round(img.naturalWidth * scale))
-  const height = Math.max(1, Math.round(img.naturalHeight * scale))
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const context = canvas.getContext('2d')
-  if (!context) {
+  const img = await loadBitmap(asset.data, () => t('error.decodeAsset'))
+  let scaled: ReturnType<typeof drawScaled>
+  try {
+    scaled = drawScaled(img, preset.maxEdge, () => t('error.canvasContext'))
+  } catch {
+    // Why: no 2D context means nothing can be re-encoded; the original is still a valid export.
     return asset
   }
-  context.drawImage(img, 0, 0, width, height)
+  const { canvas, width, height } = scaled
   const data = encode(canvas, mimeOfDataUrl(asset.data), preset.quality)
   // Why: never let "compression" grow a file (tiny PNGs re-encode larger).
   if (data.length >= asset.data.length) {

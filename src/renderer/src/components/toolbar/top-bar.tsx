@@ -22,9 +22,11 @@ import {
   selectDocument,
   useDocumentStore
 } from '@/store/document-store'
-import { useExportDialogStore } from '@/store/export-dialog-store'
-import { useSettingsDialogStore } from '@/store/settings-dialog-store'
-import { useShortcutHelpStore } from '@/store/shortcut-help-store'
+import {
+  useExportDialogStore,
+  useSettingsDialogStore,
+  useShortcutHelpStore
+} from '@/store/modal-dialogs'
 import { selectUpdateAvailable, useUpdateStore } from '@/store/update-store'
 import { usePresentationStore } from '@/store/presentation-store'
 

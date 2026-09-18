@@ -12,7 +12,7 @@ import type { HandlePosition } from '@shared/canvas/resize-handles'
 import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
 import { importableFilesFrom, insertFile } from '@/lib/external-content'
 import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
-import { showErrorMessage } from '@/platform/document-file-access'
+import { reportError } from '@/platform/document-file-access'
 import { useCameraStore } from '@/store/camera-store'
 
 /** Mouse/drag events share the fields `toInfo` needs; only pointer events carry `button`. */
@@ -120,7 +120,7 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
             try {
               await insertFile(file, world)
             } catch (error) {
-              await showErrorMessage(error instanceof Error ? error.message : String(error))
+              await reportError(error)
             }
           }
         })()

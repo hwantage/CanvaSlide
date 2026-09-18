@@ -90,9 +90,68 @@ describe('clipboard-payload', () => {
     expect(Object.keys(document.assets)).toHaveLength(1)
     expect(document.elements.x?.type).toBe('image')
   })
+
+  it('still skips pasted images when their assets did not travel along', () => {
+    const payload = buildClipboardPayload({ ...sample(), assets: {} }, ['i', 't'])!
+    let n = 0
+    const { document, newIds } = pasteClipboardPayload(
+      createEmptyDocument(),
+      payload,
+      () => `copy${++n}`,
+      { x: 24, y: 24 }
+    )
+    expect(newIds).toHaveLength(1)
+    expect(document.order).toEqual(newIds)
+    expect(document.elements[newIds[0]!]).toMatchObject({ type: 'text', text: 'hi', x: 44, y: 44 })
+  })
 })
 
 describe('pasting connectors', () => {
+  it('detaches and offsets endpoints whose copied image was skipped for a missing asset', () => {
+    const doc = syncConnectorGeometry(
+      insertElement(
+        { ...sample(), assets: {} },
+        {
+          id: 'c',
+          type: 'connector',
+          x: 0,
+          y: 0,
+          width: 1,
+          height: 1,
+          start: { x: 0, y: 0, elementId: 'i', side: 'right', pinned: true },
+          end: { x: 100, y: 50 },
+          route: 'straight',
+          startHead: 'none',
+          endHead: 'arrow',
+          style: { stroke: '#000', strokeWidth: 2, dashed: false },
+          label: '',
+          textStyle: { color: '#000', fontSize: 12, align: 'center', bold: false }
+        }
+      )
+    )
+    const payload = buildClipboardPayload(doc, ['i', 'c'])!
+    let n = 0
+    const { document, newIds } = pasteClipboardPayload(
+      createEmptyDocument(),
+      payload,
+      () => `copy${++n}`,
+      { x: 24, y: 24 }
+    )
+    expect(newIds).toHaveLength(1)
+    const pasted = document.elements[newIds[0]!]
+    expect(pasted).toMatchObject({
+      type: 'connector',
+      start: { x: 39, y: 36.5 },
+      end: { x: 124, y: 74 }
+    })
+    if (pasted?.type !== 'connector') {
+      throw new Error('connector')
+    }
+    expect(pasted.start.elementId).toBeUndefined()
+    expect(pasted.start.side).toBeUndefined()
+    expect(pasted.start.pinned).toBeUndefined()
+  })
+
   it('moves the free ends of a connector pasted without its host by the paste offset', () => {
     let doc = insertElement(createEmptyDocument(), {
       id: 's',

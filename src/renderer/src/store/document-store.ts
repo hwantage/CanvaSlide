@@ -3,7 +3,13 @@ import { create } from 'zustand'
 import { syncConnectorGeometry } from '@shared/canvas/connector-geometry'
 import { upsertAsset } from '@shared/canvas/document-assets'
 import { groupElements, ungroupElements } from '@shared/canvas/element-groups'
-import { alignElements, distributeElements } from '@shared/canvas/element-alignment'
+import {
+  alignElements,
+  distributeElements,
+  type AlignMode,
+  type DistributeAxis
+} from '@shared/canvas/element-alignment'
+import type { FilePath } from '@/platform/file-path'
 import {
   applyFrameOrders,
   duplicateElements,
@@ -11,12 +17,19 @@ import {
   patchElements,
   removeElements,
   reorderZ,
-  translateElements
+  translateElements,
+  type ElementPatch,
+  type ZDirection
 } from '@shared/canvas/document-mutations'
 import {
   createEmptyDocument,
   type CanvasDocument,
-  type ElementId
+  type CanvasElement,
+  type DocumentSettings,
+  type ElementId,
+  type ImageAsset,
+  type ImageElement,
+  type Point
 } from '@shared/canvas/element-types'
 import {
   moveFrameInSequence,
@@ -24,10 +37,67 @@ import {
   orderedFrames
 } from '@shared/canvas/presentation-sequence'
 import { syncTextHeight } from '@shared/canvas/text-height'
-import { popRedo, popUndo, pushSnapshot } from './document-history'
-import type { DocumentState, DocumentStore } from './document-state'
+import { popRedo, popUndo, pushSnapshot, type HistoryStacks } from './document-history'
 
-export type { DocumentActions, DocumentState, DocumentStore, SaveSnapshot } from './document-state'
+/** What a save started from; completing it must not clear edits made while the file was written. */
+export type SaveSnapshot = { document: CanvasDocument; session: number; revision: number }
+
+export type DocumentState = HistoryStacks & {
+  document: CanvasDocument
+  selectedIds: ElementId[]
+  filePath: FilePath | null
+  dirty: boolean
+  /** Counts content edits; renderer measurements do not invalidate an in-flight save. */
+  revision: number
+  /** Bumped on new/open so an in-flight save can't attach its path to another document. */
+  session: number
+  /** Snapshot taken at the start of a drag; committed as one undo step on end. */
+  editBaseline: CanvasDocument | null
+}
+export type DocumentActions = {
+  loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
+  newDocument: () => void
+  takeSaveSnapshot: () => SaveSnapshot
+  /** Applies a finished save: path + name always, `dirty=false` only if nothing changed since. */
+  completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
+  setSelection: (ids: ElementId[]) => void
+  toggleSelected: (id: ElementId) => void
+  selectAll: () => void
+  clearSelection: () => void
+  /** One-shot recorded edit. */
+  applyEdit: (updater: (document: CanvasDocument) => CanvasDocument) => void
+  /** Unrecorded live change between beginEdit/endEdit (drags, typing). */
+  applyLive: (updater: (document: CanvasDocument) => CanvasDocument) => void
+  syncTextHeight: (id: ElementId, measuredHeight: number) => void
+  beginEdit: () => void
+  endEdit: () => void
+  /** Drops everything since beginEdit (e.g. an aborted connector drag). */
+  cancelEdit: () => void
+  insertElement: (element: CanvasElement, select?: boolean) => void
+  /** Adds the asset (deduplicated by content hash) and the element in one undo step. */
+  insertImage: (asset: ImageAsset, element: ImageElement) => void
+  /** Bulk import (e.g. PDF pages): every asset and element lands in one undo step. */
+  insertImported: (assets: ImageAsset[], elements: CanvasElement[], select: ElementId[]) => void
+  patchElements: (ids: ElementId[], patch: ElementPatch, record?: boolean) => void
+  translateSelected: (delta: Point) => void
+  deleteSelected: () => void
+  duplicateSelected: () => void
+  reorderSelected: (direction: ZDirection) => void
+  moveFrameOrder: (id: ElementId, direction: 'up' | 'down') => void
+  moveFrameTo: (id: ElementId, index: number) => void
+  /** Groups the selection (frames excluded); the new group becomes the selection. */
+  groupSelected: () => void
+  ungroupSelected: () => void
+  alignSelected: (mode: AlignMode) => void
+  distributeSelected: (axis: DistributeAxis) => void
+  /** `record: false` is the live half of a slider drag, between `beginEdit` and `endEdit`. */
+  updateSettings: (patch: Partial<DocumentSettings>, record?: boolean) => void
+  renameDocument: (name: string) => void
+  undo: () => void
+  redo: () => void
+}
+
+export type DocumentStore = DocumentState & DocumentActions
 
 const initialState: DocumentState = {
   document: createEmptyDocument(),
@@ -55,6 +125,31 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
       dirty: true,
       revision: revision + 1,
       ...pushSnapshot({ past, future }, document)
+    })
+  }
+
+  /** Live edits between beginEdit/endEdit are unrecorded; everything else lands in history. */
+  const change = (updater: (document: CanvasDocument) => CanvasDocument, record: boolean) => {
+    if (record) {
+      recorded(updater)
+    } else {
+      get().applyLive(updater)
+    }
+  }
+
+  /** Lands on a history entry; a selection that no longer exists there is dropped. */
+  const restore = (result: ReturnType<typeof popUndo>) => {
+    if (!result) {
+      return
+    }
+    const { selectedIds, revision } = get()
+    set({
+      document: result.document,
+      ...result.stacks,
+      dirty: true,
+      revision: revision + 1,
+      editBaseline: null,
+      selectedIds: selectedIds.filter((id) => result.document.elements[id] !== undefined)
     })
   }
 
@@ -137,10 +232,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
         set({ selectedIds: [element.id] })
       }
     },
-    insertImage: (asset, element) => {
-      recorded((d) => insertElement(upsertAsset(d, asset), element))
-      set({ selectedIds: [element.id] })
-    },
+    insertImage: (asset, element) => get().insertImported([asset], [element], [element.id]),
     insertImported: (assets, elements, select) => {
       if (elements.length === 0) {
         return
@@ -154,14 +246,8 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
       })
       set({ selectedIds: select })
     },
-    patchElements: (ids, patch, record = true) => {
-      const apply = (d: CanvasDocument) => patchElements(d, ids, patch)
-      if (record) {
-        recorded(apply)
-      } else {
-        get().applyLive(apply)
-      }
-    },
+    patchElements: (ids, patch, record = true) =>
+      change((d) => patchElements(d, ids, patch), record),
     translateSelected: (delta) => {
       const ids = get().selectedIds
       if (ids.length > 0) {
@@ -217,57 +303,20 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     ungroupSelected: () => recorded((d) => ungroupElements(d, get().selectedIds)),
     alignSelected: (mode) => recorded((d) => alignElements(d, get().selectedIds, mode)),
     distributeSelected: (axis) => recorded((d) => distributeElements(d, get().selectedIds, axis)),
-    updateSettings: (patch, record = true) => {
-      const apply = (d: CanvasDocument) => ({ ...d, settings: { ...d.settings, ...patch } })
-      if (record) {
-        recorded(apply)
-      } else {
-        get().applyLive(apply)
-      }
-    },
+    updateSettings: (patch, record = true) =>
+      change((d) => ({ ...d, settings: { ...d.settings, ...patch } }), record),
     renameDocument: (name) => recorded((d) => ({ ...d, name })),
 
     undo: () => {
-      const { past, future, document, revision } = get()
-      const result = popUndo({ past, future }, document)
-      if (result) {
-        set({
-          document: result.document,
-          ...result.stacks,
-          dirty: true,
-          revision: revision + 1,
-          editBaseline: null
-        })
-        pruneSelection(set, get)
-      }
+      const { past, future, document } = get()
+      restore(popUndo({ past, future }, document))
     },
     redo: () => {
-      const { past, future, document, revision } = get()
-      const result = popRedo({ past, future }, document)
-      if (result) {
-        set({
-          document: result.document,
-          ...result.stacks,
-          dirty: true,
-          revision: revision + 1,
-          editBaseline: null
-        })
-        pruneSelection(set, get)
-      }
+      const { past, future, document } = get()
+      restore(popRedo({ past, future }, document))
     }
   }
 })
-
-function pruneSelection(
-  set: (partial: Partial<DocumentState>) => void,
-  get: () => DocumentState
-): void {
-  const { document, selectedIds } = get()
-  const kept = selectedIds.filter((id) => document.elements[id] !== undefined)
-  if (kept.length !== selectedIds.length) {
-    set({ selectedIds: kept })
-  }
-}
 
 export const selectDocument = (s: DocumentStore) => s.document
 export const selectSelectedIds = (s: DocumentStore) => s.selectedIds

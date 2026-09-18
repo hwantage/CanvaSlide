@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { CanvasElement } from '@shared/canvas/element-types'
+import type { CanvasElement, ElementId } from '@shared/canvas/element-types'
+import { useDocumentStore } from './document-store'
 import {
   defaultStyleMemory,
   rememberStyleFrom,
@@ -25,4 +26,13 @@ export const useStyleMemoryStore = create<StyleMemoryStore>()((set, get) => ({
 
 export function currentStyleMemory(): StyleMemory {
   return useStyleMemoryStore.getState().memory
+}
+
+/** After a panel edit, the first selected element's style becomes the default for new ones. */
+export function rememberSelectionStyle(ids: readonly ElementId[]): void {
+  const { document } = useDocumentStore.getState()
+  const first = ids[0] === undefined ? undefined : document.elements[ids[0]]
+  if (first) {
+    useStyleMemoryStore.getState().rememberFrom(first)
+  }
 }

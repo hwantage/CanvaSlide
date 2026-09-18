@@ -1,7 +1,7 @@
 import type { ImageAsset } from '@shared/canvas/element-types'
 import type { ImageDetailRegion } from '@shared/canvas/image-detail'
 import { svgPreviewSize } from '@shared/canvas/image-rendering'
-import { rasterizeSvg, type ImagePreview } from './svg-raster'
+import { imageHref, parseViewBox, rasterizeSvg, type ImagePreview } from './svg-raster'
 import { prepareSvgBitmapDetail } from './svg-bitmap-detail'
 
 export type { ImagePreview } from './svg-raster'
@@ -61,34 +61,13 @@ function maskedBitmapSvg(root: SVGSVGElement): boolean {
     return false
   }
   const images = [...root.querySelectorAll('image')]
-  return (
-    images.length > 0 &&
-    images.every((image) =>
-      staticBitmap(
-        image.getAttribute('href') ??
-          image.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ??
-          ''
-      )
-    )
-  )
+  return images.length > 0 && images.every((image) => staticBitmap(imageHref(image)))
 }
 
 function stillSvg(data: string): SVGSVGElement | null {
   const doc = new DOMParser().parseFromString(decodeSvg(data), 'image/svg+xml')
   const root = doc.documentElement
-  if (root.localName !== 'svg' || doc.querySelector('parsererror')) {
-    return null
-  }
-  const viewBox = (root.getAttribute('viewBox') ?? '')
-    .trim()
-    .split(/[\s,]+/)
-    .map(Number)
-  if (
-    viewBox.length !== 4 ||
-    !viewBox.every(Number.isFinite) ||
-    viewBox[2]! <= 0 ||
-    viewBox[3]! <= 0
-  ) {
+  if (root.localName !== 'svg' || doc.querySelector('parsererror') || !parseViewBox(root)) {
     return null
   }
   // CSS and SMIL animation must keep their live renderer after the camera settles.
@@ -131,18 +110,13 @@ export async function createSvgImagePreview(
   if (!svg) {
     return originalImagePreview(asset)
   }
-  const viewBox = (svg.getAttribute('viewBox') ?? '')
-    .trim()
-    .split(/[\s,]+/)
-    .map(Number)
+  // Why: stillSvg() already refused an SVG without a positive viewBox, so the clone has one.
+  const [, , boxWidth, boxHeight] = parseViewBox(svg) ?? [0, 0, asset.width, asset.height]
   const pixelLength = (name: string) => {
     const value = svg.getAttribute(name) ?? ''
     return /^[\d.]+(?:px)?$/.test(value) ? Number.parseFloat(value) : 0
   }
-  const edge = Math.max(
-    pixelLength('width') || viewBox[2] || asset.width,
-    pixelLength('height') || viewBox[3] || asset.height
-  )
+  const edge = Math.max(pixelLength('width') || boxWidth, pixelLength('height') || boxHeight)
   const viewport =
     aspect >= 1 ? { width: edge, height: edge / aspect } : { width: edge * aspect, height: edge }
   const size = detail ? viewport : svgPreviewSize(viewport)

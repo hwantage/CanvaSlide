@@ -1,36 +1,55 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent
+} from 'react'
 import type { FrameElement as FrameElementModel } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
-import { FRAME_TITLE_FONT_PX } from '@/lib/frame-chrome'
 import { useDocumentStore } from '@/store/document-store'
-import { useToolStore } from '@/store/tool-store'
 
-/** Inline rename in the title strip: Enter/blur commit, Escape cancels, empty names are ignored. */
-export function FrameNameEditor({ frame }: { frame: FrameElementModel }) {
+type FrameNameEditorProps = {
+  frame: FrameElementModel
+  /** The editor is done, committed or cancelled; the owner takes it down. */
+  onFinish: () => void
+  className: string
+  style?: CSSProperties
+}
+
+export function FrameNameEditor({ frame, onFinish, className, style }: FrameNameEditorProps) {
+  const session = useDocumentStore((s) => s.session)
+  const startedSession = useRef(session)
   const [draft, setDraft] = useState(frame.name)
   const draftRef = useRef(frame.name)
   const commit = useCallback(() => {
-    const current = useDocumentStore.getState().document.elements[frame.id]
+    const store = useDocumentStore.getState()
+    // Why: reopening a document may reuse frame ids, but must never inherit an old draft.
+    if (store.session !== startedSession.current) {
+      return
+    }
+    const current = store.document.elements[frame.id]
     const next = draftRef.current.trim()
     if (current?.type === 'frame' && next !== '' && next !== current.name) {
       useDocumentStore.getState().patchElements([frame.id], { name: next })
     }
   }, [frame.id])
-  const finish = () => {
-    if (useToolStore.getState().editingTextId === frame.id) {
-      useToolStore.getState().setEditingTextId(null)
-    }
-  }
-  // Why: clicking elsewhere unmounts the editor before blur fires; commit on the way out too.
+  // Why: clicking elsewhere can unmount the editor before blur fires.
   useEffect(() => commit, [commit])
+  useEffect(() => {
+    if (session !== startedSession.current) {
+      onFinish()
+    }
+  }, [session, onFinish])
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.stopPropagation()
     if (event.key === 'Enter') {
       commit()
-      finish()
+      onFinish()
     } else if (event.key === 'Escape') {
       draftRef.current = frame.name
-      finish()
+      onFinish()
     }
   }
   return (
@@ -38,8 +57,8 @@ export function FrameNameEditor({ frame }: { frame: FrameElementModel }) {
       autoFocus
       aria-label={t('frames.name')}
       data-testid="frame-name-editor"
-      className="h-5 min-w-24 rounded border border-input bg-background px-1 text-foreground outline-none ring-2 ring-ring"
-      style={{ fontSize: FRAME_TITLE_FONT_PX, pointerEvents: 'auto' }}
+      className={className}
+      style={style}
       value={draft}
       onChange={(event) => {
         draftRef.current = event.target.value
@@ -48,7 +67,7 @@ export function FrameNameEditor({ frame }: { frame: FrameElementModel }) {
       onFocus={(event) => event.target.select()}
       onBlur={() => {
         commit()
-        finish()
+        onFinish()
       }}
       onKeyDown={onKeyDown}
       onPointerDown={(event) => event.stopPropagation()}

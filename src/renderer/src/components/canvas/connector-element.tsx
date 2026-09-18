@@ -1,17 +1,16 @@
 import { useMemo } from 'react'
-import { arrowHeadSize, connectorMidpoint, connectorPath } from '@shared/canvas/connector-geometry'
+import { connectorMidpoint, connectorPath } from '@shared/canvas/connector-geometry'
 import { elementRect } from '@shared/canvas/element-bounds'
 import type { ConnectorElement as ConnectorElementModel } from '@shared/canvas/element-types'
+import {
+  ARROW_MARKER,
+  arrowMarkerSize,
+  connectorCanvasRect,
+  connectorDashArray
+} from '@shared/canvas/shape-svg'
 import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
 import { EditableText } from './editable-text'
-
-/** Padding around the bounding box so arrowheads and thick strokes are never clipped. */
-const PAD = 24
-
-export function connectorMarkerId(id: string, which: 'start' | 'end'): string {
-  return `uc-arrow-${which}-${id}`
-}
 
 export function ConnectorElement({
   element,
@@ -33,39 +32,36 @@ export function ConnectorElement({
   )
   const { d } = connectorPath(element, obstacles)
   const mid = connectorMidpoint(element, obstacles)
-  const { stroke, strokeWidth, dashed } = element.style
-  const head = arrowHeadSize(strokeWidth)
+  const { stroke, strokeWidth } = element.style
+  const head = arrowMarkerSize(element)
+  const markerId = `uc-arrow-end-${element.id}`
+  const box = connectorCanvasRect(element)
   const hasLabel = editing || element.label !== ''
   return (
     <div
       className="absolute"
       data-element-id={element.id}
       data-element-type="connector"
-      style={{
-        left: element.x - PAD,
-        top: element.y - PAD,
-        width: element.width + PAD * 2,
-        height: element.height + PAD * 2
-      }}
+      style={{ left: box.x, top: box.y, width: box.width, height: box.height }}
     >
       <svg
         className="absolute inset-0 overflow-visible"
-        width={element.width + PAD * 2}
-        height={element.height + PAD * 2}
-        viewBox={`${element.x - PAD} ${element.y - PAD} ${element.width + PAD * 2} ${element.height + PAD * 2}`}
+        width={box.width}
+        height={box.height}
+        viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
       >
         <defs>
           <marker
-            id={connectorMarkerId(element.id, 'end')}
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
+            id={markerId}
+            viewBox={ARROW_MARKER.viewBox}
+            refX={ARROW_MARKER.refX}
+            refY={ARROW_MARKER.refY}
             markerUnits="userSpaceOnUse"
             markerWidth={head}
             markerHeight={head}
-            orient="auto-start-reverse"
+            orient={ARROW_MARKER.orient}
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={stroke} />
+            <path d={ARROW_MARKER.path} fill={stroke} />
           </marker>
         </defs>
         <path
@@ -76,25 +72,17 @@ export function ConnectorElement({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray={dashed ? `${strokeWidth * 3} ${strokeWidth * 2}` : undefined}
-          markerStart={
-            element.startHead === 'arrow'
-              ? `url(#${connectorMarkerId(element.id, 'end')})`
-              : undefined
-          }
-          markerEnd={
-            element.endHead === 'arrow'
-              ? `url(#${connectorMarkerId(element.id, 'end')})`
-              : undefined
-          }
+          strokeDasharray={connectorDashArray(element)}
+          markerStart={element.startHead === 'arrow' ? `url(#${markerId})` : undefined}
+          markerEnd={element.endHead === 'arrow' ? `url(#${markerId})` : undefined}
         />
       </svg>
       {hasLabel && (
         <div
           className="absolute min-w-6 max-w-64 rounded bg-canvas px-1.5 py-0.5"
           style={{
-            left: mid.x - (element.x - PAD),
-            top: mid.y - (element.y - PAD),
+            left: mid.x - box.x,
+            top: mid.y - box.y,
             transform: 'translate(-50%, -50%)'
           }}
         >

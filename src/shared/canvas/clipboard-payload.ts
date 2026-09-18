@@ -1,9 +1,6 @@
 import { z } from 'zod'
-import { remapConnectorHosts } from './connector-geometry'
 import { upsertAsset } from './document-assets'
-import { remapGroupIds } from './element-groups'
-import { translateElement } from './document-mutations'
-import { insertElement } from './document-mutations'
+import { cloneElements } from './document-mutations'
 import {
   canvasElementSchema,
   imageAssetSchema,
@@ -13,7 +10,6 @@ import {
   type ImageAsset,
   type Point
 } from './element-types'
-import { nextFrameOrder } from './presentation-sequence'
 
 export const CLIPBOARD_KIND = 'canvaslide/clipboard'
 
@@ -68,28 +64,12 @@ export function pasteClipboardPayload(
   makeId: () => ElementId,
   offset: Point
 ): { document: CanvasDocument; newIds: ElementId[] } {
-  let next = document
-  for (const asset of Object.values(payload.assets)) {
-    next = upsertAsset(next, asset)
-  }
-  const newIds: ElementId[] = []
-  let frameOrder = nextFrameOrder(next)
-  const idMap = new Map(payload.elements.map((element) => [element.id, makeId()] as const))
-  for (const source of remapGroupIds(payload.elements, makeId)) {
-    let copy: CanvasElement = { ...source, id: idMap.get(source.id) as ElementId }
-    // Why: detach before translating; translate skips attached ends, so a detached-after end would
-    // stay at its original coordinates.
-    if (copy.type === 'connector') {
-      copy = remapConnectorHosts(copy, idMap, false)
-    }
-    const base = translateElement(copy, offset)
-    const element: CanvasElement =
-      base.type === 'frame' ? { ...base, order: (frameOrder += 1) - 1 } : base
-    if (element.type === 'image' && !next.assets[element.assetId]) {
-      continue
-    }
-    next = insertElement(next, element)
-    newIds.push(element.id)
-  }
-  return { document: next, newIds }
+  const withAssets = Object.values(payload.assets).reduce(upsertAsset, document)
+  // Why: hosts that were not copied along may not exist here, so their ends become free points.
+  return cloneElements(withAssets, payload.elements, makeId, {
+    offset,
+    keepMissingHosts: false,
+    renumberFrames: true,
+    skipMissingAssets: true
+  })
 }

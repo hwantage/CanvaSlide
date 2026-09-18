@@ -1,11 +1,12 @@
 import { Check, ChevronDown } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fontFamilyIds,
   fontStackFor,
   isFontFamilyId,
   type FontFamilyId
 } from '@shared/canvas/font-family'
+import { popoverStyle, useAnchoredPopover } from '@/hooks/use-anchored-popover'
 import { t } from '@/i18n/ui-strings'
 import { cn } from '@/lib/cn'
 import { useFontStore } from '@/store/font-store'
@@ -33,58 +34,23 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
   const [query, setQuery] = useState('')
   const rootRef = useRef<HTMLSpanElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
-  const [placement, setPlacement] = useState<{ left: number; top: number } | null>(null)
   const families = useFontStore((s) => s.families)
   const status = useFontStore((s) => s.status)
   const load = useFontStore((s) => s.load)
+  const dismiss = useCallback(() => setOpen(false), [])
+  const placement = useAnchoredPopover(
+    open,
+    rootRef,
+    popoverRef,
+    dismiss,
+    `${status}:${families.length}:${query}`
+  )
 
   useEffect(() => {
     if (open) {
       void load()
     }
   }, [open, load])
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-    const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        setOpen(false)
-      }
-    }
-    document.addEventListener('pointerdown', onPointerDown, true)
-    window.addEventListener('keydown', onKeyDown, true)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown, true)
-      window.removeEventListener('keydown', onKeyDown, true)
-    }
-  }, [open])
-
-  // Why: same fixed placement as the colour popover, so the scrolling panel cannot clip it.
-  useLayoutEffect(() => {
-    if (!open || !rootRef.current || !popoverRef.current) {
-      setPlacement(null)
-      return
-    }
-    const anchor = rootRef.current.getBoundingClientRect()
-    const { offsetWidth, offsetHeight } = popoverRef.current
-    const margin = 8
-    const left = Math.max(
-      margin,
-      Math.min(anchor.right - offsetWidth, window.innerWidth - offsetWidth - margin)
-    )
-    const below = anchor.bottom + 4
-    const top =
-      below + offsetHeight + margin > window.innerHeight ? anchor.top - offsetHeight - 4 : below
-    setPlacement({ left, top: Math.max(margin, top) })
-  }, [open])
 
   const needle = query.trim().toLowerCase()
   const presets = fontFamilyIds.filter(
@@ -133,7 +99,7 @@ export function FontPicker({ label, value, onChange }: FontPickerProps) {
           aria-label={label}
           data-testid="font-popover"
           className="fixed z-30 flex w-64 flex-col gap-1 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
-          style={placement ?? { left: 0, top: 0, visibility: 'hidden' }}
+          style={popoverStyle(placement)}
         >
           <input
             autoFocus

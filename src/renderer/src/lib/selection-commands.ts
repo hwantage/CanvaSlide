@@ -1,4 +1,9 @@
-import { elementRect, selectionBounds } from '@shared/canvas/element-bounds'
+import {
+  contentBounds,
+  elementRect,
+  rectContainsRect,
+  selectionBounds
+} from '@shared/canvas/element-bounds'
 import { frameRectAround, selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import { insertElement } from '@shared/canvas/document-mutations'
 import { frameIndexById, orderedFrames } from '@shared/canvas/presentation-sequence'
@@ -9,6 +14,16 @@ import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore } from '@/store/tool-store'
 
 /** Commands that act on the current selection; shared by shortcuts, the panel and the context menu. */
+
+/** Fit-all: the whole board in view, never past 100%; nothing to do on an empty board. */
+export function zoomToContent(): boolean {
+  const bounds = contentBounds(useDocumentStore.getState().document)
+  if (!bounds) {
+    return false
+  }
+  useCameraStore.getState().fitContent(bounds)
+  return true
+}
 
 export function zoomToSelection(): boolean {
   const { document, selectedIds } = useDocumentStore.getState()
@@ -51,15 +66,7 @@ export function selectedFrameIndex(): number {
   if (!bounds) {
     return -1
   }
-  return frames.findIndex((frame) => {
-    const rect = elementRect(frame)
-    return (
-      bounds.x >= rect.x &&
-      bounds.y >= rect.y &&
-      bounds.x + bounds.width <= rect.x + rect.width &&
-      bounds.y + bounds.height <= rect.y + rect.height
-    )
-  })
+  return frames.findIndex((frame) => rectContainsRect(elementRect(frame), bounds))
 }
 
 export function presentFromSelection(): void {

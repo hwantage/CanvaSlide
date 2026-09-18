@@ -2,6 +2,7 @@ import { remapConnectorHosts, translateConnector } from './connector-geometry'
 import { pruneUnreferencedAssets } from './document-assets'
 import { remapGroupIds } from './element-groups'
 import { selectionIsOnlyFrames } from './frame-from-selection'
+import { nextFrameOrder } from './presentation-sequence'
 import type { CanvasDocument, CanvasElement, ElementId, Point } from './element-types'
 
 /** Pure document transforms; every function returns a new document and never mutates. */
@@ -69,33 +70,65 @@ export function translateElements(
   return patchElements(document, ids, (element) => translateElement(element, delta))
 }
 
+/** How copies of elements land in the document; duplicating and pasting differ only here. */
+export type CloneOptions = {
+  offset: Point
+  /** Keep uncopied hosts for duplicate; detach them for paste into another document. */
+  keepMissingHosts: boolean
+  /** Copied frames take fresh deck positions after the last frame instead of their source's. */
+  renumberFrames: boolean
+  /** Paste skips images without assets; duplication preserves every existing element. */
+  skipMissingAssets?: boolean
+}
+
+export function cloneElements(
+  document: CanvasDocument,
+  sources: readonly CanvasElement[],
+  makeId: () => ElementId,
+  options: CloneOptions
+): { document: CanvasDocument; newIds: ElementId[] } {
+  const cloneable = sources.filter(
+    (source) =>
+      !options.skipMissingAssets || source.type !== 'image' || document.assets[source.assetId]
+  )
+  // Why: all copied IDs must exist before connectors and groups can be remapped.
+  const idMap = new Map(cloneable.map((source) => [source.id, makeId()] as const))
+  let next = document
+  let frameOrder = nextFrameOrder(document)
+  const newIds: ElementId[] = []
+  for (const source of remapGroupIds(cloneable, makeId)) {
+    let copy: CanvasElement = { ...source, id: idMap.get(source.id) as ElementId }
+    // Why: translating skips attached ends, so detach missing hosts before applying the offset.
+    if (copy.type === 'connector') {
+      copy = remapConnectorHosts(copy, idMap, options.keepMissingHosts)
+    }
+    copy = translateElement(copy, options.offset)
+    if (copy.type === 'frame' && options.renumberFrames) {
+      copy = { ...copy, order: (frameOrder += 1) - 1 }
+    }
+    next = insertElement(next, copy)
+    newIds.push(copy.id)
+  }
+  return { document: next, newIds }
+}
+
+/** Copies of `ids` in z-order, a step down-right, still attached to hosts that stayed behind. */
 export function duplicateElements(
   document: CanvasDocument,
   ids: readonly ElementId[],
   makeId: () => ElementId,
   offset: Point = { x: 24, y: 24 }
 ): { document: CanvasDocument; newIds: ElementId[] } {
-  let next = document
-  const newIds: ElementId[] = []
-  // Why: iterate in z-order so duplicates keep their relative stacking; ids are assigned first
-  // so connectors can be re-pointed at duplicated hosts.
-  const sources = document.order.filter((id) => ids.includes(id) && document.elements[id])
-  const idMap = new Map(sources.map((id) => [id, makeId()] as const))
-  const copies: CanvasElement[] = []
-  for (const id of sources) {
-    const source = document.elements[id] as CanvasElement
-    let copy = translateElement({ ...source, id: idMap.get(id) as ElementId }, offset)
-    if (copy.type === 'connector') {
-      copy = remapConnectorHosts(copy, idMap, true)
-    }
-    copies.push(copy)
-  }
-  // Why: a duplicated group must stay grouped, but as its own group.
-  for (const copy of remapGroupIds(copies, makeId)) {
-    next = insertElement(next, copy)
-    newIds.push(copy.id)
-  }
-  return { document: next, newIds }
+  const wanted = new Set(ids)
+  const sources = document.order.flatMap((id) => {
+    const element = document.elements[id]
+    return element && wanted.has(id) ? [element] : []
+  })
+  return cloneElements(document, sources, makeId, {
+    offset,
+    keepMissingHosts: true,
+    renumberFrames: false
+  })
 }
 
 export type ZDirection = 'front' | 'back' | 'forward' | 'backward'

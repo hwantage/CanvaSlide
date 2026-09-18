@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Point } from '@shared/canvas/element-types'
-import { contentBounds } from '@shared/canvas/element-bounds'
 import { canGroup, canUngroup } from '@shared/canvas/element-groups'
 import { clampMenuToViewport } from '@shared/canvas/menu-placement'
 import { t } from '@/i18n/ui-strings'
@@ -13,6 +12,7 @@ import {
   presentFromSelection,
   selectedFrameIndex,
   startEditingSelection,
+  zoomToContent,
   zoomToSelection
 } from '@/lib/selection-commands'
 import { copySelectedStyle, hasCopiedStyle, pasteStyleToSelection } from '@/lib/style-clipboard'
@@ -128,16 +128,7 @@ function canvasItems(world: Point | null): MenuItem[] {
     item(t('import.files'), () => void importPickedFiles(world ?? undefined), {
       shortcut: shortcutLabel('I')
     }),
-    item(
-      t('zoom.fit'),
-      () => {
-        const bounds = contentBounds(store.document)
-        if (bounds) {
-          useCameraStore.getState().fitContent(bounds)
-        }
-      },
-      { shortcut: `${shiftLabel()}1` }
-    )
+    item(t('zoom.fit'), () => zoomToContent(), { shortcut: `${shiftLabel()}1` })
   ]
 }
 
@@ -171,7 +162,7 @@ export function ContextMenu() {
   const hide = useContextMenuStore((s) => s.hide)
   const viewport = useCameraStore(selectViewport)
   // Why: subscribing keeps the item list in sync when the selection changes underneath the menu.
-  useDocumentStore(selectSelectedIds)
+  const selectedIds = useDocumentStore(selectSelectedIds)
   useDocumentStore(selectDocument)
   const ref = useRef<HTMLDivElement>(null)
   const [placed, setPlaced] = useState<Point | null>(null)
@@ -188,8 +179,7 @@ export function ContextMenu() {
   if (!position) {
     return null
   }
-  const items =
-    useDocumentStore.getState().selectedIds.length > 0 ? selectionItems(world) : canvasItems(world)
+  const items = selectedIds.length > 0 ? selectionItems(world) : canvasItems(world)
   const at = placed ?? position
   return (
     <>

@@ -4,7 +4,7 @@ import {
   isConnectable,
   nearestAnchorSide
 } from '@shared/canvas/connector-geometry'
-import { patchElements } from '@shared/canvas/document-mutations'
+import { insertElement, patchElements } from '@shared/canvas/document-mutations'
 import { elementRect, rectContainsPoint } from '@shared/canvas/element-bounds'
 import type {
   CanvasDocument,
@@ -124,11 +124,7 @@ export function beginConnectorCreate(world: Point): ConnectorCreateSession {
     textStyle: { ...memory.connectorText }
   }
   doc.beginEdit()
-  doc.applyLive((d) => ({
-    ...d,
-    elements: { ...d.elements, [id]: connector },
-    order: [...d.order, id]
-  }))
+  doc.applyLive((d) => insertElement(d, connector))
   doc.setSelection([id])
   return { kind: 'connector-create', id, startWorld: world }
 }

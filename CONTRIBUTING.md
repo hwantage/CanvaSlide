@@ -22,7 +22,7 @@ to get it merged.
 
 Requirements:
 
-- Node.js 22+ and pnpm 11 (`corepack enable` picks up the pinned version from `package.json`)
+- Node.js 22.20+ and pnpm 11 (`corepack enable` picks up the pinned version from `package.json`)
 - Rust stable toolchain (only for the Tauri window and `src-tauri/` changes)
 - Tauri prerequisites for your OS: <https://v2.tauri.app/start/prerequisites/>
 
@@ -52,8 +52,13 @@ The full list is in [`AGENTS.md`](./AGENTS.md). The ones that most often come up
 
 - **Logic in `src/shared/canvas`, UI stays thin.** Math and document transforms belong in the shared
   layer with a `*.test.ts` next to them. Components and hooks should mostly wire things together.
-- **File size limits:** `.ts` ≤ 300 lines, `.tsx` ≤ 400, tests ≤ 800. Split the file instead of
-  disabling the rule. Only `src/renderer/src/i18n/locales/*.ts` are exempt.
+- **File-size hard limits:** `.ts`/`.tsx` ≤ 800 lines; `.test.ts`, `.test.tsx`, `.spec.ts` and
+  `.spec.tsx` ≤ 1000. Count blank lines and comments; a final newline adds no extra line. This applies
+  to all non-ignored TypeScript across the repository, including tests, examples, config and website.
+  Only `src/renderer/src/i18n/locales/*.ts` are exempt. Keep related state and transitions together;
+  split when responsibilities or lifecycles differ, not to satisfy a smaller target. Never disable
+  the rule. `.oxlintrc.json` defines the limits, test patterns and locale exception for both checks;
+  the guard shares oxlint's file discovery and counts independently of inline disables.
 - **Name files after the concept** (`frame-fit.ts`, `camera-animator.ts`), never `utils` or `helpers`.
 - **i18n:** every user-visible string goes through `t()` / `tn()`. Add the key to `i18n/locales/en.ts`
   first; the type forces every other locale to follow. Keep product names, key names (Esc, ⌘), file

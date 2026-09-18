@@ -1,15 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
-
-async function dragOnCanvas(page: Page, from: [number, number], to: [number, number]) {
-  const box = await page.getByTestId('canvas-viewport').boundingBox()
-  if (!box) {
-    throw new Error('canvas not laid out')
-  }
-  await page.mouse.move(box.x + from[0], box.y + from[1])
-  await page.mouse.down()
-  await page.mouse.move(box.x + to[0], box.y + to[1], { steps: 6 })
-  await page.mouse.up()
-}
+import { expect, test } from '@playwright/test'
+import { dragOnCanvas } from './canvas-gestures'
 
 test('settings dialog controls background, the default transition and the frame border', async ({
   page
@@ -131,7 +121,9 @@ test('language switches the whole interface and survives a reload', async ({ pag
   await dialog.getByRole('radio', { name: '한국어' }).click()
   // Not just the dialog: the panels behind it read the same strings.
   await expect(page.getByRole('dialog', { name: '설정' })).toBeVisible()
-  const framesHeading = page.getByTestId('frames-pane').getByRole('heading', { name: '프레임' })
+  const framesHeading = page
+    .getByTestId('frames-pane')
+    .getByRole('heading', { name: '프레임', includeHidden: true })
   await expect(framesHeading).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
 

@@ -41,6 +41,19 @@ describe('frame-fit', () => {
   })
 
   it.each([
+    [0, MIN_ZOOM],
+    [-1, MIN_ZOOM],
+    [MIN_ZOOM / 2, MIN_ZOOM],
+    [Number.NaN, 1]
+  ])('normalizes a content zoom cap of %s and keeps the content centered', (cap, zoom) => {
+    const rect = { x: 100, y: 200, width: 20, height: 40 }
+    const camera = fitContentToViewport(rect, viewport, cap)
+    expect(camera.zoom).toBe(zoom)
+    expect(camera.x + 110 * camera.zoom).toBeCloseTo(viewport.width / 2)
+    expect(camera.y + 220 * camera.zoom).toBeCloseTo(viewport.height / 2)
+  })
+
+  it.each([
     { width: 800, height: 500 },
     { width: 1400, height: 900 },
     { width: 900, height: 1400 }

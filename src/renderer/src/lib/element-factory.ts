@@ -9,16 +9,13 @@ import type {
   TextElement
 } from '@shared/canvas/element-types'
 import { defaultFrameName, nextFrameOrder } from '@shared/canvas/presentation-sequence'
+import { textLineHeight } from '@shared/canvas/text-height'
 import { newElementId } from '@/store/document-store'
 import { currentStyleMemory } from '@/store/style-memory-store'
 
 export const DEFAULT_SHAPE_SIZE = { width: 160, height: 100 }
 export const DEFAULT_FRAME_SIZE = { width: 960, height: 540 }
 export const DEFAULT_TEXT_WIDTH = 240
-
-export function textLineHeight(fontSize: number): number {
-  return Math.round(fontSize * 1.4)
-}
 
 /** New shapes and text start from the last style the user applied (see style-memory-store). */
 export function createShapeElement(shape: ShapeKind, rect: Rect): ShapeElement {

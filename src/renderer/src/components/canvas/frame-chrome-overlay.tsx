@@ -9,6 +9,14 @@ import { selectPresentationActive, usePresentationStore } from '@/store/presenta
 import { selectEditingTextId, useToolStore } from '@/store/tool-store'
 import { FrameNameEditor } from './frame-name-editor'
 
+/** The strip's editor closes by clearing the shared editing id, unless another one has taken it. */
+function stopRenaming(id: string): void {
+  const tools = useToolStore.getState()
+  if (tools.editingTextId === id) {
+    tools.setEditingTextId(null)
+  }
+}
+
 const FrameChrome = memo(function FrameChrome({
   frame,
   index,
@@ -51,7 +59,13 @@ const FrameChrome = memo(function FrameChrome({
           {index + 1}
         </span>
         {editing ? (
-          <FrameNameEditor key={frame.id} frame={frame} />
+          <FrameNameEditor
+            key={frame.id}
+            frame={frame}
+            onFinish={() => stopRenaming(frame.id)}
+            className="h-5 min-w-24 rounded border border-input bg-background px-1 text-foreground outline-none ring-2 ring-ring"
+            style={{ fontSize: FRAME_TITLE_FONT_PX, pointerEvents: 'auto' }}
+          />
         ) : (
           <span className="font-medium">{frame.name}</span>
         )}

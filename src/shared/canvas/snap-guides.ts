@@ -56,7 +56,7 @@ function edgeCandidates(
                 kind: 'line',
                 axis,
                 position: target,
-                from: Math.min(moving.crossStart + 0, other.crossStart),
+                from: Math.min(moving.crossStart, other.crossStart),
                 to: Math.max(moving.crossEnd, other.crossEnd)
               }
             ]
@@ -135,10 +135,11 @@ export function computeSnap(moving: Rect, others: readonly Rect[], threshold: nu
   for (const axis of ['x', 'y'] as const) {
     const m = alongAxis(moving, axis)
     const os = others.map((o) => alongAxis(o, axis))
-    const chosen = best([
+    const candidates = [
       ...edgeCandidates(m, os, axis, threshold),
       ...gapCandidates(m, os, axis, threshold)
-    ])
+    ]
+    const chosen = best(candidates)
     if (!chosen) {
       continue
     }
@@ -148,10 +149,7 @@ export function computeSnap(moving: Rect, others: readonly Rect[], threshold: nu
       result.dy = chosen.delta
     }
     // Why: every candidate that lands on the same delta is a real alignment; show them all.
-    const same = [
-      ...edgeCandidates(m, os, axis, threshold),
-      ...gapCandidates(m, os, axis, threshold)
-    ].filter((c) => Math.abs(c.delta - chosen.delta) < 1e-6)
+    const same = candidates.filter((c) => Math.abs(c.delta - chosen.delta) < 1e-6)
     result.guides.push(...same.flatMap((c) => c.guides))
   }
   return result

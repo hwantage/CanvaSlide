@@ -8,7 +8,7 @@ import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
-import { useStyleMemoryStore } from '@/store/style-memory-store'
+import { rememberSelectionStyle } from '@/store/style-memory-store'
 
 export function NumberInput({
   value,
@@ -45,15 +45,6 @@ export function NumberInput({
   )
 }
 
-/** After a panel edit, the first selected element's style becomes the default for new ones. */
-function rememberFirst(ids: string[]) {
-  const { document } = useDocumentStore.getState()
-  const first = ids[0] === undefined ? undefined : document.elements[ids[0]]
-  if (first) {
-    useStyleMemoryStore.getState().rememberFrom(first)
-  }
-}
-
 export function ShapeStyleFields({ ids, style }: { ids: string[]; style: ShapeStyle }) {
   const patch = (partial: Partial<ShapeStyle>) => {
     useDocumentStore
@@ -61,7 +52,7 @@ export function ShapeStyleFields({ ids, style }: { ids: string[]; style: ShapeSt
       .patchElements(ids, (element) =>
         element.type === 'shape' ? { style: { ...element.style, ...partial } } : {}
       )
-    rememberFirst(ids)
+    rememberSelectionStyle(ids)
   }
   return (
     <>
@@ -114,7 +105,7 @@ export function TextStyleFields({ ids, style }: { ids: string[]; style: TextStyl
           ? { textStyle: { ...element.textStyle, ...partial } }
           : {}
       )
-    rememberFirst(ids)
+    rememberSelectionStyle(ids)
   }
   return (
     <>

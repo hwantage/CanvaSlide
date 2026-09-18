@@ -4,8 +4,9 @@ import {
   type ClipboardPayload
 } from '@shared/canvas/clipboard-payload'
 import { newElementId, useDocumentStore } from '@/store/document-store'
-
-const PASTE_OFFSET = 24
+import type { Point } from '@shared/canvas/element-types'
+import { objectPastePlacement, type ObjectPastePlacement } from '@shared/canvas/paste-placement'
+import { canvasPastePointer } from './canvas-paste-pointer'
 
 /**
  * Real engines (Chromium, WebView2, WKWebView with an Edit menu) dispatch `paste` within a few
@@ -18,7 +19,8 @@ const KEYBOARD_FALLBACK_DELAY_MS = 200
  * documents/windows; an in-memory copy covers engines that block clipboard reads.
  */
 let memory: ClipboardPayload | null = null
-let pasteCount = 0
+let copyPointerRevision = 0
+let placement: ObjectPastePlacement | null = null
 let pendingFallbacks: ReturnType<typeof setTimeout>[] = []
 
 /** The native `paste` event owns this ⌘V: drop every pending keyboard fallback. */
@@ -29,14 +31,14 @@ export function nativePasteArrived(): void {
   pendingFallbacks = []
 }
 
-let keyboardFallback: () => void = () => {
+let keyboardFallback: (target: Point | null) => void = (target) => {
   if (memory) {
-    pasteObjects(memory)
+    pasteObjects(memory, target)
   }
 }
 
 /** Lets the clipboard hook swap in a richer fallback (native image/text) than the memory copy. */
-export function setKeyboardPasteFallback(fallback: () => void): void {
+export function setKeyboardPasteFallback(fallback: (target: Point | null) => void): void {
   keyboardFallback = fallback
 }
 
@@ -45,9 +47,10 @@ export function setKeyboardPasteFallback(fallback: () => void): void {
  * (it cancels us), then run the registered fallback.
  */
 export function requestKeyboardPaste(): void {
+  const target = objectPasteTarget()
   const timer = setTimeout(() => {
     pendingFallbacks = pendingFallbacks.filter((t) => t !== timer)
-    keyboardFallback()
+    keyboardFallback(target)
   }, KEYBOARD_FALLBACK_DELAY_MS)
   pendingFallbacks.push(timer)
 }
@@ -59,7 +62,8 @@ export function copySelection(): ClipboardPayload | null {
     return null
   }
   memory = payload
-  pasteCount = 0
+  placement = null
+  copyPointerRevision = canvasPastePointer().revision
   void navigator.clipboard?.writeText(JSON.stringify(payload)).catch(() => undefined)
   return payload
 }
@@ -72,12 +76,17 @@ export function cutSelection(): ClipboardPayload | null {
   return payload
 }
 
-export function pasteObjects(payload: ClipboardPayload): void {
-  pasteCount += 1
-  const offset = PASTE_OFFSET * pasteCount
+export function objectPasteTarget(): Point | null {
+  const pointer = canvasPastePointer()
+  return pointer.revision > copyPointerRevision ? pointer.world : null
+}
+
+export function pasteObjects(payload: ClipboardPayload, target = objectPasteTarget()): void {
+  placement = objectPastePlacement(payload.elements, target, placement)
+  const { offset } = placement
   let newIds: string[] = []
   useDocumentStore.getState().applyEdit((d) => {
-    const result = pasteClipboardPayload(d, payload, newElementId, { x: offset, y: offset })
+    const result = pasteClipboardPayload(d, payload, newElementId, offset)
     newIds = result.newIds
     return result.document
   })

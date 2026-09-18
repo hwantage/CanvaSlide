@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { trackCanvasPastePointer } from '@/lib/canvas-paste-pointer'
 import { useCanvasInteraction } from '@/hooks/use-canvas-interaction'
 import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { useWheelZoom } from '@/hooks/use-wheel-zoom'
@@ -39,6 +40,12 @@ export function CanvasViewport() {
   useViewportSize(ref)
   useWheelZoom(ref)
   const handlers = useCanvasInteraction(ref)
+
+  useEffect(() => {
+    if (ref.current) {
+      return trackCanvasPastePointer(ref.current)
+    }
+  }, [])
 
   // Only slide shows hide editor chrome, so only they need a new viewport before the first flight.
   useLayoutEffect(() => {

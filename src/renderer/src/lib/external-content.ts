@@ -7,7 +7,7 @@ import { normalizePastedText, pastedTextWidth } from '@shared/canvas/pasted-text
 import { decodeImageFile } from '@/lib/clipboard-image'
 import { pickFiles } from '@/lib/file-picker'
 import { createImageElement, createTextElement, placeImageRect } from '@/lib/element-factory'
-import { memoryPayload, pasteObjects } from '@/lib/object-clipboard'
+import { memoryPayload, objectPasteTarget, pasteObjects } from '@/lib/object-clipboard'
 import { reportError } from '@/platform/document-file-access'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { useCameraStore } from '@/store/camera-store'
@@ -55,10 +55,14 @@ export function insertPlainText(raw: string, at?: Point): boolean {
 }
 
 /** Clipboard text: our own object payload first, otherwise plain text. */
-export function insertClipboardText(text: string, at?: Point): boolean {
+export function insertClipboardText(
+  text: string,
+  at?: Point,
+  objectTarget = at === undefined ? objectPasteTarget() : null
+): boolean {
   const payload = parseClipboardPayload(text)
   if (payload) {
-    pasteObjects(payload)
+    pasteObjects(payload, objectTarget)
     return true
   }
   return insertPlainText(text, at)
@@ -100,7 +104,10 @@ export async function insertFile(file: File, at?: Point): Promise<void> {
  * Menu-driven paste: no native `paste` event exists, so read the clipboard directly. Engines that
  * refuse the read (or hold nothing we understand) fall back to the last in-app copy.
  */
-export async function pasteFromSystemClipboard(at?: Point): Promise<void> {
+export async function pasteFromSystemClipboard(
+  at?: Point,
+  objectTarget = at === undefined ? objectPasteTarget() : null
+): Promise<void> {
   const image = await readNativeClipboardImage()
   if (image) {
     await insertImageFile(image, at)
@@ -114,12 +121,12 @@ export async function pasteFromSystemClipboard(at?: Point): Promise<void> {
       text = ''
     }
   }
-  if (text !== '' && insertClipboardText(text, at)) {
+  if (text !== '' && insertClipboardText(text, at, objectTarget)) {
     return
   }
   const remembered = memoryPayload()
   if (remembered) {
-    pasteObjects(remembered)
+    pasteObjects(remembered, objectTarget)
   }
 }
 

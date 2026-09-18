@@ -58,6 +58,7 @@
 - `fig-kiwi.ts`: 파일에 내장된 Kiwi 스키마 해석. `eval` / `new Function`을 쓰지 않아 기존 Tauri CSP를 유지한다.
 - `fig-scene.ts`: 페이지·레이어 순서, 행렬, 바운드, SVG 경로. 자동 크기 그룹의 NaN 크기는 자식으로 계산한다.
 - `fig-svg.ts`: 채우기·이미지 자르기·클리핑·마스크·글리프 렌더링.
+  글자별 채우기는 `textStyleTable`과 `styleOverrideTable`을 함께 읽으며, 같은 스타일 ID는 오버라이드를 우선한다.
 - `fig-convert.ts`: CanvaSlide 요소·자산·발표 프레임 변환.
 - `fig-text.ts`: 편집 가능한 텍스트·서식·프레임 자르기 변환. `text-clip.ts`는 편집기·HTML 플레이어의 표시 범위를 공유하고 편집기의 선택 범위에도 적용한다.
 - `renderer/src/lib/fig-import.worker.ts`: 해독과 변환을 메인 스레드 밖에서 실행. 취소 시 워커 종료.
@@ -102,10 +103,14 @@ pnpm exec playwright test --config tests/playwright.config.ts tests/e2e/fig-impo
 
 | 검사                        | 결과                                                      |
 | --------------------------- | --------------------------------------------------------- |
-| `pnpm check`                | lint·format·typecheck 통과, 단위 491개·도구 검사 8개 통과 |
+| `pnpm check`                | lint·format·typecheck 통과, 단위 492개·도구 검사 8개 통과 |
 | 실제 샘플을 포함한 전체 E2E | Chromium 135개·선택된 WebKit 28개, 총 163개 통과          |
 | Rust format·clippy·test     | 통과, 테스트 31개                                         |
 | macOS 앱 번들               | 아래 로컬 빌드 명령으로 통과                              |
+
+리뷰에서 확인한 SVG 글자별 색상 누락을 수정한 뒤 `pnpm check`와 실제 샘플을 포함한 가져오기 E2E 9개를 다시 통과했다.
+회귀 테스트는 기본 스타일 표의 색상, 오버라이드 우선순위, 오버라이드만 있는 스타일, 미지정 스타일의 기본 색상을 확인한다.
+전체 E2E 163개와 앱 번들 검증은 해당 수정 전에 수행했다.
 
 실제 샘플의 문구 수정·저장·다시 열기·재편집을 두 브라우저에서 검증했다.
 일반 검사의 로컬 샘플 1건은 환경변수가 없으면 건너뛰며 위 명령으로 별도 실행한다.

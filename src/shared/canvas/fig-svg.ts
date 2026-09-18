@@ -189,9 +189,15 @@ export function createFigSvgRenderer(
   function textShape(node: FigNode): string {
     const glyphs = node.derivedTextData?.glyphs
     if (glyphs?.length) {
-      const styles = new Map(
-        node.textData?.styleOverrideTable?.map((style) => [style.styleID, style])
-      )
+      const styles = new Map<number, Partial<FigNode>>()
+      for (const style of [
+        ...(node.textStyleTable ?? []),
+        ...(node.textData?.styleOverrideTable ?? [])
+      ]) {
+        if (style.styleID !== undefined) {
+          styles.set(style.styleID, style)
+        }
+      }
       return glyphs
         .map((glyph) => {
           let id = glyphIds.get(glyph.commandsBlob)

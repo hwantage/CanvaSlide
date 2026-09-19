@@ -42,6 +42,7 @@ export function ModalDialog({
         onClose()
       }}
       onKeyDown={(event) => {
+        event.stopPropagation()
         if (event.key !== 'Tab') {
           return
         }

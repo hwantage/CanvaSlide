@@ -5,19 +5,22 @@ import { FrameElement } from './frame-element'
 import { ImageElement } from './image-element'
 import { ShapeElement } from './shape-element'
 import { TextElement } from './text-element'
+import { VideoElement } from './video-element'
 
 type ElementViewProps = {
   element: CanvasElement
   editing: boolean
   selected: boolean
   layoutScale: number
+  videoMode?: 'editor' | 'passive' | 'manual' | 'auto'
 }
 
 export const ElementView = memo(function ElementView({
   element,
   editing,
   selected,
-  layoutScale
+  layoutScale,
+  videoMode = 'editor'
 }: ElementViewProps) {
   switch (element.type) {
     case 'shape':
@@ -26,6 +29,8 @@ export const ElementView = memo(function ElementView({
       return <TextElement element={element} editing={editing} />
     case 'image':
       return <ImageElement element={element} selected={selected} layoutScale={layoutScale} />
+    case 'video':
+      return <VideoElement element={element} mode={videoMode} />
     case 'frame':
       return <FrameElement element={element} />
     case 'connector':

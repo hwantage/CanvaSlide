@@ -1,5 +1,36 @@
 // Source language: every other locale must define exactly these keys (enforced by the type).
 export const en = {
+  'video.thumbnail': '{provider} video thumbnail',
+  'video.autoplay': 'Autoplay in Slide Show',
+  'video.exportLinked':
+    'Linked videos require internet access. Video files are not included in the export.',
+  'video.exportYouTube':
+    '{provider} playback requires opening this {format} from an {protocol} web address, rather than directly from disk.',
+  'element.video': 'Video',
+  'video.insert': 'Insert video link',
+  'video.edit': 'Edit video link',
+  'video.url': 'Video URL',
+  'video.support': '{providers} or a direct video URL ({formats}). Only the link is saved.',
+  'video.policy':
+    'Slide Show starts muted. Linked videos need internet; playback depends on browser codecs and the source’s embedding permissions.',
+  'video.invalid': 'Enter a valid http or https video URL.',
+  'video.cancel': 'Cancel',
+  'video.save': 'Save link',
+  'video.play': 'Play video',
+  'video.pause': 'Pause video',
+  'video.resume': 'Resume video',
+  'video.expand': 'Expand video',
+  'video.collapse': 'Return to previous view',
+  'video.sound': 'Enable sound',
+  'video.mute': 'Mute',
+  'video.loading': 'Loading video…',
+  'video.blocked': 'Use the player’s Play button to start playback.',
+  'video.error': 'Video unavailable. Check the link, connection, format or embedding permissions.',
+  'video.retry': 'Retry',
+  'video.open': 'Open original',
+  'video.linked': 'Linked video',
+  'video.autoplayLimit': 'Additional videos from this provider start manually.',
+
   'tool.select': 'Select',
   'tool.hand': 'Hand (pan)',
   'tool.text': 'Text',

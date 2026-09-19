@@ -84,6 +84,12 @@ function shapeSvg(element: ShapeElement): SVGElement {
 
 function renderElement(element: CanvasElement, doc: CanvasDocument): HTMLElement | null {
   switch (element.type) {
+    case 'video': {
+      const node = el('div', 'uc-el')
+      node.dataset.videoId = element.id
+      place(node, element)
+      return node
+    }
     case 'text': {
       const node = el('div', 'uc-el uc-text')
       place(node, element)

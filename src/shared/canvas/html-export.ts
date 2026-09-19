@@ -17,7 +17,7 @@ export function embedJsonSafely(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', '\\u003c')
 }
 
-/** One self-contained page: no external requests, opens from disk in any modern browser. */
+/** Static content stays self-contained; intentionally linked videos load only on playback. */
 export function buildStandaloneHtml({
   document,
   playerScript,

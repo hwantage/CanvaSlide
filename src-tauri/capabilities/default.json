@@ -16,7 +16,7 @@
     "process:allow-restart",
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "https://github.com/hwantage/CanvaSlide/releases" }]
+      "allow": [{ "url": "https://*" }, { "url": "http://*" }]
     },
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-read-image"

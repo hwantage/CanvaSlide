@@ -5,6 +5,7 @@ mod file_path;
 mod font_embed;
 mod launch_document;
 mod system_fonts;
+mod video_embed;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
@@ -61,6 +62,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(launch_document::PendingDocument::default())
+        .manage(video_embed::VideoEmbedServer::default())
         .setup(|app| {
             app_menu::install(app)?;
             let cwd = std::env::current_dir().unwrap_or_default();
@@ -79,6 +81,7 @@ pub fn run() {
             system_fonts::list_system_fonts,
             font_embed::subset_fonts,
             launch_document::take_launch_document,
+            video_embed::video_embed_origin,
             quit_app,
             acknowledge_quit
         ])

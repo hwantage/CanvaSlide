@@ -1,4 +1,5 @@
 import css from './player.css?inline'
+import videoCss from '@shared/media/linked-video.css?inline'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { presentationKeyAction } from '@shared/canvas/presentation-keys'
 import { renderDocument } from './player-dom'
@@ -81,7 +82,7 @@ function bindKeyboard(presentation: PlayerPresentation): void {
 
 function mount(): void {
   const style = document.createElement('style')
-  style.textContent = css
+  style.textContent = css + videoCss
   document.head.append(style)
 
   const doc = readDocument()

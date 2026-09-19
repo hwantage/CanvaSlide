@@ -1,4 +1,5 @@
 :root {
+  --video-backdrop: #000000;
   --canvas: #f7f7f8;
   --selection: #2563eb;
   --frame-stroke: #a1a1aa;

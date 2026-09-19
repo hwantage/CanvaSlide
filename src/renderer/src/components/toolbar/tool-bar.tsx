@@ -5,11 +5,13 @@ import {
   Frame,
   Hand,
   ImagePlus,
+  Video,
   MousePointer2,
   Square,
   Type
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { VideoUrlDialog } from '@/components/panels/video-url-dialog'
 import { connectorHeadOptions, connectorRouteOptions } from '@/components/ui/connector-options'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
@@ -67,6 +69,7 @@ function ConnectorFlyout() {
 }
 
 export function ToolBar() {
+  const [videoDialog, setVideoDialog] = useState(false)
   const active = useToolStore(selectTool)
   const setTool = useToolStore((s) => s.setTool)
   return (
@@ -89,6 +92,10 @@ export function ToolBar() {
       >
         <ImagePlus size={16} />
       </IconButton>
+      <IconButton label={t('video.insert')} onClick={() => setVideoDialog(true)}>
+        <Video size={16} />
+      </IconButton>
+      {videoDialog && <VideoUrlDialog onClose={() => setVideoDialog(false)} />}
       {active === 'connector' && <ConnectorFlyout />}
     </div>
   )

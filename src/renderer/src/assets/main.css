@@ -4,6 +4,7 @@
 /* Design tokens: surface/foreground pairs, neutral chrome, colour reserved for state.
    `data-theme` is written onto <html> from the theme store before React renders. */
 :root {
+  --video-backdrop: #000000;
   color-scheme: light;
   --background: #ffffff;
   --foreground: #18181b;

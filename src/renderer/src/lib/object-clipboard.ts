@@ -23,23 +23,27 @@ let memory: ClipboardPayload | null = null
 let copyPointerRevision = 0
 let placement: (ObjectPastePlacement & { payloadKey: string }) | null = null
 let pendingFallbacks: ReturnType<typeof setTimeout>[] = []
+let nativePasteRevision = 0
 
 /** The native `paste` event owns this ⌘V: drop every pending keyboard fallback. */
 export function nativePasteArrived(): void {
+  nativePasteRevision++
   for (const timer of pendingFallbacks) {
     clearTimeout(timer)
   }
   pendingFallbacks = []
 }
 
-let keyboardFallback: (target: Point | null) => void = (target) => {
+let keyboardFallback: (target: Point | null, valid: () => boolean) => void = (target) => {
   if (memory) {
     pasteObjects(memory, target)
   }
 }
 
 /** Lets the clipboard hook swap in a richer fallback (native image/text) than the memory copy. */
-export function setKeyboardPasteFallback(fallback: (target: Point | null) => void): void {
+export function setKeyboardPasteFallback(
+  fallback: (target: Point | null, valid: () => boolean) => void
+): void {
   keyboardFallback = fallback
 }
 
@@ -49,9 +53,10 @@ export function setKeyboardPasteFallback(fallback: (target: Point | null) => voi
  */
 export function requestKeyboardPaste(): void {
   const target = objectPasteTarget()
+  const revision = nativePasteRevision
   const timer = setTimeout(() => {
     pendingFallbacks = pendingFallbacks.filter((t) => t !== timer)
-    keyboardFallback(target)
+    keyboardFallback(target, () => revision === nativePasteRevision)
   }, KEYBOARD_FALLBACK_DELAY_MS)
   pendingFallbacks.push(timer)
 }

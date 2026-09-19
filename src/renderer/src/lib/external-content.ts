@@ -4,6 +4,9 @@ import { createImageAsset } from '@shared/canvas/document-assets'
 import type { Point, Rect } from '@shared/canvas/element-types'
 import { cascadeRect } from '@shared/canvas/paste-placement'
 import { normalizePastedText, pastedTextWidth } from '@shared/canvas/pasted-text'
+import { parseVideoSource } from '@shared/canvas/video-source'
+import { initialVideoAspectRatio, videoInsertionRect } from '@shared/canvas/video-placement'
+import { readVideoAspectRatio } from './video-metadata'
 import { decodeImageFile } from '@/lib/clipboard-image'
 import { pickFiles } from '@/lib/file-picker'
 import { createImageElement, createTextElement, placeImageRect } from '@/lib/element-factory'
@@ -11,7 +14,7 @@ import { memoryPayload, objectPasteTarget, pasteObjects } from '@/lib/object-cli
 import { reportError } from '@/platform/document-file-access'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { useCameraStore } from '@/store/camera-store'
-import { useDocumentStore } from '@/store/document-store'
+import { newElementId, useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
 import { importFigFile } from '@/store/fig-import-store'
 
@@ -27,8 +30,15 @@ function landingBox(at?: Point): Rect {
   return { x: center.x - width / 2, y: center.y - height / 2, width, height }
 }
 
-export async function insertImageFile(file: File, at?: Point): Promise<void> {
+export async function insertImageFile(
+  file: File,
+  at?: Point,
+  valid: () => boolean = () => true
+): Promise<void> {
   const decoded = await decodeImageFile(file)
+  if (!valid()) {
+    return
+  }
   const asset = createImageAsset(decoded.src, decoded.width, decoded.height)
   const document = useDocumentStore.getState().document
   const rect = cascadeRect(placeImageRect(decoded, landingBox(at)), document)
@@ -65,7 +75,68 @@ export function insertClipboardText(
     pasteObjects(payload, objectTarget)
     return true
   }
+  const video = parseVideoSource(text)
+  if (video) {
+    return insertVideoUrl(text, at)
+  }
   return insertPlainText(text, at)
+}
+
+export function insertVideoUrl(raw: string, at?: Point): boolean {
+  const source = parseVideoSource(raw, true)
+  if (!source) {
+    return false
+  }
+  const document = useDocumentStore.getState().document
+  const box = landingBox(at)
+  const initialRatio = initialVideoAspectRatio(raw)
+  const rect = cascadeRect(videoInsertionRect(initialRatio, box), document)
+  const id = newElementId()
+  useDocumentStore
+    .getState()
+    .insertElement({ id, type: 'video', url: source.url, autoplay: true, ...rect })
+  useToolStore.getState().setTool('select')
+  const inserted = useDocumentStore.getState().document
+  const session = useDocumentStore.getState().session
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 4000)
+  const unsubscribe = useDocumentStore.subscribe((state) => {
+    if (state.document !== inserted || state.session !== session || state.editBaseline) {
+      controller.abort()
+    }
+  })
+  void readVideoAspectRatio(source, controller.signal)
+    .then((ratio) => {
+      const state = useDocumentStore.getState()
+      if (
+        !ratio ||
+        controller.signal.aborted ||
+        state.document !== inserted ||
+        state.session !== session
+      ) {
+        return
+      }
+      // Some YouTube responses describe a landscape embed even for a Shorts URL.
+      const aspect =
+        initialRatio < 1 && source.provider === 'youtube' && ratio > 1 ? initialRatio : ratio
+      const fitted = videoInsertionRect(aspect, box)
+      unsubscribe()
+      state.patchElements(
+        [id],
+        {
+          width: fitted.width,
+          height: fitted.height,
+          x: rect.x + (rect.width - fitted.width) / 2,
+          y: rect.y + (rect.height - fitted.height) / 2
+        },
+        false
+      )
+    })
+    .finally(() => {
+      clearTimeout(timeout)
+      unsubscribe()
+    })
+  return true
 }
 
 export function isPdfFile(file: File): boolean {
@@ -106,11 +177,17 @@ export async function insertFile(file: File, at?: Point): Promise<void> {
  */
 export async function pasteFromSystemClipboard(
   at?: Point,
-  objectTarget = at === undefined ? objectPasteTarget() : null
+  objectTarget = at === undefined ? objectPasteTarget() : null,
+  valid: () => boolean = () => true
 ): Promise<void> {
+  const session = useDocumentStore.getState().session
+  const current = () => valid() && session === useDocumentStore.getState().session
   const image = await readNativeClipboardImage()
+  if (!current()) {
+    return
+  }
   if (image) {
-    await insertImageFile(image, at)
+    await insertImageFile(image, at, current)
     return
   }
   let text = await readNativeClipboardText()
@@ -120,6 +197,9 @@ export async function pasteFromSystemClipboard(
     } catch {
       text = ''
     }
+  }
+  if (!current()) {
+    return
   }
   if (text !== '' && insertClipboardText(text, at, objectTarget)) {
     return

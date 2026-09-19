@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Page, type Locator } from '@playwright/test'
+import { unzipSync } from 'fflate'
 
 const clip = readFileSync('tests/fixtures/linked-video.mp4')
 const thumbnailFixture =
@@ -475,11 +476,16 @@ test('save/open and standalone HTML preserve URLs without video bytes; exported 
   const dir = mkdtempSync(join(tmpdir(), 'canvaslide-video-'))
   const saved = join(dir, 'saved.canvaslide')
   await (await download).saveAs(saved)
-  const document = JSON.parse(readFileSync(saved, 'utf8'))
+  const savedBytes = readFileSync(saved)
+  const entries = savedBytes.subarray(0, 4).equals(Buffer.from([80, 75, 3, 4]))
+    ? unzipSync(savedBytes)
+    : { 'document.json': savedBytes }
+  expect(Object.keys(entries)).toEqual(['document.json'])
+  const document = JSON.parse(Buffer.from(entries['document.json']!).toString('utf8'))
   expect(document.elements.a.url).toBe(url)
   expect(document.elements.b.autoplay).toBe(false)
   expect(document.assets).toEqual({})
-  expect(readFileSync(saved).length).toBeLessThan(4000)
+  expect(savedBytes.length).toBeLessThan(4000)
   const reopen = page.waitForEvent('filechooser')
   await page.getByRole('button', { name: /^Open/ }).click()
   await (await reopen).setFiles(saved)

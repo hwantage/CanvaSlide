@@ -155,11 +155,18 @@ test('batch fields preserve other overrides and undo/reset the whole selection @
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
   const reset = await state(page)
   expect(reset.past).toBe(changed.past + 1)
-  expect(reset.elements.f1.transition).toBeUndefined()
-  expect(reset.elements.f3.transition).toBeUndefined()
+  expect(reset.elements.f1.transition).toEqual({ ms: 1000 })
+  expect(reset.elements.f3.transition).toEqual({ ms: 1000 })
+  await expect(page.getByRole('combobox', { name: 'Duration' })).toHaveValue('1000')
+  await expect(page.locator('[data-testid="motion-control"][data-non-default="true"]')).toHaveCount(
+    0
+  )
+  await expect(selectedRows(page).getByTestId('frame-motion-marks')).toHaveCount(0)
   expect(reset.elements.f2).toEqual(original.elements.f2)
   await page.keyboard.press(`${primary}+z`)
   expect((await state(page)).elements).toEqual(changed.elements)
+  await page.keyboard.press(`${primary}+Shift+z`)
+  expect((await state(page)).elements).toEqual(reset.elements)
 })
 
 test('advanced batch slider keeps one undo step and leaves other fields intact @webkit', async ({

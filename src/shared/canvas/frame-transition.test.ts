@@ -11,6 +11,7 @@ import {
   frameTransitionSelection,
   mergeFrameTransition,
   pruneFrameTransition,
+  resetFrameTransition,
   resolveFrameTransition
 } from './frame-transition'
 
@@ -116,7 +117,7 @@ describe('resolveFrameTransition', () => {
 })
 
 describe('frameMotionDiff', () => {
-  it('reports nothing for a frame that presents like every other', () => {
+  it('reports nothing for a frame using the application defaults', () => {
     expect(frameMotionDiff(frame('a', 1), defaultDocumentSettings)).toEqual([])
   })
 
@@ -125,17 +126,54 @@ describe('frameMotionDiff', () => {
     expect(frameMotionDiff(frameWith, defaultDocumentSettings)).toEqual(['roll', 'spotlight'])
   })
 
-  it('stays quiet when the override repeats the document default', () => {
+  it('marks inherited non-default effects even when overrides repeat them', () => {
     const settings = { ...defaultDocumentSettings, transitionMs: 900, spotlight: 0.5 }
     const pinned = frame('a', 1, { transition: { ms: 900, spotlight: 0.5 } })
-    expect(frameMotionDiff(pinned, settings)).toEqual([])
+    expect(frameMotionDiff(pinned, settings)).toEqual(['ms', 'spotlight'])
+    expect(frameMotionDiff(frame('inherited', 2), settings)).toEqual(['ms', 'spotlight'])
   })
 
-  it('reports a spotlight the frame switches off against a document that dims', () => {
+  it('stays quiet when an override restores the application default', () => {
     const settings = { ...defaultDocumentSettings, spotlight: 0.5 }
-    expect(frameMotionDiff(frame('a', 1, { transition: { spotlight: 0 } }), settings)).toEqual([
+    expect(frameMotionDiff(frame('a', 1, { transition: { spotlight: 0 } }), settings)).toEqual([])
+  })
+
+  it.each([
+    ['ai-prompt-example', 1.4, undefined],
+    ['ai-prompt-example-long-prompt', Math.SQRT2, { ms: 900, arc: 1.4, roll: 0, spotlight: 1 }],
+    ['orca-prompt-example', 1.4, undefined]
+  ] as const)('marks the camera settings from %s', (_name, transitionArc, transition) => {
+    const settings = { ...defaultDocumentSettings, transitionMs: 900, transitionArc, spotlight: 1 }
+    expect(frameMotionDiff(frame('a', 1, { transition }), settings)).toEqual([
+      'ms',
+      'arc',
       'spotlight'
     ])
+  })
+
+  it('resolves omitted values and explicit application defaults without marks', () => {
+    const settings = { transitionMs: 1000 } as typeof defaultDocumentSettings
+    expect(frameMotionDiff(frame('a', 1), settings)).toEqual([])
+    expect(
+      frameMotionDiff(
+        frame('b', 2, {
+          transition: { ms: 1000, easing: 'smooth', arc: Math.SQRT2, roll: 0, spotlight: 0 }
+        }),
+        settings
+      )
+    ).toEqual([])
+  })
+
+  it('marks each non-default effective field', () => {
+    expect(
+      frameMotionDiff(frame('a', 1, { transition: { roll: 10 } }), {
+        ...defaultDocumentSettings,
+        transitionMs: 900,
+        transitionEasing: 'linear',
+        transitionArc: 2,
+        spotlight: 1
+      })
+    ).toEqual(['ms', 'easing', 'arc', 'roll', 'spotlight'])
   })
 
   it('ignores an out-of-range value that clamps back onto the default', () => {
@@ -173,10 +211,23 @@ describe('batch frame transitions', () => {
     const frames = [frame('a', 1), frame('b', 2, { transition: { ms: 1000, roll: 15 } })]
     expect(frameTransitionSelection(frames, defaultDocumentSettings)).toMatchObject({
       mixed: ['roll'],
-      overridden: ['ms', 'roll'],
+      nonDefault: ['roll'],
       resolved: { ms: 1000, roll: 0 }
     })
     expect(frameTransitionSelection([], defaultDocumentSettings).mixed).toEqual([])
+  })
+
+  it('highlights inherited effects and any non-default value in a mixed selection', () => {
+    const settings = { ...defaultDocumentSettings, transitionMs: 900, spotlight: 1 }
+    const inherited = frame('a', 1)
+    const reset = frame('b', 2, { transition: resetFrameTransition(settings) })
+    expect(frameTransitionSelection([inherited], settings).nonDefault).toEqual(['ms', 'spotlight'])
+    expect(frameTransitionSelection([reset], settings).nonDefault).toEqual([])
+    expect(frameTransitionSelection([reset, inherited], settings)).toMatchObject({
+      mixed: ['ms', 'spotlight'],
+      nonDefault: ['ms', 'spotlight']
+    })
+    expect(frameTransitionSelection([], settings).nonDefault).toEqual([])
   })
 
   it('merges only edited fields and preserves each frame’s independent overrides', () => {
@@ -203,5 +254,36 @@ describe('batch frame transitions', () => {
     expect(
       mergeFrameTransition(frame('b', 2, { transition: { roll: 15 } }), { roll: 0 }, settings)
     ).toBeUndefined()
+  })
+})
+
+describe('resetFrameTransition', () => {
+  it('removes overrides when the document already uses application defaults', () => {
+    expect(resetFrameTransition(defaultDocumentSettings)).toBeUndefined()
+  })
+
+  it.each([
+    { transitionMs: 900, transitionArc: 1.4, spotlight: 1 },
+    { transitionMs: 900, transitionArc: Math.SQRT2, spotlight: 1 },
+    { transitionMs: 0, transitionEasing: 'linear' as const, transitionArc: 2.2, spotlight: 0.5 },
+    { transitionArc: Math.SQRT2 + 1e-7 }
+  ])('restores every effective application default against %j', (change) => {
+    const settings = { ...defaultDocumentSettings, ...change }
+    const before = { ...settings }
+    const reset = frame('a', 1, { transition: resetFrameTransition(settings) })
+    expect(resolveFrameTransition(reset, settings)).toEqual(
+      resolveFrameTransition(undefined, defaultDocumentSettings)
+    )
+    expect(frameMotionDiff(reset, settings)).toEqual([])
+    expect(frameTransitionSelection([reset], settings).nonDefault).toEqual([])
+    const edited = { ...reset, transition: mergeFrameTransition(reset, { roll: 15 }, settings) }
+    expect(frameMotionDiff(edited, settings)).toEqual(['roll'])
+    expect(settings).toEqual(before)
+  })
+
+  it('stores only defaults needed to neutralize inherited effects', () => {
+    expect(
+      resetFrameTransition({ ...defaultDocumentSettings, transitionMs: 900, spotlight: 1 })
+    ).toEqual({ ms: 1000, spotlight: 0 })
   })
 })

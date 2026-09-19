@@ -4,6 +4,7 @@ import { cameraEasings, type CameraEasing } from '@shared/canvas/camera-easing'
 import { MAX_CAMERA_ARC, MIN_CAMERA_ARC, type FrameTransition } from '@shared/canvas/element-types'
 import {
   mergeFrameTransition,
+  resetFrameTransition,
   frameTransitionSelection,
   type MotionField
 } from '@shared/canvas/frame-transition'
@@ -41,13 +42,13 @@ const steps = (presets: readonly MotionPreset[]) =>
  */
 const CONTROL = 'h-7 w-36 shrink-0'
 
-/** A primary border is what says "this frame differs from the document" — on the control itself. */
-function stateClass(overridden: boolean): string {
-  return overridden ? 'border-primary' : 'border-input'
+/** The control and frame-list marks use the same application-default baseline. */
+function stateClass(nonDefault: boolean): string {
+  return nonDefault ? 'border-primary' : 'border-input'
 }
 
-function stateTitle(overridden: boolean): string {
-  return t(overridden ? 'motion.overridden' : 'motion.inherited')
+function stateTitle(nonDefault: boolean): string {
+  return t(nonDefault ? 'motion.nonDefault' : 'motion.default')
 }
 
 /**
@@ -57,7 +58,7 @@ function stateTitle(overridden: boolean): string {
 function StepSelect({
   field,
   label,
-  overridden,
+  nonDefault,
   mixed,
   value,
   options,
@@ -66,7 +67,7 @@ function StepSelect({
 }: {
   field: MotionField
   label: string
-  overridden: boolean
+  nonDefault: boolean
   mixed: boolean
   value: number
   options: readonly { value: number; label: string }[]
@@ -77,11 +78,11 @@ function StepSelect({
   return (
     <select
       aria-label={label}
-      title={stateTitle(overridden)}
+      title={stateTitle(nonDefault)}
       data-testid="motion-control"
       data-field={field}
-      data-overridden={overridden}
-      className={`${inputBaseClass} ${CONTROL} px-1 ${stateClass(overridden)}`}
+      data-non-default={nonDefault}
+      className={`${inputBaseClass} ${CONTROL} px-1 ${stateClass(nonDefault)}`}
       value={mixed ? 'mixed' : match ? String(match.value) : 'custom'}
       onChange={(event) => onChange(Number(event.target.value))}
     >
@@ -108,7 +109,7 @@ function StepSelect({
 function MotionSlider({
   field,
   label,
-  overridden,
+  nonDefault,
   mixed,
   min,
   max,
@@ -119,7 +120,7 @@ function MotionSlider({
 }: {
   field: MotionField
   label: string
-  overridden: boolean
+  nonDefault: boolean
   mixed: boolean
   min: number
   max: number
@@ -131,10 +132,10 @@ function MotionSlider({
   const session = useSliderEditSession()
   return (
     <span
-      title={stateTitle(overridden)}
+      title={stateTitle(nonDefault)}
       data-testid="motion-control"
       data-field={field}
-      data-overridden={overridden}
+      data-non-default={nonDefault}
       className={`flex items-center gap-1 ${CONTROL}`}
     >
       <input
@@ -154,7 +155,7 @@ function MotionSlider({
       />
       <span
         className={`w-8 shrink-0 text-right text-[11px] tabular-nums ${
-          overridden ? 'font-medium text-primary' : 'text-muted-foreground'
+          nonDefault ? 'font-medium text-primary' : 'text-muted-foreground'
         }`}
       >
         {mixed ? t('motion.mixed') : readout}
@@ -165,7 +166,7 @@ function MotionSlider({
 
 /**
  * Per-frame camera direction. Every control shows the value the frame will actually present with;
- * editing one writes an override, and Reset hands the whole section back to the document.
+ * editing preserves document inheritance, while Reset restores the application defaults.
  * The named steps are the whole interface — ρ 1.41 and `roll: -22` are not decisions an author can
  * make, so Advanced is what swaps them for the raw sliders, one row at a time in the same column.
  */
@@ -179,7 +180,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
   })
   const previewTransition = usePresentationStore((s) => s.previewTransition)
   const [advanced, setAdvanced] = useState(false)
-  const { resolved, mixed, overridden } = frameTransitionSelection(frames, settings)
+  const { resolved, mixed, nonDefault } = frameTransitionSelection(frames, settings)
 
   // Each frame keeps its other overrides; one patch also means one undo step for the batch.
   const patch = (change: FrameTransition, record = true) => {
@@ -216,8 +217,11 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           type="button"
           title={t('motion.resetAllHint')}
           aria-label={t('motion.resetAll')}
-          disabled={frames.every((frame) => frame.transition === undefined)}
-          onClick={() => useDocumentStore.getState().patchElements(ids, { transition: undefined })}
+          disabled={nonDefault.length === 0}
+          onClick={() => {
+            const store = useDocumentStore.getState()
+            store.patchElements(ids, { transition: resetFrameTransition(store.document.settings) })
+          }}
           className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent disabled:pointer-events-none disabled:opacity-30"
         >
           <RotateCcw size={11} />
@@ -238,7 +242,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <MotionSlider
             field="ms"
             label={t('motion.duration')}
-            overridden={overridden.includes('ms')}
+            nonDefault={nonDefault.includes('ms')}
             mixed={mixed.includes('ms')}
             min={0}
             max={sliderBound(DURATION_SLIDER_MS, resolved.ms)}
@@ -251,7 +255,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <StepSelect
             field="ms"
             label={t('motion.duration')}
-            overridden={overridden.includes('ms')}
+            nonDefault={nonDefault.includes('ms')}
             mixed={mixed.includes('ms')}
             value={resolved.ms}
             options={steps(durationPresets)}
@@ -264,11 +268,11 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
       <FieldRow label={t('motion.easing')}>
         <select
           aria-label={t('motion.easing')}
-          title={stateTitle(overridden.includes('easing'))}
+          title={stateTitle(nonDefault.includes('easing'))}
           data-testid="motion-control"
           data-field="easing"
-          data-overridden={overridden.includes('easing')}
-          className={`${inputBaseClass} ${CONTROL} px-1 ${stateClass(overridden.includes('easing'))}`}
+          data-non-default={nonDefault.includes('easing')}
+          className={`${inputBaseClass} ${CONTROL} px-1 ${stateClass(nonDefault.includes('easing'))}`}
           value={mixed.includes('easing') ? 'mixed' : resolved.easing}
           onChange={(event) => patch({ easing: event.target.value as CameraEasing })}
         >
@@ -290,7 +294,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <MotionSlider
             field="arc"
             label={t('motion.arc')}
-            overridden={overridden.includes('arc')}
+            nonDefault={nonDefault.includes('arc')}
             mixed={mixed.includes('arc')}
             min={MIN_CAMERA_ARC}
             max={MAX_CAMERA_ARC}
@@ -303,7 +307,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <StepSelect
             field="arc"
             label={t('motion.arc')}
-            overridden={overridden.includes('arc')}
+            nonDefault={nonDefault.includes('arc')}
             mixed={mixed.includes('arc')}
             value={resolved.arc}
             options={steps(arcPresets)}
@@ -318,7 +322,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <MotionSlider
             field="roll"
             label={t('motion.roll')}
-            overridden={overridden.includes('roll')}
+            nonDefault={nonDefault.includes('roll')}
             mixed={mixed.includes('roll')}
             min={-sliderBound(ROLL_SLIDER_DEGREES, resolved.roll)}
             max={sliderBound(ROLL_SLIDER_DEGREES, resolved.roll)}
@@ -331,7 +335,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <StepSelect
             field="roll"
             label={t('motion.roll')}
-            overridden={overridden.includes('roll')}
+            nonDefault={nonDefault.includes('roll')}
             mixed={mixed.includes('roll')}
             value={resolved.roll}
             options={rollOptions()}
@@ -346,7 +350,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <MotionSlider
             field="spotlight"
             label={t('motion.spotlight')}
-            overridden={overridden.includes('spotlight')}
+            nonDefault={nonDefault.includes('spotlight')}
             mixed={mixed.includes('spotlight')}
             min={0}
             max={1}
@@ -359,7 +363,7 @@ export function FrameTransitionFields({ frameIds }: { frameIds: string[] }) {
           <StepSelect
             field="spotlight"
             label={t('motion.spotlight')}
-            overridden={overridden.includes('spotlight')}
+            nonDefault={nonDefault.includes('spotlight')}
             mixed={mixed.includes('spotlight')}
             value={resolved.spotlight}
             options={steps(spotlightPresets)}

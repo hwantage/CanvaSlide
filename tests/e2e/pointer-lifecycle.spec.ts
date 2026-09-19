@@ -302,20 +302,36 @@ test.describe('pointer lifecycle @core-interaction', () => {
     })
   }
 
-  test('Escape cancels a middle pan without pasting on the native release', async ({ page }) => {
-    await seedSelectionClipboard(page)
-    await move(page, 100, 100)
-    await page.mouse.down({ button: 'middle' })
-    await move(page, 160, 140)
-    await loseCapture(page, 160, 140)
-    await page.keyboard.press('Escape')
-    await page.mouse.up({ button: 'middle' })
-    await expect(page.locator('[data-element-id]')).toHaveCount(0)
-    await page.keyboard.press('r')
-    await dragOnCanvas(page, [300, 300], [450, 400])
-    await page.keyboard.press(`${await primaryModifier(page)}+z`)
-    await expect(page.locator('[data-element-id]')).toHaveCount(0)
-  })
+  for (const { cancelled, chorded } of [
+    { cancelled: true, chorded: false },
+    { cancelled: false, chorded: true },
+    { cancelled: true, chorded: true }
+  ]) {
+    test(`native middle release cannot paste (cancelled=${cancelled}, chorded=${chorded})`, async ({
+      page
+    }) => {
+      await seedSelectionClipboard(page)
+      await move(page, 100, 100)
+      await page.mouse.down({ button: 'middle' })
+      await move(page, 160, 140)
+      await loseCapture(page, 160, 140)
+      if (chorded) {
+        await page.mouse.down({ button: 'left' })
+      }
+      if (cancelled) {
+        await page.keyboard.press('Escape')
+      }
+      await page.mouse.up({ button: 'middle' })
+      if (chorded) {
+        await page.mouse.up({ button: 'left' })
+      }
+      await expect(page.locator('[data-element-id]')).toHaveCount(0)
+      await page.keyboard.press('r')
+      await dragOnCanvas(page, [300, 300], [450, 400])
+      await page.keyboard.press(`${await primaryModifier(page)}+z`)
+      await expect(page.locator('[data-element-id]')).toHaveCount(0)
+    })
+  }
 
   test('connector creation and endpoint dragging survive capture loss with one undo each', async ({
     page

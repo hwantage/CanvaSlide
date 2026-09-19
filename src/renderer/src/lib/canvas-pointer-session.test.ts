@@ -48,7 +48,12 @@ describe('canvas pointer ownership', () => {
     }
   )
 
-  it.each([false, true])('suppresses native middle release after cancellation=%s', (cancelled) => {
+  it.each([
+    { cancelled: false, type: 'pointerup', buttons: 0 },
+    { cancelled: true, type: 'pointerup', buttons: 0 },
+    { cancelled: false, type: 'pointermove', buttons: 1 },
+    { cancelled: true, type: 'pointermove', buttons: 1 }
+  ])('suppresses native middle release: %j', ({ cancelled, type, buttons }) => {
     const { session, target, callbacks } = setup()
     session.start(pointer('pointerdown', { button: 1, buttons: 4 }), target, () => true)
     if (cancelled) {
@@ -62,7 +67,7 @@ describe('canvas pointer ownership', () => {
     })
     window.dispatchEvent(foreign)
     expect(foreign.defaultPrevented).toBe(false)
-    const release = pointer('pointerup', { button: 1, buttons: 0, cancelable: true })
+    const release = pointer(type, { button: 1, buttons, cancelable: true })
     window.dispatchEvent(release)
     expect(release.defaultPrevented).toBe(true)
     expect(callbacks.finish).toHaveBeenCalledTimes(cancelled ? 0 : 1)

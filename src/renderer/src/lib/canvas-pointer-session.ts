@@ -29,11 +29,11 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
   let pendingMiddleRelease: number | null = null
 
   const detach = () => {
-    window.removeEventListener('pointermove', onMove, true)
     window.removeEventListener('pointercancel', onPointerCancel, true)
     window.removeEventListener('keydown', onKeyDown, true)
     // A cancelled pan still owns its native release, which can otherwise paste on Linux.
     if (pendingMiddleRelease === null) {
+      window.removeEventListener('pointermove', onMove, true)
       window.removeEventListener('pointerup', onUp, true)
       window.removeEventListener('pointerdown', onFreshDown, true)
       window.removeEventListener('auxclick', onAuxClick, true)
@@ -66,7 +66,18 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
     release(pointer)
   }
 
+  const preventMiddleRelease = (event: PointerEvent) => {
+    if (
+      event.pointerId === pendingMiddleRelease &&
+      event.button === 1 &&
+      (event.buttons & 4) === 0
+    ) {
+      event.preventDefault()
+    }
+  }
+
   const onMove = (event: PointerEvent) => {
+    preventMiddleRelease(event)
     if (!active || event.pointerId !== active.id) {
       return
     }
@@ -81,13 +92,7 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
   }
 
   const onUp = (event: PointerEvent) => {
-    if (
-      event.pointerId === pendingMiddleRelease &&
-      event.button === 1 &&
-      (event.buttons & 4) === 0
-    ) {
-      event.preventDefault()
-    }
+    preventMiddleRelease(event)
     if (active && event.pointerId === active.id && (event.buttons & active.buttons) === 0) {
       finish(event)
     } else if (!active) {

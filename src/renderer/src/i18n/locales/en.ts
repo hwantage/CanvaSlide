@@ -100,6 +100,43 @@ export const en = {
   'file.discardTitle': 'Unsaved changes',
   'file.discardQuestion': 'You have unsaved changes. Discard them?',
 
+  'share.button': 'Share',
+  'share.title': 'Cloud share',
+  'share.openTitle': 'Open shared canvas',
+  'share.description':
+    'Create a snapshot that anyone with the link can open. It is automatically deleted 24 hours after creation. Later edits do not update the link. Maximum size: {limit}.',
+  'share.create': 'Create link',
+  'share.access.label': 'Allow recipients to',
+  'share.access.edit': 'Edit a copy',
+  'share.access.editDescription': 'Open the canvas in the editor, make changes, and save a copy.',
+  'share.access.present': 'View slide show only',
+  'share.access.presentDescription': 'Open directly in the slide show without editing tools.',
+  'share.link': 'Shareable URL',
+  'share.copy': 'Copy link',
+  'share.copied': 'Link copied.',
+  'share.copyFailed': 'Could not copy the link. Select the URL and copy it manually.',
+  'share.close': 'Close',
+  'share.retry': 'Try again',
+  'share.uploading': 'Creating link…',
+  'share.loading': 'Loading shared canvas…',
+  'share.saveLocal': 'Save {format} file',
+  'share.fallback':
+    'You can save the current canvas as a local {format} file and share that file instead.',
+  'share.error.invalid':
+    'This share link or document is invalid. Shared images must be embedded in the document.',
+  'share.error.tooLarge': 'This document is too large for cloud sharing.',
+  'share.error.noFrames': 'Add a presentation frame to share a slide show.',
+  'share.error.unsupportedVideo':
+    'Shared videos must use YouTube, Vimeo, or a file hosted on the share site.',
+  'share.error.quota': 'Cloud sharing has reached its request or storage limit. Try again later.',
+  'share.error.missing':
+    'This shared canvas was not found or its 24-hour link has expired. New links may take a minute to become available; try again shortly.',
+  'share.error.unavailable':
+    'Cloud sharing is unavailable. This app may not have a share service configured.',
+  'share.error.network': 'Could not reach the share service. Check your connection and try again.',
+  'share.error.changed':
+    'The current canvas changed. Your work was kept; open the share link in a new window.',
+
   'edit.undo': 'Undo',
   'edit.redo': 'Redo',
 

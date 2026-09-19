@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test'
 for (const { opener, label, close } of [
   { opener: /^Settings/, label: 'Settings', close: 'Done' },
   { opener: /^Keyboard shortcuts/, label: 'Keyboard shortcuts', close: 'Done' },
-  { opener: /^Export$/, label: 'Export presentation', close: 'Cancel' }
+  { opener: /^Export$/, label: 'Export presentation', close: 'Cancel' },
+  { opener: /^Share$/, label: 'Cloud share', close: 'Close' }
 ]) {
   test(`${label} contains focus and restores its opener on every close path @webkit`, async ({
     page

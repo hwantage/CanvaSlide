@@ -5,7 +5,7 @@ import { t } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { selectPreviewing, usePresentationStore } from '@/store/presentation-store'
 
-export function PresentationOverlay() {
+export function PresentationOverlay({ allowExit = true }: { allowExit?: boolean }) {
   const active = usePresentationStore((s) => s.active)
   // Why: a preview is one flight long; nav controls would outlive it and invite a stray click.
   const previewing = usePresentationStore(selectPreviewing)
@@ -59,9 +59,11 @@ export function PresentationOverlay() {
             {current?.name}
           </span>
         </span>
-        <IconButton label={`${t('present.exit')} (Esc)`} onClick={exit}>
-          <X size={16} />
-        </IconButton>
+        {allowExit && (
+          <IconButton label={`${t('present.exit')} (Esc)`} onClick={exit}>
+            <X size={16} />
+          </IconButton>
+        )}
       </div>
     </div>
   )

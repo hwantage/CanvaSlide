@@ -29,7 +29,7 @@ export const storedAssetSchema = imageAssetSchema.omit({ data: true }).extend({
   ])
 })
 export type StoredAsset = z.infer<typeof storedAssetSchema>
-export type StoredResource = { bytes: Uint8Array; compress: boolean }
+export type StoredResource = { bytes: Uint8Array<ArrayBuffer>; compress: boolean }
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
@@ -37,7 +37,7 @@ const dataUrlPrefixPattern = /^data:image\/[^,\s]+;base64,$/i
 const embeddedImagePrefixPattern = /data:image\/(?!svg\+xml)[a-z0-9.+-]+(?:;[^,\s"'<>]*)?;base64,/gi
 const base64EndPattern = /[^A-Za-z0-9+/=]/g
 
-function binaryDataUrl(data: string): { prefix: string; bytes: Uint8Array } | null {
+function binaryDataUrl(data: string): { prefix: string; bytes: Uint8Array<ArrayBuffer> } | null {
   const comma = data.indexOf(',')
   if (comma < 0 || comma >= 256) {
     return null
@@ -69,7 +69,7 @@ export function createAssetStorage(resources = new Map<string, StoredResource>()
 } {
   const storedBytes = new WeakMap<Uint8Array, string>()
   const imagesByUrl = new Map<string, ReturnType<typeof binaryDataUrl>>()
-  const put = (bytes: Uint8Array, compress: boolean): string => {
+  const put = (bytes: Uint8Array<ArrayBuffer>, compress: boolean): string => {
     const existing = storedBytes.get(bytes)
     if (existing) {
       return existing

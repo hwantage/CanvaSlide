@@ -7,6 +7,7 @@ import {
   Redo2,
   Save,
   Settings,
+  Share2,
   Undo2
 } from 'lucide-react'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
@@ -29,6 +30,7 @@ import {
 } from '@/store/modal-dialogs'
 import { selectUpdateAvailable, useUpdateStore } from '@/store/update-store'
 import { usePresentationStore } from '@/store/presentation-store'
+import { useCloudShareStore } from '@/store/cloud-share-store'
 
 export function TopBar({ commands }: { commands: DocumentCommands }) {
   const document = useDocumentStore(selectDocument)
@@ -40,13 +42,14 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
   const renameDocument = useDocumentStore((s) => s.renameDocument)
   const start = usePresentationStore((s) => s.start)
   const showExport = useExportDialogStore((s) => s.show)
+  const showShare = useCloudShareStore((s) => s.show)
   const showSettings = useSettingsDialogStore((s) => s.show)
   const showHelp = useShortcutHelpStore((s) => s.show)
   const updateAvailable = useUpdateStore(selectUpdateAvailable)
   const frameCount = orderedFrames(document).length
 
   return (
-    <header className="flex h-11 items-center gap-2 border-b border-border bg-background px-3">
+    <header className="flex h-11 items-center gap-2 border-b border-border bg-background px-3 [&_button]:shrink-0 [&_button]:whitespace-nowrap">
       <div className="flex items-center gap-1">
         <IconButton
           label={`${t('file.new')} (${shortcutLabel('N')})`}
@@ -90,11 +93,15 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
       <div className="mx-1 h-5 w-px bg-border" />
       <input
         aria-label={t('file.documentName')}
-        className={`${inputClass} w-48`}
+        className={`${inputClass} min-w-0 w-48`}
         value={document.name}
         onChange={(event) => renameDocument(event.target.value)}
       />
-      {dirty && <span className="text-xs text-muted-foreground">{t('file.unsaved')}</span>}
+      {dirty && (
+        <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
+          {t('file.unsaved')}
+        </span>
+      )}
       <div className="flex-1" />
       <IconButton label={`${t('help.title')} (?)`} onClick={showHelp}>
         <CircleQuestionMark size={16} />
@@ -131,6 +138,9 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
         onClick={showExport}
       >
         <FileDown size={14} /> {t('export.button')}
+      </TextButton>
+      <TextButton onClick={showShare}>
+        <Share2 size={14} /> {t('share.button')}
       </TextButton>
     </header>
   )

@@ -1,6 +1,8 @@
 import { CanvasViewport } from '@/components/canvas/canvas-viewport'
+import { SharedSlideShow } from '@/components/canvas/shared-slide-show'
 import { ExportDialog } from '@/components/panels/export-dialog'
 import { FigImportDialog } from '@/components/panels/fig-import-dialog'
+import { CloudShareDialog } from '@/components/panels/cloud-share-dialog'
 import { SidePanel } from '@/components/panels/side-panel'
 import { SettingsDialog } from '@/components/panels/settings-dialog'
 import { ShortcutHelpDialog } from '@/components/panels/shortcut-help-dialog'
@@ -12,13 +14,21 @@ import { useClipboard } from '@/hooks/use-clipboard'
 import { useCloseGuard } from '@/hooks/use-close-guard'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useLaunchDocument } from '@/hooks/use-launch-document'
+import { useSharedDocument } from '@/hooks/use-shared-document'
 import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
 import { preventPageContextMenu } from '@/lib/native-context-menu'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
 import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
+import { useCloudShareStore } from '@/store/cloud-share-store'
 
 export function App() {
+  const presentation = useCloudShareStore((s) => s.presentation)
+  useSharedDocument()
+  return presentation ? <SharedSlideShow document={presentation} /> : <Editor />
+}
+
+function Editor() {
   const commands = useDocumentCommands()
   // Why: only a full slide show takes the editor away; a preview keeps the panels so the values
   // it is showing off can be adjusted between replays.
@@ -55,6 +65,7 @@ export function App() {
           )}
         </main>
         {!presenting && <ExportDialog />}
+        {!presenting && <CloudShareDialog commands={commands} />}
         {!presenting && <FigImportDialog />}
         {!presenting && <SettingsDialog />}
         {!presenting && <ShortcutHelpDialog />}

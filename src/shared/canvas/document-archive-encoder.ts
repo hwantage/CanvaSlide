@@ -29,9 +29,14 @@ export type DocumentEncodingInput = Omit<CanvasDocument, 'assets'> & {
   assets: Record<string, Omit<ImageAsset, 'data'> & { data?: string }>
 }
 type CachedAsset = { source: StoredAsset['source']; characters: number }
-type PackedResource = { data: Uint8Array; crc: number; size: number; compression: number }
+type PackedResource = {
+  data: Uint8Array<ArrayBuffer>
+  crc: number
+  size: number
+  compression: number
+}
 
-function pack(bytes: Uint8Array, compress: boolean): PackedResource {
+function pack(bytes: Uint8Array<ArrayBuffer>, compress: boolean): PackedResource {
   return {
     data: compress ? deflateSync(bytes, { level: 3 }) : bytes,
     crc: documentResourceChecksum(bytes),

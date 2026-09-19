@@ -15,7 +15,7 @@ import { autoplayVideoIds, frameVideos } from '@shared/canvas/video-playback'
 const COMPOSITE_VECTOR_COUNT = 256
 
 /** Single transformed layer; frames render beneath all content regardless of z-order. */
-export function WorldLayer() {
+export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
   const outerRef = useRef<HTMLDivElement>(null)
   const previewing = usePresentationStore((s) => s.previewFrameId !== null)
   const flightZoom = useCameraStore((s) => (previewing ? s.flightZoom : null))
@@ -79,8 +79,8 @@ export function WorldLayer() {
             : id
         }
         element={element}
-        editing={editingTextId === id}
-        selected={selectedIds.includes(id)}
+        editing={!readOnly && editingTextId === id}
+        selected={!readOnly && selectedIds.includes(id)}
         videoMode={
           !active
             ? 'editor'

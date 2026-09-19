@@ -264,9 +264,8 @@ test.describe('pointer lifecycle @core-interaction', () => {
   for (const button of ['left', 'middle'] as const) {
     test(`${button} pan completes outside after capture loss`, async ({ page }) => {
       // Seed Linux's selection clipboard so native middle-button paste cannot pass unnoticed.
-      await page.getByRole('heading', { name: 'Frames', exact: true }).evaluate((node) => {
-        window.getSelection()!.selectAllChildren(node)
-      })
+      await page.getByRole('textbox', { name: 'Document name' }).selectText()
+      await page.getByTestId('canvas-viewport').click({ position: { x: 600, y: 600 } })
       if (button === 'left') {
         await page.keyboard.press('h')
       }

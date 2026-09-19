@@ -80,7 +80,7 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
     window.addEventListener('blur', session.cancel)
     return () => {
       window.removeEventListener('blur', session.cancel)
-      session.cancel()
+      session.dispose()
       pointers.current = null
     }
   }, [interaction, toInfo])

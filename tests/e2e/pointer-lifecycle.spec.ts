@@ -62,6 +62,13 @@ async function loseCapture(page: Page, x: number, y: number) {
   await emit(page, 'pointermove', x, y)
 }
 
+async function seedSelectionClipboard(page: Page) {
+  // Native keyboard selection populates Linux's selection clipboard; DOM selection alone does not.
+  await page.getByRole('textbox', { name: 'Document name' }).click()
+  await page.keyboard.press(`${await primaryModifier(page)}+a`)
+  await page.getByTestId('canvas-viewport').click({ position: { x: 600, y: 600 } })
+}
+
 test.describe('pointer lifecycle @core-interaction', () => {
   for (const kind of ['resize', 'connector-end']) {
     test(`clicking a ${kind} handle without moving does not edit the document`, async ({
@@ -263,9 +270,7 @@ test.describe('pointer lifecycle @core-interaction', () => {
 
   for (const button of ['left', 'middle'] as const) {
     test(`${button} pan completes outside after capture loss`, async ({ page }) => {
-      // Seed Linux's selection clipboard so native middle-button paste cannot pass unnoticed.
-      await page.getByRole('textbox', { name: 'Document name' }).selectText()
-      await page.getByTestId('canvas-viewport').click({ position: { x: 600, y: 600 } })
+      await seedSelectionClipboard(page)
       if (button === 'left') {
         await page.keyboard.press('h')
       }
@@ -273,9 +278,14 @@ test.describe('pointer lifecycle @core-interaction', () => {
       await page.mouse.down({ button })
       await move(page, 160, 140)
       await loseCapture(page, 160, 140)
-      await emit(page, 'pointerup', 200, 180, 'properties-pane', {
-        button: button === 'middle' ? 1 : 0
-      })
+      const panel = await page.getByTestId('properties-pane').boundingBox()
+      const canvas = await page.getByTestId('canvas-viewport').boundingBox()
+      if (!panel || !canvas) {
+        throw new Error('No panel or canvas')
+      }
+      const x = Math.floor(panel.x + panel.width / 2)
+      const y = Math.floor(panel.y + panel.height / 2)
+      await page.mouse.move(x, y, { steps: 5 })
       await page.mouse.up({ button })
       await move(page, 400, 400)
       const camera = await page.evaluate(async () => {
@@ -283,10 +293,29 @@ test.describe('pointer lifecycle @core-interaction', () => {
         const { useCameraStore } = await import(url)
         return useCameraStore.getState().camera
       })
-      expect(camera).toEqual({ x: 100, y: 80, zoom: 1 })
+      expect(camera).toEqual({
+        x: x - Math.floor(canvas.x) - 100,
+        y: y - Math.floor(canvas.y) - 100,
+        zoom: 1
+      })
       await expect(page.locator('[data-element-id]')).toHaveCount(0)
     })
   }
+
+  test('Escape cancels a middle pan without pasting on the native release', async ({ page }) => {
+    await seedSelectionClipboard(page)
+    await move(page, 100, 100)
+    await page.mouse.down({ button: 'middle' })
+    await move(page, 160, 140)
+    await loseCapture(page, 160, 140)
+    await page.keyboard.press('Escape')
+    await page.mouse.up({ button: 'middle' })
+    await expect(page.locator('[data-element-id]')).toHaveCount(0)
+    await page.keyboard.press('r')
+    await dragOnCanvas(page, [300, 300], [450, 400])
+    await page.keyboard.press(`${await primaryModifier(page)}+z`)
+    await expect(page.locator('[data-element-id]')).toHaveCount(0)
+  })
 
   test('connector creation and endpoint dragging survive capture loss with one undo each', async ({
     page

@@ -4,7 +4,7 @@ import { createCanvasPointerSession } from './canvas-pointer-session'
 const sessions: ReturnType<typeof createCanvasPointerSession>[] = []
 afterEach(() => {
   for (const session of sessions) {
-    session.cancel()
+    session.dispose()
   }
   sessions.length = 0
 })
@@ -39,8 +39,54 @@ describe('canvas pointer ownership', () => {
       const event = pointer('pointerdown', { button, isPrimary, cancelable: true })
       session.start(event, target, () => accepted)
       expect(event.defaultPrevented).toBe(prevented)
+      const release = pointer('pointerup', { button, buttons: 0, cancelable: true })
+      window.dispatchEvent(release)
+      expect(release.defaultPrevented).toBe(prevented)
+      const click = pointer('auxclick', { button, buttons: 0, cancelable: true })
+      window.dispatchEvent(click)
+      expect(click.defaultPrevented).toBe(prevented)
     }
   )
+
+  it.each([false, true])('suppresses native middle release after cancellation=%s', (cancelled) => {
+    const { session, target, callbacks } = setup()
+    session.start(pointer('pointerdown', { button: 1, buttons: 4 }), target, () => true)
+    if (cancelled) {
+      session.cancel()
+    }
+    const foreign = pointer('pointerup', {
+      pointerId: 99,
+      button: 1,
+      buttons: 0,
+      cancelable: true
+    })
+    window.dispatchEvent(foreign)
+    expect(foreign.defaultPrevented).toBe(false)
+    const release = pointer('pointerup', { button: 1, buttons: 0, cancelable: true })
+    window.dispatchEvent(release)
+    expect(release.defaultPrevented).toBe(true)
+    expect(callbacks.finish).toHaveBeenCalledTimes(cancelled ? 0 : 1)
+    const click = pointer('auxclick', { button: 1, buttons: 0, cancelable: true })
+    window.dispatchEvent(click)
+    expect(click.defaultPrevented).toBe(true)
+    const unrelated = pointer('pointerup', { button: 1, buttons: 0, cancelable: true })
+    window.dispatchEvent(unrelated)
+    expect(unrelated.defaultPrevented).toBe(false)
+  })
+
+  it.each(['fresh press', 'dispose'])('clears a pending middle release on %s', (reason) => {
+    const { session, target } = setup()
+    session.start(pointer('pointerdown', { button: 1, buttons: 4 }), target, () => true)
+    session.cancel()
+    if (reason === 'dispose') {
+      session.dispose()
+    } else {
+      window.dispatchEvent(pointer('pointerdown'))
+    }
+    const release = pointer('pointerup', { button: 1, buttons: 0, cancelable: true })
+    window.dispatchEvent(release)
+    expect(release.defaultPrevented).toBe(false)
+  })
 
   it('does not repeat the last move on release, but applies changed modifiers', () => {
     const { session, callbacks, target } = setup()

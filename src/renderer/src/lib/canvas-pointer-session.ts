@@ -26,13 +26,18 @@ function needsFinalMove(previous: PointerEvent, event: PointerEvent): boolean {
 
 export function createCanvasPointerSession(callbacks: PointerCallbacks) {
   let active: ActivePointer | null = null
+  let pendingMiddleRelease: number | null = null
 
   const detach = () => {
     window.removeEventListener('pointermove', onMove, true)
-    window.removeEventListener('pointerup', onUp, true)
     window.removeEventListener('pointercancel', onPointerCancel, true)
-    window.removeEventListener('pointerdown', onFreshDown, true)
     window.removeEventListener('keydown', onKeyDown, true)
+    // A cancelled pan still owns its native release, which can otherwise paste on Linux.
+    if (pendingMiddleRelease === null) {
+      window.removeEventListener('pointerup', onUp, true)
+      window.removeEventListener('pointerdown', onFreshDown, true)
+      window.removeEventListener('auxclick', onAuxClick, true)
+    }
   }
 
   const release = (pointer: ActivePointer | null) => {
@@ -76,8 +81,33 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
   }
 
   const onUp = (event: PointerEvent) => {
+    if (
+      event.pointerId === pendingMiddleRelease &&
+      event.button === 1 &&
+      (event.buttons & 4) === 0
+    ) {
+      event.preventDefault()
+    }
     if (active && event.pointerId === active.id && (event.buttons & active.buttons) === 0) {
       finish(event)
+    } else if (!active) {
+      detach()
+    }
+  }
+
+  const onAuxClick = (event: MouseEvent) => {
+    if (
+      pendingMiddleRelease === null ||
+      event.button !== 1 ||
+      (event instanceof PointerEvent && event.pointerId !== pendingMiddleRelease)
+    ) {
+      return
+    }
+    // Firefox pastes on auxclick; Chromium pastes on pointerup.
+    event.preventDefault()
+    pendingMiddleRelease = null
+    if (!active) {
+      detach()
     }
   }
 
@@ -88,9 +118,14 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
   }
 
   const onFreshDown = (event: PointerEvent) => {
+    if (event.pointerId === pendingMiddleRelease) {
+      pendingMiddleRelease = null
+    }
     // A new press of this pointer supersedes a release missed outside the window.
     if (event.pointerId === active?.id) {
       cancel()
+    } else if (!active) {
+      detach()
     }
   }
 
@@ -104,6 +139,10 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
   return {
     isActive: () => active !== null,
     cancel,
+    dispose: () => {
+      pendingMiddleRelease = null
+      cancel()
+    },
     start: (event: PointerEvent, target: HTMLElement, begin: () => boolean) => {
       if (active || !event.isPrimary || (event.button !== 0 && event.button !== 1)) {
         return
@@ -111,9 +150,11 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
       if (!begin()) {
         return
       }
-      // Middle-button pan must suppress native paste on Linux and autoscroll on Windows.
+      // Middle-button pan owns native defaults through pointerup and auxclick.
       if (event.button === 1) {
         event.preventDefault()
+        pendingMiddleRelease = event.pointerId
+        window.addEventListener('auxclick', onAuxClick, true)
       }
       active = {
         id: event.pointerId,

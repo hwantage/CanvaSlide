@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { canvasDocumentSchema } from '../shared/canvas/element-types'
-import { hasOnlyEmbeddedImages } from '../shared/canvas/share-document'
+import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '../shared/canvas/share-document'
 import { orderedFrames } from '../shared/canvas/presentation-sequence'
 import {
   CloudShareError,
@@ -70,6 +70,9 @@ export async function createShare({ request, env }: ShareContext): Promise<Respo
     const parsed = canvasDocumentSchema.safeParse(snapshot.document)
     if (!parsed.success || !hasOnlyEmbeddedImages(parsed.data)) {
       return reply({ error: 'invalid' }, 400)
+    }
+    if (!hasAllowedShareVideos(parsed.data, new URL(request.url).origin)) {
+      return reply({ error: 'unsupportedVideo' }, 400)
     }
     if (snapshot.access === 'present' && orderedFrames(parsed.data).length === 0) {
       return reply({ error: 'noFrames' }, 400)

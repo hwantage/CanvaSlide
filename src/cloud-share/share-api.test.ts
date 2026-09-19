@@ -155,6 +155,46 @@ it('rejects external image URLs before storing any data', async () => {
   expect((await post(JSON.stringify(document))).status).toBe(201)
 })
 
+it('rejects embedded SVG tracking images before writing to KV', async () => {
+  const document = createEmptyDocument()
+  document.assets.svg = {
+    id: 'svg',
+    mime: 'image/svg+xml',
+    width: 10,
+    height: 10,
+    data: `data:image/svg+xml,${encodeURIComponent('<svg><image href="https://tracker.example/pixel"/></svg>')}`
+  }
+  expect((await post(JSON.stringify(document))).status).toBe(400)
+  expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
+})
+
+it('rejects arbitrary video hosts while accepting provider and same-origin videos', async () => {
+  const document = createEmptyDocument()
+  document.elements.video = {
+    id: 'video',
+    type: 'video',
+    url: 'https://tracker.example/pixel',
+    autoplay: true,
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100
+  }
+  document.order = ['video']
+  const denied = await post(JSON.stringify(document))
+  expect(denied.status).toBe(400)
+  expect(await denied.json()).toEqual({ error: 'unsupportedVideo' })
+  expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
+  for (const url of [
+    'https://youtu.be/M7lc1UVf-VE',
+    'https://vimeo.com/76979871',
+    `${origin}/video.mp4`
+  ]) {
+    document.elements.video.url = url
+    expect((await post(JSON.stringify(document))).status).toBe(201)
+  }
+})
+
 it.each([
   '{',
   'null',

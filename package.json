@@ -60,6 +60,7 @@
     "pdfjs-dist": "^6.3.289",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "saxes": "6.0.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.6.2",
     "zustand": "^5.0.15"

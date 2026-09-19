@@ -30,6 +30,13 @@ test.beforeEach(async ({ page }) => {
   }
 })
 
+async function clearClipboard(page: Page, browserName: string) {
+  if (browserName === 'chromium') {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+    await page.evaluate(() => navigator.clipboard.writeText(''))
+  }
+}
+
 test('YouTube shows a thumbnail before playback and falls back safely when it is unavailable @webkit', async ({
   page
 }) => {
@@ -110,9 +117,11 @@ async function paste(page: Page, text: string) {
 }
 
 test('Command/Ctrl paste creates one video and preserves ordinary text, input paste and undo @webkit', async ({
-  page
+  page,
+  browserName
 }) => {
   await page.goto('/')
+  await clearClipboard(page, browserName)
   const primary = await page.evaluate(() =>
     /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Meta' : 'Control'
   )
@@ -146,13 +155,14 @@ test('Command/Ctrl paste creates one video and preserves ordinary text, input pa
   await expect(videos).toHaveCount(1)
 })
 
-test('Windows Ctrl+V uses the URL path @webkit', async ({ page }) => {
+test('Windows Ctrl+V uses the URL path @webkit', async ({ page, browserName }) => {
   await page.addInitScript(() =>
     Object.defineProperty(navigator, 'userAgent', {
       get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     })
   )
   await page.goto('/')
+  await clearClipboard(page, browserName)
   await page.keyboard.press('Control+v')
   await paste(page, 'https://vimeo.com/76979871')
   await expect(page.locator('[data-element-type="video"]')).toHaveCount(1)

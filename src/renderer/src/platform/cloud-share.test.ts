@@ -138,23 +138,53 @@ it('rejects malformed access metadata instead of downgrading a shared document t
   await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
 })
 
-it('rejects external images before uploading or loading a shared document', async () => {
-  const document = {
-    ...createEmptyDocument(),
-    assets: {
-      image: {
-        id: 'image',
-        mime: 'image/png',
-        data: 'https://tracker.example/pixel',
-        width: 1,
-        height: 1
+it.each([
+  ['image/png', 'https://tracker.example/pixel'],
+  [
+    'image/svg+xml',
+    `data:image/svg+xml,${encodeURIComponent('<svg><image href="https://tracker.example/pixel"/></svg>')}`
+  ]
+])(
+  'rejects external images in %s before uploading or loading a shared document',
+  async (mime, data) => {
+    const document = {
+      ...createEmptyDocument(),
+      assets: {
+        image: {
+          id: 'image',
+          mime,
+          data,
+          width: 1,
+          height: 1
+        }
       }
     }
+    await expect(createCloudShare(document, signal())).rejects.toMatchObject({ code: 'invalid' })
+    expect(fetch).not.toHaveBeenCalled()
+    vi.mocked(fetch).mockResolvedValue(Response.json(document))
+    await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
   }
-  await expect(createCloudShare(document, signal())).rejects.toMatchObject({ code: 'invalid' })
+)
+
+it('rejects unapproved videos before upload or loading previously stored documents', async () => {
+  const document = createEmptyDocument()
+  document.elements.video = {
+    id: 'video',
+    type: 'video',
+    url: 'https://tracker.example/pixel',
+    autoplay: true,
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100
+  }
+  document.order = ['video']
+  await expect(createCloudShare(document, signal())).rejects.toMatchObject({
+    code: 'unsupportedVideo'
+  })
   expect(fetch).not.toHaveBeenCalled()
   vi.mocked(fetch).mockResolvedValue(Response.json(document))
-  await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
+  await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'unsupportedVideo' })
 })
 
 it('rejects a bad ID without issuing a request', async () => {

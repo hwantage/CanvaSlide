@@ -129,6 +129,8 @@ export const ko: UiStrings = {
     '공유 링크 또는 문서가 올바르지 않습니다. 공유할 이미지는 문서에 포함되어 있어야 합니다.',
   'share.error.tooLarge': '문서가 클라우드 공유의 최대 크기를 초과했습니다.',
   'share.error.noFrames': '슬라이드 쇼로 공유하려면 프레젠테이션 프레임을 추가해 주세요.',
+  'share.error.unsupportedVideo':
+    '공유 문서의 동영상은 YouTube, Vimeo 또는 공유 사이트에 저장된 파일만 사용할 수 있습니다.',
   'share.error.quota':
     '클라우드 공유의 요청 또는 저장 한도에 도달했습니다. 나중에 다시 시도해 주세요.',
   'share.error.missing':

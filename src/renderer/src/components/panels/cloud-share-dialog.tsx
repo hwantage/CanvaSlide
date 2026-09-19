@@ -86,9 +86,11 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
       {error && (
         <div role="alert" className="mb-3 space-y-2 text-xs">
           <p className="text-destructive">{t(`share.error.${error}`)}</p>
-          <p className="text-muted-foreground">
-            {t('share.fallback', { format: `.${DOCUMENT_FILE_EXTENSION}` })}
-          </p>
+          {mode === 'publish' && (
+            <p className="text-muted-foreground">
+              {t('share.fallback', { format: `.${DOCUMENT_FILE_EXTENSION}` })}
+            </p>
+          )}
         </div>
       )}
       {url && (
@@ -117,9 +119,11 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
         <TextButton variant="ghost" onClick={hide}>
           {t('share.close')}
         </TextButton>
-        <TextButton disabled={busy} onClick={() => void commands.saveDocumentAs()}>
-          {t('share.saveLocal', { format: `.${DOCUMENT_FILE_EXTENSION}` })}
-        </TextButton>
+        {mode === 'publish' && (
+          <TextButton disabled={busy} onClick={() => void commands.saveDocumentAs()}>
+            {t('share.saveLocal', { format: `.${DOCUMENT_FILE_EXTENSION}` })}
+          </TextButton>
+        )}
         {!url && (
           <TextButton
             variant="primary"

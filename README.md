@@ -81,10 +81,14 @@ OS deep-link registration is outside this feature.
 
 The API validates the existing document schema, checks streamed bytes as well as Content-Length,
 and returns JSON with `no-store`/`nosniff` headers. Shared images must use embedded image data URLs;
-external URLs are rejected on upload and again by the viewer, including for older stored documents.
-Pages' `_headers` policy also blocks external image loads except the fixed YouTube thumbnail
-host used by linked videos, and omits referrers. Linked videos retain their existing provider
-connections and playback behavior; the embedded-image restriction applies to document image assets.
+external URLs, including image references nested inside SVGs, are rejected on upload and again
+by the viewer, including for older stored documents. SVG validation rejects malformed XML,
+DTDs, processing instructions, and excessive nesting. Shared videos accept YouTube, Vimeo,
+and direct files hosted on the share service's exact origin; arbitrary external video URLs
+must be removed or replaced before sharing. Pages' `_headers` policy restricts scripts,
+connections, frames, and media to the application and the required provider origins, blocks
+external image loads except YouTube thumbnails, and omits referrers. YouTube and Vimeo playback
+still contacts those providers. Local desktop documents retain their existing video support.
 KV quota failures return 429 with Retry-After;
 other storage failures return 503. Configure request limits for `/api/share` in the Cloudflare
 deployment if needed; the application does not implement an atomic per-IP limiter in KV.

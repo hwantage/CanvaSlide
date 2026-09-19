@@ -9,7 +9,7 @@ import {
   type SharedSnapshot
 } from '@shared/cloud-share'
 import { parseDocument } from '@shared/canvas/document-file'
-import { hasOnlyEmbeddedImages } from '@shared/canvas/share-document'
+import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '@shared/canvas/share-document'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { isTauriRuntime } from './tauri-runtime'
@@ -93,6 +93,9 @@ export async function createCloudShare(
   if (!isShareAccess(access) || !hasOnlyEmbeddedImages(document)) {
     throw new CloudShareError('invalid')
   }
+  if (!hasAllowedShareVideos(document, cloudShareOrigin())) {
+    throw new CloudShareError('unsupportedVideo')
+  }
   if (access === 'present' && orderedFrames(document).length === 0) {
     throw new CloudShareError('noFrames')
   }
@@ -134,6 +137,9 @@ export async function fetchCloudShare(id: string, signal: AbortSignal): Promise<
   const parsed = parseDocument(JSON.stringify(snapshot.document))
   if (!parsed.ok || !hasOnlyEmbeddedImages(parsed.document)) {
     throw new CloudShareError('invalid')
+  }
+  if (!hasAllowedShareVideos(parsed.document, cloudShareOrigin())) {
+    throw new CloudShareError('unsupportedVideo')
   }
   if (snapshot.access === 'present' && orderedFrames(parsed.document).length === 0) {
     throw new CloudShareError('noFrames')

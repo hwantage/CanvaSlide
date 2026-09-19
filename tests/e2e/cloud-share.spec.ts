@@ -87,9 +87,14 @@ test('creates, copies, and opens a snapshot with its content fitted @webkit', as
   expect(values.size).toBe(1)
   if (browserName === 'chromium') {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-    await dialog.getByRole('button', { name: 'Copy link' }).click()
-    await expect(dialog.getByRole('status')).toHaveText('Link copied.')
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(url)
+    const previous = await page.evaluate(() => navigator.clipboard.readText())
+    try {
+      await dialog.getByRole('button', { name: 'Copy link' }).click()
+      await expect(dialog.getByRole('status')).toHaveText('Link copied.')
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(url)
+    } finally {
+      await page.evaluate((text) => navigator.clipboard.writeText(text), previous)
+    }
   }
   await testInfo.attach('share-dialog', { body: await page.screenshot(), contentType: 'image/png' })
   await dialog.getByRole('button', { name: 'Close', exact: true }).click()
@@ -212,14 +217,15 @@ test('publishes a slideshow-only link with navigation and no path back to editin
 })
 
 test('slideshow-only shares retain linked-video playback and expansion @webkit', async ({
-  page
+  page,
+  baseURL
 }) => {
   const document: CanvasDocument = sharedBoard()
   document.settings.transitionMs = 0
   document.elements.video = {
     id: 'video',
     type: 'video',
-    url: 'https://media.example/clip.mp4',
+    url: `${baseURL}/shared-clip.mp4`,
     autoplay: true,
     x: 5100,
     y: 3100,
@@ -227,7 +233,7 @@ test('slideshow-only shares retain linked-video playback and expansion @webkit',
     height: 360
   }
   document.order.push('video')
-  await page.route('https://media.example/clip.mp4', async (route) =>
+  await page.route('**/shared-clip.mp4', async (route) =>
     route.fulfill({
       body: await readFile('tests/fixtures/linked-video.mp4'),
       contentType: 'video/mp4'
@@ -293,6 +299,8 @@ test('missing links can be retried after KV propagation @webkit', async ({ page 
   const dialog = page.getByRole('dialog', { name: 'Open shared canvas' })
   await expect(dialog.getByRole('alert')).toContainText('not found')
   await expect(dialog.getByRole('alert')).toContainText('24-hour link has expired')
+  await expect(dialog.getByRole('alert')).not.toContainText('local .canvaslide file')
+  await expect(dialog.getByRole('button', { name: 'Save .canvaslide file' })).toHaveCount(0)
   values.set(`share:${id}`, JSON.stringify(sharedBoard()))
   await dialog.getByRole('button', { name: 'Try again' }).click()
   await expect(dialog).toHaveCount(0)
@@ -301,60 +309,98 @@ test('missing links can be retried after KV propagation @webkit', async ({ page 
   )
 })
 
-test('rejects a stored tracking image before rendering or making an external request @webkit', async ({
+for (const format of ['raster', 'svg'] as const) {
+  test(`rejects a stored tracking ${format} image before rendering or making an external request @webkit`, async ({
+    page
+  }) => {
+    const document = {
+      ...createEmptyDocument(),
+      name: 'Tracking document',
+      assets: {
+        image: {
+          id: 'image',
+          mime: format === 'svg' ? 'image/svg+xml' : 'image/png',
+          data:
+            format === 'svg'
+              ? `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><image width="100" height="100" href="https://tracker.invalid/pixel"/></svg>')}`
+              : 'https://tracker.invalid/pixel',
+          width: 1,
+          height: 1
+        }
+      },
+      elements: {
+        image: {
+          id: 'image',
+          type: 'image' as const,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          assetId: 'image',
+          naturalWidth: 1,
+          naturalHeight: 1
+        }
+      },
+      order: ['image']
+    }
+    const external: string[] = []
+    await page.route('https://tracker.invalid/**', async (route) => {
+      external.push(route.request().url())
+      await route.abort()
+    })
+    await serveShares(page, new Map([[`share:${id}`, JSON.stringify(document)]]))
+    await page.goto(`/?share=${id}`)
+    await expect(page.getByRole('alert')).toContainText('Shared images must be embedded')
+    await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue('Untitled')
+    await expect(page.locator('[data-element-type="image"]')).toHaveCount(0)
+    expect(external).toEqual([])
+  })
+}
+
+test('rejects a stored tracking video before autoplay or provider metadata requests @webkit', async ({
   page
 }) => {
-  const document = {
-    ...createEmptyDocument(),
-    name: 'Tracking document',
-    assets: {
-      image: {
-        id: 'image',
-        mime: 'image/png',
-        data: 'https://tracker.invalid/pixel',
-        width: 1,
-        height: 1
-      }
-    },
-    elements: {
-      image: {
-        id: 'image',
-        type: 'image' as const,
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        assetId: 'image',
-        naturalWidth: 1,
-        naturalHeight: 1
-      }
-    },
-    order: ['image']
+  const document: CanvasDocument = sharedBoard()
+  document.elements.video = {
+    id: 'video',
+    type: 'video',
+    url: 'https://tracker.invalid/pixel',
+    autoplay: true,
+    x: 5100,
+    y: 3100,
+    width: 640,
+    height: 360
   }
+  document.order.push('video')
   const external: string[] = []
   await page.route('https://tracker.invalid/**', async (route) => {
     external.push(route.request().url())
     await route.abort()
   })
-  await serveShares(page, new Map([[`share:${id}`, JSON.stringify(document)]]))
+  await serveShares(
+    page,
+    new Map([[`share:${id}`, JSON.stringify({ access: 'present', document })]])
+  )
   await page.goto(`/?share=${id}`)
-  await expect(page.getByRole('alert')).toContainText('Shared images must be embedded')
-  await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue('Untitled')
-  await expect(page.locator('[data-element-type="image"]')).toHaveCount(0)
+  await expect(page.getByRole('alert')).toContainText('Shared videos must use YouTube, Vimeo')
+  await expect(page.locator('video, iframe, [data-element-type="video"]')).toHaveCount(0)
   expect(external).toEqual([])
 })
 
-test('offline and malformed links show fallback messages without replacing the canvas @webkit', async ({
+test('offline and malformed links show errors without offering to save an unrelated canvas @webkit', async ({
   page
 }) => {
   await page.route('**/api/share/**', (route) => route.abort('internetdisconnected'))
   await page.goto(`/?share=${id}`)
   const dialog = page.getByRole('dialog', { name: 'Open shared canvas' })
   await expect(dialog.getByRole('alert')).toContainText('Check your connection')
+  await expect(dialog.getByRole('alert')).not.toContainText('local .canvaslide file')
+  await expect(dialog.getByRole('button', { name: 'Save .canvaslide file' })).toHaveCount(0)
   await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue('Untitled')
   await page.goto('/?share=../../bad')
   await expect(dialog.getByRole('alert')).toContainText('invalid')
+  await expect(dialog.getByRole('button', { name: 'Save .canvaslide file' })).toHaveCount(0)
   await page.keyboard.press('Escape')
   await expect(dialog).toHaveCount(0)
   await expect(page).not.toHaveURL(/share=/)

@@ -1,4 +1,4 @@
 /*
-  Content-Security-Policy: img-src 'self' data: blob: https://i.ytimg.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.youtube.com https://s.ytimg.com https://player.vimeo.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://i.ytimg.com; connect-src 'self' data: blob: https://www.youtube.com https://vimeo.com; frame-src https://www.youtube.com https://player.vimeo.com; media-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff

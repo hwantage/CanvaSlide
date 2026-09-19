@@ -126,6 +126,8 @@ export const en = {
     'This share link or document is invalid. Shared images must be embedded in the document.',
   'share.error.tooLarge': 'This document is too large for cloud sharing.',
   'share.error.noFrames': 'Add a presentation frame to share a slide show.',
+  'share.error.unsupportedVideo':
+    'Shared videos must use YouTube, Vimeo, or a file hosted on the share site.',
   'share.error.quota': 'Cloud sharing has reached its request or storage limit. Try again later.',
   'share.error.missing':
     'This shared canvas was not found or its 24-hour link has expired. New links may take a minute to become available; try again shortly.',

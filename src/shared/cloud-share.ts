@@ -31,6 +31,7 @@ export type CloudShareErrorCode =
   | 'network'
   | 'changed'
   | 'noFrames'
+  | 'unsupportedVideo'
 
 export class CloudShareError extends Error {
   constructor(public readonly code: CloudShareErrorCode) {

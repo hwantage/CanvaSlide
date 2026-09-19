@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   type DragEvent,
   type MouseEvent,
   type PointerEvent,
@@ -10,6 +11,7 @@ import {
 import { screenToWorld } from '@shared/canvas/camera-transform'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
 import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
+import { createCanvasPointerSession } from '@/lib/canvas-pointer-session'
 import { importableFilesFrom, insertFile } from '@/lib/external-content'
 import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
 import { hasNativeTextMenu } from '@/lib/native-context-menu'
@@ -29,8 +31,6 @@ function isOverlayUiTarget(target: EventTarget | null): boolean {
 export type CanvasPointerHandlers = {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void
   onPointerMove: (event: PointerEvent<HTMLElement>) => void
-  onPointerUp: (event: PointerEvent<HTMLElement>) => void
-  onPointerCancel: () => void
   onDoubleClick: (event: MouseEvent<HTMLElement>) => void
   onContextMenu: (event: MouseEvent<HTMLElement>) => void
   onDragOver: (event: DragEvent<HTMLElement>) => void
@@ -69,22 +69,21 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
     [ref]
   )
 
+  const pointers = useRef<ReturnType<typeof createCanvasPointerSession> | null>(null)
   useEffect(() => {
-    const onCancel = () => interaction.cancel()
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && interaction.isActive()) {
-        interaction.cancel()
-      }
-    }
-    window.addEventListener('blur', onCancel)
-    // Cancel before the normal Escape shortcut clears selection, so a held pointer cannot select again.
-    window.addEventListener('keydown', onKeyDown, true)
+    const session = createCanvasPointerSession({
+      move: (event) => interaction.pointerMove(toInfo(event)),
+      finish: (event) => interaction.pointerUp(toInfo(event)),
+      cancel: () => interaction.cancel()
+    })
+    pointers.current = session
+    window.addEventListener('blur', session.cancel)
     return () => {
-      window.removeEventListener('blur', onCancel)
-      window.removeEventListener('keydown', onKeyDown, true)
-      interaction.cancel()
+      window.removeEventListener('blur', session.cancel)
+      session.cancel()
+      pointers.current = null
     }
-  }, [interaction])
+  }, [interaction, toInfo])
 
   return useMemo(
     () => ({
@@ -93,18 +92,16 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
         if (isEditableTarget(event.target) || isOverlayUiTarget(event.target)) {
           return
         }
-        // Why: keep receiving moves after the pointer leaves the canvas mid-drag.
-        event.currentTarget.setPointerCapture(event.pointerId)
-        interaction.pointerDown(toInfo(event))
+        pointers.current?.start(event.nativeEvent, event.currentTarget, () => {
+          interaction.pointerDown(toInfo(event))
+          return interaction.isActive()
+        })
       },
-      onPointerMove: (event) => interaction.pointerMove(toInfo(event)),
-      onPointerUp: (event) => {
-        interaction.pointerUp(toInfo(event))
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId)
+      onPointerMove: (event) => {
+        if (!pointers.current?.isActive() && event.isPrimary && event.buttons === 0) {
+          interaction.pointerMove(toInfo(event))
         }
       },
-      onPointerCancel: () => interaction.cancel(),
       onDoubleClick: (event) => interaction.doubleClick(toInfo(event)),
       onContextMenu: (event) => {
         if (hasNativeTextMenu(event.target)) {
@@ -141,15 +138,25 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
       },
       onResizeHandleDown: (handle, event) => {
         event.stopPropagation()
-        ref.current?.setPointerCapture(event.pointerId)
-        interaction.startResize(handle, toInfo(event))
+        if (event.button !== 0 || !ref.current) {
+          return
+        }
+        pointers.current?.start(event.nativeEvent, ref.current, () => {
+          interaction.startResize(handle, toInfo(event))
+          return interaction.isActive()
+        })
       },
       onConnectorEndDown: (id, which, event) => {
         event.stopPropagation()
-        ref.current?.setPointerCapture(event.pointerId)
-        interaction.startConnectorEnd(id, which)
+        if (event.button !== 0 || !ref.current) {
+          return
+        }
+        pointers.current?.start(event.nativeEvent, ref.current, () => {
+          interaction.startConnectorEnd(id, which)
+          return interaction.isActive()
+        })
       }
     }),
-    [interaction, toInfo, ref]
+    [interaction, pointers, toInfo, ref]
   )
 }

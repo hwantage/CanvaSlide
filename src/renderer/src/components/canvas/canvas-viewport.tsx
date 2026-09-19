@@ -63,9 +63,6 @@ export function CanvasViewport() {
       style={{ cursor: presenting ? 'default' : cursorByTool[tool] }}
       onPointerDown={handlers.onPointerDown}
       onPointerMove={handlers.onPointerMove}
-      onPointerUp={handlers.onPointerUp}
-      onPointerCancel={handlers.onPointerCancel}
-      onLostPointerCapture={handlers.onPointerCancel}
       onDoubleClick={handlers.onDoubleClick}
       onContextMenu={handlers.onContextMenu}
       onDragOver={handlers.onDragOver}

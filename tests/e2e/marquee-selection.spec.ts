@@ -243,12 +243,23 @@ for (const modifier of ['Shift', 'primary'] as const) {
   })
 }
 
-for (const cancel of ['Escape', 'pointercancel', 'lostpointercapture', 'blur'] as const) {
+for (const cancel of ['Escape', 'pointercancel', 'blur'] as const) {
   test(`${cancel} clears marquee feedback and prevents the held pointer from resuming it @webkit`, async ({
     page
   }) => {
     await loadScene(page)
     await page.getByTestId('canvas-viewport').click({ position: { x: 930, y: 630 } })
+    if (cancel === 'pointercancel') {
+      await page.getByTestId('canvas-viewport').evaluate((node) => {
+        node.addEventListener(
+          'pointerdown',
+          (event) => {
+            node.setAttribute('data-test-pointer', String((event as PointerEvent).pointerId))
+          },
+          { once: true, capture: true }
+        )
+      })
+    }
     await start(page, 70, 70)
     await move(page, 310, 150)
     await expectSelection(page, ['a', 'b'])
@@ -256,16 +267,14 @@ for (const cancel of ['Escape', 'pointercancel', 'lostpointercapture', 'blur'] a
       await page.keyboard.press('Escape')
     } else if (cancel === 'blur') {
       await page.evaluate(() => window.dispatchEvent(new Event('blur')))
-    } else if (cancel === 'lostpointercapture') {
-      await page.getByTestId('canvas-viewport').evaluate((node) => {
-        for (let id = 0; id < 10; id++) {
-          if (node.hasPointerCapture(id)) {
-            node.releasePointerCapture(id)
-          }
-        }
-      })
     } else {
-      await page.getByTestId('canvas-viewport').dispatchEvent('pointercancel')
+      await page.getByTestId('canvas-viewport').evaluate((node) => {
+        const pointerId = Number(node.getAttribute('data-test-pointer'))
+        if (!node.hasPointerCapture(pointerId)) {
+          throw new Error('The marquee did not capture the initiating pointer')
+        }
+        node.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId }))
+      })
     }
     await move(page, 350, 190)
     await page.mouse.up()

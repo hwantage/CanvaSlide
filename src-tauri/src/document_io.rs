@@ -144,10 +144,11 @@ pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
     )?;
     validate_document_bytes(&bytes)?;
     if bytes.starts_with(b"PK\x03\x04") {
-        Ok(format!(
-            "{ARCHIVE_TRANSPORT_PREFIX}{}",
-            STANDARD.encode(&bytes)
-        ))
+        let mut contents =
+            String::with_capacity(ARCHIVE_TRANSPORT_PREFIX.len() + bytes.len().div_ceil(3) * 4);
+        contents.push_str(ARCHIVE_TRANSPORT_PREFIX);
+        STANDARD.encode_string(&bytes, &mut contents);
+        Ok(contents)
     } else {
         String::from_utf8(bytes).map_err(|e| DocumentIoError::InvalidJson(e.to_string()))
     }

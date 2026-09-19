@@ -88,6 +88,12 @@ it('resends full assets after worker failure and releases the cache after idle',
   await retry
   vi.advanceTimersByTime(30_000)
   expect(worker.terminate).toHaveBeenCalledOnce()
+  const afterIdle = encodeDocumentFile(document)
+  await Promise.resolve()
+  const restarted = TestWorker.instances[2]!
+  expect(restarted.postMessage).toHaveBeenCalledWith({ kind: 'encode', document }, [])
+  restarted.respond({ kind: 'encoded', bytes: new Uint8Array([4]) })
+  expect(await afterIdle).toEqual(new Uint8Array([4]))
 })
 
 it('keeps native transport conversions inside the worker', async () => {

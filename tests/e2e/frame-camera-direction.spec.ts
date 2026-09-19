@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import { primaryModifier } from './canvas-gestures'
 
 type FrameTransition = {
   ms?: number
@@ -35,14 +37,19 @@ function frame(index: number, name: string, transition?: FrameTransition) {
   }
 }
 
-async function openDeck(page: Page, frames: ReturnType<typeof frame>[], extras: object[] = []) {
+async function openDeck(
+  page: Page,
+  frames: ReturnType<typeof frame>[],
+  extras: object[] = [],
+  settings: object = {}
+) {
   const all = [...frames, ...extras] as { id: string }[]
   const document = {
     version: 2,
     name: 'Direction',
     elements: Object.fromEntries(all.map((f) => [f.id, f])),
     order: all.map((f) => f.id),
-    settings: { transitionMs: 400, background: 'dots', frameBorder: 'solid' },
+    settings: { transitionMs: 400, background: 'dots', frameBorder: 'solid', ...settings },
     assets: {},
     camera: { x: 0, y: 0, zoom: 1 }
   }
@@ -59,7 +66,7 @@ async function openDeck(page: Page, frames: ReturnType<typeof frame>[], extras: 
   await expect(page.getByTestId('frame-row')).toHaveCount(frames.length)
 }
 
-/** The control for one camera setting; a `data-overridden` one wears the primary border. */
+/** The control for one camera setting; a `data-non-default` one wears the primary border. */
 const motionControl = (page: Page, field: string) =>
   page.locator(`[data-testid="motion-control"][data-field="${field}"]`)
 
@@ -118,7 +125,9 @@ const observeDepartureHold = (page: Page) =>
     }
   })
 
-test('a frame inherits the document defaults until a step overrides one', async ({ page }) => {
+test('inherited values stay highlighted until restored to application defaults', async ({
+  page
+}) => {
   await openDeck(page, [frame(0, 'Plain'), frame(1, 'Directed', { ms: 2500 })])
   const duration = page.getByRole('combobox', { name: 'Duration' })
   const resetAll = page.getByRole('button', { name: 'Reset', exact: true })
@@ -126,18 +135,18 @@ test('a frame inherits the document defaults until a step overrides one', async 
   await page.getByTestId('frame-row').first().click()
   // The deck transitions in 400ms, which is the Fast step itself.
   await expect(duration).toHaveValue('400')
-  await expect(motionControl(page, 'ms')).toHaveAttribute('data-overridden', 'false')
-  await expect(resetAll).toBeDisabled()
+  await expect(motionControl(page, 'ms')).toHaveAttribute('data-non-default', 'true')
+  await expect(resetAll).toBeEnabled()
 
   await duration.selectOption({ label: 'Slow' })
   await expect(duration).toHaveValue('2000')
-  await expect(motionControl(page, 'ms')).toHaveAttribute('data-overridden', 'true')
+  await expect(motionControl(page, 'ms')).toHaveAttribute('data-non-default', 'true')
   await expect(resetAll).toBeEnabled()
 
-  // Landing back on the step the document already uses is not an override; the dot goes out.
+  // Returning to an inherited value keeps its non-default highlight.
   await duration.selectOption({ label: 'Fast' })
-  await expect(motionControl(page, 'ms')).toHaveAttribute('data-overridden', 'false')
-  await expect(resetAll).toBeDisabled()
+  await expect(motionControl(page, 'ms')).toHaveAttribute('data-non-default', 'true')
+  await expect(resetAll).toBeEnabled()
   await duration.selectOption({ label: 'Slow' })
 
   // 2500ms sits between the steps, so it is kept and spelled out instead of snapping to one.
@@ -145,9 +154,10 @@ test('a frame inherits the document defaults until a step overrides one', async 
   await expect(duration).toHaveValue('custom')
   await expect(duration.locator('option[value="custom"]')).toHaveText('2.5s')
 
-  // Resetting hands the frame back to the document, without touching the other one.
+  // Reset restores application defaults on this frame, without touching the other one.
   await resetAll.click()
-  await expect(duration).toHaveValue('400')
+  await expect(duration).toHaveValue('1000')
+  await expect(motionControl(page, 'ms')).toHaveAttribute('data-non-default', 'false')
   await expect(resetAll).toBeDisabled()
   await page.getByTestId('frame-row').first().click()
   await expect(duration).toHaveValue('2000')
@@ -164,7 +174,7 @@ test('per-frame easing and arc are written as overrides', async ({ page }) => {
   await expect(page.getByRole('combobox', { name: 'Arc' })).toHaveValue('2.2')
   // Choosing the document's own curve again drops the override rather than pinning it.
   await page.getByRole('combobox', { name: 'Easing' }).selectOption('smooth')
-  await expect(motionControl(page, 'easing')).toHaveAttribute('data-overridden', 'false')
+  await expect(motionControl(page, 'easing')).toHaveAttribute('data-non-default', 'false')
   await page.getByRole('combobox', { name: 'Easing' }).selectOption('overshoot')
   // The untouched frame still reads the document default.
   await page.getByTestId('frame-row').first().click()
@@ -211,10 +221,10 @@ test('a tilt states its direction, so no toggle has to be pressed to find out', 
 
   // None is the same thing as no tilt at all, so it drops the override.
   await roll.selectOption({ label: 'None' })
-  await expect(motionControl(page, 'roll')).toHaveAttribute('data-overridden', 'false')
+  await expect(motionControl(page, 'roll')).toHaveAttribute('data-non-default', 'false')
 })
 
-test('Reset hands the whole section back in one go', async ({ page }) => {
+test('Reset restores the whole section to application defaults in one go', async ({ page }) => {
   await openDeck(page, [frame(0, 'One'), frame(1, 'Two')])
   await page.getByTestId('frame-row').nth(1).click()
   await page.getByRole('combobox', { name: 'Roll' }).selectOption({ label: 'Left Mid' })
@@ -223,8 +233,9 @@ test('Reset hands the whole section back in one go', async ({ page }) => {
   await expect(row.getByTestId('frame-motion-marks')).toHaveCount(1)
 
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
-  await expect(motionControl(page, 'roll')).toHaveAttribute('data-overridden', 'false')
-  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-overridden', 'false')
+  await expect(motionControl(page, 'roll')).toHaveAttribute('data-non-default', 'false')
+  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-non-default', 'false')
+  await expect(page.getByRole('combobox', { name: 'Duration' })).toHaveValue('1000')
   await expect(row.getByTestId('frame-motion-marks')).toHaveCount(0)
 })
 
@@ -303,25 +314,151 @@ test('picking another frame ends the preview instead of fighting it', async ({ p
   await expect(page.getByRole('combobox', { name: 'Roll' })).toHaveValue('0')
 })
 
-test('the frame list marks only what breaks from the document', async ({ page }) => {
+test('the frame list marks effective effects against application defaults', async ({ page }) => {
   await openDeck(page, [
     frame(0, 'Plain'),
     frame(1, 'Pinned', { ms: 400 }),
-    frame(2, 'Directed', { roll: 12, spotlight: 1 })
+    frame(2, 'Directed', { roll: 12, spotlight: 1 }),
+    frame(3, 'App defaults', { ms: 1000 })
   ])
   const rows = page.getByTestId('frame-row')
 
-  await expect(rows.nth(0).getByTestId('frame-motion-marks')).toHaveCount(0)
-  // Pinning the value the document already uses presents identically — no mark for that either.
-  await expect(rows.nth(1).getByTestId('frame-motion-marks')).toHaveCount(0)
+  await expect(rows.nth(0).getByTestId('frame-motion-marks')).toHaveAttribute(
+    'aria-label',
+    'Camera effects differing from app defaults — Duration Fast'
+  )
+  // Explicit and inherited non-default duration have the same mark.
+  await expect(rows.nth(1).getByTestId('frame-motion-marks')).toHaveAttribute(
+    'aria-label',
+    'Camera effects differing from app defaults — Duration Fast'
+  )
   await expect(rows.nth(2).getByTestId('frame-motion-marks')).toHaveAttribute(
     'aria-label',
-    /Roll 12° · Spotlight High/
+    'Camera effects differing from app defaults — Duration Fast · Roll 12° · Spotlight High'
   )
+  await expect(rows.nth(3).getByTestId('frame-motion-marks')).toHaveCount(0)
 
   // The marks sit inside the row's own button, so they focus the frame like the name does.
   await rows.nth(2).getByTestId('frame-motion-marks').click()
   await expect(rows.nth(2)).toHaveAttribute('data-current', 'true')
+})
+
+test('inherited effects highlight controls and reset to app defaults through undo and save/reopen @webkit', async ({
+  page
+}) => {
+  const transition = { ms: 900, arc: 1.4, roll: 0, spotlight: 1 }
+  await openDeck(page, [frame(0, 'Inherited'), frame(1, 'Explicit', transition)], [], {
+    transitionMs: 900,
+    transitionArc: 1.4,
+    spotlight: 1
+  })
+  const rows = page.getByTestId('frame-row')
+  const summary =
+    'Camera effects differing from app defaults — Duration 0.9s · Arc 1.40 · Spotlight High'
+  for (const row of [rows.nth(0), rows.nth(1)]) {
+    await expect(row.getByTestId('frame-motion-marks')).toHaveAttribute('aria-label', summary)
+    await expect(row.getByTestId('frame-motion-marks').locator('svg')).toHaveCount(3)
+  }
+
+  await rows.nth(0).click()
+  const reset = page.getByRole('button', { name: 'Reset', exact: true })
+  const defaultBorder = await motionControl(page, 'easing').evaluate(
+    (node) => getComputedStyle(node).borderColor
+  )
+  for (const field of ['ms', 'arc', 'spotlight']) {
+    await expect(motionControl(page, field)).toHaveAttribute('data-non-default', 'true')
+    await expect(motionControl(page, field)).toHaveAttribute(
+      'title',
+      'Differs from the app default'
+    )
+    await expect(motionControl(page, field)).toHaveClass(/border-primary/)
+    await expect(motionControl(page, field)).not.toHaveCSS('border-color', defaultBorder)
+  }
+  await expect(reset).toBeEnabled()
+  await expect(reset).toHaveAttribute('title', 'Reset all camera settings to app defaults')
+  await page.getByRole('button', { name: 'Advanced' }).click()
+  for (const field of ['ms', 'arc', 'spotlight']) {
+    await expect(motionControl(page, field)).toHaveAttribute('data-non-default', 'true')
+    await expect(motionControl(page, field).locator('span')).toHaveClass(/text-primary/)
+  }
+  await page.getByRole('button', { name: 'Advanced' }).click()
+  await reset.click()
+  await expect(reset).toBeDisabled()
+  await expect(page.getByRole('combobox', { name: 'Duration' })).toHaveValue('1000')
+  await expect(page.getByRole('combobox', { name: 'Arc' })).toHaveValue(String(Math.SQRT2))
+  await expect(page.getByRole('combobox', { name: 'Spotlight' })).toHaveValue('0')
+  for (const field of ['ms', 'easing', 'arc', 'roll', 'spotlight']) {
+    await expect(motionControl(page, field)).toHaveAttribute('data-non-default', 'false')
+    await expect(motionControl(page, field)).toHaveCSS('border-color', defaultBorder)
+  }
+  await expect(rows.nth(0).getByTestId('frame-motion-marks')).toHaveCount(0)
+  await expect(rows.nth(1).getByTestId('frame-motion-marks')).toHaveAttribute('aria-label', summary)
+
+  const primary = await primaryModifier(page)
+  await page.keyboard.press(`${primary}+z`)
+  await expect(reset).toBeEnabled()
+  await expect(rows.nth(0).getByTestId('frame-motion-marks')).toHaveAttribute('aria-label', summary)
+  await page.keyboard.press(`${primary}+Shift+z`)
+  await expect(reset).toBeDisabled()
+  await expect(rows.nth(0).getByTestId('frame-motion-marks')).toHaveCount(0)
+  await page.getByRole('combobox', { name: 'Duration' }).selectOption('400')
+  await expect(reset).toBeEnabled()
+  await page.getByRole('combobox', { name: 'Duration' }).selectOption('1000')
+  await expect(reset).toBeDisabled()
+  await page.getByRole('combobox', { name: 'Duration' }).blur()
+  const downloaded = page.waitForEvent('download')
+  await page.keyboard.press(`${primary}+s`)
+  const bytes = await readFile((await (await downloaded).path())!)
+  await page.reload()
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /^Open/ }).click()
+  await (
+    await chooser
+  ).setFiles({
+    name: 'reset-camera.canvaslide',
+    mimeType: 'application/zip',
+    buffer: bytes
+  })
+  await expect(rows).toHaveCount(2)
+  await rows.nth(0).click()
+  await expect(reset).toBeDisabled()
+  await expect(rows.nth(0).getByTestId('frame-motion-marks')).toHaveCount(0)
+  await expect(rows.nth(1).getByTestId('frame-motion-marks')).toHaveAttribute('aria-label', summary)
+})
+
+test('frames using omitted or explicit app defaults have no camera marks', async ({ page }) => {
+  await openDeck(
+    page,
+    [
+      frame(0, 'Omitted'),
+      frame(1, 'Explicit', { ms: 1000, easing: 'smooth', arc: Math.SQRT2, roll: 0, spotlight: 0 })
+    ],
+    [],
+    { transitionMs: 1000 }
+  )
+  await expect(page.getByTestId('frame-motion-marks')).toHaveCount(0)
+})
+
+test('camera marks update their descriptions when the language changes @webkit', async ({
+  page
+}) => {
+  await openDeck(page, [frame(0, 'One'), frame(1, 'Two')])
+  const marks = page.getByTestId('frame-motion-marks')
+  await expect(marks).toHaveCount(2)
+  await page.getByTestId('frame-row').first().click()
+  await page.getByTestId('frame-row').nth(1).click()
+  await page.getByRole('button', { name: /^Settings/ }).click()
+  await page
+    .getByRole('dialog', { name: 'Settings' })
+    .getByRole('radio', { name: '한국어' })
+    .click()
+  for (const mark of await marks.all()) {
+    await expect(mark).toHaveAttribute(
+      'aria-label',
+      '앱 기본값과 다른 카메라 효과 — 전환 시간 빠르게'
+    )
+    await expect(mark).toHaveAttribute('title', '앱 기본값과 다른 카메라 효과 — 전환 시간 빠르게')
+  }
 })
 
 test('roll tilts the stage while presenting and unwinds on exit', async ({ page }) => {
@@ -443,11 +580,11 @@ test('a slider drag collapses into one undo step', async ({ page }) => {
   }
   await undo()
   await expect(roll).toHaveValue('0')
-  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-overridden', 'true')
+  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-non-default', 'true')
 
   // The whole sweep is behind us after one step: the next undo reaches the edit before it, not a
   // snapshot from the middle of the drag.
   await undo()
-  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-overridden', 'false')
-  await expect(motionControl(page, 'roll')).toHaveAttribute('data-overridden', 'false')
+  await expect(motionControl(page, 'spotlight')).toHaveAttribute('data-non-default', 'false')
+  await expect(motionControl(page, 'roll')).toHaveAttribute('data-non-default', 'false')
 })

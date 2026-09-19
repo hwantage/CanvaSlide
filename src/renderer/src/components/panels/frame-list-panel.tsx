@@ -1,5 +1,6 @@
 import { Gauge, Lightbulb, Play, Spline, Square, Timer } from 'lucide-react'
 import {
+  memo,
   useCallback,
   useRef,
   useState,
@@ -26,6 +27,7 @@ import { motionSummary } from '@/lib/motion-presets'
 import { hasPrimaryModifier } from '@/lib/platform-keys'
 import { useCameraStore } from '@/store/camera-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
+import { selectLocale, useLanguageStore } from '@/store/language-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
 const DRAG_TYPE = 'application/x-canvaslide-frame'
@@ -39,12 +41,16 @@ const motionIcons: Record<MotionField, ReactNode> = {
   spotlight: <Lightbulb size={11} />
 }
 
-/**
- * A mark per part of this frame's flight that will not look like the rest of the deck. Most rows
- * stay empty, which is the point: the contrast is what says "something was directed here", and the
- * icons say what, in a row that has no space for a number.
- */
-function MotionMarks({ frame, settings }: { frame: FrameElement; settings: DocumentSettings }) {
+/** Reuse unchanged marks when selection moves through frames with inherited camera effects. */
+const MotionMarks = memo(function MotionMarks({
+  frame,
+  settings
+}: {
+  frame: FrameElement
+  settings: DocumentSettings
+}) {
+  // t() reads the locale outside React, so memoized marks must subscribe to language changes.
+  useLanguageStore(selectLocale)
   const fields = frameMotionDiff(frame, settings)
   if (fields.length === 0) {
     return null
@@ -65,7 +71,7 @@ function MotionMarks({ frame, settings }: { frame: FrameElement; settings: Docum
       ))}
     </span>
   )
-}
+})
 
 function FrameName({ frame }: { frame: FrameElement }) {
   const [renaming, setRenaming] = useState(false)

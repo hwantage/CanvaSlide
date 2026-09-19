@@ -1,5 +1,6 @@
 import { cameraEasings, DEFAULT_CAMERA_EASING, type CameraEasing } from './camera-easing'
 import {
+  defaultDocumentSettings,
   DEFAULT_CAMERA_ARC,
   DEFAULT_TRANSITION_MS,
   MAX_CAMERA_ARC,
@@ -56,16 +57,17 @@ export type MotionField = (typeof motionFields)[number]
 export function frameTransitionSelection(
   frames: readonly FrameElement[],
   settings: DocumentSettings
-): { resolved: ResolvedFrameTransition; mixed: MotionField[]; overridden: MotionField[] } {
+): { resolved: ResolvedFrameTransition; mixed: MotionField[]; nonDefault: MotionField[] } {
   const motions = frames.map((frame) => resolveFrameTransition(frame, settings))
   const resolved = motions[0] ?? resolveFrameTransition(undefined, settings)
+  const base = resolveFrameTransition(undefined, defaultDocumentSettings)
   return {
     resolved,
     mixed: motionFields.filter((field) =>
       motions.some((motion) => motion[field] !== resolved[field])
     ),
-    overridden: motionFields.filter((field) =>
-      frames.some((frame) => frame.transition?.[field] !== undefined)
+    nonDefault: motionFields.filter((field) =>
+      motions.some((motion) => motion[field] !== base[field])
     )
   }
 }
@@ -78,22 +80,19 @@ export function mergeFrameTransition(
   return pruneFrameTransition({ ...frame.transition, ...change }, settings)
 }
 
-/**
- * Which parts of this frame's flight will actually look different from the document default.
- * Compared after resolving, not by looking for override keys: a frame that pins the value the
- * document already uses presents identically, and the frame list must not claim otherwise.
- */
+/** Keep explicit defaults where removing overrides would restore non-default inherited effects. */
+export function resetFrameTransition(settings: DocumentSettings): FrameTransition | undefined {
+  return pruneFrameTransition(resolveFrameTransition(undefined, defaultDocumentSettings), settings)
+}
+
+/** Effective camera effects that differ from the application defaults, including inheritance. */
 export function frameMotionDiff(frame: FrameElement, settings: DocumentSettings): MotionField[] {
   const mine = resolveFrameTransition(frame, settings)
-  const base = resolveFrameTransition(undefined, settings)
+  const base = resolveFrameTransition(undefined, defaultDocumentSettings)
   return motionFields.filter((field) => mine[field] !== base[field])
 }
 
-/**
- * Strips every field that already matches the document. An override has to mean "this frame is
- * different" — the panel's dot and the frame list's mark both say so — and picking the step the
- * document already uses is not a difference, whatever route the author took to get back to it.
- */
+/** Remove redundant overrides while preserving the document’s inherited camera settings. */
 export function pruneFrameTransition(
   transition: FrameTransition,
   settings: DocumentSettings
@@ -104,9 +103,7 @@ export function pruneFrameTransition(
     if (value === undefined) {
       return false
     }
-    return typeof value === 'number' && typeof fallback === 'number'
-      ? Math.abs(value - fallback) >= 1e-6
-      : value !== fallback
+    return value !== fallback
   })
   return kept.length > 0 ? (Object.fromEntries(kept) as FrameTransition) : undefined
 }

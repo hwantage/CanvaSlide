@@ -86,7 +86,7 @@ function sections(): Section[] {
         [t('import.files'), shortcutLabel('I')],
         [t('export.title'), shortcutLabel('E')],
         [t('settings.title'), shortcutLabel(',')],
-        [t('help.title'), '?']
+        [t('help.title'), 'K']
       ]
     },
     {

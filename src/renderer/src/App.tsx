@@ -6,6 +6,7 @@ import { CloudShareDialog } from '@/components/panels/cloud-share-dialog'
 import { SidePanel } from '@/components/panels/side-panel'
 import { SettingsDialog } from '@/components/panels/settings-dialog'
 import { ShortcutHelpDialog } from '@/components/panels/shortcut-help-dialog'
+import { AboutDialog } from '@/components/panels/about-dialog'
 import { ToolBar } from '@/components/toolbar/tool-bar'
 import { TopBar } from '@/components/toolbar/top-bar'
 import { ZoomControls } from '@/components/toolbar/zoom-controls'
@@ -69,6 +70,7 @@ function Editor() {
         {!presenting && <FigImportDialog />}
         {!presenting && <SettingsDialog />}
         {!presenting && <ShortcutHelpDialog />}
+        {!presenting && <AboutDialog />}
         {!presenting && <SidePanel />}
       </div>
     </div>

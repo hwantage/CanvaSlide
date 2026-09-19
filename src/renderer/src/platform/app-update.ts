@@ -1,10 +1,8 @@
 import type { Update } from '@tauri-apps/plugin-updater'
-import { isNewerVersion } from '@shared/canvas/app-version'
 import { isTauriRuntime } from './tauri-runtime'
+import { openExternalUrl } from './external-links'
 
 export const RELEASES_URL = 'https://github.com/hwantage/CanvaSlide/releases'
-const LATEST_JSON_URL =
-  'https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json'
 
 /** Mirrors `CHECK_UPDATES_EVENT` in `src-tauri/src/lib.rs`. */
 const CHECK_UPDATES_EVENT = 'check-updates-requested'
@@ -27,33 +25,21 @@ export function canInstallInApp(): boolean {
 
 let pendingUpdate: Update | null = null
 
-/**
- * Desktop: the updater plugin reads latest.json from the release feed (verified at download time
- * with the public key in tauri.conf.json). Browser dev builds fetch the same file directly.
- */
+/** Web deployments are already served at their current version; only desktop checks the feed. */
 export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
-  const current = currentAppVersion()
-  if (isTauriRuntime()) {
-    const { check } = await import('@tauri-apps/plugin-updater')
-    pendingUpdate = await check()
-    if (!pendingUpdate) {
-      return null
-    }
-    return {
-      version: pendingUpdate.version,
-      notes: pendingUpdate.body ?? null,
-      installable: canInstallInApp()
-    }
-  }
-  const response = await fetch(LATEST_JSON_URL, { cache: 'no-store' })
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`)
-  }
-  const latest = (await response.json()) as { version?: string; notes?: string }
-  if (!latest.version || !isNewerVersion(latest.version, current)) {
+  if (!isTauriRuntime()) {
     return null
   }
-  return { version: latest.version, notes: latest.notes ?? null, installable: false }
+  const { check } = await import('@tauri-apps/plugin-updater')
+  pendingUpdate = await check()
+  if (!pendingUpdate) {
+    return null
+  }
+  return {
+    version: pendingUpdate.version,
+    notes: pendingUpdate.body ?? null,
+    installable: canInstallInApp()
+  }
 }
 
 /** Downloads and applies the pending update, then restarts. Only valid after a successful check. */
@@ -78,12 +64,7 @@ export async function installAppUpdate(onProgress: (fraction: number) => void): 
 }
 
 export async function openReleasesPage(): Promise<void> {
-  if (isTauriRuntime()) {
-    const { openUrl } = await import('@tauri-apps/plugin-opener')
-    await openUrl(RELEASES_URL)
-    return
-  }
-  window.open(RELEASES_URL, '_blank', 'noopener')
+  await openExternalUrl(RELEASES_URL)
 }
 
 /** Native "Check for Updates…" menu item (macOS). Returns a disposer. */

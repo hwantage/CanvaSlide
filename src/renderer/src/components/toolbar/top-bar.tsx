@@ -1,6 +1,6 @@
 import {
+  Circle,
   CircleQuestionMark,
-  FileDown,
   FilePlus2,
   FolderOpen,
   Play,
@@ -12,11 +12,13 @@ import {
 } from 'lucide-react'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { IconButton } from '@/components/ui/icon-button'
+import { GitHubIcon } from '@/components/ui/github-icon'
 import { TextButton } from '@/components/ui/text-button'
 import { inputClass } from '@/components/ui/field-row'
 import type { DocumentCommands } from '@/hooks/use-document-commands'
 import { t } from '@/i18n/ui-strings'
 import { shortcutLabel } from '@/lib/platform-keys'
+import { openRepositoryPage } from '@/platform/external-links'
 import {
   selectCanRedo,
   selectCanUndo,
@@ -24,7 +26,7 @@ import {
   useDocumentStore
 } from '@/store/document-store'
 import {
-  useExportDialogStore,
+  useAboutDialogStore,
   useSettingsDialogStore,
   useShortcutHelpStore
 } from '@/store/modal-dialogs'
@@ -41,10 +43,10 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
   const redo = useDocumentStore((s) => s.redo)
   const renameDocument = useDocumentStore((s) => s.renameDocument)
   const start = usePresentationStore((s) => s.start)
-  const showExport = useExportDialogStore((s) => s.show)
   const showShare = useCloudShareStore((s) => s.show)
   const showSettings = useSettingsDialogStore((s) => s.show)
   const showHelp = useShortcutHelpStore((s) => s.show)
+  const showAbout = useAboutDialogStore((s) => s.show)
   const updateAvailable = useUpdateStore(selectUpdateAvailable)
   const frameCount = orderedFrames(document).length
 
@@ -103,21 +105,42 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
         </span>
       )}
       <div className="flex-1" />
-      <IconButton label={`${t('help.title')} (?)`} onClick={showHelp}>
-        <CircleQuestionMark size={16} />
+      <IconButton label={`${t('help.title')} (K)`} onClick={showHelp} aria-keyshortcuts="K">
+        <Circle size={16} aria-hidden>
+          <text
+            x={12}
+            y={16}
+            textAnchor="middle"
+            fill="currentColor"
+            stroke="none"
+            fontSize={12}
+            fontWeight={600}
+          >
+            K
+          </text>
+        </Circle>
       </IconButton>
       <IconButton
-        label={`${updateAvailable ? `${t('update.badge')} · ` : ''}${t('settings.title')} (${shortcutLabel(',')})`}
-        className="relative"
-        onClick={showSettings}
+        label={t('about.repository', { host: 'GitHub' })}
+        onClick={() => void openRepositoryPage()}
       >
-        <Settings size={16} />
+        <GitHubIcon />
+      </IconButton>
+      <IconButton
+        label={`${updateAvailable ? `${t('update.badge')} · ` : ''}${t('about.title', { app: 'CanvaSlide' })}`}
+        className="relative"
+        onClick={showAbout}
+      >
+        <CircleQuestionMark size={16} aria-hidden />
         {updateAvailable && (
           <span
             data-testid="update-badge"
             className="absolute right-1 top-1 h-2 w-2 rounded-full bg-selection"
           />
         )}
+      </IconButton>
+      <IconButton label={`${t('settings.title')} (${shortcutLabel(',')})`} onClick={showSettings}>
+        <Settings size={16} />
       </IconButton>
       <div className="mx-1 h-5 w-px bg-border" />
       <TextButton
@@ -131,13 +154,6 @@ export function TopBar({ commands }: { commands: DocumentCommands }) {
         onClick={() => start(0)}
       >
         <Play size={14} /> {t('present.start')}
-      </TextButton>
-      <TextButton
-        variant="secondary"
-        title={`${t('export.title')} (${shortcutLabel('E')})`}
-        onClick={showExport}
-      >
-        <FileDown size={14} /> {t('export.button')}
       </TextButton>
       <TextButton onClick={showShare}>
         <Share2 size={14} /> {t('share.button')}

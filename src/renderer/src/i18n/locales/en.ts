@@ -101,11 +101,10 @@ export const en = {
   'file.discardQuestion': 'You have unsaved changes. Discard them?',
 
   'share.button': 'Share',
-  'share.title': 'Cloud share',
+  'share.title': 'Share',
   'share.openTitle': 'Open shared canvas',
   'share.description':
     'Create a snapshot that anyone with the link can open. It is automatically deleted 24 hours after creation. Later edits do not update the link. Maximum size: {limit}.',
-  'share.create': 'Create link',
   'share.access.label': 'Allow recipients to',
   'share.access.edit': 'Edit a copy',
   'share.access.editDescription': 'Open the canvas in the editor, make changes, and save a copy.',
@@ -117,9 +116,9 @@ export const en = {
   'share.copyFailed': 'Could not copy the link. Select the URL and copy it manually.',
   'share.close': 'Close',
   'share.retry': 'Try again',
-  'share.uploading': 'Creating link…',
+  'share.copying': 'Copying link…',
   'share.loading': 'Loading shared canvas…',
-  'share.saveLocal': 'Save {format} file',
+  'share.exportFile': 'Export {format}',
   'share.fallback':
     'You can save the current canvas as a local {format} file and share that file instead.',
   'share.error.invalid':
@@ -278,7 +277,6 @@ export const en = {
   'settings.frameBorder.none': 'Hidden',
   'settings.done': 'Done',
 
-  'export.button': 'Export',
   'export.dialog': 'Export presentation',
   'export.title': 'Export as HTML',
   'export.summary':
@@ -336,6 +334,10 @@ export const en = {
   'color.pick': 'Pick a colour',
 
   'help.title': 'Keyboard shortcuts',
+  'about.title': 'About {app}',
+  'about.releaseNotes': 'Release notes',
+  'about.repository': '{host} repository',
+  'about.repositoryError': 'Could not open the repository: {message}',
   'help.button': 'Shortcuts',
   'help.tools': 'Tools',
   'help.edit': 'Edit',
@@ -691,9 +693,7 @@ export const en = {
   'site.screenshot.editor': 'The canvas editor with shapes, text, and presentation frames',
   'site.screenshot.present': 'A presentation frame in full-screen view',
 
-  'update.title': 'Updates',
   'update.current': 'Current version',
-  'update.check': 'Check for updates',
   'update.checking': 'Checking…',
   'update.upToDate': 'You are on the latest version.',
   'update.available': 'Version {v} is available.',
@@ -701,9 +701,7 @@ export const en = {
   'update.downloading': 'Downloading… {p}%',
   'update.openReleases': 'Open download page',
   'update.openReleasesError': 'Could not open the download page: {message}',
-  'update.macHint': 'On macOS, download the new version from the release page and replace the app.',
   'update.error': 'Update check failed: {message}',
-  'update.checkOnLaunch': 'Check for updates when the app starts',
   'update.badge': 'Update available',
 
   'error.launchDocument': 'Could not open the document the app was asked to open: {message}',

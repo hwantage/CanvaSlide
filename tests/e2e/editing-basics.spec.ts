@@ -277,8 +277,8 @@ test('starts the slide show from the selected frame', async ({ page }) => {
   await expect(page.getByTestId('presentation-counter')).toContainText('1 / 2')
 })
 
-test('opens the shortcut help with ? and the toolbar button', async ({ page }) => {
-  await page.keyboard.press('Shift+/')
+test('opens the shortcut help with K and the toolbar button', async ({ page }) => {
+  await page.keyboard.press('k')
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' })
   await expect(dialog).toBeVisible()
   await expect(dialog).toContainText('Bring forward')

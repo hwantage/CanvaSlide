@@ -94,7 +94,8 @@ test('shared crops and masks survive save/reopen and offline HTML export @webkit
   await page.mouse.move(0, 0)
   expect(await images.first().screenshot()).toEqual(before)
 
-  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  await page.getByRole('button', { name: 'Share', exact: true }).click()
+  await page.getByRole('button', { name: 'Export HTML', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Export presentation' })
   await dialog.getByLabel(/Original/).check()
   await expect(dialog.getByTestId('export-size')).not.toContainText('calculating')

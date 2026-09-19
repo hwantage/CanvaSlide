@@ -19,11 +19,21 @@ export function ModalDialog({
   useLayoutEffect(() => {
     const dialog = dialogRef.current!
     const opener = document.activeElement
+    const previousDialogs = Array.from(
+      document.querySelectorAll<HTMLDialogElement>('dialog[open][aria-modal="true"]')
+    ).filter((previous) => !previous.inert)
+    // WebKit can still focus an earlier modal unless it is explicitly made inert.
+    for (const previous of previousDialogs) {
+      previous.inert = true
+    }
     // Why: a native modal makes the background inert for keyboard and assistive technology.
     dialog.showModal()
     panelRef.current?.focus({ preventScroll: true })
     return () => {
       dialog.close()
+      for (const previous of previousDialogs) {
+        previous.inert = false
+      }
       if (opener instanceof HTMLElement && opener.isConnected) {
         opener.focus({ preventScroll: true })
       }

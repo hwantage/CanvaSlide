@@ -21,12 +21,14 @@ function createDialogStore(): UseBoundStore<StoreApi<DialogStore>> {
 export const useExportDialogStore = createDialogStore()
 export const useSettingsDialogStore = createDialogStore()
 export const useShortcutHelpStore = createDialogStore()
+export const useAboutDialogStore = createDialogStore()
 
 /** Every modal that blocks canvas shortcuts while open, and that Escape closes. */
 const modalDialogs = [
   useExportDialogStore,
   useSettingsDialogStore,
   useShortcutHelpStore,
+  useAboutDialogStore,
   useCloudShareStore,
   useFigImportStore
 ]

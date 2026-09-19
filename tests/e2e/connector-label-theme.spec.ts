@@ -124,7 +124,8 @@ test('saved labels retain their colours and export from dark mode to the light p
   await expectLabelTheme(label, 'dark')
   await expect(page).toHaveTitle(`${document.name} — CanvaSlide`)
 
-  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  await page.getByRole('button', { name: 'Share', exact: true }).click()
+  await page.getByRole('button', { name: 'Export HTML', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Export presentation' })
   await expect(dialog.getByTestId('export-size')).not.toContainText('calculating')
   const exportDownload = page.waitForEvent('download')

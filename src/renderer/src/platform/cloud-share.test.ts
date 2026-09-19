@@ -19,6 +19,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
+  vi.restoreAllMocks()
   vi.clearAllMocks()
   vi.mocked(isTauriRuntime).mockReturnValue(false)
   vi.useRealTimers()
@@ -211,4 +212,51 @@ it('copies through the native clipboard on desktop', async () => {
   vi.mocked(isTauriRuntime).mockReturnValue(true)
   await copyShareLink(`${origin}/?share=${id}`)
   expect(writeText).toHaveBeenCalledWith(`${origin}/?share=${id}`)
+})
+
+it('starts a browser clipboard write during the click, before link creation resolves', async () => {
+  const items: Record<string, Promise<Blob>>[] = []
+  vi.stubGlobal(
+    'ClipboardItem',
+    class {
+      constructor(data: Record<string, Promise<Blob>>) {
+        items.push(data)
+      }
+    }
+  )
+  const write = vi.spyOn(navigator.clipboard, 'write').mockImplementation(async () => {
+    await items[0]!['text/plain']
+  })
+  let finish!: (url: string) => void
+  const url = new Promise<string>((resolve) => {
+    finish = resolve
+  })
+  const copying = copyShareLink(url)
+  expect(write).toHaveBeenCalledTimes(1)
+  finish(`${origin}/?share=${id}`)
+  await copying
+  expect(await (await items[0]!['text/plain'])!.text()).toBe(`${origin}/?share=${id}`)
+})
+
+it('does not leave an unhandled item rejection when clipboard denial precedes a cancelled upload', async () => {
+  vi.stubGlobal(
+    'ClipboardItem',
+    class {
+      constructor(_data: Record<string, Promise<Blob>>) {}
+    }
+  )
+  vi.spyOn(navigator.clipboard, 'write').mockRejectedValue(new Error('denied'))
+  let finish!: (url: null) => void
+  const url = new Promise<null>((resolve) => {
+    finish = resolve
+  })
+  await expect(copyShareLink(url)).rejects.toThrow('denied')
+  finish(null)
+  await new Promise((resolve) => setTimeout(resolve, 0))
+})
+
+it('does not copy a cancelled or failed share on desktop', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  await expect(copyShareLink(Promise.resolve(null))).rejects.toThrow('cancelled or failed')
+  expect(writeText).not.toHaveBeenCalled()
 })

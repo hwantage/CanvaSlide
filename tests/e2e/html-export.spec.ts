@@ -32,7 +32,8 @@ test('exports a self-contained HTML player that presents the frames @webkit', as
   })
   await expect(page.locator('[data-element-type="image"]')).toHaveCount(1)
 
-  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  await page.getByRole('button', { name: 'Share', exact: true }).click()
+  await page.getByRole('button', { name: 'Export HTML', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Export presentation' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByTestId('export-size')).not.toContainText('calculating', {

@@ -25,6 +25,10 @@ import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore, type ToolId } from '@/store/tool-store'
 
 export function handleCanvasKeyDown(event: KeyboardEvent, commands: DocumentCommands): void {
+  // Some WebViews report the final IME keystroke as 229 after isComposing clears.
+  if (event.defaultPrevented || event.isComposing || event.keyCode === 229) {
+    return
+  }
   if (isEditableTarget(event.target) && event.key !== 'Escape') {
     return
   }
@@ -266,8 +270,11 @@ function handlePlainKeys(event: KeyboardEvent): boolean {
   if (key === 'F2') {
     return startEditingSelection({ frames: true })
   }
-  if (key === '?' || (event.shiftKey && event.code === 'Slash')) {
-    useShortcutHelpStore.getState().toggle()
+  if (
+    key.toLowerCase() === 'k' &&
+    !['Alt', 'Control', 'Meta', 'Shift'].some((modifier) => event.getModifierState(modifier))
+  ) {
+    useShortcutHelpStore.getState().show()
     return true
   }
   const digit = shiftedDigit(event)

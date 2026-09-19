@@ -25,7 +25,6 @@ import {
   useThemeStore,
   type ThemePreference
 } from '@/store/theme-store'
-import { UpdateSection } from './update-section'
 
 /** Document and app settings; add a <Section> per concern so the dialog grows without restructuring. */
 
@@ -139,6 +138,17 @@ export function SettingsDialog() {
         </Row>
       </Section>
       <Section title={t('settings.frames')}>
+        <Row label={t('settings.border')}>
+          <SegmentedControl
+            label={t('settings.frameBorder')}
+            value={settings.frameBorder}
+            options={frameBorderStyles.map((value) => ({
+              value,
+              label: t(frameBorderLabels[value])
+            }))}
+            onChange={(frameBorder) => set({ frameBorder })}
+          />
+        </Row>
         <Row label={t('settings.transition')} as="label">
           <input
             type="range"
@@ -159,20 +169,6 @@ export function SettingsDialog() {
           </span>
         </Row>
         <p className="text-[11px] text-muted-foreground">{t('settings.transitionHint')}</p>
-        <Row label={t('settings.border')}>
-          <SegmentedControl
-            label={t('settings.frameBorder')}
-            value={settings.frameBorder}
-            options={frameBorderStyles.map((value) => ({
-              value,
-              label: t(frameBorderLabels[value])
-            }))}
-            onChange={(frameBorder) => set({ frameBorder })}
-          />
-        </Row>
-      </Section>
-      <Section title={t('update.title')}>
-        <UpdateSection />
       </Section>
       <div className="flex justify-end">
         <TextButton variant="primary" onClick={hide}>

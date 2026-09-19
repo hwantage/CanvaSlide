@@ -22,7 +22,7 @@ type CloudShareStore = {
   setAccess: (access: ShareAccess) => void
   show: () => void
   hide: () => void
-  publish: () => Promise<void>
+  publish: () => Promise<string | null>
   openLink: (search: string) => Promise<void>
 }
 
@@ -34,16 +34,16 @@ export const useCloudShareStore = create<CloudShareStore>()((set, get) => ({
   busy: false,
   url: null,
   error: null,
-  access: 'edit',
+  access: 'present',
   presentation: null,
   setAccess: (access) => {
-    if (!get().busy && !get().url) {
-      set({ access })
+    if (!get().busy) {
+      set({ access, url: null, error: null })
     }
   },
   show: () => {
     pending?.abort()
-    set({ open: true, mode: 'publish', busy: false, url: null, error: null, access: 'edit' })
+    set({ open: true, mode: 'publish', busy: false, url: null, error: null, access: 'present' })
   },
   hide: () => {
     pending?.abort()
@@ -54,7 +54,7 @@ export const useCloudShareStore = create<CloudShareStore>()((set, get) => ({
   },
   publish: async () => {
     if (get().busy) {
-      return
+      return null
     }
     pending?.abort()
     const request = new AbortController()
@@ -69,12 +69,14 @@ export const useCloudShareStore = create<CloudShareStore>()((set, get) => ({
       )
       if (!request.signal.aborted) {
         set({ busy: false, url })
+        return url
       }
     } catch (error) {
       if (!request.signal.aborted) {
         set({ busy: false, error: error instanceof CloudShareError ? error.code : 'unavailable' })
       }
     }
+    return null
   },
   openLink: async (search) => {
     pending?.abort()

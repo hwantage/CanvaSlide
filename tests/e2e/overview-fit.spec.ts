@@ -138,7 +138,8 @@ test('exported overview preserves a sub-minimum fit through navigation and resiz
   page
 }) => {
   await openDistantFrames(page)
-  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  await page.getByRole('button', { name: 'Share', exact: true }).click()
+  await page.getByRole('button', { name: 'Export HTML', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Export presentation' })
   await expect(dialog.getByTestId('export-size')).not.toContainText('calculating')
   const pending = page.waitForEvent('download')

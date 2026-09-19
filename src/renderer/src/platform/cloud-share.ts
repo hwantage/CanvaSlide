@@ -147,13 +147,33 @@ export async function fetchCloudShare(id: string, signal: AbortSignal): Promise<
   return { access: snapshot.access, document: parsed.document }
 }
 
-export async function copyShareLink(url: string): Promise<void> {
-  if (isTauriRuntime()) {
-    const { writeText } = await import('@tauri-apps/plugin-clipboard-manager')
-    await writeText(url)
+export async function copyShareLink(url: string | Promise<string | null>): Promise<void> {
+  if (!isTauriRuntime() && typeof url === 'string') {
+    await navigator.clipboard.writeText(url)
     return
   }
-  await navigator.clipboard.writeText(url)
+  const text = Promise.resolve(url).then((value) => {
+    if (!value) {
+      throw new Error('Share creation was cancelled or failed')
+    }
+    return value
+  })
+  if (isTauriRuntime()) {
+    const value = await text
+    const { writeText } = await import('@tauri-apps/plugin-clipboard-manager')
+    await writeText(value)
+    return
+  }
+  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+    const data = text.then((value) => new Blob([value], { type: 'text/plain' }))
+    // A denied clipboard write can reject before the pending upload settles.
+    void data.catch(() => {})
+    // WebKit requires write() during the click; the item may resolve after the upload.
+    await navigator.clipboard.write([new ClipboardItem({ 'text/plain': data })])
+    return
+  }
+  const value = await text
+  await navigator.clipboard.writeText(value)
 }
 
 export function clearShareQuery(): void {

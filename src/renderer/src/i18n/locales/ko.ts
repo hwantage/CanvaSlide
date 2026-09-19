@@ -105,11 +105,10 @@ export const ko: UiStrings = {
   'file.discardQuestion': '저장하지 않은 변경 사항이 있습니다. 버리시겠습니까?',
 
   'share.button': '공유',
-  'share.title': '클라우드 공유',
+  'share.title': '공유',
   'share.openTitle': '공유 캔버스 열기',
   'share.description':
     '현재 캔버스의 사본을 링크로 공유합니다. 링크가 있는 모든 사용자가 열 수 있으며, 생성 후 24시간이 지나면 자동 삭제됩니다. 이후 편집 내용은 반영되지 않습니다. 최대 크기: {limit}.',
-  'share.create': '링크 만들기',
   'share.access.label': '공유 방식',
   'share.access.edit': '사본 편집 허용',
   'share.access.editDescription': '편집 화면에서 캔버스를 수정하고 사본을 저장할 수 있습니다.',
@@ -121,9 +120,9 @@ export const ko: UiStrings = {
   'share.copyFailed': '링크를 복사하지 못했습니다. URL을 선택하여 직접 복사해 주세요.',
   'share.close': '닫기',
   'share.retry': '다시 시도',
-  'share.uploading': '링크 만드는 중…',
+  'share.copying': '링크 복사 중…',
   'share.loading': '공유 캔버스 불러오는 중…',
-  'share.saveLocal': '{format} 파일 저장',
+  'share.exportFile': '{format} 내보내기',
   'share.fallback': '현재 캔버스를 로컬 {format} 파일로 저장하여 공유할 수 있습니다.',
   'share.error.invalid':
     '공유 링크 또는 문서가 올바르지 않습니다. 공유할 이미지는 문서에 포함되어 있어야 합니다.',
@@ -283,7 +282,6 @@ export const ko: UiStrings = {
   'settings.frameBorder.none': '숨김',
   'settings.done': '완료',
 
-  'export.button': '내보내기',
   'export.dialog': '프레젠테이션 내보내기',
   'export.title': 'HTML로 내보내기',
   'export.summary':
@@ -341,6 +339,10 @@ export const ko: UiStrings = {
   'color.pick': '색 선택',
 
   'help.title': '키보드 단축키',
+  'about.title': '{app} 정보',
+  'about.releaseNotes': '릴리스 노트',
+  'about.repository': '{host} 저장소 열기',
+  'about.repositoryError': '저장소를 열지 못했습니다: {message}',
   'help.button': '단축키',
   'help.tools': '도구',
   'help.edit': '편집',
@@ -694,9 +696,7 @@ export const ko: UiStrings = {
   'site.screenshot.editor': '도형, 텍스트, 발표 프레임이 배치된 캔버스 편집기',
   'site.screenshot.present': '전체 화면으로 표시된 발표 프레임',
 
-  'update.title': '업데이트',
   'update.current': '현재 버전',
-  'update.check': '업데이트 확인',
   'update.checking': '확인 중…',
   'update.upToDate': '최신 버전을 사용하고 있습니다.',
   'update.available': '새 버전 {v}을(를) 사용할 수 있습니다.',
@@ -704,9 +704,7 @@ export const ko: UiStrings = {
   'update.downloading': '다운로드 중… {p}%',
   'update.openReleases': '다운로드 페이지 열기',
   'update.openReleasesError': '다운로드 페이지를 열지 못했습니다: {message}',
-  'update.macHint': 'macOS에서는 릴리즈 페이지에서 새 버전을 내려받아 앱을 교체하세요.',
   'update.error': '업데이트 확인 실패: {message}',
-  'update.checkOnLaunch': '앱을 시작할 때 업데이트 확인',
   'update.badge': '업데이트 가능',
 
   'error.launchDocument': '앱이 열도록 요청받은 문서를 열 수 없습니다: {message}',

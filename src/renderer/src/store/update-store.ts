@@ -8,16 +8,6 @@ import {
   type AvailableUpdate
 } from '@/platform/app-update'
 
-const AUTO_CHECK_KEY = 'canvaslide.updates.checkOnLaunch'
-
-function readAutoCheck(): boolean {
-  try {
-    return localStorage.getItem(AUTO_CHECK_KEY) !== 'off'
-  } catch {
-    return true
-  }
-}
-
 export type UpdateStatus = 'idle' | 'checking' | 'upToDate' | 'available' | 'downloading' | 'error'
 
 export type UpdateStore = {
@@ -26,11 +16,9 @@ export type UpdateStore = {
   /** Download progress 0..1 while `downloading`. */
   progress: number
   error: string | null
-  checkOnLaunch: boolean
   check: () => Promise<void>
   install: () => Promise<void>
   openReleases: () => Promise<void>
-  setCheckOnLaunch: (enabled: boolean) => void
 }
 
 export const useUpdateStore = create<UpdateStore>()((set, get) => ({
@@ -38,7 +26,6 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
   update: null,
   progress: 0,
   error: null,
-  checkOnLaunch: readAutoCheck(),
   check: async () => {
     if (get().status === 'checking' || get().status === 'downloading') {
       return
@@ -68,14 +55,6 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
       await openReleasesPage()
     } catch (error) {
       await showErrorMessage(t('update.openReleasesError', { message: errorText(error) }))
-    }
-  },
-  setCheckOnLaunch: (checkOnLaunch) => {
-    set({ checkOnLaunch })
-    try {
-      localStorage.setItem(AUTO_CHECK_KEY, checkOnLaunch ? 'on' : 'off')
-    } catch {
-      // Why: the preference is a convenience; blocked storage must not break the dialog.
     }
   }
 }))

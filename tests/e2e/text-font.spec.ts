@@ -128,7 +128,8 @@ test('the export dialog offers font embedding only where fonts can be read', asy
   await page.getByTestId('canvas-viewport').click({ position: { x: 410, y: 310 } })
   await page.getByTestId('font-picker').click()
   await page.getByTestId('font-popover').getByRole('option', { name: 'Zapfino' }).click()
-  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  await page.getByRole('button', { name: 'Share', exact: true }).click()
+  await page.getByRole('button', { name: 'Export HTML', exact: true }).click()
   const fonts = page.getByTestId('export-fonts')
   await expect(fonts).toContainText('Embed 1 installed font used in this document')
   // Why: the browser build cannot read font files; the desktop app enables the checkbox.

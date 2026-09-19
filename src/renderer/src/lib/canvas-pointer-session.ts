@@ -111,6 +111,10 @@ export function createCanvasPointerSession(callbacks: PointerCallbacks) {
       if (!begin()) {
         return
       }
+      // Middle-button pan must suppress native paste on Linux and autoscroll on Windows.
+      if (event.button === 1) {
+        event.preventDefault()
+      }
       active = {
         id: event.pointerId,
         button: event.button,

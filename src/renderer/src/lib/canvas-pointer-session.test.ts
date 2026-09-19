@@ -27,6 +27,21 @@ function pointer(type: string, values: PointerEventInit = {}) {
 }
 
 describe('canvas pointer ownership', () => {
+  it.each([
+    { button: 1, isPrimary: true, accepted: true, prevented: true },
+    { button: 0, isPrimary: true, accepted: true, prevented: false },
+    { button: 1, isPrimary: true, accepted: false, prevented: false },
+    { button: 1, isPrimary: false, accepted: true, prevented: false }
+  ])(
+    'suppresses native middle-button actions only for an accepted pan: %j',
+    ({ button, isPrimary, accepted, prevented }) => {
+      const { session, target } = setup()
+      const event = pointer('pointerdown', { button, isPrimary, cancelable: true })
+      session.start(event, target, () => accepted)
+      expect(event.defaultPrevented).toBe(prevented)
+    }
+  )
+
   it('does not repeat the last move on release, but applies changed modifiers', () => {
     const { session, callbacks, target } = setup()
     session.start(pointer('pointerdown'), target, () => true)

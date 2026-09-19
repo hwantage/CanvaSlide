@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { create } from 'zustand'
+import { createDocumentContentComparator } from '@shared/canvas/document-content'
 import { syncConnectorGeometry } from '@shared/canvas/connector-geometry'
 import { groupElements, ungroupElements } from '@shared/canvas/element-groups'
 import {
@@ -40,15 +41,14 @@ import { syncTextHeight } from '@shared/canvas/text-height'
 import { popRedo, popUndo, pushSnapshot, type HistoryStacks } from './document-history'
 
 /** What a save started from; completing it must not clear edits made while the file was written. */
-export type SaveSnapshot = { document: CanvasDocument; session: number; revision: number }
+export type SaveSnapshot = { document: CanvasDocument; session: number }
 
 export type DocumentState = HistoryStacks & {
   document: CanvasDocument
   selectedIds: ElementId[]
   filePath: FilePath | null
   dirty: boolean
-  /** Counts content edits; renderer measurements do not invalidate an in-flight save. */
-  revision: number
+  savedDocument: CanvasDocument
   /** Bumped on new/open so an in-flight save can't attach its path to another document. */
   session: number
   /** Snapshot taken at the start of a drag; committed as one undo step on end. */
@@ -58,7 +58,7 @@ export type DocumentActions = {
   loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
   newDocument: () => void
   takeSaveSnapshot: () => SaveSnapshot
-  /** Applies a finished save: path + name always, `dirty=false` only if nothing changed since. */
+  /** Applies a finished save: path + baseline, preserving any content that differs from the saved snapshot. */
   completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
   setSelection: (ids: ElementId[]) => void
   toggleSelected: (id: ElementId) => void
@@ -99,12 +99,13 @@ export type DocumentActions = {
 
 export type DocumentStore = DocumentState & DocumentActions
 
+const emptyDocument = createEmptyDocument()
 const initialState: DocumentState = {
-  document: createEmptyDocument(),
+  document: emptyDocument,
+  savedDocument: emptyDocument,
   selectedIds: [],
   filePath: null,
   dirty: false,
-  revision: 0,
   session: 0,
   past: [],
   future: [],
@@ -114,16 +115,16 @@ const initialState: DocumentState = {
 export const newElementId = (): ElementId => nanoid(10)
 
 export const useDocumentStore = create<DocumentStore>()((set, get) => {
+  const sameDocumentContent = createDocumentContentComparator()
   const recorded = (updater: (document: CanvasDocument) => CanvasDocument) => {
-    const { document, past, future, revision } = get()
+    const { document, savedDocument, past, future } = get()
     const next = syncConnectorGeometry(updater(document))
     if (next === document) {
       return
     }
     set({
       document: next,
-      dirty: true,
-      revision: revision + 1,
+      dirty: !sameDocumentContent(next, savedDocument),
       ...pushSnapshot({ past, future }, document)
     })
   }
@@ -142,12 +143,11 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     if (!result) {
       return
     }
-    const { selectedIds, revision } = get()
+    const { selectedIds, savedDocument } = get()
     set({
       document: result.document,
       ...result.stacks,
-      dirty: true,
-      revision: revision + 1,
+      dirty: !sameDocumentContent(result.document, savedDocument),
       editBaseline: null,
       selectedIds: selectedIds.filter((id) => result.document.elements[id] !== undefined)
     })
@@ -156,26 +156,31 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
   return {
     ...initialState,
 
-    loadDocument: (document, filePath) =>
+    loadDocument: (document, filePath) => {
+      const loaded = syncConnectorGeometry(document)
       set((s) => ({
         ...initialState,
-        document: syncConnectorGeometry(document),
+        document: loaded,
+        savedDocument: loaded,
         filePath,
         session: s.session + 1
-      })),
-    newDocument: () =>
-      set((s) => ({ ...initialState, document: createEmptyDocument(), session: s.session + 1 })),
+      }))
+    },
+    newDocument: () => get().loadDocument(createEmptyDocument(), null),
     takeSaveSnapshot: () => ({
       document: get().document,
-      session: get().session,
-      revision: get().revision
+      session: get().session
     }),
     completeSave: (snapshot, filePath) =>
       set((s) => {
         if (s.session !== snapshot.session) {
           return s
         }
-        return { filePath, dirty: s.revision === snapshot.revision ? false : s.dirty }
+        return {
+          filePath,
+          savedDocument: snapshot.document,
+          dirty: !sameDocumentContent(s.document, snapshot.document)
+        }
       }),
 
     setSelection: (ids) => set({ selectedIds: ids }),
@@ -192,7 +197,12 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     applyLive: (updater) =>
       set((s) => {
         const next = syncConnectorGeometry(updater(s.document))
-        return next === s.document ? s : { document: next, dirty: true, revision: s.revision + 1 }
+        return next === s.document
+          ? s
+          : {
+              document: next,
+              dirty: !sameDocumentContent(next, s.savedDocument)
+            }
       }),
     syncTextHeight: (id, measuredHeight) =>
       set((s) => {
@@ -208,8 +218,8 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
         s.editBaseline
           ? {
               document: s.editBaseline,
-              editBaseline: null,
-              revision: s.revision + (s.document === s.editBaseline ? 0 : 1)
+              dirty: !sameDocumentContent(s.editBaseline, s.savedDocument),
+              editBaseline: null
             }
           : s
       ),

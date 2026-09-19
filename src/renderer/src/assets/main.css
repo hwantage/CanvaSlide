@@ -145,3 +145,94 @@ select {
   color: #a1a1aa;
   pointer-events: none;
 }
+
+@media (max-width: 1100px) {
+  .editor-top-bar {
+    min-height: 52px;
+    gap: 2px;
+    padding-inline: 4px;
+  }
+  .editor-top-bar button,
+  .editor-tool-bar button,
+  .editor-zoom-controls button,
+  [data-testid='presentation-controls'] button,
+  [data-testid='preview-controls'] button {
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  .editor-tool-bar {
+    display: grid;
+    grid-template-columns: repeat(5, 44px);
+    gap: 0;
+  }
+  .editor-tool-bar > button {
+    width: 44px;
+    height: 44px;
+  }
+  .editor-tool-bar > .bg-border {
+    display: none;
+  }
+  .editor-tool-bar .tool-flyout {
+    left: 0;
+    top: 100%;
+    margin: 8px 0 0;
+  }
+  [data-testid='side-panel'] {
+    width: 286px;
+    min-height: 340px;
+  }
+  [data-testid='frame-row'] {
+    height: 44px;
+  }
+  [data-testid='frame-row'] > button:last-child {
+    opacity: 1;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-testid='frames-pane'] button[aria-label] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-testid='properties-pane'] button {
+    min-width: 32px;
+    min-height: 36px;
+  }
+  [data-testid='side-panel'] input:not([type='checkbox']),
+  [data-testid='side-panel'] select {
+    min-height: 36px;
+  }
+  [data-testid='panel-split-handle'] {
+    position: relative;
+    touch-action: none;
+  }
+  [data-testid='panel-split-handle']::before {
+    content: '';
+    position: absolute;
+    inset: -8px 0;
+  }
+  dialog button {
+    min-height: 44px;
+  }
+  [data-testid='presentation-controls'] {
+    max-width: calc(100% - 16px);
+    translate: -50% 0;
+  }
+  [data-testid='presentation-counter'] {
+    white-space: nowrap;
+  }
+  [data-testid='preview-controls'] {
+    top: 116px;
+    max-width: calc(100% - 24px);
+  }
+  [data-testid='preview-controls'] > span:first-child {
+    min-width: 0;
+  }
+}
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

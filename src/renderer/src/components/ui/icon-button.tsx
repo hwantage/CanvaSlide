@@ -1,7 +1,7 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ComponentPropsWithRef, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
-type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type IconButtonProps = ComponentPropsWithRef<'button'> & {
   active?: boolean
   label: string
   children: ReactNode

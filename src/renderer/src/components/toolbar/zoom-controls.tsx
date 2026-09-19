@@ -12,7 +12,7 @@ export function ZoomControls() {
   const resetZoom = useCameraStore((s) => s.resetZoom)
   const hasSelection = useDocumentStore((s) => s.selectedIds.length > 0)
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1 shadow-md">
+    <div className="editor-zoom-controls flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1 shadow-md">
       <IconButton label={`${t('zoom.out')} (${shortcutLabel('-')})`} onClick={() => zoomStep(-1)}>
         <Minus size={14} />
       </IconButton>

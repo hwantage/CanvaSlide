@@ -50,7 +50,7 @@ function Row({
   as?: 'div' | 'label'
 }) {
   return (
-    <Tag className="flex items-center gap-3 text-xs">
+    <Tag className="flex flex-wrap items-center gap-3 text-xs">
       <span className="w-28 shrink-0 whitespace-nowrap text-muted-foreground">{label}</span>
       {children}
     </Tag>

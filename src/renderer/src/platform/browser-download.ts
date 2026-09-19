@@ -1,5 +1,9 @@
-/** Browser fallback for "save": hands the text to the download manager under `fileName`. */
-export function downloadTextFile(contents: string, fileName: string, mime: string): void {
+/** Browser fallback for "save": hands the contents to the download manager under `fileName`. */
+export function downloadFile(
+  contents: string | Uint8Array<ArrayBuffer>,
+  fileName: string,
+  mime: string
+): void {
   const url = URL.createObjectURL(new Blob([contents], { type: mime }))
   const anchor = document.createElement('a')
   anchor.href = url

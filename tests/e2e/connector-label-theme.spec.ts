@@ -1,3 +1,4 @@
+import { readSavedDocument } from './saved-document'
 import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Locator, type Page } from '@playwright/test'
@@ -101,7 +102,7 @@ test('saved labels retain their colours and export from dark mode to the light p
   await page.keyboard.press(`${mod}+s`)
   const savedPath = await (await savedDownload).path()
   const saved = await readFile(savedPath!)
-  const document: CanvasDocument = JSON.parse(saved.toString())
+  const document: CanvasDocument = readSavedDocument(saved)
   expect(
     Object.values(document.elements)
       .filter((element) => element.type === 'connector')

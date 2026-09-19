@@ -23,6 +23,7 @@ export type ParseDocumentResult =
   | { ok: true; document: CanvasDocument }
   | { ok: false; error: string }
 
+/** Legacy JSON interchange; .canvaslide files are written by serializeDocumentArchive. */
 export function serializeDocument(document: CanvasDocument): string {
   return JSON.stringify(document, null, 2)
 }

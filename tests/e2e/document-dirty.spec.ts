@@ -1,3 +1,4 @@
+import { readSavedDocument } from './saved-document'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
@@ -80,7 +81,9 @@ test('measured text heights stay clean, while real edits retain history and save
   await page.keyboard.press(`${mod}+s`)
   const savedPath = await (await download).path()
   const saved = await readFile(savedPath!)
-  expect(JSON.parse(saved.toString()).elements['text-1'].text).toContain('Edited')
+  expect(readSavedDocument(saved).elements['text-1']).toMatchObject({
+    text: expect.stringContaining('Edited')
+  })
   await expect(page).toHaveTitle(`${document.name} — CanvaSlide`)
   expect(await closeIsGuarded(page)).toBe(false)
   await openFile(page, saved)

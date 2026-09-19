@@ -1,13 +1,17 @@
 import {
+  decodeDocumentFile,
+  encodeDocumentFile,
+  decodeNativeDocumentFile,
+  encodeNativeDocumentFile
+} from '@/lib/document-file-codec'
+import {
   DOCUMENT_FILE_EXTENSION,
   documentFileName,
-  parseDocument,
-  serializeDocument,
   withDocumentName
 } from '@shared/canvas/document-file'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
-import { downloadTextFile } from './browser-download'
+import { downloadFile } from './browser-download'
 import { displayFilePath, type FilePath } from './file-path'
 import { isTauriRuntime } from './tauri-runtime'
 
@@ -27,11 +31,11 @@ export async function saveDocumentFile(
   filePath: FilePath | null,
   forcePrompt = false
 ): Promise<SavedDocument | null> {
-  const contents = serializeDocument(document)
   if (isTauriRuntime()) {
-    return saveWithTauri(document, contents, forcePrompt ? null : filePath)
+    return saveWithTauri(document, forcePrompt ? null : filePath)
   }
-  downloadTextFile(contents, documentFileName(document), 'application/json')
+  const contents = await encodeDocumentFile(document)
+  downloadFile(contents, documentFileName(document), 'application/zip')
   return { filePath: null }
 }
 
@@ -67,7 +71,7 @@ export async function showErrorMessage(message: string): Promise<void> {
 export async function openDocumentAtPath(path: FilePath): Promise<OpenedDocument> {
   const { invoke } = await import('@tauri-apps/api/core')
   const contents = await invoke<string>('read_document', { path })
-  const parsed = parseDocument(contents)
+  const parsed = await decodeNativeDocumentFile(contents)
   if (!parsed.ok) {
     throw new Error(parsed.error)
   }
@@ -85,7 +89,6 @@ async function openWithTauri(): Promise<OpenedDocument | null> {
 
 async function saveWithTauri(
   document: CanvasDocument,
-  contents: string,
   filePath: FilePath | null
 ): Promise<SavedDocument | null> {
   const { invoke } = await import('@tauri-apps/api/core')
@@ -99,7 +102,7 @@ async function saveWithTauri(
   }
   const written = await invoke<FilePath>('write_document', {
     path: chosen,
-    contents,
+    contents: await encodeNativeDocumentFile(document),
     // Why: only a name the user just picked may gain the canonical extension. Rewriting the target
     // of a silent save would strand the original file with stale content and clobber whatever
     // already sits at the new name, without the overwrite prompt the dialog would have shown.
@@ -119,12 +122,16 @@ function openWithBrowser(): Promise<OpenedDocument | null> {
         resolve(null)
         return
       }
-      const parsed = parseDocument(await file.text())
-      if (!parsed.ok) {
-        reject(new Error(parsed.error))
-        return
+      try {
+        const parsed = await decodeDocumentFile(new Uint8Array(await file.arrayBuffer()))
+        if (!parsed.ok) {
+          reject(new Error(parsed.error))
+          return
+        }
+        resolve({ document: withDocumentName(parsed.document, file.name), filePath: null })
+      } catch (error) {
+        reject(error)
       }
-      resolve({ document: withDocumentName(parsed.document, file.name), filePath: null })
     }
     input.oncancel = () => resolve(null)
     input.click()

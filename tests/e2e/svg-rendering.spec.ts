@@ -1,3 +1,4 @@
+import { readSavedDocument } from './saved-document'
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
 import { primaryModifier } from './canvas-gestures'
@@ -167,7 +168,7 @@ test('bounds masked SVG previews, preserves alpha, reuses them offscreen, and sa
   if (!path) {
     throw new Error('Saved file is unavailable')
   }
-  const saved = JSON.parse(await readFile(path, 'utf8'))
+  const saved = readSavedDocument(await readFile(path))
   expect(saved.assets).toEqual(doc.assets)
   expect(saved.elements).toEqual(doc.elements)
 })

@@ -1,5 +1,6 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
 import { useFigImportStore } from './fig-import-store'
+import { useCloudShareStore } from './cloud-share-store'
 
 export type DialogStore = {
   open: boolean
@@ -26,6 +27,7 @@ const modalDialogs = [
   useExportDialogStore,
   useSettingsDialogStore,
   useShortcutHelpStore,
+  useCloudShareStore,
   useFigImportStore
 ]
 

@@ -104,6 +104,42 @@ export const ko: UiStrings = {
   'file.discardTitle': '저장되지 않은 변경 사항',
   'file.discardQuestion': '저장하지 않은 변경 사항이 있습니다. 버리시겠습니까?',
 
+  'share.button': '공유',
+  'share.title': '클라우드 공유',
+  'share.openTitle': '공유 캔버스 열기',
+  'share.description':
+    '현재 캔버스의 사본을 링크로 공유합니다. 링크가 있는 모든 사용자가 열 수 있으며, 생성 후 24시간이 지나면 자동 삭제됩니다. 이후 편집 내용은 반영되지 않습니다. 최대 크기: {limit}.',
+  'share.create': '링크 만들기',
+  'share.access.label': '공유 방식',
+  'share.access.edit': '사본 편집 허용',
+  'share.access.editDescription': '편집 화면에서 캔버스를 수정하고 사본을 저장할 수 있습니다.',
+  'share.access.present': '슬라이드 쇼 전용',
+  'share.access.presentDescription': '편집 도구 없이 슬라이드 쇼로 바로 열립니다.',
+  'share.link': '공유 URL',
+  'share.copy': '링크 복사',
+  'share.copied': '링크를 복사했습니다.',
+  'share.copyFailed': '링크를 복사하지 못했습니다. URL을 선택하여 직접 복사해 주세요.',
+  'share.close': '닫기',
+  'share.retry': '다시 시도',
+  'share.uploading': '링크 만드는 중…',
+  'share.loading': '공유 캔버스 불러오는 중…',
+  'share.saveLocal': '{format} 파일 저장',
+  'share.fallback': '현재 캔버스를 로컬 {format} 파일로 저장하여 공유할 수 있습니다.',
+  'share.error.invalid':
+    '공유 링크 또는 문서가 올바르지 않습니다. 공유할 이미지는 문서에 포함되어 있어야 합니다.',
+  'share.error.tooLarge': '문서가 클라우드 공유의 최대 크기를 초과했습니다.',
+  'share.error.noFrames': '슬라이드 쇼로 공유하려면 프레젠테이션 프레임을 추가해 주세요.',
+  'share.error.quota':
+    '클라우드 공유의 요청 또는 저장 한도에 도달했습니다. 나중에 다시 시도해 주세요.',
+  'share.error.missing':
+    '공유 캔버스를 찾을 수 없거나 링크의 유효 기간인 24시간이 지났습니다. 새 링크는 반영되기까지 약 1분이 걸릴 수 있으니 잠시 후 다시 시도해 주세요.',
+  'share.error.unavailable':
+    '클라우드 공유를 사용할 수 없습니다. 앱에 공유 서비스가 설정되어 있지 않을 수 있습니다.',
+  'share.error.network':
+    '공유 서비스에 연결하지 못했습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.',
+  'share.error.changed':
+    '현재 캔버스가 변경되어 작업 내용을 유지했습니다. 새 창에서 공유 링크를 열어 주세요.',
+
   'edit.undo': '실행 취소',
   'edit.redo': '다시 실행',
 

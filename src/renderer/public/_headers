@@ -1,0 +1,4 @@
+/*
+  Content-Security-Policy: img-src 'self' data: blob: https://i.ytimg.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff

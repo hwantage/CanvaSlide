@@ -1,3 +1,4 @@
+import { readSavedDocument } from './saved-document'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -76,8 +77,8 @@ test('edits nested mixed-style text, undoes, saves and reopens it @webkit', asyn
   const download = await downloaded
   const saved = testInfo.outputPath('edited.canvaslide')
   await download.saveAs(saved)
-  const document = JSON.parse(readFileSync(saved, 'utf8'))
-  expect(document.elements[document.order.at(-1)].text).toBe('Clipped edit')
+  const document = readSavedDocument(readFileSync(saved))
+  expect(document.elements[document.order.at(-1)!]).toMatchObject({ text: 'Clipped edit' })
   await page.reload()
   const openChooser = page.waitForEvent('filechooser')
   await page.keyboard.press(`${primary}+o`)
@@ -203,10 +204,10 @@ test('local sample: imports all pages, edits nested text and reopens the saved d
   const download = await downloaded
   const saved = await download.path()
   expect(saved).toBeTruthy()
-  const doc = JSON.parse(readFileSync(saved!, 'utf8'))
+  const doc = readSavedDocument(readFileSync(saved!))
   expect(doc.version).toBe(2)
   expect(doc.order.length).toBeGreaterThan(1000)
-  expect(doc.elements[targetId!].text).toBe('규칙 수정')
+  expect(doc.elements[targetId!]).toMatchObject({ text: '규칙 수정' })
   const reopened = testInfo.outputPath('figma1-roundtrip.canvaslide')
   await download.saveAs(reopened)
   await page.reload()

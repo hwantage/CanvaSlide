@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { createEmptyDocument } from '@shared/canvas/element-types'
+import { encodeNativeDocumentFile } from '@/lib/document-file-codec'
+import { parseDocumentFile, serializeDocumentArchive } from '@shared/canvas/document-archive'
+import { base64ToBytes, bytesToBase64 } from '@shared/canvas/binary-data'
 import { serializeDocument } from '@shared/canvas/document-file'
 import { useDocumentCommands, useWindowTitle } from '@/hooks/use-document-commands'
 import { useDocumentStore } from '@/store/document-store'
@@ -16,6 +19,22 @@ const { invoke, listen, setTitle } = vi.hoisted(() => ({
 vi.mock('@tauri-apps/api/core', () => ({ invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen }))
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ setTitle }) }))
+vi.mock('@/lib/document-file-codec', async () => {
+  const codec = await import('@shared/canvas/document-archive')
+  const { parseDocument } = await import('@shared/canvas/document-file')
+  const { bytesToBase64, base64ToBytes } = await import('@shared/canvas/binary-data')
+  return {
+    encodeDocumentFile: vi.fn(codec.serializeDocumentArchive),
+    decodeDocumentFile: codec.parseDocumentFile,
+    encodeNativeDocumentFile: vi.fn(
+      (document) => `canvaslide-zip:${bytesToBase64(codec.serializeDocumentArchive(document))}`
+    ),
+    decodeNativeDocumentFile: (contents: string) =>
+      contents.startsWith('canvaslide-zip:')
+        ? codec.parseDocumentFile(base64ToBytes(contents.slice('canvaslide-zip:'.length)))
+        : parseDocument(contents)
+  }
+})
 vi.mock('./tauri-runtime', () => ({ isTauriRuntime: () => true }))
 vi.mock('@tauri-apps/plugin-dialog', () => ({ ask: () => true, message: vi.fn() }))
 
@@ -146,6 +165,52 @@ describe('native path transport', () => {
       contents: expect.any(String),
       normalizeExtension: false
     })
+    unmount()
+  })
+
+  it('opens a native archive transport with the original asset payloads', async () => {
+    const document = createEmptyDocument('Archive')
+    const packed = serializeDocumentArchive(document)
+    invoke.mockResolvedValue(`canvaslide-zip:${bytesToBase64(packed)}`)
+    expect((await openDocumentAtPath(native)).document).toEqual(document)
+  })
+
+  it('queues slow saves and uses the completed Save As path for the following save', async () => {
+    const document = createEmptyDocument('First snapshot')
+    useDocumentStore.getState().loadDocument(document, native)
+    let release!: () => void
+    vi.mocked(encodeNativeDocumentFile).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve(`canvaslide-zip:${bytesToBase64(serializeDocumentArchive(document))}`)
+        })
+    )
+    invoke.mockImplementation((command: string, args?: { path?: FilePath }) =>
+      Promise.resolve(command === 'pick_document_save_path' ? windows : args?.path)
+    )
+    const { result, unmount } = renderHook(() => useDocumentCommands())
+    await act(async () => {
+      const first = result.current.saveDocumentAs()
+      await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+      useDocumentStore.getState().renameDocument('Second snapshot')
+      const second = result.current.saveDocument()
+      expect(invoke.mock.calls.filter(([command]) => command === 'write_document')).toHaveLength(0)
+      release()
+      await Promise.all([first, second])
+    })
+    const writes = invoke.mock.calls
+      .filter(([command]) => command === 'write_document')
+      .map(([, args]) => args)
+    expect(writes.map((args) => [args.path, args.normalizeExtension])).toEqual([
+      [windows, true],
+      [windows, false]
+    ])
+    const last = parseDocumentFile(
+      base64ToBytes(writes[1].contents.slice('canvaslide-zip:'.length))
+    )
+    expect(last.ok && last.document.name).toBe('Second snapshot')
+    expect(useDocumentStore.getState().dirty).toBe(false)
     unmount()
   })
 

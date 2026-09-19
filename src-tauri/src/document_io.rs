@@ -1,11 +1,18 @@
-//! Canvas document file IO. Validation of the JSON shape lives in the frontend (zod);
-//! here we only guarantee the bytes are well-formed JSON and the extension is ours.
+//! Canvas document IO. The frontend validates document schemas and shared ZIP resources.
+//! Native IO preserves bytes and paths and writes atomically.
 
+use std::io::Read;
 use std::path::{Path, PathBuf};
+
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use serde::Serialize;
 
 use crate::file_path::FilePath;
+
+const ARCHIVE_TRANSPORT_PREFIX: &str = "canvaslide-zip:";
+const MAX_DOCUMENT_BYTES: usize = 256 * 1024 * 1024;
+const MAX_LEGACY_DOCUMENT_BYTES: usize = 512 * 1024 * 1024;
 
 pub const DOCUMENT_EXTENSION: &str = "canvaslide";
 /// Documents written before the single-extension move. They open and save in place; only the save
@@ -20,6 +27,10 @@ pub enum DocumentIoError {
     InvalidExtension(PathBuf),
     #[error("document is not valid JSON: {0}")]
     InvalidJson(String),
+    #[error("invalid document archive: {0}")]
+    InvalidArchive(String),
+    #[error("document exceeds file size limit")]
+    TooLarge,
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -77,14 +88,69 @@ pub fn normalize_document_path(path: &Path) -> PathBuf {
     path.with_file_name(name)
 }
 
+fn validate_document_bytes(bytes: &[u8]) -> Result<(), DocumentIoError> {
+    let archive = bytes.starts_with(b"PK\x03\x04");
+    let limit = if archive {
+        MAX_DOCUMENT_BYTES
+    } else {
+        MAX_LEGACY_DOCUMENT_BYTES
+    };
+    if bytes.len() > limit {
+        return Err(DocumentIoError::TooLarge);
+    }
+    if archive {
+        // ZIP contents and expansion limits are checked in the shared frontend reader.
+        if bytes.len() < 22 || !bytes[bytes.len() - 22..].starts_with(b"PK\x05\x06") {
+            return Err(DocumentIoError::InvalidArchive(
+                "missing ZIP end record".into(),
+            ));
+        }
+    } else {
+        serde_json::from_slice::<serde_json::Value>(bytes)
+            .map_err(|e| DocumentIoError::InvalidJson(e.to_string()))?;
+    }
+    Ok(())
+}
+
+fn read_document_bytes(
+    mut reader: impl Read,
+    archive_limit: usize,
+    legacy_limit: usize,
+) -> Result<Vec<u8>, DocumentIoError> {
+    let mut bytes = Vec::new();
+    (&mut reader).take(4).read_to_end(&mut bytes)?;
+    let limit = if bytes.starts_with(b"PK\x03\x04") {
+        archive_limit
+    } else {
+        legacy_limit
+    };
+    reader
+        .take((limit.saturating_sub(bytes.len()) + 1) as u64)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > limit {
+        return Err(DocumentIoError::TooLarge);
+    }
+    Ok(bytes)
+}
+
 pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
     if !is_openable_document(path) {
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
     }
-    let contents = std::fs::read_to_string(path)?;
-    serde_json::from_str::<serde_json::Value>(&contents)
-        .map_err(|e| DocumentIoError::InvalidJson(e.to_string()))?;
-    Ok(contents)
+    let bytes = read_document_bytes(
+        std::fs::File::open(path)?,
+        MAX_DOCUMENT_BYTES,
+        MAX_LEGACY_DOCUMENT_BYTES,
+    )?;
+    validate_document_bytes(&bytes)?;
+    if bytes.starts_with(b"PK\x03\x04") {
+        Ok(format!(
+            "{ARCHIVE_TRANSPORT_PREFIX}{}",
+            STANDARD.encode(&bytes)
+        ))
+    } else {
+        String::from_utf8(bytes).map_err(|e| DocumentIoError::InvalidJson(e.to_string()))
+    }
 }
 
 /// `normalize_extension` is set only for a name the user just picked in the save dialog. A silent
@@ -96,8 +162,17 @@ pub fn write_document_file(
     contents: &str,
     normalize_extension: bool,
 ) -> Result<PathBuf, DocumentIoError> {
-    serde_json::from_str::<serde_json::Value>(contents)
-        .map_err(|e| DocumentIoError::InvalidJson(e.to_string()))?;
+    let bytes = if let Some(encoded) = contents.strip_prefix(ARCHIVE_TRANSPORT_PREFIX) {
+        if encoded.len() > MAX_DOCUMENT_BYTES.div_ceil(3) * 4 {
+            return Err(DocumentIoError::TooLarge);
+        }
+        STANDARD
+            .decode(encoded)
+            .map_err(|e| DocumentIoError::InvalidArchive(e.to_string()))?
+    } else {
+        contents.as_bytes().to_vec()
+    };
+    validate_document_bytes(&bytes)?;
     let target = if normalize_extension {
         normalize_document_path(path)
     } else if is_openable_document(path) {
@@ -112,7 +187,7 @@ pub fn write_document_file(
     let mut tmp = target.clone().into_os_string();
     tmp.push(".tmp");
     let tmp = PathBuf::from(tmp);
-    std::fs::write(&tmp, contents)?;
+    std::fs::write(&tmp, &bytes)?;
     std::fs::rename(&tmp, &target)?;
     Ok(target)
 }
@@ -303,3 +378,7 @@ mod tests {
 #[cfg(test)]
 #[path = "document_path_tests.rs"]
 mod path_tests;
+
+#[cfg(test)]
+#[path = "document_archive_tests.rs"]
+mod archive_tests;

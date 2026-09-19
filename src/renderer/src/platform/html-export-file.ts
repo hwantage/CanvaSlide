@@ -1,4 +1,4 @@
-import { downloadTextFile } from './browser-download'
+import { downloadFile } from './browser-download'
 import { isTauriRuntime } from './tauri-runtime'
 
 const HTML_FILTER = { name: 'HTML presentation', extensions: ['html'] }
@@ -6,7 +6,7 @@ const HTML_FILTER = { name: 'HTML presentation', extensions: ['html'] }
 /** Saves the standalone page; returns the path (Tauri) or null when cancelled. */
 export async function saveHtmlExport(html: string, suggestedName: string): Promise<string | null> {
   if (!isTauriRuntime()) {
-    downloadTextFile(html, suggestedName, 'text/html')
+    downloadFile(html, suggestedName, 'text/html')
     return null
   }
   const [{ save }, { invoke }] = await Promise.all([

@@ -2,6 +2,38 @@ import type { UiStrings } from '../ui-strings'
 
 // Terms follow the Korean editions of Figma / PowerPoint / Keynote where a standard exists.
 export const ko: UiStrings = {
+  'video.thumbnail': '{provider} 동영상 미리 보기',
+  'video.autoplay': '슬라이드 쇼에서 자동 재생',
+  'video.exportLinked':
+    '연결된 동영상에는 인터넷이 필요합니다. 내보내는 파일에 영상 데이터는 포함되지 않습니다.',
+  'video.exportYouTube':
+    '{provider} 영상을 재생하려면 이 {format}을 디스크에서 직접 여는 대신 {protocol} 웹 주소로 열어야 합니다.',
+  'element.video': '동영상',
+  'video.insert': '동영상 링크 삽입',
+  'video.edit': '동영상 링크 편집',
+  'video.url': '동영상 URL',
+  'video.support': '{providers} 또는 직접 동영상 URL({formats}). 링크만 저장합니다.',
+  'video.policy':
+    '슬라이드 쇼에서는 음소거로 시작합니다. 연결된 영상에는 인터넷이 필요하며 브라우저 코덱과 원본의 삽입 허용 여부에 따라 재생이 제한될 수 있습니다.',
+  'video.invalid': '올바른 http 또는 https 동영상 URL을 입력하세요.',
+  'video.cancel': '취소',
+  'video.save': '링크 저장',
+  'video.play': '동영상 재생',
+  'video.pause': '동영상 일시 중지',
+  'video.resume': '동영상 재개',
+  'video.expand': '동영상 확대 보기',
+  'video.collapse': '이전 보기로 돌아가기',
+  'video.sound': '소리 켜기',
+  'video.mute': '음소거',
+  'video.loading': '동영상 불러오는 중…',
+  'video.blocked': '동영상의 재생 버튼을 눌러 시작하세요.',
+  'video.error':
+    '동영상을 재생할 수 없습니다. 링크, 연결 상태, 형식 또는 삽입 허용 여부를 확인하세요.',
+  'video.retry': '다시 시도',
+  'video.open': '원본 열기',
+  'video.linked': '연결된 동영상',
+  'video.autoplayLimit': '이 공급자의 추가 영상은 직접 재생합니다.',
+
   'tool.select': '선택',
   'tool.hand': '손 (이동)',
   'tool.text': '텍스트',

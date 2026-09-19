@@ -5,6 +5,7 @@ import { collectFontUsage, embeddedFontBytes, fontFaceCss } from '@shared/canvas
 import { buildStandaloneHtml, estimateHtmlBytes, formatBytes } from '@shared/canvas/html-export'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import { parseVideoSource } from '@shared/canvas/video-source'
 import { ModalDialog } from '@/components/ui/modal-dialog'
 import { TextButton } from '@/components/ui/text-button'
 import playerScript from '@/generated/player.iife.js?raw'
@@ -95,6 +96,10 @@ export function ExportDialog() {
       : null
   const frameCount = orderedFrames(document).length
   const assetCount = Object.keys(document.assets).length
+  const videos = Object.values(document.elements).filter((element) => element.type === 'video')
+  const hasYouTube = videos.some(
+    (video) => parseVideoSource(video.url, true)?.provider === 'youtube'
+  )
 
   const save = async () => {
     if (!preview) {
@@ -121,6 +126,14 @@ export function ExportDialog() {
           bytes: formatBytes(assetsByteLength(document))
         })}
       </p>
+      {videos.length > 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">{t('video.exportLinked')}</p>
+      )}
+      {hasYouTube && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t('video.exportYouTube', { provider: 'YouTube', format: 'HTML', protocol: 'HTTP(S)' })}
+        </p>
+      )}
       <fieldset className="mt-3 flex flex-col gap-1.5">
         <legend className="mb-1 text-xs font-medium">{t('export.imageQuality')}</legend>
         {exportQualities.map((value) => (

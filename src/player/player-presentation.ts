@@ -1,3 +1,4 @@
+import { createVideoFocus } from '@shared/canvas/video-focus'
 import { createCameraAnimator } from '@shared/canvas/camera-animator'
 import { worldLayerCssTransform } from '@shared/canvas/camera-transform'
 import { zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'
@@ -16,6 +17,7 @@ import {
 } from '@shared/canvas/presentation-shot'
 import { orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
 import type { FrameNode } from './player-dom'
+import { createPlayerVideos } from './player-video'
 
 type Mount = {
   viewport: HTMLElement
@@ -30,6 +32,7 @@ type Mount = {
 /** Slideshow controller for the standalone player: same math and timings as the app. */
 export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
   const frames = orderedFrames(doc)
+  let flight = 0
   let camera: Camera = { x: 0, y: 0, zoom: 1 }
   let index = 0
   let overview = false
@@ -88,6 +91,22 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
     getViewport: viewportSize
   })
 
+  const videoFocus = createVideoFocus({
+    getView: () => ({ camera, shot }),
+    setView: (view) => {
+      animator.cancel()
+      camera = view.camera
+      shot = view.shot
+      paint()
+    },
+    getRect: (id) => {
+      const element = doc.elements[id]
+      return element?.type === 'video' ? element : null
+    },
+    getViewport: viewportSize
+  })
+  const videos = createPlayerVideos(doc, mount.zoomLayer, videoFocus)
+
   const notify = () => {
     mount.viewport.classList.toggle('uc-overview', overview)
     mount.frameNodes.forEach(({ node, index: i }) =>
@@ -103,10 +122,16 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
     if (!at) {
       return
     }
+    const token = ++flight
     animator.animateTo(shotCamera(at, viewportSize()), durationMs ?? at.motion.ms, {
       rho: at.motion.arc,
       easing: at.motion.easing,
-      onProgress: shotProgress(frameShot(at))
+      onProgress: shotProgress(frameShot(at)),
+      onDone: () => {
+        if (token === flight && !overview) {
+          videos.show(frames[i]?.id ?? null)
+        }
+      }
     })
   }
 
@@ -125,6 +150,9 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
     goTo: (i: number) => {
       if (i < 0 || i >= frames.length) {
         return
+      }
+      if (i !== index || overview) {
+        videos.show(null)
       }
       index = i
       overview = false
@@ -146,6 +174,8 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
         return
       }
       overview = true
+      flight++
+      videos.show(null)
       notify()
       // Why: the overview is level and lit, and the hole fades where it stands.
       animator.animateTo(target, doc.settings.transitionMs, {
@@ -171,6 +201,9 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
       flyToFrame(0, 0)
     },
     refit: () => {
+      if (videoFocus.refit()) {
+        return
+      }
       if (overview) {
         api.showOverview()
       } else if (frames.length > 0) {

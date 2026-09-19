@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { cameraEasings, DEFAULT_CAMERA_EASING } from './camera-easing'
+import { parseVideoSource } from './video-source'
 
 /** van Wijk ρ bounds. √2 is the paper's optimum and stays the default. */
 export const MIN_CAMERA_ARC = 0.6
@@ -101,6 +102,13 @@ export const imageElementSchema = elementBaseSchema.extend({
 })
 export type ImageElement = z.infer<typeof imageElementSchema>
 
+export const videoElementSchema = elementBaseSchema.extend({
+  type: z.literal('video'),
+  url: z.string().refine((url) => parseVideoSource(url, true) !== null),
+  autoplay: z.boolean().optional()
+})
+export type VideoElement = z.infer<typeof videoElementSchema>
+
 /** v1 stored the data URL inline on every image element. Kept only for migration. */
 export const legacyImageElementV1Schema = elementBaseSchema.extend({
   type: z.literal('image'),
@@ -181,6 +189,7 @@ export const canvasElementSchema = z.discriminatedUnion('type', [
   shapeElementSchema,
   textElementSchema,
   imageElementSchema,
+  videoElementSchema,
   frameElementSchema,
   connectorElementSchema
 ])

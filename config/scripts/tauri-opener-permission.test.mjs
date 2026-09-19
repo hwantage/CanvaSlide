@@ -6,7 +6,7 @@ const capability = JSON.parse(
   readFileSync(new URL('../../src-tauri/capabilities/default.json', import.meta.url), 'utf8')
 )
 
-test('the main window can open only the release page with the default application', () => {
+test('the main window can open web links but has no file or shell opener permission', () => {
   assert.ok(capability.windows.includes('main'))
   const openerPermissions = capability.permissions.filter((permission) =>
     (typeof permission === 'string' ? permission : permission.identifier).startsWith('opener:')
@@ -14,7 +14,7 @@ test('the main window can open only the release page with the default applicatio
   assert.deepEqual(openerPermissions, [
     {
       identifier: 'opener:allow-open-url',
-      allow: [{ url: 'https://github.com/hwantage/CanvaSlide/releases' }]
+      allow: [{ url: 'https://*' }, { url: 'http://*' }]
     }
   ])
 })

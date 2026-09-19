@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { VideoUrlDialog } from './video-url-dialog'
 import {
   BringToFront,
   ChevronDown,
@@ -32,6 +34,7 @@ function firstOfType<T extends CanvasElement['type']>(
 }
 
 export function PropertiesPanel() {
+  const [videoDialog, setVideoDialog] = useState(false)
   const document = useDocumentStore(selectDocument)
   const selectedIds = useDocumentStore(selectSelectedIds)
   const elements = selectedIds.flatMap((id) => document.elements[id] ?? [])
@@ -81,6 +84,31 @@ export function PropertiesPanel() {
             onChange={(height) => store.patchElements([first.id], { height })}
           />
         </FieldRow>
+      )}
+      {first.type === 'video' && elements.length === 1 && (
+        <>
+          <label className="my-1 flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-xs">
+            <input
+              type="checkbox"
+              className="size-3.5 accent-primary"
+              checked={first.autoplay !== false}
+              onChange={(event) =>
+                store.patchElements([first.id], { autoplay: event.target.checked })
+              }
+            />
+            {t('video.autoplay')}
+          </label>
+          <TextButton onClick={() => setVideoDialog(true)}>{t('video.edit')}</TextButton>
+          <p className="break-all px-1 text-xs text-muted-foreground">{first.url}</p>
+          {videoDialog && (
+            <VideoUrlDialog
+              key={first.id}
+              elementId={first.id}
+              initialUrl={first.url}
+              onClose={() => setVideoDialog(false)}
+            />
+          )}
+        </>
       )}
       {onlyFrames && <FrameTransitionFields frameIds={selectedIds} />}
       {!onlyFrames && <AlignmentToolbar count={elements.length} />}

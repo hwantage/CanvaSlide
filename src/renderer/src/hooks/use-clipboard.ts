@@ -22,14 +22,20 @@ function findPdfFile(data: DataTransfer | null): File | null {
 }
 
 function ignoring(event: ClipboardEvent): boolean {
-  return isEditableTarget(event.target) || usePresentationStore.getState().active
+  return (
+    isEditableTarget(event.target) ||
+    usePresentationStore.getState().active ||
+    document.querySelector('dialog[open]') !== null
+  )
 }
 
 /** Native copy/cut/paste events: objects first (our JSON), then images, then plain text. */
 export function useClipboard(): void {
   useEffect(() => {
     // Why: ⌘V without a `paste` event (WKWebView) falls back to the OS clipboard, not just memory.
-    setKeyboardPasteFallback((target) => void pasteFromSystemClipboard(undefined, target))
+    setKeyboardPasteFallback(
+      (target, valid) => void pasteFromSystemClipboard(undefined, target, valid)
+    )
     const onCopy = (event: ClipboardEvent, cut: boolean) => {
       if (ignoring(event)) {
         return

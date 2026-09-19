@@ -9,6 +9,8 @@ import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/doc
 import { usePresentationStore } from '@/store/presentation-store'
 import { selectEditingTextId, useToolStore } from '@/store/tool-store'
 import { ElementView } from './element-view'
+import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import { autoplayVideoIds, frameVideos } from '@shared/canvas/video-playback'
 
 const COMPOSITE_VECTOR_COUNT = 256
 
@@ -18,6 +20,16 @@ export function WorldLayer() {
   const previewing = usePresentationStore((s) => s.previewFrameId !== null)
   const flightZoom = useCameraStore((s) => (previewing ? s.flightZoom : null))
   const document = useDocumentStore(selectDocument)
+  const session = useDocumentStore((s) => s.session)
+  const active = usePresentationStore((s) => s.active)
+  const overview = usePresentationStore((s) => s.overview)
+  const index = usePresentationStore((s) => s.index)
+  const animating = useCameraStore((s) => s.animationActive)
+  const frameId =
+    active && !previewing && !overview ? (orderedFrames(document)[index]?.id ?? null) : null
+  const videos = useMemo(() => frameVideos(document, frameId), [document, frameId])
+  const autoplayIds = useMemo(() => new Set(autoplayVideoIds(videos)), [videos])
+  const memberIds = useMemo(() => new Set(videos.map((video) => video.id)), [videos])
   const selectedIds = useDocumentStore(selectSelectedIds)
   const editingTextId = useToolStore(selectEditingTextId)
   const compositeVectors = useMemo(
@@ -61,10 +73,23 @@ export function WorldLayer() {
     }
     return (
       <ElementView
-        key={id}
+        key={
+          element.type === 'video'
+            ? `${session}:${id}:${active ? (frameId ?? 'passive') : 'editor'}`
+            : id
+        }
         element={element}
         editing={editingTextId === id}
         selected={selectedIds.includes(id)}
+        videoMode={
+          !active
+            ? 'editor'
+            : animating || !memberIds.has(id)
+              ? 'passive'
+              : autoplayIds.has(id)
+                ? 'auto'
+                : 'manual'
+        }
         layoutScale={
           element.type === 'image' ? imageLayoutScale(element, baseZoom, flightZoom ?? baseZoom) : 1
         }

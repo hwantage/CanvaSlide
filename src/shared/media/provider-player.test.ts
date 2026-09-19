@@ -95,3 +95,46 @@ it('honors Vimeo pause before readiness and never starts a disposed player', asy
   player!.destroy()
   expect(destroy).toHaveBeenCalledTimes(2)
 })
+
+it.each([false, true])('removes YouTube even if SDK teardown throws (ready: %s)', async (ready) => {
+  const iframe = document.createElement('iframe')
+  document.body.append(iframe)
+  const target = {
+    mute: vi.fn(),
+    unMute: vi.fn(),
+    playVideo: vi.fn(),
+    pauseVideo: vi.fn(),
+    destroy: vi.fn(() => {
+      throw new Error('SDK teardown failed')
+    })
+  }
+  let onReady!: () => void
+  vi.stubGlobal('YT', {
+    Player: class {
+      constructor(
+        _: unknown,
+        options: { events: { onReady: (event: { target: typeof target }) => void } }
+      ) {
+        onReady = () => options.events.onReady({ target })
+        return target
+      }
+    }
+  })
+  const player = await attachProviderPlayer(
+    iframe,
+    parseVideoSource('https://youtu.be/M7lc1UVf-VE')!,
+    true,
+    () => true,
+    vi.fn()
+  )
+  try {
+    if (ready) {
+      onReady()
+    }
+    expect(() => player!.destroy()).not.toThrow()
+    expect(target.destroy).toHaveBeenCalledOnce()
+    expect(iframe.isConnected).toBe(false)
+  } finally {
+    iframe.remove()
+  }
+})

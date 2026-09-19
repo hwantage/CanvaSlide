@@ -167,7 +167,14 @@ export async function attachProviderPlayer(
           }
         }
       },
-      destroy: () => player.destroy()
+      destroy: () => {
+        try {
+          player.destroy()
+        } catch {
+          // Removing the browsing context stops playback even when SDK teardown fails.
+          iframe.remove()
+        }
+      }
     }
   }
   const player = new (providerWindow().Vimeo!.Player)(iframe)

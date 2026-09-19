@@ -6,9 +6,11 @@ import { useCameraStore } from '@/store/camera-store'
 import { insertClipboardText, pasteFromSystemClipboard } from './external-content'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { readVideoAspectRatio } from './video-metadata'
+import { decodeImageFile } from './clipboard-image'
 import { VIDEO_CHROME_HEIGHT } from '@shared/canvas/video-placement'
 
 vi.mock('./video-metadata', () => ({ readVideoAspectRatio: vi.fn(async () => null) }))
+vi.mock('./clipboard-image', () => ({ decodeImageFile: vi.fn() }))
 
 vi.mock('@/platform/native-clipboard', () => ({
   readNativeClipboardImage: vi.fn(async () => null),
@@ -81,6 +83,43 @@ it('drops a late native read after the DOM paste owns the gesture or the documen
   await pasteFromSystemClipboard()
   expect(useDocumentStore.getState().document.order).toHaveLength(0)
 })
+
+it.each(['new', 'open', 'superseded', 'current'] as const)(
+  'rechecks a decoded native image before insertion when the paste is %s',
+  async (action) => {
+    let resolve!: (image: { src: string; width: number; height: number }) => void
+    vi.mocked(readNativeClipboardImage).mockResolvedValueOnce(
+      new File([], 'clipboard.png', { type: 'image/png' })
+    )
+    vi.mocked(decodeImageFile).mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done
+      })
+    )
+    let valid = true
+    const pending = pasteFromSystemClipboard(undefined, null, () => valid)
+    await vi.waitFor(() => expect(decodeImageFile).toHaveBeenCalledOnce())
+    if (action === 'new') {
+      useDocumentStore.getState().newDocument()
+    } else if (action === 'open') {
+      useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
+    } else if (action === 'superseded') {
+      valid = false
+    }
+    const before = useDocumentStore.getState()
+    resolve({ src: 'data:image/png;base64,aGVsbG8=', width: 10, height: 10 })
+    await pending
+    const after = useDocumentStore.getState()
+    if (action === 'current') {
+      expect(after.document.order).toHaveLength(1)
+      expect(Object.keys(after.document.assets)).toHaveLength(1)
+      after.undo()
+      expect(useDocumentStore.getState().document).toEqual(before.document)
+    } else {
+      expect(after).toBe(before)
+    }
+  }
+)
 
 it('amends the initial size from metadata as one undo step and preserves the paste centre', async () => {
   vi.mocked(readVideoAspectRatio).mockResolvedValueOnce(9 / 16)

@@ -30,8 +30,15 @@ function landingBox(at?: Point): Rect {
   return { x: center.x - width / 2, y: center.y - height / 2, width, height }
 }
 
-export async function insertImageFile(file: File, at?: Point): Promise<void> {
+export async function insertImageFile(
+  file: File,
+  at?: Point,
+  valid: () => boolean = () => true
+): Promise<void> {
   const decoded = await decodeImageFile(file)
+  if (!valid()) {
+    return
+  }
   const asset = createImageAsset(decoded.src, decoded.width, decoded.height)
   const document = useDocumentStore.getState().document
   const rect = cascadeRect(placeImageRect(decoded, landingBox(at)), document)
@@ -180,7 +187,7 @@ export async function pasteFromSystemClipboard(
     return
   }
   if (image) {
-    await insertImageFile(image, at)
+    await insertImageFile(image, at, current)
     return
   }
   let text = await readNativeClipboardText()

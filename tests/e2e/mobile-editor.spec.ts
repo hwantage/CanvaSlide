@@ -239,34 +239,58 @@ test.describe('compact editor', () => {
     await page.goto('/')
     const client = await page.context().newCDPSession(page)
     const drag = async (from: [number, number], to: [number, number]) => {
-      const point = (x: number, y: number) => [{ x, y, id: 1 }]
-      await client.send('Input.dispatchTouchEvent', {
-        type: 'touchStart',
-        touchPoints: point(...from)
+      const movement = await page.evaluateHandle(() => {
+        const points: { start?: [number, number]; end?: [number, number] } = {}
+        window.addEventListener(
+          'pointerdown',
+          (event) => (points.start = [event.clientX, event.clientY]),
+          { once: true, capture: true }
+        )
+        window.addEventListener(
+          'pointerup',
+          (event) => (points.end = [event.clientX, event.clientY]),
+          { once: true, capture: true }
+        )
+        return points
       })
-      for (let step = 1; step <= 8; step++) {
-        await client.send('Input.dispatchTouchEvent', {
-          type: 'touchMove',
-          touchPoints: point(
-            from[0] + ((to[0] - from[0]) * step) / 8,
-            from[1] + ((to[1] - from[1]) * step) / 8
-          )
-        })
-      }
-      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      // Queued native gestures keep Linux Chromium's next tap from losing its click.
+      await client.send('Input.synthesizeScrollGesture', {
+        x: from[0],
+        y: from[1],
+        xDistance: to[0] - from[0],
+        yDistance: to[1] - from[1],
+        gestureSourceType: 'touch',
+        preventFling: true
+      })
+      const { start, end } = await movement.jsonValue()
+      await movement.dispose()
+      expect(start).toBeDefined()
+      expect(end).toBeDefined()
+      // Chromium adds touch slop; verify geometry against the delivered pointer movement.
+      return { x: end![0] - start![0], y: end![1] - start![1] }
     }
     await page.getByRole('button', { name: 'Rectangle (R)', exact: true }).tap()
-    await drag([70, 240], [270, 380])
+    const drawnBy = await drag([70, 240], [270, 380])
     const shape = page.locator('[data-element-type="shape"]')
     await expect(shape).toHaveCount(1)
+    const drawn = (await shape.boundingBox())!
+    expect(drawnBy.x).toBeGreaterThanOrEqual(200)
+    expect(drawnBy.y).toBeGreaterThanOrEqual(140)
+    expect(drawn.width).toBeCloseTo(drawnBy.x, 0)
+    expect(drawn.height).toBeCloseTo(drawnBy.y, 0)
     await page.getByRole('button', { name: /^Undo/ }).tap()
     await expect(shape).toHaveCount(0)
     await page.getByRole('button', { name: /^Redo/ }).tap()
     await expect(shape).toHaveCount(1)
     const before = (await shape.boundingBox())!
     await page.getByRole('button', { name: 'Hand (pan) (H)', exact: true }).tap()
-    await drag([100, 450], [150, 500])
-    await expect.poll(async () => (await shape.boundingBox())!.x).toBeCloseTo(before.x + 50, 0)
+    const pannedBy = await drag([100, 450], [150, 500])
+    await expect
+      .poll(async () => (await shape.boundingBox())!.x)
+      .toBeCloseTo(before.x + pannedBy.x, 0)
+    await expect
+      .poll(async () => (await shape.boundingBox())!.y)
+      .toBeCloseTo(before.y + pannedBy.y, 0)
     await page.getByRole('button', { name: /Zoom in/ }).tap()
     await expect(page.getByTestId('zoom-level')).not.toHaveText('100%')
     for (const name of ['Save', 'Save as…']) {

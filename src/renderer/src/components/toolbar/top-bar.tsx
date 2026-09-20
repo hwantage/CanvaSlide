@@ -171,6 +171,21 @@ export function TopBar({
           </span>
         )}
       </div>
+      {compact && (
+        <IconButton
+          label={t('present.start')}
+          aria-pressed={undefined}
+          disabled={frameCount === 0}
+          title={
+            frameCount === 0
+              ? t('present.needsFrame')
+              : `${t('present.start')} (${shortcutLabel('⏎')})`
+          }
+          onClick={() => start(0)}
+        >
+          <Play size={18} fill="currentColor" aria-hidden />
+        </IconButton>
+      )}
       {compact ? (
         <ActionMenu
           label={t('menu.actions')}
@@ -190,12 +205,6 @@ export function TopBar({
               onSelect: showAbout
             },
             { label: t('settings.title'), icon: <Settings size={16} />, onSelect: showSettings },
-            {
-              label: t('present.start'),
-              icon: <Play size={16} />,
-              onSelect: () => start(0),
-              disabled: frameCount === 0
-            },
             { label: t('share.button'), icon: <Share2 size={16} />, onSelect: showShare }
           ]}
         />

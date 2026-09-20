@@ -18,15 +18,15 @@ afterEach(() => {
 const at = (zoom: number) => ({ x: 0, y: 0, zoom })
 
 describe('settled layout zoom', () => {
-  it('preserves a preview hold layout independently of the compositing threshold', () => {
+  it('preserves a preview hold layout independently of the density threshold', () => {
     vi.useFakeTimers()
     usePresentationStore.setState({ active: true, previewFrameId: 'preview' })
     useCameraStore.setState({ camera: at(4), stationaryCamera: at(8) })
-    const { result, rerender } = renderHook(({ composited }) => useSettledZoom(composited), {
-      initialProps: { composited: true }
+    const { result, rerender } = renderHook(({ denseVectors }) => useSettledZoom(denseVectors), {
+      initialProps: { denseVectors: true }
     })
     expect(result.current).toBe(8)
-    rerender({ composited: false })
+    rerender({ denseVectors: false })
     expect(result.current).toBe(8)
     act(() => useCameraStore.setState({ stationaryCamera: null }))
     expect(result.current).toBe(4)
@@ -46,11 +46,11 @@ describe('settled layout zoom', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('keeps the editor layout and pending settle when the document crosses the compositing threshold', () => {
+  it('keeps the editor layout and pending settle when the document crosses the density threshold', () => {
     vi.useFakeTimers()
     useCameraStore.setState({ camera: at(4) })
-    const { result, rerender } = renderHook(({ composited }) => useSettledZoom(composited), {
-      initialProps: { composited: true }
+    const { result, rerender } = renderHook(({ denseVectors }) => useSettledZoom(denseVectors), {
+      initialProps: { denseVectors: true }
     })
     expect(result.current).toBe(4)
     act(() => useCameraStore.setState({ camera: at(2) }))
@@ -58,11 +58,11 @@ describe('settled layout zoom', () => {
     expect(result.current).toBe(4)
     act(() => vi.advanceTimersByTime(1))
     expect(result.current).toBe(2)
-    rerender({ composited: false })
+    rerender({ denseVectors: false })
     expect(result.current).toBe(2)
     act(() => useCameraStore.setState({ camera: at(3) }))
     act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS - 1))
-    rerender({ composited: true })
+    rerender({ denseVectors: true })
     expect(result.current).toBe(2)
     act(() => vi.advanceTimersByTime(1))
     expect(result.current).toBe(3)
@@ -84,12 +84,12 @@ describe('settled layout zoom', () => {
   })
 
   it.each([false, true])(
-    'settles a preview immediately on landing (composited=%s)',
-    (composited) => {
+    'settles a preview immediately on landing (denseVectors=%s)',
+    (denseVectors) => {
       vi.useFakeTimers()
       const isAnimating = vi.fn(() => false)
       useCameraStore.setState({ camera: at(1), isAnimating })
-      const { result } = renderHook(() => useSettledZoom(composited))
+      const { result } = renderHook(() => useSettledZoom(denseVectors))
       act(() => usePresentationStore.setState({ active: true, previewFrameId: 'preview' }))
       isAnimating.mockReturnValue(true)
       act(() => useCameraStore.setState({ animationActive: true, animationTarget: at(2.4) }))
@@ -106,11 +106,11 @@ describe('settled layout zoom', () => {
   )
 })
 
-describe.each([false, true])('editor settled layout zoom (composited=%s)', (composited) => {
+describe.each([false, true])('editor settled layout zoom (denseVectors=%s)', (denseVectors) => {
   it('debounces wheel and pinch updates until the latest zoom has held still', () => {
     vi.useFakeTimers()
     useCameraStore.setState({ camera: at(1.6) })
-    const { result } = renderHook(() => useSettledZoom(composited))
+    const { result } = renderHook(() => useSettledZoom(denseVectors))
     expect(result.current).toBe(1.6)
     for (const zoom of [2, 2.4, 1.8]) {
       act(() => useCameraStore.setState({ camera: at(zoom) }))
@@ -126,7 +126,7 @@ describe.each([false, true])('editor settled layout zoom (composited=%s)', (comp
     vi.useFakeTimers()
     const isAnimating = vi.fn(() => true)
     useCameraStore.setState({ camera: at(8), isAnimating })
-    const { result } = renderHook(() => useSettledZoom(composited))
+    const { result } = renderHook(() => useSettledZoom(denseVectors))
     act(() => useCameraStore.setState({ camera: at(2) }))
     act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS * 5))
     expect(result.current).toBe(8)
@@ -139,7 +139,7 @@ describe.each([false, true])('editor settled layout zoom (composited=%s)', (comp
     vi.useFakeTimers()
     const isAnimating = vi.fn(() => true)
     useCameraStore.setState({ camera: at(1.174), isAnimating })
-    const { result } = renderHook(() => useSettledZoom(composited))
+    const { result } = renderHook(() => useSettledZoom(denseVectors))
     expect(result.current).toBe(1.174)
     // Same-scale hop: nothing changes at departure, nothing at arrival.
     act(() =>
@@ -174,7 +174,7 @@ describe.each([false, true])('editor settled layout zoom (composited=%s)', (comp
   it('keeps the font-size floor and cleans up a pending timer', () => {
     vi.useFakeTimers()
     useCameraStore.setState({ camera: at(4) })
-    const { result, unmount } = renderHook(() => useSettledZoom(composited))
+    const { result, unmount } = renderHook(() => useSettledZoom(denseVectors))
     act(() => useCameraStore.setState({ camera: at(0.02) }))
     act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
     expect(result.current).toBe(1)

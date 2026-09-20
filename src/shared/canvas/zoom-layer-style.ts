@@ -1,5 +1,13 @@
 export type ZoomLayerCssStyle = { zoom: number; fontOpticalSizing: 'auto' | 'none' }
 
+function isBlink(userAgent: string): boolean {
+  return /Chrome|Chromium|Edg\//.test(userAgent)
+}
+
+function isWebKit(userAgent: string): boolean {
+  return /AppleWebKit/.test(userAgent) && !isBlink(userAgent)
+}
+
 /**
  * Whether the engine sizes the system font's optical design and tracking from the laid-out
  * (zoomed) font size. WebKit does: 11px text scaled 4× on the compositor is up to 14% wider than
@@ -7,7 +15,25 @@ export type ZoomLayerCssStyle = { zoom: number; fontOpticalSizing: 'auto' | 'non
  * can still produce small metric differences when a composited world changes layout zoom.
  */
 export function textMetricsFollowLayoutZoom(userAgent: string): boolean {
-  return /AppleWebKit/.test(userAgent) && !/Chrome|Chromium|Edg\//.test(userAgent)
+  return isWebKit(userAgent)
+}
+
+export function worldLayerWillChange({
+  denseVectors,
+  presenting,
+  previewing,
+  userAgent
+}: {
+  denseVectors: boolean
+  presenting: boolean
+  previewing: boolean
+  userAgent: string
+}): 'transform' | 'auto' {
+  // Avoid re-promoting Blink worlds on exit; leave other engines' dense-world policy intact.
+  if (!denseVectors || isBlink(userAgent)) {
+    return 'auto'
+  }
+  return isWebKit(userAgent) && presenting && !previewing ? 'auto' : 'transform'
 }
 
 /**

@@ -80,10 +80,10 @@ describe('camera-transform', () => {
   })
 
   it.each([false, true])(
-    'settles editing and preview layout at the camera zoom (composited=%s)',
-    (composited) => {
+    'settles editing and preview layout at the camera zoom (denseVectors=%s)',
+    (denseVectors) => {
       for (const zoom of [0.3, 1, 1.6, 2.4, 4]) {
-        const layout = worldLayoutZoom(zoom, composited)
+        const layout = worldLayoutZoom(zoom, denseVectors)
         expect(layout).toBe(Math.max(1, zoom))
         if (zoom >= 1) {
           expect(worldLayerCssTransform({ x: 10, y: -5, zoom }, layout)).toBe(

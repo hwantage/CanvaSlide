@@ -16,7 +16,7 @@ type RenderingWindow = {
     camera: StoreApi<RenderingCamera>
     document: StoreApi<{ document: CanvasDocument }>
     original: CanvasDocument
-    samples: { zoom: number; hint: string; layoutZoom: string }[]
+    samples: { zoom: number; layoutZoom: string }[]
     stop?: () => void
   }
 }
@@ -45,7 +45,6 @@ async function observeCamera(page: Page) {
       if (state.animationActive && state.camera !== previous.camera) {
         w.rendering.samples.push({
           zoom: state.camera.zoom,
-          hint: layer.style.willChange,
           layoutZoom: (layer.firstElementChild as HTMLElement).style.zoom
         })
       }
@@ -59,7 +58,7 @@ async function waitForArrival(page: Page) {
   )
 }
 
-test('keeps dense vector frame-list flights composited without changing the document', async ({
+test('animates dense vector frame-list flights without changing the document @webkit', async ({
   page
 }) => {
   await page.goto('/')
@@ -77,20 +76,20 @@ test('keeps dense vector frame-list flights composited without changing the docu
     expect(flight.unchanged).toBe(true)
     expect(flight.samples.length).toBeGreaterThan(3)
     expect(new Set(flight.samples.map((sample) => sample.zoom)).size).toBeGreaterThan(3)
-    expect(flight.samples.every((sample) => sample.hint === 'transform')).toBe(true)
     expect(flight.samples.every((sample) => sample.layoutZoom === '1')).toBe(true)
   }
   await page.evaluate(() => (window as unknown as RenderingWindow).rendering.stop?.())
 })
 
 test('keeps a light editor document uncomposited and settles its layout after zooming @webkit', async ({
-  page
+  page,
+  browserName
 }) => {
   await page.goto('/')
   await openExample(page, 'anatomy/the-body.canvaslide')
   await expect(page.locator('[data-element-type="shape"]')).toHaveCount(2459)
   const layer = page.getByTestId('world-layer')
-  await expect(layer).toHaveCSS('will-change', 'transform')
+  await expect(layer).toHaveCSS('will-change', browserName === 'chromium' ? 'auto' : 'transform')
   // Why: always exercise the discard prompt instead of relying on post-load dirty state.
   await page.getByRole('textbox', { name: 'Document name' }).fill('Compositing transition')
   const discardPrompt = page.waitForEvent('dialog').then(async (dialog) => {

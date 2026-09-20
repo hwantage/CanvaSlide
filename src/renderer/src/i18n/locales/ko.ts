@@ -2,6 +2,135 @@ import type { UiStrings } from '../ui-strings'
 
 // Terms follow the Korean editions of Figma / PowerPoint / Keynote where a standard exists.
 export const ko: UiStrings = {
+  'site.showcase.freefall.title': 'FREEFALL. 하나의 캔버스, 끊김 없는 장면.',
+  'site.showcase.freefall.body':
+    '지구에서 도시와 작은 디테일 속으로 들어간 뒤, 콘서트 불빛의 바다와 움직이는 불꽃놀이로 이어지는 10개 프레임을 따라가세요. 약 {size}를 다운로드하는 큰 예제입니다.',
+  'site.showcase.freefall.alt': '우주에서 바라본 지구와 FREEFALL 제목, 그 안에 겹쳐진 세부 장면.',
+
+  'site.showcase.inside.title': '인체 내부로 들어가다.',
+  'site.showcase.inside.body':
+    '해부학 프레젠테이션의 13개 프레임을 따라 이동하세요. 겹쳐진 {svg} 일러스트와 내장 사진의 디테일이 확대할수록 드러납니다. 약 {size}를 다운로드하는 큰 예제입니다.',
+  'site.showcase.inside.alt': '장기 세부 일러스트와 내장 사진을 포함한 해부학 프레젠테이션.',
+
+  'site.docs.examples.title': '예제 둘러보기',
+  'site.docs.examples.summary': 'ShowCase에서 이야기를 탐색하고 나만의 버전을 저장하세요.',
+  'site.docs.examples.openHeading': '완성된 캔버스 열기',
+  'site.docs.examples.openBody':
+    'ShowCase에서 예제를 선택하고 웹 편집기로 열기를 누르세요. 새 탭에 편집 가능한 사본이 열립니다. 슬라이드 쇼({present})로 프레임을 따라가고 {overview}로 전체를 확인하거나 {escape}로 편집에 돌아올 수 있습니다. 작은 화면에서는 상단의 패널 열기로 프레임 목록을 확인하세요.',
+  'site.docs.examples.saveHeading': '수정하고 저장하기',
+  'site.docs.examples.saveBody':
+    '서버의 원본을 바꾸지 않고 텍스트, 도형과 프레임 순서를 편집할 수 있습니다. 브라우저에서는 {save}로 편집 가능한 {format} 사본을 다운로드하세요. ShowCase의 원본 다운로드로 받은 파일을 데스크톱 앱에서 열어도 됩니다. 브라우저 편집 내용은 자동 저장되지 않으며 예제 링크를 새로고침하면 원본이 다시 열립니다.',
+  'site.docs.examples.linksHeading': '예제 바로 열기 링크',
+  'site.docs.examples.linksBody':
+    '편집기 주소에 {query}를 붙이면 새로고침하거나 직접 접속해도 해당 예제가 열립니다. 카탈로그 ID만 사용할 수 있으며 파일 경로나 다른 웹사이트 주소는 허용되지 않습니다. 공유 링크와 예제 ID가 함께 있으면 공유 링크가 우선합니다. 불러오기를 취소할 수 있으며, 알 수 없는 ID나 잘못된 파일은 현재 캔버스를 바꾸지 않습니다. 다운로드 실패 시 다시 시도할 수 있습니다.',
+  'site.docs.media.title': '가져오기와 동영상',
+  'site.docs.media.summary': '디자인, 페이지 이미지와 동영상 링크를 캔버스에 추가하세요.',
+  'site.docs.media.filesHeading': '이미지와 페이지 가져오기',
+  'site.docs.media.filesBody':
+    '툴바의 파일 가져오기({import})를 선택하거나 캔버스에 파일을 놓으세요. 이미지는 이동하고 크기를 조절할 수 있습니다. {pdf}는 페이지마다 이미지와 발표 프레임으로 변환되므로 내부 텍스트는 직접 편집할 수 없습니다. 가져오기 전체를 한 번에 실행 취소할 수 있습니다.',
+  'site.docs.media.figmaHeading': '로컬 디자인 파일 가져오기',
+  'site.docs.media.figmaBody':
+    '로컬 {figma} {format} 파일을 가져와 페이지를 선택한 뒤 텍스트·도형 편집 또는 원본 모양 유지를 고르세요. 편집 모드는 지원하는 텍스트와 기본 도형을 편집 가능하게 유지하며 복잡한 디자인은 이미지로 변환합니다. 원본 모양 유지는 최상위 레이어를 이미지로 만듭니다. 효과, 레이아웃 규칙, 컴포넌트 오버라이드와 일부 마스크는 정확히 유지되지 않으므로 변환 보고서를 확인하세요. 계정이나 API 토큰이 필요 없고 원본 파일은 변경되지 않습니다.',
+  'site.docs.media.videoHeading': '동영상 링크 추가하기',
+  'site.docs.media.videoBody':
+    '동영상 도구에서 지원되는 {youtube}, {vimeo} 또는 직접 동영상 URL을 붙여넣으세요. 문서에는 영상 데이터 대신 링크가 저장됩니다. 동영상을 선택해 재생 옵션을 조절하고 슬라이드 쇼에서 확인하세요. 제공 서비스와 네트워크가 필요하며 브라우저 자동 재생 정책에 따라 클릭해야 할 수 있습니다. 내보낸 {html}에서 {youtube}를 재생하려면 HTTP(S) 호스팅이 필요합니다. 클라우드 공유는 지원 제공 서비스와 공유 서버 자체 출처의 직접 동영상만 허용합니다.',
+  'site.docs.media.details': '디자인 가져오기 제한 자세히 보기',
+  'site.docs.ai.title': 'AI와 함께 만들기',
+  'site.docs.ai.summary': 'AI 도우미에 전달할 프롬프트를 준비하고 편집 가능한 결과를 여세요.',
+  'site.docs.ai.promptHeading': 'AI 도우미에 프롬프트 전달하기',
+  'site.docs.ai.promptBody':
+    '상단의 AI와 함께 만들기를 여세요. 일반적인 발표는 일반, 다양한 카메라 시점으로 공간을 활용하는 이야기는 다이나믹을 선택하세요. 발표용 사본도 필요하면 {html} 파일 생성을 켜세요. 프롬프트를 원하는 AI 도우미에 붙여넣고 주제, 청중과 분위기를 설명하세요. 앱은 작성 지침을 준비하며 직접 콘텐츠를 생성하거나 AI 서비스에 연결하지 않습니다.',
+  'site.docs.ai.openHeading': '결과를 열고 확인하기',
+  'site.docs.ai.openBody':
+    '편집 가능한 {format} 파일을 요청하고 {open}으로 여세요. AI가 JSON만 반환하면 전체 JSON을 UTF-8로 저장하고 올바른 확장자를 붙이세요. 발표 전에 텍스트, 글꼴, 프레임 순서, 카메라 이동과 미디어를 확인하세요. {html}로 내보내더라도 편집 가능한 원본을 보관하세요. 작성 가이드와 선택 설치 스킬에서 지원 파일 형식을 안내합니다.',
+  'site.docs.ai.guide': '작성 가이드 읽기',
+  'site.docs.frames.directionHeading': '프레임별 이동 연출하기',
+  'site.docs.frames.directionBody':
+    '프레임을 선택하고 속성 패널의 카메라를 여세요. 전환 시간은 이동 시간을, 이징은 속도 변화를, 아크는 카메라가 뒤로 빠지는 정도를 정합니다. 회전은 시점을 기울이고 스포트라이트는 주변 캔버스를 어둡게 합니다. 조절 항목에는 문서 기본값을 포함한 실제 적용값이 표시됩니다. 초기화는 앱 기본값으로 되돌리며, 재정의가 없는 항목은 문서 설정을 따릅니다. 프레임 목록의 표시로 기본과 다른 효과가 적용된 프레임을 찾을 수 있습니다.',
+  'site.docs.frames.batchHeading': '미리 보기와 여러 프레임 조절',
+  'site.docs.frames.batchBody':
+    '여러 프레임을 선택하면 카메라 설정을 한 번에 적용할 수 있습니다. 서로 다른 값은 해당 조절 항목을 바꾸기 전까지 혼합 상태로 표시됩니다. 미리 보기에서는 편집 도구를 유지한 채 순서를 확인하고 슬라이드 쇼에서는 발표 화면을 열 수 있습니다. 내용을 옮기지 않고 프레임 목록의 순서를 바꿔 이야기 흐름을 조절하세요.',
+  'site.docs.sharing.cloudHeading': '스냅샷 링크 공유하기',
+  'site.docs.sharing.cloudBody':
+    '공유에서 사본 편집 또는 슬라이드 쇼만 보기를 선택한 뒤 링크 복사를 누르세요. 발표 전용 링크에는 하나 이상의 프레임이 필요하며 편집 도구 없이 열립니다. 링크를 아는 사람은 24시간 동안 스냅샷에 접근할 수 있습니다. 이후 편집은 반영되지 않으며 계정, 수동 링크 폐기와 실시간 공동 편집은 제공하지 않습니다. 내장 이미지를 포함한 스냅샷 한도는 {limit}입니다. 공유를 사용할 수 없거나 크기를 초과하면 로컬 저장 또는 {html} 내보내기를 사용하세요. 발표 전용 화면도 콘텐츠 복사를 막지는 못합니다.',
+  'site.docs.sharing.fontHeading': '글꼴과 연결된 미디어 확인하기',
+  'site.docs.sharing.fontBody':
+    '데스크톱 내보내기는 설치된 글꼴의 일부를 포함할 수 있습니다. 브라우저 내보내기는 사용 가능한 글꼴에 따라 달라지므로 받는 기기에서 확인하세요. 내장 이미지와 플레이어는 {html} 파일에 포함되지만 연결된 동영상은 호스트와 네트워크가 필요합니다. 나중에 수정할 수 있도록 {format} 원본을 보관하세요.',
+  'example.title': '예제 열기',
+  'example.loading': '예제를 불러오는 중…',
+  'example.unknown': '카탈로그에 없는 예제입니다. 닫은 후 ShowCase에서 예제를 선택하세요.',
+  'example.missing':
+    '서버에서 예제 파일을 찾을 수 없습니다. 나중에 다시 시도하거나 다른 예제를 선택하세요.',
+  'example.network': '예제를 다운로드하지 못했습니다. 네트워크 연결을 확인하고 다시 시도하세요.',
+  'example.invalid':
+    '올바른 문서 형식이 아닙니다. 다른 예제를 선택하세요. 현재 문서는 그대로 유지됩니다.',
+  'example.changed':
+    '예제를 불러오는 동안 문서가 변경되어 현재 작업을 유지했습니다. 예제는 새 탭에서 열어보세요.',
+  'example.cancel': '불러오기 취소',
+  'example.dismiss': '닫기',
+  'example.retry': '다시 시도',
+  'site.hero.editor': '웹 편집기 열기',
+  'site.showcase.meta': 'ShowCase — {product}',
+  'site.showcase.description':
+    '프레젠테이션 안으로 들어가 보세요. 프레임을 따라 이동하고 전체 캔버스를 살펴본 뒤 브라우저에서 직접 편집할 수 있습니다. 설치나 계정은 필요 없습니다.',
+  'site.showcase.homeTitle': '캔버스로 어디까지 갈 수 있을까요?',
+  'site.showcase.browse': '모든 예제 보기',
+  'site.showcase.open': '웹 편집기로 열기',
+  'site.showcase.openNamed': '웹 편집기에서 {name} 열기',
+  'site.showcase.download': '원본 다운로드',
+  'site.showcase.guide': '예제 탐색과 저장 방법',
+  'site.showcase.featured': '여기서 시작하세요 · 하나의 캔버스에 담긴 이야기',
+  'site.showcase.featuredOpen': '웹 편집기에서 주문 하나의 여정 열기',
+  'site.showcase.instructions':
+    '예제는 새 탭에서 열립니다. 슬라이드 쇼로 프레임을 따라가거나 바로 편집하세요. 데스크톱 앱에서는 원본 파일을 다운로드해 열 수 있습니다. 예제 본문은 영어이며, 닫거나 새로고침하기 전에 변경 내용을 저장하세요.',
+  'site.showcase.one-order.title': '주문 하나의 여정.',
+  'site.showcase.one-order.body':
+    '결제 시간 초과와 안전한 재시도를 거쳐 완료되는 주문을 따라갑니다. 23개 프레임이 시스템 전체 지도와 요청 하나의 세부 과정을 연결합니다.',
+  'site.showcase.one-order.alt': '시스템 지도, 요청 메시지, 결제와 영수증으로 이어지는 주문 여정.',
+  'site.showcase.swing.title': '도시를 가로지르는 시선.',
+  'site.showcase.swing.body':
+    '넓게 펼쳐진 도시를 오가는 12번의 카메라 이동. 긴 이동 경로와 확대·축소가 만드는 이야기의 리듬을 살펴보세요.',
+  'site.showcase.swing.alt': '넓은 발표 경로를 따라 펼쳐진 도시 일러스트.',
+  'site.showcase.anatomy.title': '몸 전체에서 세포 하나까지.',
+  'site.showcase.anatomy.body':
+    '인체 지도와 전신이 하나의 캔버스에 놓여 있습니다. 20개 프레임을 따라 전체 구조에서 세밀한 해부학적 요소로 이동하세요.',
+  'site.showcase.anatomy.alt': '전신 인체도와 나란히 놓인 해부학 지도.',
+  'site.showcase.flowchart.title': '과정을 한눈에.',
+  'site.showcase.flowchart.body':
+    '의사 결정, 예외 분기와 재시도 흐름을 연결해 주문 이행 과정을 보여줍니다. 3개 단계 프레임과 편집 가능한 연결선을 살펴보세요.',
+  'site.showcase.flowchart.alt': '의사 결정 분기와 재시도 경로가 있는 주문 이행 순서도.',
+  'site.showcase.erd.title': '관계를 읽는 지도.',
+  'site.showcase.erd.body':
+    '7개 테이블과 관계 표기, 4개 영역 프레임으로 쇼핑몰 구조를 설명합니다. 테이블을 이동하면 연결선도 따라 움직입니다.',
+  'site.showcase.erd.alt': '관계선으로 연결된 7개 데이터베이스 테이블.',
+  'site.showcase.slides.title': '확대해서 보는 출시 이야기.',
+  'site.showcase.slides.body':
+    '익숙한 출시 발표가 연결된 캔버스로 펼쳐집니다. 프로세스, 시범 운영 결과, 차트 확대와 로드맵을 7개 프레임으로 보여줍니다.',
+  'site.showcase.slides.alt': '결과 차트와 로드맵이 하나의 캔버스에 배치된 출시 발표.',
+  'site.showcase.architecture.title': '시스템의 흐름을 따라서.',
+  'site.showcase.architecture.body':
+    '4개 영역으로 나뉜 쇼핑몰 플랫폼을 탐색합니다. 실선 요청 경로와 점선 이벤트 경로로 서비스 관계를 구분합니다.',
+  'site.showcase.architecture.alt': '서비스 영역별로 구분된 클라우드 아키텍처 구성도.',
+  'site.showcase.mindmap.title': '전략을 펼칠 공간.',
+  'site.showcase.mindmap.body':
+    '중심 아이디어에서 색상별로 구분된 다섯 주제가 뻗어 나갑니다. 곡선 연결선과 6개 프레임을 따라 계획을 차례로 설명하세요.',
+  'site.showcase.mindmap.alt': '다섯 색상 가지로 구성된 제품 전략 마인드맵.',
+  'site.showcase.one-order.try':
+    '전체 보기를 연 다음 결제 재시도로 확대해 보세요. 모든 도형과 연결선을 편집할 수 있습니다.',
+  'site.workflows.title': '이야기에 더 많은 것을 담으세요.',
+  'site.workflows.description': '첫 아이디어부터 최종 발표까지, 디테일과 맥락을 함께 유지하세요.',
+  'site.workflows.motion.title': '카메라를 연출하세요.',
+  'site.workflows.motion.body':
+    '프레임마다 속도, 이동 곡선, 회전과 스포트라이트를 설정하고 미리 보거나 여러 프레임을 함께 조절하세요.',
+  'site.workflows.import.title': '가지고 있는 자료부터.',
+  'site.workflows.import.body':
+    '{design} 파일, {pdf} 페이지와 이미지를 가져오세요. 움직임이 필요할 때는 동영상 링크를 추가하세요.',
+  'site.workflows.share.title': '상황에 맞게 공유하세요.',
+  'site.workflows.share.body':
+    '발표 전용 또는 사본 편집용 링크를 24시간 동안 공유하세요. 휴대용 프레젠테이션은 {html}로 내보낼 수 있습니다.',
+  'site.workflows.ai.title': 'AI 프롬프트로 시작하세요.',
+  'site.workflows.ai.body':
+    '일반 또는 다이나믹 프롬프트를 원하는 AI 도우미에 붙여넣고, 생성된 편집 가능한 발표 파일을 열어보세요.',
   'menu.file': '파일 메뉴',
   'menu.actions': '작업 메뉴',
   'panel.open': '패널 펼치기',
@@ -444,14 +573,14 @@ export const ko: UiStrings = {
     '세 가지 아이디어와 세 개의 프레임이면 첫 이야기를 만들 수 있습니다. 빠른 시작 문서를 따라 빈 캔버스에서 발표를 만들고 저장해 보세요.',
   'site.docs.install.availableHeading': '데스크톱 앱 받기',
   'site.docs.install.availableBody':
-    '릴리스가 공개되면 첨부 파일에서 운영체제에 맞는 설치 파일을 선택하세요. 공식 저장소에서 제공하는 파일을 사용해 주세요.',
+    '공식 릴리스 페이지에서 운영체제에 맞는 설치 파일을 받으세요. 설치 없이 웹 편집기를 사용하거나 아래 안내에 따라 소스에서 빌드할 수도 있습니다.',
   'site.docs.install.macBody':
     '{dmg} 파일을 열어 앱을 응용 프로그램 폴더로 옮긴 뒤 실행하세요. {platform} {version} 이상이 필요합니다.',
   'site.docs.install.windowsBody':
     '릴리스 첨부 파일의 {exe} 또는 {msi} 설치 프로그램을 실행해 안내를 따르세요. 설치가 끝나면 시작 메뉴에서 앱을 실행합니다. WebView2 설치 안내가 나오면 함께 설치해 주세요.',
   'site.docs.install.sourceHeading': '소스에서 빌드하기',
   'site.docs.install.sourceBody':
-    '설치 파일이 공개되기 전에는 소스에서 현재 앱을 실행할 수 있습니다. Git, {node} {version} 이상, 저장소에 지정된 {packageManager}, 안정 버전 Rust 도구 모음을 설치하세요. 먼저 Tauri 사전 준비 문서의 운영체제별 설정을 완료해 주세요.',
+    '현재 앱을 소스에서 직접 실행할 수도 있습니다. Git, {node} {version} 이상, 저장소에 지정된 {packageManager} 버전과 Rust 안정 버전을 설치하고, Tauri 사전 요구사항에서 운영체제별 준비를 먼저 마치세요.',
   'site.docs.install.prerequisites': '운영체제별 사전 준비',
   'site.docs.install.buildHeading': '설치 파일 빌드',
   'site.docs.install.buildBody':
@@ -518,7 +647,7 @@ export const ko: UiStrings = {
     '{export}로 HTML 내보내기를 여세요. 이미지 품질 옵션과 예상 파일 크기를 확인한 뒤 저장합니다. 발표 내용과 플레이어가 포함된 하나의 {format} 파일이 만들어집니다.',
   'site.docs.sharing.playHeading': '발표할 곳에서 열기',
   'site.docs.sharing.playBody':
-    '내보낸 파일을 브라우저에서 여세요. 오프라인으로 작동하며 보는 사람은 데스크톱 앱이 필요하지 않습니다. 플레이어 버튼이나 방향키로 이동하고, 전체 보기에서 프레임으로 바로 이동할 수 있습니다. 내보낸 플레이어의 인터페이스는 영어로 표시됩니다.',
+    '내보낸 파일을 브라우저에서 여세요. 내장 콘텐츠는 오프라인에서 작동하며 보는 사람에게 데스크톱 앱이 필요하지 않습니다. 연결된 동영상은 네트워크와 HTTP(S) 호스팅이 필요할 수 있습니다. 플레이어 버튼이나 방향키로 이동하고 전체 보기에서 원하는 프레임으로 이동하세요. 내보낸 플레이어의 인터페이스는 영어입니다.',
   'site.docs.sharing.tip':
     '나중에 수정하려면 원본 캔버스 파일을 보관하세요. 이미지가 많은 발표는 파일이 커질 수 있으므로 공유할 때 내보내기 품질을 조정해 주세요.',
   'site.docs.shortcuts.heading': '몇 개의 키로 더 빠르게.',
@@ -547,7 +676,7 @@ export const ko: UiStrings = {
     '아니요. 데스크톱 앱은 로그인 없이 사용할 수 있습니다. 문서는 내 컴퓨터에 파일로 저장합니다.',
   'site.docs.faq.offlineQ': '오프라인에서도 작업하고 발표할 수 있나요?',
   'site.docs.faq.offlineA':
-    '네. 인터넷 연결 없이 데스크톱 앱에서 편집하고 발표할 수 있습니다. 내보낸 발표도 브라우저에서 오프라인으로 실행됩니다.',
+    '데스크톱 편집기와 콘텐츠가 내장된 내보내기 파일은 오프라인에서 작동합니다. 연결된 동영상은 제공 서비스와 네트워크가 필요하며 웹 예제와 클라우드 스냅샷을 여는 데도 연결이 필요합니다.',
   'site.docs.faq.autosaveQ': '작업은 어디에 저장되나요?',
   'site.docs.faq.autosaveA':
     '저장할 때 파일 위치를 직접 선택합니다. 현재 버전에는 자동 클라우드 동기화나 자동 저장 복구 기능이 없으므로 문서를 자주 저장해 주세요.',
@@ -563,6 +692,7 @@ export const ko: UiStrings = {
 
   // Official website.
   'site.nav.product': '제품',
+  'site.nav.showcase': 'ShowCase',
   'site.nav.docs': '사용 문서',
   'site.nav.download': '앱 받기',
   'site.nav.github': 'GitHub 소스',
@@ -599,15 +729,14 @@ export const ko: UiStrings = {
   'site.docs.frames.overviewHeading': '슬라이드 전체를 조망하며 발표 이어가기',
   'site.docs.frames.overviewBody':
     '발표 중 전체 보기 컨트롤을 사용하면 모든 슬라이드를 캔버스 위에서 한눈에 볼 수 있습니다. 프레임을 클릭해 원하는 장면으로 바로 이동한 뒤 이전·다음 컨트롤로 발표를 이어가세요. 각 장면의 관계를 설명하고 싶을 때는 다시 전체 보기로 돌아올 수 있습니다. 내보낸 브라우저 프레젠테이션에서도 전체 조망과 프레임 선택을 사용할 수 있습니다.',
-  'site.hero.title': '커다란 생각을,\n하나의 파일로.',
+  'site.hero.title': '하나의 캔버스,\n다양한 시선.',
   'site.hero.description':
-    '순서도, ERD, 프레젠테이션 슬라이드까지. 무한한 캔버스에 자유롭게 표현하고, 세부 영역을 확대해 설명하고, {format} 파일 하나로 이야기를 전하세요.',
-  'site.hero.try': '다양한 표현 살펴보기',
+    '아이디어를 연결하고 디자인을 가져와 전체 흐름에서 작은 디테일까지 안내하세요. 실제 프레젠테이션을 열고 나만의 이야기로 바꿔보세요.',
+  'site.hero.try': 'ShowCase 둘러보기',
   'site.hero.platforms': '{mac}·{windows}를 위한 앱',
   'site.hero.note': '무료 오픈 소스. 오프라인에서도 자유롭게.',
   'site.hero.scroll': '캔버스의 가능성을 만나보세요',
-  'site.hero.eyebrow': '무한한 캔버스. 어디로든 전해지는 이야기.',
-  'site.hero.share': '{format} 하나로 공유하기',
+  'site.hero.eyebrow': '생각을 펼치는 캔버스, 시선을 이끄는 이야기.',
   'site.hero.ray': '푸른 날개를 활짝 펴고 자유롭게 활공하는 {product} 마스코트 레이.',
   'site.hero.file': '어디로든 떠날 준비 완료.',
   'site.possibilities.eyebrow': '생각마다 어울리는 표현으로',
@@ -714,7 +843,7 @@ export const ko: UiStrings = {
   'site.download.macDetail': '{version} 이상',
   'site.download.windowsDetail': '데스크톱 앱',
   'site.download.pending':
-    '첫 공개 설치 파일을 준비하고 있습니다. 릴리스 페이지에서 배포 여부를 확인하거나, 안내에 따라 지금 소스에서 빌드할 수 있습니다.',
+    '두 데스크톱 플랫폼의 설치 파일을 릴리스 페이지에서 받을 수 있습니다. 사용 중인 기기에 맞는 파일을 선택하세요.',
   'site.download.guide': '설치 안내',
   'site.download.source': '소스에서 빌드하기',
   'site.footer.tagline': '당신의 생각에, 날아갈 공간을.',
@@ -724,7 +853,7 @@ export const ko: UiStrings = {
   'site.footer.top': '맨 위로',
   'site.meta.home': '{product} — 당신의 생각에, 날아갈 공간을.',
   'site.meta.description':
-    '무한 캔버스에 생각을 펼치고 프레임으로 이야기를 엮어 자연스럽게 발표하세요.',
+    '아이디어 연결, 카메라 연출, {design}·{pdf} 가져오기와 공유를 위한 무한 캔버스. 브라우저에서 편집 가능한 예제를 만나보세요.',
   'site.screenshot.editor': '도형, 텍스트, 발표 프레임이 배치된 캔버스 편집기',
   'site.screenshot.present': '전체 화면으로 표시된 발표 프레임',
 

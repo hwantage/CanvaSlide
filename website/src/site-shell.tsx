@@ -65,6 +65,12 @@ export function SiteShell({
               {t('site.nav.product')}
             </a>
             <a href={siteHref('docs/')}>{t('site.nav.docs')}</a>
+            <a
+              href={siteHref('showcase/')}
+              aria-current={location.pathname.includes('/showcase/') ? 'page' : undefined}
+            >
+              {t('site.nav.showcase')}
+            </a>
             <a href={repositoryUrl} target="_blank" rel="noreferrer" className="source-link">
               <img src={asset(`brand/github-mark-${theme}.svg`)} width="20" height="20" alt="" />
               GitHub
@@ -121,6 +127,7 @@ export function SiteShell({
           <p>{t('site.footer.tagline')}</p>
         </div>
         <nav aria-label={t('site.nav.label')}>
+          <a href={siteHref('showcase/')}>{t('site.nav.showcase')}</a>
           <a href={siteHref('docs/')}>{t('site.nav.docs')}</a>
           <a href={`${repositoryUrl}/issues`} target="_blank" rel="noreferrer">
             {t('site.footer.issues')}

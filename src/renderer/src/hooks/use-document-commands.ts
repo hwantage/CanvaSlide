@@ -12,6 +12,7 @@ import {
 import type { FilePath } from '@/platform/file-path'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
 import { clearShareQuery } from '@/platform/cloud-share'
+import { useExampleStore } from '@/store/example-store'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
@@ -45,6 +46,7 @@ async function replaceWith(read: () => Promise<OpenedDocument | null>): Promise<
   usePresentationStore.getState().exit()
   useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
   clearShareQuery()
+  useExampleStore.getState().hide()
   // Why: the saved camera may point at empty space; show the whole board instead.
   const camera = useCameraStore.getState()
   camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))

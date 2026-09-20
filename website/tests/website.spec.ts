@@ -5,7 +5,7 @@ test('starts in English even when the browser language is Korean', async ({ brow
   const page = await context.newPage()
   await page.goto('http://127.0.0.1:1422/CanvaSlide/')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Big ideas. One little file.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('One canvas. Every perspective.')
   await context.close()
 })
 
@@ -15,7 +15,7 @@ test('language and theme survive navigation and reload', async ({ page }) => {
   await page.getByRole('button', { name: '다크 테마로 전환' }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('커다란 생각을, 하나의 파일로.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('하나의 캔버스, 다양한 시선.')
   await page.locator('.header-nav').getByRole('link', { name: '사용 문서' }).click()
   await expect(page.getByRole('heading', { level: 1 })).toContainText('첫 캔버스부터')
   await page.reload()
@@ -86,14 +86,14 @@ test('documentation search finds content and handles no results', async ({ page 
   await input.fill('nothingmatches123')
   await expect(page.getByRole('status')).toContainText('No guides found')
   await page.getByRole('button', { name: 'Clear search' }).click()
-  await expect(page.locator('#docs-navigation a')).toHaveCount(9)
+  await expect(page.locator('#docs-navigation a')).toHaveCount(12)
 })
 
 test('installation explains availability and copies source commands', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('./docs/?guide=installation')
   await expect(page.locator('.docs-callout')).toContainText(
-    'first public installers are being prepared'
+    'Installers for both desktop platforms are available'
   )
   await page.getByRole('button', { name: 'Windows', exact: true }).click()
   await expect(page.locator('.install-platforms')).toContainText('.exe')
@@ -119,6 +119,9 @@ for (const locale of ['en', 'ko']) {
       'overview',
       'installation',
       'quick-start',
+      'examples',
+      'media',
+      'ai',
       'canvas',
       'editing',
       'frames',

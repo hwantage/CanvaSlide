@@ -4,6 +4,7 @@ import { t, type UiStringKey } from '@app/i18n/ui-strings'
 import { isMacPlatform, shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
 import { asset, repositoryUrl, siteHref } from './site-preferences'
 import type { TopicId } from './docs-topics'
+import { exampleEditorUrl } from './example-links'
 
 export function CommandBlock({ command }: { command: string }) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -129,6 +130,53 @@ function ShortcutsTable() {
 }
 
 export function DocsExtra({ topic, section }: { topic: TopicId; section: string }) {
+  if (topic === 'examples' && section === 'open-an-example') {
+    return (
+      <a className="button" href={siteHref('showcase/')}>
+        {t('site.showcase.browse')}
+        <ArrowUpRight size={16} />
+      </a>
+    )
+  }
+  if (topic === 'examples' && section === 'direct-links') {
+    return (
+      <a
+        className="doc-text-link"
+        href={exampleEditorUrl('one-order')}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {exampleEditorUrl('one-order')}
+        <ArrowUpRight size={14} />
+      </a>
+    )
+  }
+  if (topic === 'media' && section === 'figma') {
+    return (
+      <a
+        className="doc-text-link"
+        href={`${repositoryUrl}/blob/main/docs/FIGMA-IMPORT.md`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t('site.docs.media.details')}
+        <ArrowUpRight size={14} />
+      </a>
+    )
+  }
+  if (topic === 'ai' && section === 'open-the-result') {
+    return (
+      <a
+        className="doc-text-link"
+        href={`${repositoryUrl}/blob/main/examples/README.md#authoring-with-ai`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t('site.docs.ai.guide')}
+        <ArrowUpRight size={14} />
+      </a>
+    )
+  }
   if (topic === 'installation') {
     if (section === 'desktop-app') {
       return <InstallPlatforms />

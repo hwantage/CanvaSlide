@@ -3,7 +3,10 @@ import { t } from '@app/i18n/ui-strings'
 import { ScrollStory } from './scroll-story'
 import { DownloadSection, ProductFeatures, SharingSection } from './product-sections'
 import { useSectionReveal } from './use-section-reveal'
-import { asset } from './site-preferences'
+import { asset, siteHref } from './site-preferences'
+import { webAppUrl } from './example-links'
+import { ShowcasePreview } from './showcase'
+import { Workflows } from './workflows'
 import { Possibilities } from './possibilities'
 import { DetailZoom } from './detail-zoom'
 import { PresentationOverview } from './presentation-overview'
@@ -16,14 +19,14 @@ export function Landing() {
         <div className="hero-copy">
           <p className="hero-eyebrow">{t('site.hero.eyebrow')}</p>
           <h1>{t('site.hero.title')}</h1>
-          <p className="hero-description">{t('site.hero.description', { format: 'HTML' })}</p>
+          <p className="hero-description">{t('site.hero.description')}</p>
           <div className="hero-actions">
-            <a className="button" href="#possibilities">
+            <a className="button" href={siteHref('showcase/')}>
               {t('site.hero.try')}
               <ArrowUpRight size={17} />
             </a>
-            <a className="text-button" href="#sharing">
-              {t('site.hero.share', { format: 'HTML' })}
+            <a className="text-button" href={webAppUrl} target="_blank" rel="noreferrer">
+              {t('site.hero.editor')}
               <ArrowUpRight size={16} />
             </a>
           </div>
@@ -60,6 +63,8 @@ export function Landing() {
           {t('site.hero.scroll')}
         </a>
       </section>
+      <ShowcasePreview />
+      <Workflows />
       <Possibilities />
       <SharingSection />
       <DetailZoom />

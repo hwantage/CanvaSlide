@@ -9,6 +9,8 @@ the editor also runs in a browser.
 
 ![CanvaSlide editor with two presentation frames on one canvas](./website/public/images/editor.png)
 
+[ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) ·
+[Try the web editor](https://canvaslide.pages.dev/) ·
 [Download releases](https://github.com/hwantage/CanvaSlide/releases) ·
 [User guide](https://hwantage.github.io/CanvaSlide/docs/) ·
 [Documentation map](./docs/README.md)

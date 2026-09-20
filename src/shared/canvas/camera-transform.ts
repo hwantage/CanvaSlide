@@ -101,14 +101,14 @@ export function layoutZoomFor(zoom: number): number {
  * Editing and previews need native layout resolution even without an explicit compositing hint:
  * the WebView can still rasterize transformed text and vectors at layout scale. Light slideshows
  * keep a fixed layout so text and emoji do not reflow between shots; dense slideshows need
- * native layout resolution for their composited layer (see layoutZoomFor).
+ * native layout resolution independently of the compositing hint (see layoutZoomFor).
  */
 export function worldLayoutZoom(
   zoom: number,
-  composited: boolean,
+  denseVectors: boolean,
   slideShowActive = false
 ): number {
-  return slideShowActive && !composited ? 1 : layoutZoomFor(zoom)
+  return slideShowActive && !denseVectors ? 1 : layoutZoomFor(zoom)
 }
 
 /**

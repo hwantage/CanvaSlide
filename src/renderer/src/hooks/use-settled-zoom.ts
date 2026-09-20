@@ -10,15 +10,15 @@ import { selectSlideShowActive, usePresentationStore } from '@/store/presentatio
 
 /**
  * The CSS zoom the world is laid out at. Light slideshows keep a fixed layout to avoid text
- * reflow (see worldLayoutZoom). Editing, previews and composited slideshows follow the camera zoom,
+ * reflow (see worldLayoutZoom). Editing, previews and dense slideshows follow the camera zoom,
  * lagging behind gestures: the layout updates only after the zoom has held still
  * for ZOOM_SETTLE_MS, and a flight holds one layout scale until arrival — the arrival scale
  * itself where the flight allows it (see flightLayoutZoom), so landing has nothing left to reflow.
  */
-export function useSettledZoom(composited: boolean): number {
+export function useSettledZoom(denseVectors: boolean): number {
   const stationary = useCameraStore((s) => s.stationaryCamera)
   const slideShowActive = usePresentationStore(selectSlideShowActive)
-  const fixedLayout = slideShowActive && !composited
+  const fixedLayout = slideShowActive && !denseVectors
   // A light slideshow resets the settled zoom so returning to editing catches up once at rest.
   const [zoom, setZoom] = useState(() => layoutZoomFor(useCameraStore.getState().camera.zoom))
   if (fixedLayout && zoom !== 1) {
@@ -73,5 +73,5 @@ export function useSettledZoom(composited: boolean): number {
       }
     }
   }, [fixedLayout])
-  return worldLayoutZoom(stationary?.zoom ?? zoom, composited, slideShowActive)
+  return worldLayoutZoom(stationary?.zoom ?? zoom, denseVectors, slideShowActive)
 }

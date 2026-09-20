@@ -92,7 +92,12 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
 - [`prepareCameraFlight`](../src/renderer/src/lib/camera-flight-preparation.ts) prepares image leases
   and waits for a paint before starting the tween. Without that wait, replaying from a settled zoom
   pays the layout cost during the first animation frames. Compositing hints depend on document
-  content; indiscriminate `will-change` can blur light documents or create oversized photo layers.
+  content, engine and presentation mode. WebKit dense editor/preview worlds retain
+  `will-change: transform`, while slideshows leave compositing to the browser to avoid large-scene
+  stalls. Blink also uses automatic compositing on editor return, where Brave has shown large paint
+  omissions. Other engines retain the existing density-based hint. See `worldLayerWillChange` in
+  `zoom-layer-style.ts`.
+  Dense slideshows still restore native layout resolution at rest, independently of that hint.
 - WKWebView rasterizes SVG images at layout size. SVG layout scaling and visible detail rendering
   preserve sharpness at high zoom; see [`image-rendering.ts`](../src/shared/canvas/image-rendering.ts).
   [`image-surface.ts`](../src/shared/canvas/image-surface.ts) maps pixel-sized surfaces into world

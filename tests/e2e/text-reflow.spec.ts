@@ -26,7 +26,7 @@ function text(id: string, x: number, y: number, width: number, fontSize: number,
   }
 }
 
-/** Enough vectors to make the world composited, so its layout zoom follows the camera at rest. */
+/** Dense slideshows restore native layout resolution even without a world compositing hint. */
 const DENSE_VECTOR_COUNT = 260
 
 function filler(index: number) {

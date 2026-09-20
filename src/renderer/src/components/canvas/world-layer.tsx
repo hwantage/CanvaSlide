@@ -2,7 +2,7 @@ import { imageLayoutScale } from '@shared/canvas/image-rendering'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { worldLayerCssTransform } from '@shared/canvas/camera-transform'
 import type { Camera } from '@shared/canvas/element-types'
-import { zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'
+import { worldLayerWillChange, zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'
 import { useSettledZoom } from '@/hooks/use-settled-zoom'
 import { useCameraStore } from '@/store/camera-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'
@@ -12,7 +12,7 @@ import { ElementView } from './element-view'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { autoplayVideoIds, frameVideos } from '@shared/canvas/video-playback'
 
-const COMPOSITE_VECTOR_COUNT = 256
+const DENSE_VECTOR_COUNT = 256
 
 /** Single transformed layer; frames render beneath all content regardless of z-order. */
 export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
@@ -32,15 +32,21 @@ export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
   const memberIds = useMemo(() => new Set(videos.map((video) => video.id)), [videos])
   const selectedIds = useDocumentStore(selectSelectedIds)
   const editingTextId = useToolStore(selectEditingTextId)
-  const compositeVectors = useMemo(
+  const denseVectors = useMemo(
     () =>
       document.order.filter((id) => {
         const type = document.elements[id]?.type
         return type === 'shape' || type === 'text' || type === 'connector'
-      }).length >= COMPOSITE_VECTOR_COUNT,
+      }).length >= DENSE_VECTOR_COUNT,
     [document]
   )
-  const baseZoom = useSettledZoom(compositeVectors)
+  const baseZoom = useSettledZoom(denseVectors)
+  const willChange = worldLayerWillChange({
+    denseVectors,
+    presenting: active,
+    previewing,
+    userAgent: navigator.userAgent
+  })
 
   // Why: the camera changes every frame while panning or animating; writing the transform straight
   // to the DOM keeps React (and its 500+ children) out of the per-frame path.
@@ -54,14 +60,11 @@ export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
     return useCameraStore.subscribe((state) => apply(state.camera))
   }, [baseZoom])
 
-  // Why: repainting thousands of SVG roots every frame stalls WebKit, so a dense world is
-  // composited. Light documents avoid that backing store; both settle at native layout resolution
-  // in editing and previews because WebViews may rasterize transformed content at its layout scale.
   useLayoutEffect(() => {
     if (outerRef.current) {
-      outerRef.current.style.willChange = compositeVectors ? 'transform' : 'auto'
+      outerRef.current.style.willChange = willChange
     }
-  }, [compositeVectors])
+  }, [willChange])
 
   const frameIds = document.order.filter((id) => document.elements[id]?.type === 'frame')
   const contentIds = document.order.filter((id) => document.elements[id]?.type !== 'frame')

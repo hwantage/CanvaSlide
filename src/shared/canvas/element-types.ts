@@ -109,19 +109,7 @@ export const videoElementSchema = elementBaseSchema.extend({
 })
 export type VideoElement = z.infer<typeof videoElementSchema>
 
-/** v1 stored the data URL inline on every image element. Kept only for migration. */
-export const legacyImageElementV1Schema = elementBaseSchema.extend({
-  type: z.literal('image'),
-  src: z.string().min(1),
-  naturalWidth: z.number().positive(),
-  naturalHeight: z.number().positive()
-})
-export type LegacyImageElementV1 = z.infer<typeof legacyImageElementV1Schema>
-
-/**
- * Per-frame camera direction. Every field is optional and falls back to `document.settings`, so a
- * frame that sets nothing behaves exactly as it did before this existed.
- */
+/** Omitted camera fields inherit document settings, except roll, which defaults to zero. */
 export const frameTransitionSchema = z.object({
   /** Flight duration to this frame. */
   ms: z.number().int().min(0).max(MAX_TRANSITION_MS).optional(),
@@ -209,7 +197,7 @@ export type CanvasBackground = (typeof canvasBackgrounds)[number]
 export const frameBorderStyles = ['solid', 'dashed', 'none'] as const
 export type FrameBorderStyle = (typeof frameBorderStyles)[number]
 
-// Why: every new setting gets a `.default()` so older files keep opening unchanged.
+// Defaults let authors specify only the settings their presentation needs.
 export const documentSettingsSchema = z.object({
   transitionMs: z.number().int().min(0).max(MAX_TRANSITION_MS),
   // Why: these three are the document-wide defaults a frame's own `transition` overrides.
@@ -230,7 +218,7 @@ export const defaultDocumentSettings: DocumentSettings = {
   frameBorder: 'solid'
 }
 
-export const DOCUMENT_VERSION = 2
+export const DOCUMENT_VERSION = 1
 
 export const canvasDocumentSchema = z.object({
   version: z.literal(DOCUMENT_VERSION),
@@ -244,23 +232,30 @@ export const canvasDocumentSchema = z.object({
 })
 export type CanvasDocument = z.infer<typeof canvasDocumentSchema>
 
-export const canvasDocumentV1Schema = z.object({
-  version: z.literal(1),
-  name: z.string(),
-  elements: z.record(
-    z.string(),
-    z.discriminatedUnion('type', [
-      shapeElementSchema,
-      textElementSchema,
-      legacyImageElementV1Schema,
-      frameElementSchema
-    ])
-  ),
-  order: z.array(z.string()),
-  settings: documentSettingsSchema,
-  camera: cameraSchema.optional()
+/** SVG text stays editable; objects insert a shared data resource at that point. */
+export const MAX_SVG_RESOURCE_PARTS = 100_000
+export const imageResourceSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('data'), data: z.string().regex(/^data:image\/[^,]+,/i) }),
+  z.object({
+    type: z.literal('svg'),
+    parts: z
+      .array(z.union([z.string(), z.object({ resourceId: z.string().min(1) })]))
+      .max(MAX_SVG_RESOURCE_PARTS)
+  })
+])
+export type ImageResource = z.infer<typeof imageResourceSchema>
+
+export const fileImageAssetSchema = imageAssetSchema.omit({ data: true }).extend({
+  resourceId: z.string().min(1)
 })
-export type CanvasDocumentV1 = z.infer<typeof canvasDocumentV1Schema>
+export type FileImageAsset = z.infer<typeof fileImageAssetSchema>
+
+/** The single UTF-8 JSON file contract; renderers receive resolved image data URLs. */
+export const documentFileSchema = canvasDocumentSchema.extend({
+  assets: z.record(z.string(), fileImageAssetSchema),
+  resources: z.record(z.string(), imageResourceSchema)
+})
+export type DocumentFile = z.infer<typeof documentFileSchema>
 
 export const DEFAULT_TRANSITION_MS = 1000
 

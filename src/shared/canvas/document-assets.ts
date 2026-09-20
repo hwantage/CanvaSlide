@@ -1,11 +1,4 @@
-import type {
-  AssetId,
-  CanvasDocument,
-  CanvasDocumentV1,
-  CanvasElement,
-  ImageAsset
-} from './element-types'
-import { DOCUMENT_VERSION } from './element-types'
+import type { AssetId, CanvasDocument, ImageAsset } from './element-types'
 
 /**
  * Content-addressed image assets: the id is a hash of the data URL, so pasting the same image
@@ -76,29 +69,4 @@ export function assetsByteLength(document: CanvasDocument): number {
     total += asset.data.length
   }
   return total
-}
-
-/** v1 → v2: hoist inline image data into the shared asset table. */
-export function migrateDocumentV1(legacy: CanvasDocumentV1): CanvasDocument {
-  let document: CanvasDocument = {
-    version: DOCUMENT_VERSION,
-    name: legacy.name,
-    elements: {},
-    order: legacy.order,
-    settings: legacy.settings,
-    assets: {},
-    ...(legacy.camera ? { camera: legacy.camera } : {})
-  }
-  const elements: Record<string, CanvasElement> = {}
-  for (const [id, element] of Object.entries(legacy.elements)) {
-    if (element.type !== 'image') {
-      elements[id] = element
-      continue
-    }
-    const { src, ...rest } = element
-    const asset = createImageAsset(src, element.naturalWidth, element.naturalHeight)
-    document = upsertAsset(document, asset)
-    elements[id] = { ...rest, assetId: asset.id }
-  }
-  return { ...document, elements }
 }

@@ -136,6 +136,9 @@ pnpm tauri build --bundles app   # macOS .app only
 Ready-made documents (flowchart, ERD, slide deck, system architecture, mind map) live in
 [`examples/`](./examples/README.md). Open one with ⌘O / Ctrl+O and press ⏎ to present.
 
+For AI-assisted authoring, download the portable [CanvaSlide skill](./skills/README.md).
+Its single `SKILL.md` guides the creation of editable `.canvaslide` JSON and standalone HTML.
+
 ## Contributing
 
 Bug reports, feature ideas and pull requests are welcome. See [`CONTRIBUTING.md`](./CONTRIBUTING.md)

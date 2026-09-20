@@ -12,6 +12,7 @@ import {
   Save,
   Settings,
   Share2,
+  Sparkles,
   Undo2
 } from 'lucide-react'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
@@ -32,6 +33,7 @@ import {
 } from '@/store/document-store'
 import {
   useAboutDialogStore,
+  useAiGuideStore,
   useSettingsDialogStore,
   useShortcutHelpStore
 } from '@/store/modal-dialogs'
@@ -80,6 +82,7 @@ export function TopBar({
   const showSettings = useSettingsDialogStore((s) => s.show)
   const showHelp = useShortcutHelpStore((s) => s.show)
   const showAbout = useAboutDialogStore((s) => s.show)
+  const showAiGuide = useAiGuideStore((s) => s.show)
   const updateAvailable = useUpdateStore(selectUpdateAvailable)
   const frameCount = orderedFrames(document).length
 
@@ -174,6 +177,7 @@ export function TopBar({
           icon={<Ellipsis size={18} />}
           align="right"
           actions={[
+            { label: t('aiGuide.button'), icon: <Sparkles size={16} />, onSelect: showAiGuide },
             { label: t('help.title'), icon: <ShortcutHelpIcon />, onSelect: showHelp },
             {
               label: t('about.repository', { host: 'GitHub' }),
@@ -197,6 +201,9 @@ export function TopBar({
         />
       ) : (
         <>
+          <IconButton label={t('aiGuide.button')} onClick={showAiGuide} aria-haspopup="dialog">
+            <Sparkles size={16} aria-hidden />
+          </IconButton>
           <IconButton label={`${t('help.title')} (K)`} onClick={showHelp} aria-keyshortcuts="K">
             <ShortcutHelpIcon />
           </IconButton>

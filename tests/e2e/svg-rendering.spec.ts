@@ -1,4 +1,4 @@
-import { readSavedDocument } from './saved-document'
+import { readSavedDocument, encodeDocumentFixture } from './saved-document'
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
 import { primaryModifier } from './canvas-gestures'
@@ -57,7 +57,7 @@ async function openMaskedImage(page: Page) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 800"><defs><mask id="fade"><rect width="100%" height="100%" fill="white" opacity=".5"/></mask></defs><image href="${png}" width="100%" height="100%" preserveAspectRatio="none" mask="url(#fade)"/></svg>`
   const data = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
   const doc = {
-    version: 2,
+    version: 1,
     name: 'Large masked image',
     settings: { background: 'plain', frameBorder: 'solid', transitionMs: 0 },
     camera: { x: 0, y: 0, zoom: 1 },
@@ -105,7 +105,7 @@ async function openMaskedImage(page: Page) {
   ).setFiles({
     name: 'masked.canvas.json',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(doc))
+    buffer: encodeDocumentFixture(doc)
   })
   await expect(page.locator('[data-element-id="first"]')).toHaveCount(1)
   await setCamera(page, { x: 100, y: 120, zoom: 0.02 })

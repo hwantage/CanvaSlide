@@ -9,10 +9,6 @@ fn normalization_preserves_existing_hidden_and_mixed_case_name_behavior() {
     for (name, expected) in [
         (".json", ".canvaslide"),
         (".JSON", ".canvaslide"),
-        (".canvas.json", ".canvaslide"),
-        (".CANVAS.JSON", ".canvaslide"),
-        (".canvas.canvas.json", ".canvas.canvaslide"),
-        ("deck.CANVAS.JSON", "deck.canvaslide"),
         ("deck.CANVASLIDE", "deck.CANVASLIDE"),
         ("deck.foo", "deck.foo.canvaslide"),
     ] {
@@ -27,7 +23,7 @@ fn normalization_preserves_existing_hidden_and_mixed_case_name_behavior() {
 fn unicode_path_reads_and_saves_through_the_commands() {
     let dir = std::env::temp_dir().join(format!("canvaslide-unicode-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let selected = dir.join("계획 😀.canvas.json");
+    let selected = dir.join("계획 😀.json");
     std::fs::write(&selected, r#"{"original":true}"#).unwrap();
     assert_eq!(
         read_document(through_bridge(&selected)).unwrap(),
@@ -59,7 +55,7 @@ fn normalization_keeps_non_utf8_names_and_directories() {
     let expected = PathBuf::from(std::ffi::OsString::from_vec(
         b"/tmp/dir\xfe/deck\xff.canvaslide".to_vec(),
     ));
-    for suffix in ["", ".json", ".canvas.json", ".CANVAS.JSON", ".canvaslide"] {
+    for suffix in ["", ".json", ".JSON", ".canvaslide"] {
         let mut bytes = b"/tmp/dir\xfe/deck\xff".to_vec();
         bytes.extend(suffix.as_bytes());
         let path = PathBuf::from(std::ffi::OsString::from_vec(bytes));
@@ -75,7 +71,7 @@ fn non_utf8_commands_never_read_or_overwrite_the_lossy_twin() {
     let root = std::env::temp_dir().join(format!("canvaslide-native-{}", std::process::id()));
     let dir = root.join(std::ffi::OsString::from_vec(b"directory\xfe".to_vec()));
     std::fs::create_dir_all(&dir).unwrap();
-    for suffix in [".canvaslide", ".canvas.json", ".json"] {
+    for suffix in [".canvaslide", ".json"] {
         let mut name = b"deck\xff".to_vec();
         name.extend(suffix.as_bytes());
         let selected = dir.join(std::ffi::OsString::from_vec(name));
@@ -102,7 +98,7 @@ fn non_utf8_commands_never_read_or_overwrite_the_lossy_twin() {
         );
     }
 
-    for suffix in ["", ".json", ".canvas.json"] {
+    for suffix in ["", ".json"] {
         let mut name = b"save-as\xff".to_vec();
         name.extend(suffix.as_bytes());
         let selected = dir.join(std::ffi::OsString::from_vec(name));

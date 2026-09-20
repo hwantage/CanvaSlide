@@ -11,7 +11,6 @@ import {
   translateElements
 } from './document-mutations'
 import { createEmptyDocument, type CanvasElement } from './element-types'
-import { parseDocument, serializeDocument } from './document-file'
 
 const text = (id: string, x = 0): CanvasElement => ({
   id,
@@ -91,7 +90,6 @@ describe('document-mutations', () => {
       height: 80
     }
     const doc = insertElement(createEmptyDocument(), image)
-    expect(parseDocument(serializeDocument(doc)).ok).toBe(true)
     const copy = duplicateElements(doc, ['image'], () => 'copy')
     expect(copy.newIds).toEqual(['copy'])
     expect(copy.document.elements.copy).toEqual({ ...image, id: 'copy', x: 34, y: 44 })

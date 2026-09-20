@@ -34,6 +34,7 @@ test('opens and dismisses nested dialogs without requiring the modal pseudo-clas
 })
 
 for (const { opener, label, close } of [
+  { opener: /^Create with AI$/, label: 'Create with AI and CanvaSlide', close: 'Close AI guide' },
   { opener: /^Settings/, label: 'Settings', close: 'Done' },
   { opener: /^Keyboard shortcuts/, label: 'Keyboard shortcuts', close: 'Done' },
   { opener: /^About CanvaSlide$/, label: 'About CanvaSlide', close: 'Done' },

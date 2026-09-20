@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "The body, top to bottom",
   "elements": {
     "frame-1": {
@@ -57552,6 +57552,9 @@
   ],
   "settings": {
     "transitionMs": 1400,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "plain",
     "frameBorder": "none"
   },
@@ -57560,5 +57563,6 @@
     "x": 190.93150684931499,
     "y": 192.60273972602738,
     "zoom": 0.0145
-  }
+  },
+  "resources": {}
 }

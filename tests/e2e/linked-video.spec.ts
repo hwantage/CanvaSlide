@@ -1,9 +1,9 @@
+import { encodeDocumentFixture } from './saved-document'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Page, type Locator } from '@playwright/test'
-import { unzipSync } from 'fflate'
 
 const clip = readFileSync('tests/fixtures/linked-video.mp4')
 const thumbnailFixture =
@@ -34,6 +34,24 @@ async function clearClipboard(page: Page, browserName: string) {
   if (browserName === 'chromium') {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.evaluate(() => navigator.clipboard.writeText(''))
+  } else if (browserName === 'webkit') {
+    // WebKit requires a trusted click to replace clipboard content left by earlier tests.
+    await page.evaluate(() => {
+      const button = document.createElement('button')
+      button.dataset.testid = 'reset-test-clipboard'
+      button.textContent = 'Reset test clipboard'
+      button.style.cssText = 'position:fixed;inset:0;z-index:99999'
+      button.onclick = () => {
+        void navigator.clipboard.writeText('').then(() => {
+          button.dataset.ready = 'true'
+        })
+      }
+      document.body.append(button)
+    })
+    const button = page.getByTestId('reset-test-clipboard')
+    await button.click()
+    await expect(button).toHaveAttribute('data-ready', 'true')
+    await button.evaluate((node) => node.remove())
   }
 }
 
@@ -61,7 +79,7 @@ test('YouTube shows a thumbnail before playback and falls back safely when it is
   await expect(unavailable.getByRole('button', { name: 'Play video', exact: true })).toBeVisible()
 })
 const deck = () => ({
-  version: 2,
+  version: 1,
   name: 'Linked video test',
   assets: {},
   settings: { transitionMs: 0 },
@@ -101,7 +119,7 @@ async function openDeck(page: Page, content: unknown = deck()) {
   ).setFiles({
     name: 'videos.canvaslide',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(content))
+    buffer: encodeDocumentFixture(content)
   })
   await expect(page.locator('[data-element-type="video"]')).toHaveCount(4)
 }
@@ -487,11 +505,9 @@ test('save/open and standalone HTML preserve URLs without video bytes; exported 
   const saved = join(dir, 'saved.canvaslide')
   await (await download).saveAs(saved)
   const savedBytes = readFileSync(saved)
-  const entries = savedBytes.subarray(0, 4).equals(Buffer.from([80, 75, 3, 4]))
-    ? unzipSync(savedBytes)
-    : { 'document.json': savedBytes }
-  expect(Object.keys(entries)).toEqual(['document.json'])
-  const document = JSON.parse(Buffer.from(entries['document.json']!).toString('utf8'))
+  const document = JSON.parse(savedBytes.toString('utf8'))
+  expect(document.version).toBe(1)
+  expect(document.resources).toEqual({})
   expect(document.elements.a.url).toBe(url)
   expect(document.elements.b.autoplay).toBe(false)
   expect(document.assets).toEqual({})

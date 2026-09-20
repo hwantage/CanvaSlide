@@ -3,17 +3,12 @@ import {
   assetIdForData,
   assetsByteLength,
   createImageAsset,
-  migrateDocumentV1,
   mimeOfDataUrl,
   pruneUnreferencedAssets,
   upsertAsset
 } from './document-assets'
 import { insertElement, removeElements, duplicateElements } from './document-mutations'
-import {
-  createEmptyDocument,
-  defaultDocumentSettings,
-  type CanvasDocumentV1
-} from './element-types'
+import { createEmptyDocument } from './element-types'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk'
 const JPG = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsL'
@@ -67,55 +62,5 @@ describe('document-assets', () => {
     const none = removeElements(one, ['i2'])
     expect(none.assets).toEqual({})
     expect(pruneUnreferencedAssets(none)).toBe(none)
-  })
-
-  it('migrates v1 inline images into the asset table, deduplicating', () => {
-    const legacy: CanvasDocumentV1 = {
-      version: 1,
-      name: 'old',
-      elements: {
-        a: {
-          id: 'a',
-          type: 'image',
-          src: PNG,
-          naturalWidth: 1,
-          naturalHeight: 1,
-          x: 0,
-          y: 0,
-          width: 5,
-          height: 5
-        },
-        b: {
-          id: 'b',
-          type: 'image',
-          src: PNG,
-          naturalWidth: 1,
-          naturalHeight: 1,
-          x: 9,
-          y: 9,
-          width: 5,
-          height: 5
-        },
-        t: {
-          id: 't',
-          type: 'text',
-          text: 'hi',
-          x: 0,
-          y: 0,
-          width: 5,
-          height: 5,
-          textStyle: { color: '#000', fontSize: 12, align: 'left', bold: false }
-        }
-      },
-      order: ['a', 'b', 't'],
-      settings: { ...defaultDocumentSettings, transitionMs: 500 }
-    }
-    const migrated = migrateDocumentV1(legacy)
-    expect(migrated.version).toBe(2)
-    expect(Object.keys(migrated.assets)).toHaveLength(1)
-    const a = migrated.elements.a
-    expect(a?.type === 'image' && a.assetId === assetIdForData(PNG)).toBe(true)
-    expect(a && 'src' in a).toBe(false)
-    expect(migrated.elements.t).toEqual(legacy.elements.t)
   })
 })

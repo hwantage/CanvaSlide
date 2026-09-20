@@ -96,7 +96,7 @@ it('resends full assets after worker failure and releases the cache after idle',
   expect(await afterIdle).toEqual(new Uint8Array([4]))
 })
 
-it('keeps native transport conversions inside the worker', async () => {
+it('serializes and parses native JSON inside the worker', async () => {
   const { encodeNativeDocumentFile, decodeNativeDocumentFile } =
     await import('./document-file-codec')
   const document = createEmptyDocument()
@@ -104,12 +104,12 @@ it('keeps native transport conversions inside the worker', async () => {
   await Promise.resolve()
   const worker = TestWorker.instances[0]!
   expect(worker.postMessage).toHaveBeenCalledWith({ kind: 'encode-native', document }, [])
-  worker.respond({ kind: 'encoded-native', contents: 'canvaslide-zip:encoded' })
-  expect(await save).toBe('canvaslide-zip:encoded')
-  const open = decodeNativeDocumentFile('canvaslide-zip:encoded')
+  worker.respond({ kind: 'encoded-native', contents: '{"version":1,"resources":{}}' })
+  expect(await save).toBe('{"version":1,"resources":{}}')
+  const open = decodeNativeDocumentFile('{"version":1,"resources":{}}')
   await Promise.resolve()
   expect(worker.postMessage).toHaveBeenLastCalledWith(
-    { kind: 'decode-native', contents: 'canvaslide-zip:encoded' },
+    { kind: 'decode-native', contents: '{"version":1,"resources":{}}' },
     []
   )
   worker.respond({ kind: 'decoded', result: { ok: true, document } })

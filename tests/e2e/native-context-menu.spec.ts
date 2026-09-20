@@ -81,15 +81,17 @@ for (const dirty of [false, true]) {
     const download = page.waitForEvent('download')
     await page.getByRole('button', { name: /^Save \(/ }).click()
     const saved = readSavedDocument(await readFile((await (await download).path())!))
-    const original = JSON.parse(
-      await readFile('examples/slides/northwind-launch-deck.canvaslide', 'utf8')
+    const original = readSavedDocument(
+      await readFile('examples/slides/northwind-launch-deck.canvaslide')
     )
     expect(saved.order).toEqual(original.order)
     expect(saved.assets).toEqual(original.assets)
     expect(Object.keys(saved.elements)).toEqual(Object.keys(original.elements))
     expect(saved.elements['frame-1']).toMatchObject({ name: dirty ? 'Unsaved intro' : 'Title' })
     for (const id of original.order) {
-      expect(Reflect.get(saved.elements[id]!, 'text')).toBe(original.elements[id].text)
+      expect(Reflect.get(saved.elements[id]!, 'text')).toBe(
+        Reflect.get(original.elements[id]!, 'text')
+      )
     }
   })
 }

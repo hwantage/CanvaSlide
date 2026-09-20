@@ -1,6 +1,6 @@
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import type { ParseDocumentResult } from '@shared/canvas/document-file'
-import type { DocumentEncodingInput } from '@shared/canvas/document-archive-encoder'
+import type { DocumentEncodingInput } from '@shared/canvas/document-resources'
 
 export type DocumentCodecRequest =
   | { kind: 'encode' | 'encode-native'; document: DocumentEncodingInput }

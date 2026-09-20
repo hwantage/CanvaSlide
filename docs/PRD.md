@@ -127,10 +127,12 @@ world  = (screen - (x, y)) / zoom
 
 ### 4.5 파일 IO
 
-- 문서 형식: `{ version: 1, elements: [...], camera, settings }` JSON. zod로 검증.
+- 문서 형식: `{ version: 1, name, elements: {}, order: [], settings, assets: {}, resources: {} }`
+  단일 UTF-8 JSON. `camera`는 선택 항목이며 `documentFileSchema`로 검증한다.
 - Tauri: `dialog` 플러그인으로 경로 선택, Rust 커맨드 `read_document`/`write_document` 로 IO.
 - 브라우저 dev 모드(`pnpm dev:web`): File System Access API 없이 다운로드/파일 input 폴백.
-- 이미지는 data URL로 저장하되 **포맷 v2**부터 `assets` 테이블에 내용 해시로 한 번만 두고 요소는 참조(v1 자동 마이그레이션).
+- 이미지 데이터는 공유 `resources`에 한 번 저장하고 `assets`의 메타데이터를 통해 요소가 참조한다.
+  SVG 원문과 내부 이미지 참조도 JSON에서 편집할 수 있다. 이전 JSON/ZIP 형식은 지원하지 않는다.
   큰 이미지는 붙여넣기 시 최대 2048px로 다운스케일.
 - **HTML 익스포트(v1.1)**: `src/player/` 바닐라 플레이어를 IIFE로 번들해 문서 JSON과 함께 단일 HTML로 저장. 품질 옵션·예상 크기 표시.
 

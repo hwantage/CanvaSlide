@@ -1,3 +1,4 @@
+import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 import type { StoreApi } from 'zustand'
 
@@ -70,7 +71,7 @@ async function openDeck(page: Page, dense: boolean) {
     ...Array.from({ length: dense ? DENSE_VECTOR_COUNT : 0 }, (_, index) => filler(index))
   ]
   const document = {
-    version: 2,
+    version: 1,
     name: 'Reflow',
     elements: Object.fromEntries(elements.map((e) => [e.id, e])),
     order: elements.map((e) => e.id),
@@ -86,7 +87,7 @@ async function openDeck(page: Page, dense: boolean) {
   ).setFiles({
     name: 'reflow.canvaslide',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(document))
+    buffer: encodeDocumentFixture(document)
   })
   await expect(page.getByTestId('frame-row')).toHaveCount(2)
 }

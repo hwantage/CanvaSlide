@@ -1,3 +1,4 @@
+import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 
 test.use({ deviceScaleFactor: 2 })
@@ -60,7 +61,7 @@ async function openPreviewDocument(page: Page) {
     height: 2.4
   }
   const doc = {
-    version: 2,
+    version: 1,
     name: 'Reused preview',
     settings: { background: 'plain', frameBorder: 'none', transitionMs: 600 },
     assets: { photo: { id: 'photo', mime: 'image/svg+xml', data, width: 64, height: 32 } },
@@ -74,7 +75,7 @@ async function openPreviewDocument(page: Page) {
   ).setFiles({
     name: 'preview.canvaslide',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(doc))
+    buffer: encodeDocumentFixture(doc)
   })
   await page.getByTestId('frame-row').nth(1).locator('button').first().click()
   await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeVisible()

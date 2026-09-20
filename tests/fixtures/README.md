@@ -9,9 +9,6 @@ pages sharing the same local origin. No user-provided design content is included
 group, mixed-style text, partially clipped text, fully clipped text, and a hidden ancestor. It
 checks that frame backgrounds never capture the text and that the visible text can actually be edited.
 
-The real local sample is exercised only when `CANVASLIDE_FIG_SAMPLE` is set; see
-[`docs/FIGMA-IMPORT.md`](../../docs/FIGMA-IMPORT.md).
-
 `linked-video.mp4` (8 seconds, H.264/AAC) and `linked-video.webm` (4 seconds, VP9/Opus) are
 synthetic 320×180 test patterns with a quiet sine tone. They contain no user media. Linked-video E2E serves these bytes from a mocked HTTP
 media URL to verify decoding, playback and teardown without third-party network dependencies.

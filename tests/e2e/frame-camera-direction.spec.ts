@@ -1,3 +1,4 @@
+import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { primaryModifier } from './canvas-gestures'
@@ -45,7 +46,7 @@ async function openDeck(
 ) {
   const all = [...frames, ...extras] as { id: string }[]
   const document = {
-    version: 2,
+    version: 1,
     name: 'Direction',
     elements: Object.fromEntries(all.map((f) => [f.id, f])),
     order: all.map((f) => f.id),
@@ -61,7 +62,7 @@ async function openDeck(
   ).setFiles({
     name: 'direction.canvaslide',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(document))
+    buffer: encodeDocumentFixture(document)
   })
   await expect(page.getByTestId('frame-row')).toHaveCount(frames.length)
 }
@@ -416,7 +417,7 @@ test('inherited effects highlight controls and reset to app defaults through und
     await chooser
   ).setFiles({
     name: 'reset-camera.canvaslide',
-    mimeType: 'application/zip',
+    mimeType: 'application/json',
     buffer: bytes
   })
   await expect(rows).toHaveCount(2)

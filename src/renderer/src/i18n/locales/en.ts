@@ -5,6 +5,30 @@ export const en = {
   'panel.open': 'Open panels',
   'panel.close': 'Close panels',
   'panel.title': 'Frames and properties',
+  'aiGuide.button': 'Create with AI',
+  'aiGuide.title': 'Create with AI and {app}',
+  'aiGuide.description': 'Copy the prompt below and paste it into your AI assistant.',
+  'aiGuide.example': 'Example prompt · Introducing {app}',
+  'aiGuide.style': 'Presentation style',
+  'aiGuide.style.general': 'General',
+  'aiGuide.style.dynamic': 'Dynamic',
+  'aiGuide.includeHtml': 'Generate an {format} file',
+  'aiGuide.prompt.html': 'Also create an {format} file.',
+  'aiGuide.close': 'Close AI guide',
+  'aiGuide.copy': 'Copy prompt',
+  'aiGuide.copying': 'Copying…',
+  'aiGuide.copied': 'Prompt copied. Paste it into your AI assistant.',
+  'aiGuide.failed': 'Could not copy. Select the prompt above and copy it manually.',
+  'aiGuide.prompt.general': `Analyze the content at {website} and create an editable 8-slide English presentation introducing {app}, saved as {file}.
+
+Use calm layouts and restrained camera movement to communicate clearly.
+
+Use the skill at {skill} to create the file.`,
+  'aiGuide.prompt.dynamic': `Analyze the content at {website} and create an editable English presentation introducing {app}, saved as {file}.
+
+Use varied camera effects to create a dynamic feel. Place nested frames around areas to emphasize with zoom effects. Include these zoomed-in scenes in a total presentation sequence of 8 scenes.
+
+Use the skill at {skill} to create the file.`,
   'video.thumbnail': '{provider} video thumbnail',
   'video.autoplay': 'Autoplay in Slide Show',
   'video.exportLinked':

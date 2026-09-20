@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "Cloud Architecture",
   "elements": {
     "text-1": {
@@ -1291,6 +1291,9 @@
   ],
   "settings": {
     "transitionMs": 900,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "dots",
     "frameBorder": "solid"
   },
@@ -1299,5 +1302,6 @@
     "x": 17.786666666666665,
     "y": 89.07333333333334,
     "zoom": 0.7053
-  }
+  },
+  "resources": {}
 }

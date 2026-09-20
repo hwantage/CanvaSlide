@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import './brand.css';
 
+[data-modal-pointer-focus]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Design tokens: surface/foreground pairs, neutral chrome, colour reserved for state.
    `data-theme` is written onto <html> from the theme store before React renders. */
 :root {

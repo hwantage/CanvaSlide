@@ -35,7 +35,7 @@ export async function saveDocumentFile(
     return saveWithTauri(document, forcePrompt ? null : filePath)
   }
   const contents = await encodeDocumentFile(document)
-  downloadFile(contents, documentFileName(document), 'application/zip')
+  downloadFile(contents, documentFileName(document), 'application/json')
   return { filePath: null }
 }
 

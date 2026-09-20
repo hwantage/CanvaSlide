@@ -1,4 +1,14 @@
-import { Gauge, Lightbulb, Play, Spline, Square, Timer } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  Gauge,
+  Lightbulb,
+  ListChecks,
+  Play,
+  Spline,
+  Square,
+  Timer
+} from 'lucide-react'
 import {
   memo,
   useCallback,
@@ -20,6 +30,7 @@ import {
 } from '@shared/canvas/frame-transition'
 import { FrameNameEditor } from '@/components/canvas/frame-name-editor'
 import { useDragAutoScroll } from '@/hooks/use-drag-auto-scroll'
+import { useCompactLayout } from '@/hooks/use-compact-layout'
 import { inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
@@ -97,6 +108,8 @@ function FrameName({ frame }: { frame: FrameElement }) {
 }
 
 export function FrameListPanel() {
+  const compact = useCompactLayout()
+  const [multiple, setMultiple] = useState(false)
   const document = useDocumentStore(selectDocument)
   const selectedIds = useDocumentStore(selectSelectedIds)
   const setSelection = useDocumentStore((s) => s.setSelection)
@@ -107,6 +120,8 @@ export function FrameListPanel() {
   const [dropGap, setDropGap] = useState<number | null>(null)
   const [dragging, setDragging] = useState<number | null>(null)
   const frames = orderedFrames(document)
+  const selectedIndex =
+    compact && selectedIds.length === 1 ? frameIndexById(frames, selectedIds[0]!) : -1
   const anchorId = useRef<string | null>(null)
 
   // Why: one click both highlights the frame on the canvas and brings it into view.
@@ -119,7 +134,7 @@ export function FrameListPanel() {
   }
 
   const selectFrame = (event: MouseEvent, frame: FrameElement) => {
-    const toggle = hasPrimaryModifier(event)
+    const toggle = hasPrimaryModifier(event) || (compact && multiple)
     const selection = selectFrameInList(frames, selectedIds, frame.id, anchorId.current, {
       range: event.shiftKey,
       toggle
@@ -206,9 +221,36 @@ export function FrameListPanel() {
         }
       }}
     >
-      <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {t('frames.title')}
-      </h2>
+      <div className="flex items-center justify-between gap-1">
+        <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {t('frames.title')}
+        </h2>
+        {compact && (
+          <div className="flex shrink-0">
+            <IconButton
+              label={t('frames.selectMultiple')}
+              active={multiple}
+              onClick={() => setMultiple(!multiple)}
+            >
+              <ListChecks size={16} />
+            </IconButton>
+            <IconButton
+              label={t('frames.moveUp')}
+              disabled={selectedIndex <= 0}
+              onClick={() => moveFrameTo(selectedIds[0]!, selectedIndex - 1)}
+            >
+              <ArrowUp size={16} />
+            </IconButton>
+            <IconButton
+              label={t('frames.moveDown')}
+              disabled={selectedIndex < 0 || selectedIndex >= frames.length - 1}
+              onClick={() => moveFrameTo(selectedIds[0]!, selectedIndex + 1)}
+            >
+              <ArrowDown size={16} />
+            </IconButton>
+          </div>
+        )}
+      </div>
       {frames.length === 0 && (
         <p className="px-1 text-xs text-muted-foreground">{t('frames.empty')}</p>
       )}

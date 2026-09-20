@@ -2,6 +2,11 @@ import type { UiStrings } from '../ui-strings'
 
 // Terms follow the Korean editions of Figma / PowerPoint / Keynote where a standard exists.
 export const ko: UiStrings = {
+  'menu.file': '파일 메뉴',
+  'menu.actions': '작업 메뉴',
+  'panel.open': '패널 펼치기',
+  'panel.close': '패널 접기',
+  'panel.title': '프레임 및 속성',
   'video.thumbnail': '{provider} 동영상 미리 보기',
   'video.autoplay': '슬라이드 쇼에서 자동 재생',
   'video.exportLinked':
@@ -245,6 +250,9 @@ export const ko: UiStrings = {
   'panel.resize': '패널 크기 조절',
 
   'frames.title': '프레임',
+  'frames.selectMultiple': '여러 프레임 선택',
+  'frames.moveUp': '선택한 프레임 위로 이동',
+  'frames.moveDown': '선택한 프레임 아래로 이동',
   'frames.empty': 'F를 누른 뒤 캔버스를 드래그해 프레젠테이션 프레임을 추가하세요.',
   'frames.renameHint': '더블클릭하여 이름 변경',
   'frames.name': '프레임 이름',

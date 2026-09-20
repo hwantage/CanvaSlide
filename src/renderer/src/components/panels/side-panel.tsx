@@ -82,7 +82,7 @@ export function SidePanel() {
     <aside
       ref={ref}
       data-testid="side-panel"
-      className="flex w-64 shrink-0 flex-col border-l border-border bg-background"
+      className="flex h-full w-64 max-w-[100vw] shrink-0 flex-col border-l border-border bg-background"
     >
       <div
         data-testid="frames-pane"

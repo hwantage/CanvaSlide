@@ -187,6 +187,11 @@ for (const locale of ['en', 'ko']) {
       await page.emulateMedia({ colorScheme: theme })
       for (const width of [800, 1024, 1440]) {
         await page.setViewportSize({ width, height: 700 })
+        const menu = header.getByRole('button', {
+          name: locale === 'en' ? 'Actions menu' : '작업 메뉴',
+          exact: true
+        })
+        await expect(menu).toHaveCount(width <= 1100 ? 1 : 0)
         expect(await header.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
           true
         )
@@ -204,7 +209,12 @@ for (const locale of ['en', 'ko']) {
             expect(control.left).toBeGreaterThanOrEqual(controls[index - 1]!.right)
           }
         }
-        await header.getByRole('button', { name: aboutLabel, exact: true }).click()
+        if (width <= 1100) {
+          await menu.click()
+          await page.getByRole('menuitem', { name: aboutLabel, exact: true }).click()
+        } else {
+          await header.getByRole('button', { name: aboutLabel, exact: true }).click()
+        }
         const about = page.getByRole('dialog', { name: aboutLabel })
         const logo = about.getByRole('img', { name: 'CanvaSlide' })
         const imageBox = (await logo.boundingBox())!

@@ -90,7 +90,7 @@ export function ModalDialog({
     >
       <div
         className={cn(
-          'rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl',
+          'max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl',
           className
         )}
         ref={panelRef}

@@ -1,5 +1,10 @@
 // Source language: every other locale must define exactly these keys (enforced by the type).
 export const en = {
+  'menu.file': 'File menu',
+  'menu.actions': 'Actions menu',
+  'panel.open': 'Open panels',
+  'panel.close': 'Close panels',
+  'panel.title': 'Frames and properties',
   'video.thumbnail': '{provider} video thumbnail',
   'video.autoplay': 'Autoplay in Slide Show',
   'video.exportLinked':
@@ -240,6 +245,9 @@ export const en = {
   'panel.resize': 'Resize panels',
 
   'frames.title': 'Frames',
+  'frames.selectMultiple': 'Select multiple frames',
+  'frames.moveUp': 'Move selected frame up',
+  'frames.moveDown': 'Move selected frame down',
   'frames.empty': 'Press F and drag on the canvas to add a presentation frame.',
   'frames.renameHint': 'Double-click to rename',
   'frames.name': 'Frame name',

@@ -41,7 +41,7 @@ export function PreviewControls() {
           </span>
           <IconButton
             label={t('preview.previous')}
-            className="h-7 w-7"
+            className="h-7 w-7 rounded-full"
             disabled={!stepSelectedFrame(ids, previewFrameId, -1)}
             onClick={previous}
           >
@@ -49,7 +49,7 @@ export function PreviewControls() {
           </IconButton>
           <IconButton
             label={t('preview.next')}
-            className="h-7 w-7"
+            className="h-7 w-7 rounded-full"
             disabled={!stepSelectedFrame(ids, previewFrameId, 1)}
             onClick={next}
           >
@@ -59,13 +59,13 @@ export function PreviewControls() {
       )}
       <IconButton
         label={t('preview.replay')}
-        className="h-7 w-7"
+        className="h-7 w-7 rounded-full"
         disabled={!frame}
         onClick={() => previewTransition(previewFrameId, previewFrameIds)}
       >
         <RotateCcw size={14} />
       </IconButton>
-      <IconButton label={t('preview.close')} className="h-7 w-7" onClick={exit}>
+      <IconButton label={t('preview.close')} className="h-7 w-7 rounded-full" onClick={exit}>
         <X size={14} />
       </IconButton>
     </div>

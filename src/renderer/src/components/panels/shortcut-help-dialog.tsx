@@ -116,7 +116,7 @@ export function ShortcutHelpDialog() {
       className="flex max-h-[85vh] w-[44rem] max-w-[95vw] flex-col gap-3 overflow-y-auto"
     >
       <h2 className="text-sm font-semibold">{t('help.title')}</h2>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         {sections().map((section) => (
           <section key={section.title} className="flex flex-col gap-1">
             <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

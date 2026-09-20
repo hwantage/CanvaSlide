@@ -37,7 +37,7 @@ function ConnectorFlyout() {
   return (
     <div
       data-testid="connector-flyout"
-      className="absolute left-full top-0 ml-2 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1 shadow-md"
+      className="tool-flyout absolute left-full top-0 ml-2 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1 shadow-md"
     >
       <div className="flex gap-0.5">
         {connectorRouteOptions.map(({ value, label, icon: Icon }) => (
@@ -73,7 +73,7 @@ export function ToolBar() {
   const active = useToolStore(selectTool)
   const setTool = useToolStore((s) => s.setTool)
   return (
-    <div className="relative flex flex-col gap-1 rounded-lg border border-border bg-popover p-1 shadow-md">
+    <div className="editor-tool-bar relative flex flex-col gap-1 rounded-lg border border-border bg-popover p-1 shadow-md">
       {tools.map((tool) => (
         <IconButton
           key={tool.id}

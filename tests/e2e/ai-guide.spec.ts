@@ -174,6 +174,10 @@ test('pointer dismissal leaves the AI icon unchanged while keyboard dismissal re
       await expect(page.getByRole('dialog')).toHaveCount(0)
       await expect(opener).toHaveCSS('box-shadow', 'none')
       await expect(opener).toHaveAttribute('aria-pressed', 'false')
+      // macOS Safari does not focus buttons on pointer clicks.
+      if (browserName !== 'webkit' || process.platform !== 'darwin') {
+        await expect(opener).toBeFocused()
+      }
     }
     // Safari includes buttons in keyboard navigation with Option+Tab on macOS.
     const tab = browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab'

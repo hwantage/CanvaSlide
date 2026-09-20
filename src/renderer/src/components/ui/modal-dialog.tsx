@@ -1,6 +1,22 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
+function restoreFocus(opener: HTMLElement, wasFocusVisible: boolean) {
+  opener.focus({ preventScroll: true })
+  if (wasFocusVisible || document.activeElement !== opener || !opener.matches(':focus-visible')) {
+    return
+  }
+  // WebKit can transfer a textarea's focus ring to a pointer-opened dialog's opener.
+  opener.setAttribute('data-modal-pointer-focus', '')
+  const clear = () => {
+    opener.removeAttribute('data-modal-pointer-focus')
+    opener.removeEventListener('blur', clear)
+    opener.removeEventListener('keydown', clear)
+  }
+  opener.addEventListener('blur', clear)
+  opener.addEventListener('keydown', clear)
+}
+
 export function ModalDialog({
   label,
   onClose,
@@ -15,10 +31,13 @@ export function ModalDialog({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const keyboardInteraction = useRef(false)
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current!
     const opener = document.activeElement
+    const wasFocusVisible =
+      opener?.matches(':focus-visible') === true && !opener.hasAttribute('data-modal-pointer-focus')
     const previousDialogs = Array.from(
       document.querySelectorAll<HTMLDialogElement>('dialog[open][aria-modal="true"]')
     ).filter((previous) => !previous.inert)
@@ -35,7 +54,7 @@ export function ModalDialog({
         previous.inert = false
       }
       if (opener instanceof HTMLElement && opener.isConnected) {
-        opener.focus({ preventScroll: true })
+        restoreFocus(opener, wasFocusVisible || keyboardInteraction.current)
       }
     }
   }, [])
@@ -46,12 +65,16 @@ export function ModalDialog({
       aria-modal
       aria-label={label}
       className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-0 backdrop:bg-black/40 open:flex"
+      onPointerDown={() => {
+        keyboardInteraction.current = false
+      }}
       onClick={onClose}
       onCancel={(event) => {
         event.preventDefault()
         onClose()
       }}
       onKeyDown={(event) => {
+        keyboardInteraction.current = true
         event.stopPropagation()
         if (event.key !== 'Tab') {
           return

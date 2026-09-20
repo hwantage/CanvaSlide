@@ -62,6 +62,10 @@ test.describe('compact editor', () => {
     await page.goto('/')
     const file = page.getByRole('button', { name: 'File menu', exact: true })
     const actions = page.getByRole('button', { name: 'Actions menu', exact: true })
+    const slideshow = page.getByRole('button', { name: 'Slide Show', exact: true })
+    await contained(slideshow, page)
+    await expect(slideshow).toBeDisabled()
+    await expect(slideshow).toHaveAttribute('title', 'Add a frame first (F)')
     await expect(page.getByTestId('side-panel')).toBeHidden()
     await contained(page.getByRole('banner'), page)
     await file.focus()
@@ -88,7 +92,6 @@ test.describe('compact editor', () => {
     await expect(page.getByRole('menuitem', { name: 'Keyboard shortcuts' })).toBeFocused()
     await page.keyboard.press('End')
     await page.keyboard.press('ArrowUp')
-    // Slide Show is disabled in an empty document and must be skipped.
     await expect(page.getByRole('menuitem', { name: 'Settings', exact: true })).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
@@ -172,7 +175,7 @@ test.describe('compact editor', () => {
     await page.getByRole('button', { name: 'Select multiple frames', exact: true }).tap()
     await rows.first().getByRole('button').first().tap()
     await expect(rows.locator('button[aria-pressed="true"]')).toHaveCount(2)
-    await action(page, 'Slide Show')
+    await page.getByRole('button', { name: 'Slide Show', exact: true }).tap()
     await expect(page.getByTestId('presentation-controls')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(page.getByRole('banner')).toBeVisible()
@@ -195,6 +198,45 @@ test.describe('compact editor', () => {
     await page.setViewportSize({ width: 1400, height: 900 })
     await expect(panel).toBeHidden()
   })
+
+  for (const width of [320, 390]) {
+    test(`Slide Show starts beside a long document title at ${width}px @core-interaction`, async ({
+      page
+    }) => {
+      await page.setViewportSize({ width, height: 844 })
+      await openShared(page)
+      const title = page.getByRole('textbox', { name: 'Document name' })
+      await title.fill('A long mobile presentation title that must not hide the Slide Show button')
+      const slideshow = page.getByRole('button', { name: 'Slide Show', exact: true })
+      await expect(slideshow).toBeEnabled()
+      await contained(page.getByRole('banner'), page)
+      await contained(slideshow, page)
+      const titleBox = (await title.boundingBox())!
+      const buttonBox = (await slideshow.boundingBox())!
+      expect(buttonBox.x).toBeGreaterThanOrEqual(titleBox.x + titleBox.width)
+      expect(buttonBox.width).toBeGreaterThanOrEqual(44)
+      expect(buttonBox.height).toBeGreaterThanOrEqual(44)
+      await expect(page.getByRole('menu')).toHaveCount(0)
+      await slideshow.tap()
+      await expect(page.getByTestId('presentation-controls')).toBeVisible()
+      await expect(page.getByTestId('presentation-counter')).toContainText('1 / 3')
+      await page.getByRole('button', { name: /Next frame/ }).tap()
+      await expect(page.getByTestId('presentation-counter')).toContainText('2 / 3')
+      await page.getByRole('button', { name: /^Exit/ }).tap()
+      await expect(slideshow).toBeVisible()
+      await slideshow.focus()
+      await page.keyboard.press('Enter')
+      await expect(page.getByTestId('presentation-counter')).toContainText('1 / 3')
+      await page.keyboard.press('Escape')
+      await expect(slideshow).toBeVisible()
+      await page.getByRole('button', { name: 'Actions menu', exact: true }).tap()
+      await expect(page.getByRole('menuitem', { name: 'Slide Show', exact: true })).toHaveCount(0)
+      await page.keyboard.press('Escape')
+      await page.setViewportSize({ width: 1400, height: 900 })
+      await expect(slideshow).toHaveCount(1)
+      await expect(slideshow).toHaveText('Slide Show')
+    })
+  }
 
   for (const viewport of [
     { width: 320, height: 568 },
@@ -222,7 +264,7 @@ test.describe('compact editor', () => {
       await page.keyboard.press('Escape')
       await expect(page.getByRole('dialog', { name: 'Share', exact: true })).toBeVisible()
       await page.keyboard.press('Escape')
-      await action(page, 'Slide Show')
+      await page.getByRole('button', { name: 'Slide Show', exact: true }).tap()
       await contained(page.getByTestId('presentation-controls'), page)
       await page.getByRole('button', { name: /Next frame/ }).tap()
       await expect(page.getByTestId('presentation-counter')).toContainText('2 / 3')

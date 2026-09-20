@@ -1,6 +1,6 @@
 # CanvaSlide official website
 
-The product website and documentation live here, alongside the desktop app. The site uses the repository's existing React, Vite, TypeScript, pnpm, and Playwright dependencies. No additional package installation is required beyond the root `pnpm install`.
+The product website and user guide live here, alongside the desktop app. See the [documentation map](../docs/README.md) for repository guides. The site uses the repository's existing React, Vite, TypeScript, pnpm, and Playwright dependencies. No additional package installation is required beyond the root `pnpm install`.
 
 ```bash
 pnpm dev:site      # http://127.0.0.1:1421/
@@ -17,8 +17,10 @@ The home page is `/`; documentation is `/docs/`. Documentation topics use `?guid
 - The initial theme follows the operating system. `public/appearance.js` applies preferences before the page renders; storage failures are nonfatal.
 - Visible copy uses the shared typed `t()` dictionary in `src/renderer/src/i18n/locales/{en,ko}.ts`, under `site.*`. Add English keys first and provide Korean equivalents.
 - Documentation covers installation, a first presentation, navigation, editing, connectors, frames, presentation timing, saving, HTML export, shortcuts, and common questions.
-- The first public installer release did not exist when this site was created. Download links deliberately open the official Releases page, and installation documents offer source-build instructions. When installers are published, update the availability copy and download links together.
-- Screenshots show the actual editor and presentation view. Feature copy is based on the repository README, PRD, report, and implemented shortcuts. Platform prerequisites link to the official Tauri guide.
+- Download links open the [official Releases page](https://github.com/hwantage/CanvaSlide/releases). Installer availability comes from published releases; source-build instructions describe the checkout. Keep availability wording and download links aligned when maintaining installation copy.
+- Screenshots show the actual editor and presentation view. Verify feature copy against the current code, tests and [maintained guides](../docs/README.md); historical plans and implementation reports are not a source for current behavior. Platform prerequisites link to the official Tauri guide.
+
+For navigation and drawing keys, check [`keyboard-shortcuts.ts`](../src/renderer/src/lib/keyboard-shortcuts.ts) and the app’s shortcut help. Keep English and Korean guide copy aligned. Record test results in the PR, not as a dated status section here.
 
 ## Brand and motion
 

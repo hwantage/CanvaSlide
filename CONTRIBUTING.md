@@ -6,15 +6,14 @@ to get it merged.
 
 ## Before You Start
 
-- Keep each change scoped to one user-facing improvement, bug fix, or refactor.
+- Keep each change scoped to one improvement, bug fix, refactor, or documentation topic.
 - CanvaSlide targets **macOS and Windows** as first-class platforms. Never hardcode `metaKey`; use
   `hasPrimaryModifier()` and `shortcutLabel()` from `src/renderer/src/lib/platform-keys.ts` so shortcuts
   and their labels (⌘ / Ctrl) are right on both.
 - The app must work both inside the Tauri shell and in plain browser dev mode (`pnpm dev:web`). Anything
   that touches the OS (file dialogs, menus, file IO) goes through `src/renderer/src/platform/` with a
   browser fallback.
-- Read [`AGENTS.md`](./AGENTS.md) for the code rules, [`docs/PRD.md`](./docs/PRD.md) for scope and
-  [`docs/REPORT.md`](./docs/REPORT.md) for the current state before changing behaviour.
+- Read [`AGENTS.md`](./AGENTS.md) for code rules and follow the [documentation map](./docs/README.md) for task-specific guidance.
 - Check existing issues first. For anything larger than a bug fix, open an issue describing the problem
   and your proposed approach before writing code, so we can agree on direction early.
 
@@ -26,6 +25,8 @@ Requirements:
 - Rust stable toolchain (only for the Tauri window and `src-tauri/` changes)
 - Tauri prerequisites for your OS: <https://v2.tauri.app/start/prerequisites/>
 
+Exact commands and dependency versions are maintained in [`package.json`](./package.json).
+
 ```bash
 pnpm install
 pnpm dev            # Tauri window (needs Rust)
@@ -36,15 +37,18 @@ pnpm dev:web        # browser only, http://127.0.0.1:1420
 
 ## Project Layout
 
-| Path                 | What lives there                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `src/shared/canvas/` | Pure domain logic (geometry, document transforms). No React, no Tauri. Tested.       |
-| `src/renderer/src/`  | React app: `store/` (zustand), `hooks/`, `components/`, `lib/`, `platform/`, `i18n/` |
-| `src/player/`        | Vanilla standalone player inlined into HTML exports                                  |
-| `src-tauri/`         | Rust shell: window, macOS menu, file IO commands                                     |
-| `config/`            | Tool configs (tsconfig, vite, vitest)                                                |
-| `tests/e2e/`         | Playwright browser E2E                                                               |
-| `examples/`          | Sample `.canvaslide` documents and their generated HTML exports                      |
+| Path                                 | What lives there                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------ |
+| `src/shared/canvas/`                 | Pure domain logic (geometry, document transforms). No React, no Tauri. Tested.       |
+| `src/renderer/src/`                  | React app: `store/` (zustand), `hooks/`, `components/`, `lib/`, `platform/`, `i18n/` |
+| `src/player/`                        | Vanilla standalone player inlined into HTML exports                                  |
+| `src-tauri/`                         | Rust shell: window, macOS menu, file IO commands                                     |
+| `config/`                            | Tool configs (tsconfig, vite, vitest)                                                |
+| `tests/e2e/`                         | Playwright browser E2E                                                               |
+| `examples/`                          | Sample `.canvaslide` documents and their generated HTML exports                      |
+| `src/cloud-share/`, `functions/api/` | Cloud snapshot validation/storage and Pages API routes                               |
+| `website/`                           | Separate product website and user documentation                                      |
+| `skills/`                            | Portable authoring skill linked to the example guide and file schema                 |
 
 ## Code Rules
 
@@ -72,6 +76,11 @@ The full list is in [`AGENTS.md`](./AGENTS.md). The ones that most often come up
 
 ## Documentation and Temporary Files
 
+- Update the maintained documentation affected by the change; keep the English and Korean README
+  structure, feature summaries and getting-started steps aligned.
+- Track planned work in issues and completed changes
+  in PRs/releases. Put run-specific test results, counts and measurements in the PR with their environment,
+  not in a rolling status report. Preserve lasting constraints with links to the code/tests that enforce them.
 - Do not add files under `docs/` without a specific, lasting documentation need. Explain that need
   in the PR; `docs/` is not a workspace for task artifacts or review evidence.
 - Keep temporary files in `discuss/`, which is already excluded by `.gitignore`. This includes
@@ -109,13 +118,24 @@ Run the same checks CI runs:
 
 ```bash
 pnpm check                          # oxlint + max-lines + oxfmt + tsc + vitest
-pnpm test:e2e                       # Playwright (starts its own vite; port derived from the checkout)
+pnpm test:e2e                       # Chromium suite + core interactions in Firefox/WebKit
 pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test   # only if src-tauri/ changed
-pnpm tauri build --bundles app      # if you touched the shell, config, or bundling
+pnpm tauri build --bundles app      # macOS; if you touched the shell, config, or bundling
+pnpm test:site                      # if website content, code, or build inputs changed
 ```
+
+E2E starts Vite on a port derived from this checkout and verifies the server belongs to it.
+Install browsers with `pnpm exec playwright install chromium firefox webkit` if needed.
+Set `CANVASLIDE_E2E_WEBKIT=1` to include the additional WebKit rendering regressions.
+For an unsigned local app bundle, see the [release guide](./docs/RELEASE.md#5-실패했을-때).
+CI runs Rust checks and macOS/Windows bundle jobs regardless of the local change scope; workflow
+definitions live in [`.github/workflows/`](./.github/workflows/).
 
 `pnpm format` fixes formatting; `pnpm lint:fix` fixes auto-fixable lint issues; `pnpm rust:fmt`
 reformats `src-tauri/`.
+
+For documentation edits, check relative links, anchors, example paths and documented commands against
+the checkout. Do not add runtime tests solely to assert prose. Report skipped or failed checks explicitly.
 
 Add tests that would actually catch a regression, not just the happy path:
 

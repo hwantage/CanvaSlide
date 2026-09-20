@@ -1,8 +1,8 @@
 # Examples
 
 Sample `.canvaslide` documents that show what CanvaSlide is good at. Open any of them with
-**Open** (⌘O / Ctrl+O), then click **Slide Show**. Use **→ / Space** to advance,
-**←** to go back, **O** for the overview and **Esc** to exit.
+**Open** (⌘O / Ctrl+O), then start **Slide Show** with **⌘Enter / Ctrl+Enter** or the toolbar button.
+Use **→ / Space** to advance, **←** to go back, **O** for the overview and **Esc** to exit.
 
 Start with **`showcase/one-order.canvaslide`** — a 23-frame journey through an order, a lost
 payment response, an idempotent retry, and completion, built entirely from editable native shapes,
@@ -46,7 +46,8 @@ Write **UTF-8 JSON with `version: 1`**, validated by
 `name.canvaslide` file. This is the document format for both the browser and desktop app.
 The file contains elements, presentation settings, assets and shared resources in one JSON object.
 `canvasDocumentSchema` in the application source describes the renderer's resolved image data;
-use `documentFileSchema` when producing a file.
+use `documentFileSchema` when producing a file. See [document formats](../docs/ARCHITECTURE.md#document-formats)
+for the boundary between file data and the runtime model. Earlier JSON/ZIP formats are not supported.
 
 Deliver the file itself when possible. If only text output is available, provide the complete JSON
 in one code block; the user saves its contents without the Markdown fences as UTF-8 `.canvaslide`
@@ -224,5 +225,6 @@ when HTML is requested **in addition** to it. HTML is a presentation viewer, not
 - [One order](./showcase/one-order.canvaslide): nested detail frames and camera direction.
 
 With a checkout, `pnpm test` validates these examples and the complete JSON above with the actual
-loader. Otherwise, open the file in CanvaSlide and check every frame. A schema pass cannot detect
-clipped text, unreadable type or unwanted overlaps; inspect any generated HTML in a browser too.
+loader. `pnpm tc:examples` checks the example TypeScript, not JSON validity. Otherwise, open the file
+in CanvaSlide and check every frame. A schema pass cannot detect clipped text, unreadable type or
+unwanted overlaps; inspect any generated HTML in a browser too.

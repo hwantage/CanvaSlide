@@ -1,8 +1,16 @@
 # CanvaSlide — agent guide
 
-Infinite-canvas desktop app (Tauri 2 + React 19). Read [`docs/PRD.md`](./docs/PRD.md) for scope and
-[`docs/REPORT.md`](./docs/REPORT.md) for the current state before changing behaviour.
-Releases follow [`docs/RELEASE.md`](./docs/RELEASE.md).
+Infinite-canvas presentation app for macOS and Windows (Tauri 2 + React 19), also runnable in a browser.
+
+## Finding context
+
+- Follow the [documentation map](./docs/README.md) for guidance relevant to the task.
+- Check current behaviour in this checkout's code, tests and configuration. The requested change and
+  maintained feature guidance define the intended behaviour; resolve conflicts explicitly.
+- Reuse context already read during the task. Re-read when a relevant file changes or a new question
+  needs it, not on every follow-up prompt.
+- Contribution workflow and verification scope: [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+  Releases: [`docs/RELEASE.md`](./docs/RELEASE.md).
 
 ## Layout
 
@@ -12,6 +20,9 @@ Releases follow [`docs/RELEASE.md`](./docs/RELEASE.md).
 - `src/player/` — vanilla standalone player inlined into HTML exports; built by `pnpm build:player` into
   `src/renderer/src/generated/player.iife.js` (gitignored, rebuilt by `dev:web`/`build:web`/`tc:web`).
 - `src-tauri/` — Rust shell: `document_io.rs` (file IO commands), `app_menu.rs` (macOS menu).
+- `src/cloud-share/`, `functions/api/` — snapshot validation/storage and Cloudflare Pages routes.
+- `website/` — separately built product website and user guide.
+- `skills/` — portable CanvaSlide authoring skill; the file contract and examples live in `examples/README.md`.
 - `config/` — tool configs (tsconfig.*, vite, vitest). `tests/e2e/` — Playwright browser E2E.
 
 ## Rules
@@ -45,8 +56,12 @@ Releases follow [`docs/RELEASE.md`](./docs/RELEASE.md).
 ## Verify
 
 ```
-pnpm check        # lint + format + typecheck + unit
-pnpm test:e2e     # Playwright (starts its own vite on a port derived from this checkout)
-pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test
-pnpm tauri build --bundles app
+pnpm check        # lint + max-lines + format + typecheck + unit
+pnpm test:e2e     # Chromium suite + core interactions in Firefox/WebKit; checkout-specific port
+pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test  # if src-tauri/ changed
+pnpm tauri build --bundles app  # macOS; if shell, config or bundling changed
+pnpm test:site    # if website content, code or build inputs changed
 ```
+
+For local bundle verification without updater signing, see the [release guide](./docs/RELEASE.md#5-실패했을-때).
+Record actual results and platforms in the PR; do not copy historical test counts into maintained docs.

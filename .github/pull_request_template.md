@@ -41,7 +41,9 @@ Fixes #
 - [ ] This PR is small and focused on one topic
 - [ ] `pnpm check` passes (oxlint + max-lines + oxfmt + tsc + vitest)
 - [ ] `pnpm test:e2e` passes, or the change cannot affect browser E2E
-- [ ] `pnpm rust:fmt && pnpm rust:clippy && pnpm rust:test` pass, or `src-tauri/` is untouched
+- [ ] `pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test` pass, or `src-tauri/` is untouched
+- [ ] `pnpm test:site` passes, or website content, code and build inputs are untouched
+- [ ] Affected documentation and links are updated; new permanent docs have a stated purpose
 - [ ] New user-visible strings go through `t()` / `tn()` and are added to `i18n/locales/en.ts` first
 - [ ] Shortcuts use `hasPrimaryModifier()` / `shortcutLabel()`, never hardcoded `metaKey`
 - [ ] Math and document transforms live in `src/shared/canvas` with unit tests

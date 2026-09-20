@@ -1,6 +1,6 @@
 # CanvaSlide — 릴리즈 가이드
 
-> 작성일: 2026-09-13 · 워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) · [문서 목록](./README.md)
 
 git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
 릴리즈는 메인테이너가 수행하며, 코드 기여 규칙은 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
@@ -12,12 +12,6 @@ npm version minor        # ① package.json 버전 올리고 커밋 + v0.x.0 태
 git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된다
 # ③ GitHub → Releases 에서 초안(draft)을 열어 노트를 다듬고 Publish
 ```
-
-| 단계      | 누가       | 걸리는 시간 |
-| --------- | ---------- | ----------- |
-| 버전·태그 | 메인테이너 | 1분         |
-| 빌드·첨부 | GitHub CI  | 10~15분     |
-| 노트·공개 | 메인테이너 | 5분         |
 
 ## 2. 버전 규칙
 
@@ -50,7 +44,7 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
    - 첨부 파일: `CanvaSlide_<버전>_universal.dmg`, `CanvaSlide_<버전>_x64-setup.exe`, `CanvaSlide_<버전>_x64_en-US.msi`
    - **Generate release notes** 버튼을 눌러 지난 태그 이후 머지된 PR 제목을 불러온 뒤 사용자 관점으로 다듬는다.
    - 서명이 없는 동안은 §6의 안내 문구를 노트에 넣는다.
-7. **Publish release**를 누른다. 공개 전까지는 아무도 볼 수 없으므로 초안 단계에서 얼마든지 다시 빌드해도 된다.
+7. **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
 
 ## 4. 워크플로가 하는 일
 
@@ -72,19 +66,26 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 
 ## 5. 실패했을 때
 
-- **태그 불일치로 실패**: `package.json`을 고쳐 커밋한 뒤 태그를 옮긴다.
-  ```bash
-  git tag -d v0.2.0 && git push origin :refs/tags/v0.2.0
-  git tag v0.2.0 && git push --follow-tags
-  ```
+- **태그 불일치로 실패**: 태그와 `package.json`의 차이를 확인한다. 아직 공개하지 않은 태그만
+  메인테이너가 수정하며, 이미 공개한 버전이면 새 버전·태그를 만든다.
 - **한쪽 플랫폼만 실패**: Actions에서 실패한 잡만 **Re-run failed jobs** 하면 같은 초안에 파일이 추가된다.
-- **초안을 버리고 다시**: Releases에서 초안을 삭제하고 태그를 다시 푸시한다(위 명령).
+- **초안을 버리고 다시**: 먼저 실패한 잡 재실행을 사용한다. 초안·태그를 재작성할 필요가 있으면
+  공개 여부와 두 플랫폼의 산출물을 확인한 뒤 메인테이너가 처리한다.
 - **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 `npm version patch`로 다음 버전을 낸다.
 - **로컬에서 재현**: `pnpm tauri build`(현재 OS용) 또는 `pnpm tauri build --target universal-apple-darwin`.
 
-## 6. 코드 서명 (아직 없음)
+업데이터 개인키 없이 macOS 앱 번들만 검증할 때는 다음 명령을 사용한다. 저장소 설정을 바꾸지 않는
+로컬 오버라이드이며, 서명된 업데이트 패키지나 Windows 설치 파일까지 검증하는 것은 아니다.
 
-서명 없이 배포하면 다음 경고가 뜬다. 릴리즈 노트에 안내한다.
+```bash
+pnpm tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
+```
+
+## 6. OS 코드 서명
+
+현재 저장소 워크플로는 업데이터 서명 키를 전달하지만 Apple/Windows 코드 서명 자격 증명은
+설정하지 않는다. 업데이터 서명과 OS 코드 서명은 별개다. 서명 없는 배포에서 나타날 수 있는
+다음 경고와 설치 방법을 릴리즈 노트에 안내한다.
 
 - **macOS**: "손상되었기 때문에 열 수 없습니다" 또는 Gatekeeper 차단. 우클릭 → 열기, 또는
   `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`.
@@ -99,17 +100,24 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 
 ## 7. 자동 업데이트
 
-앱에는 `tauri-plugin-updater`가 들어 있다. 설정 다이얼로그(⌘, / Ctrl+,)의 **업데이트** 절에서 현재 버전 확인, 수동 확인, 설치를 할 수 있고, 데스크톱 앱은 시작 3초 뒤 한 번 자동으로 확인한다(설정에서 끌 수 있음). macOS 메뉴의 **Check for Updates…**도 같은 동작이다.
+데스크톱 앱은 시작 3초 뒤 한 번 업데이트를 확인한다. **CanvaSlide 정보** 대화상자에서 현재 버전,
+릴리즈 노트 링크와 업데이트 상태를 표시하고, 새 버전이 있으면 설치 또는 다운로드 페이지 버튼을 제공한다.
+macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시 확인한다. 동작은
+[`use-update-check.ts`](../src/renderer/src/hooks/use-update-check.ts)와
+[`app-update.ts`](../src/renderer/src/platform/app-update.ts)에서 확인한다.
 
 | 플랫폼   | 동작                                                                                                       |
 | -------- | ---------------------------------------------------------------------------------------------------------- |
 | Windows  | 새 버전을 앱 안에서 내려받아 설치하고 다시 시작한다(NSIS 조용한 설치).                                     |
 | macOS    | 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. Apple 서명이 생기면 앱 내 설치로 바꾼다. |
-| 브라우저 | `latest.json`을 직접 읽어 알림만 한다(개발·E2E용).                                                         |
+| 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리즈 노트 링크로 공개 버전을 확인한다.             |
 
 동작 원리:
 
 - 릴리즈 워크플로가 `bundle.createUpdaterArtifacts`로 서명 파일(`.sig`)을 만들고, `tauri-action`의 `includeUpdaterJson`이 **`latest.json`**을 Release에 첨부한다. 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
-- 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`, 비밀키는 저장소 Secret `TAURI_SIGNING_PRIVATE_KEY`(암호 없음, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`는 비워 둠). 원본 비밀키는 메인테이너의 `~/.tauri/canvaslide.key`에 있다. **이 키를 잃으면 기존 설치본이 이후 업데이트를 검증하지 못하므로** 반드시 백업한다. 키를 바꾸면 공개키도 함께 바꾸고 사용자는 한 번 수동 재설치해야 한다.
-- 로컬에서 `pnpm tauri build`를 돌릴 때도 같은 키가 필요하다. `TAURI_SIGNING_PRIVATE_KEY_PATH=~/.tauri/canvaslide.key pnpm tauri build`처럼 경로를 넘긴다(CI 워크플로 두 곳은 Secret으로 받는다).
+- 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`, 비밀키는 저장소 Secret
+  `TAURI_SIGNING_PRIVATE_KEY`로 전달한다. 암호가 있으면 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`도 설정한다.
+  개인키 보관 위치와 백업은 메인테이너가 관리한다. **키를 잃으면 같은 키로 후속 업데이트를 서명할 수 없다.**
+  키를 교체하려면 기존 설치본의 신뢰 키 전환 또는 수동 재설치 계획이 필요하다.
+- 로컬에서 업데이터 산출물까지 만들려면 같은 서명 키를 빌드 환경에 제공한다. 개인키 없는 앱 번들 검증은 §5를 따른다.
 - 릴리즈 노트: `latest.json`의 `notes`는 Release 본문에서 온다. 초안에 노트를 쓴 뒤 Publish 하면 앱의 업데이트 안내에 그대로 보인다.

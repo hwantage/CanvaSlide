@@ -1,6 +1,16 @@
 import { readFile } from 'node:fs/promises'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { exampleCatalog, exampleAssetPath } from '../../src/shared/example-catalog'
+
+async function tabTo(page: Page, target: Locator, key: 'Tab' | 'Shift+Tab' = 'Tab') {
+  for (let step = 0; step < 20; step++) {
+    await page.keyboard.press(key)
+    if (await target.evaluate((element) => element === document.activeElement)) {
+      break
+    }
+  }
+  await expect(target).toBeFocused()
+}
 
 for (const lang of ['en', 'ko']) {
   test(`ShowCase links, previews, source downloads and direct reload work in ${lang}`, async ({
@@ -39,22 +49,29 @@ for (const lang of ['en', 'ko']) {
 test('ShowCase is keyboard reachable and fits small screens in both themes', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 })
   await page.goto('./?lang=en')
-  await page.getByRole('button', { name: 'Open navigation' }).click()
+  const navigation = page.getByRole('button', { name: 'Open navigation' })
+  await tabTo(page, navigation)
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Close navigation' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  )
   const link = page.locator('.header-nav').getByRole('link', { name: 'ShowCase' })
-  await link.focus()
+  await tabTo(page, link, 'Shift+Tab')
   await page.keyboard.press('Enter')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ShowCase')
+  const open = page.locator('.featured-copy a.button')
   for (const theme of ['light', 'dark']) {
     if (theme === 'dark') {
-      await page.getByRole('button', { name: 'Switch to dark theme' }).click()
+      await tabTo(page, page.getByRole('button', { name: 'Switch to dark theme' }), 'Shift+Tab')
+      await page.keyboard.press('Enter')
     }
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
       .toBeLessThanOrEqual(320)
+    await tabTo(page, open)
   }
-  const open = page.locator('.featured-copy a.button')
-  await open.focus()
-  await expect(open).toBeFocused()
 })
 
 test('the source downloads as an immediately editable document', async ({ page }) => {

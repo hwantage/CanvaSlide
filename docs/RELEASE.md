@@ -26,6 +26,9 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 ## 3. 릴리즈 절차
 
 1. `main`이 CI를 통과했는지 확인한다(Actions 탭의 **CI** 워크플로가 초록색).
+   데스크톱 클라우드 공유를 제공할 때는 저장소 **Settings → Secrets and variables → Actions → Variables**의
+   `VITE_CLOUD_SHARE_URL`을 배포된 편집기의 HTTPS origin으로 설정한다(예: `https://canvaslide.pages.dev`).
+   CI 번들과 릴리즈 빌드는 이 값을 Vite와 Rust에 함께 전달한다. 값이 없으면 데스크톱 공유가 비활성화된다.
 2. 로컬에서 `main`을 최신으로 맞춘다.
    ```bash
    git switch main && git pull

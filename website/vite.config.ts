@@ -2,11 +2,12 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { exampleAssets } from '../config/example-assets.ts'
 
 export default defineConfig(({ command, isPreview }) => ({
   root: import.meta.dirname,
   base: process.env.WEBSITE_BASE_PATH ?? (command === 'serve' && !isPreview ? '/' : '/CanvaSlide/'),
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), exampleAssets()],
   resolve: {
     alias: {
       '@app': resolve(import.meta.dirname, '../src/renderer/src'),
@@ -21,7 +22,8 @@ export default defineConfig(({ command, isPreview }) => ({
     rollupOptions: {
       input: {
         home: resolve(import.meta.dirname, 'index.html'),
-        docs: resolve(import.meta.dirname, 'docs/index.html')
+        docs: resolve(import.meta.dirname, 'docs/index.html'),
+        showcase: resolve(import.meta.dirname, 'showcase/index.html')
       }
     }
   }

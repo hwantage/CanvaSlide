@@ -26,10 +26,16 @@ import { preventPageContextMenu } from '@/lib/native-context-menu'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
 import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
 import { useCloudShareStore } from '@/store/cloud-share-store'
+import { cancelExampleRequest, useExampleStore } from '@/store/example-store'
+import { ExampleDialog } from '@/components/panels/example-dialog'
 
 export function App() {
   const presentation = useCloudShareStore((s) => s.presentation)
   useSharedDocument()
+  useEffect(() => {
+    void useExampleStore.getState().openLink(window.location.search)
+    return cancelExampleRequest
+  }, [])
   return presentation ? <SharedSlideShow document={presentation} /> : <Editor />
 }
 
@@ -117,6 +123,7 @@ function Editor() {
         </main>
         {!presenting && <ExportDialog />}
         {!presenting && <CloudShareDialog commands={commands} />}
+        {!presenting && <ExampleDialog />}
         {!presenting && <FigImportDialog />}
         {!presenting && <SettingsDialog />}
         {!presenting && <ShortcutHelpDialog />}

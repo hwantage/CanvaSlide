@@ -11,13 +11,39 @@ text, connectors, and presentation frames.
 | Folder          | Document                           | What it shows                                                                                                      |
 | --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `showcase/`     | `one-order.canvaslide`             | 23 camera stops: checkout → request envelope → payment timeout → recovery → receipt; nested zooms and a system map |
+| `showcase/`     | `freefall.canvaslide`              | 10 camera stops from Earth into nested photographic details, a concert and animated fireworks                      |
 | `swing/`        | `the-swing.canvaslide`             | 12 frames scattered over a 48 000-unit skyline: the camera hurls itself across the city and doubles back           |
+| `anatomy/`      | `inside.canvaslide`                | 13-frame illustrated journey through the human body with detailed organs and embedded photographs                  |
 | `anatomy/`      | `the-body.canvaslide`              | An atlas on the left and a whole standing figure on the right: 20 stops, then a fall from skull to one cell        |
 | `flowchart/`    | `order-fulfillment.canvaslide`     | Process flow with decisions, exception branches, dashed retry loops, three stage frames                            |
 | `erd/`          | `shop-schema.canvaslide`           | Seven-table entity-relationship diagram with cardinality labels and cluster frames                                 |
 | `slides/`       | `northwind-launch-deck.canvaslide` | Seven scenes: launch slides, a step diagram, a chart detail zoom and a roadmap                                     |
 | `architecture/` | `shop-platform.canvaslide`         | Cloud system architecture in zones; solid request path, dashed event lane                                          |
 | `mindmap/`      | `product-strategy-2027.canvaslide` | Central topic with five colour-coded branches on curved connectors, one frame each                                 |
+
+## Open examples in the browser
+
+Browse [ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) or open the web editor directly:
+
+- [One order](https://canvaslide.pages.dev/?example=one-order)
+- [Inside the human body](https://canvaslide.pages.dev/?example=inside)
+- [FREEFALL](https://canvaslide.pages.dev/?example=freefall)
+
+The shared catalog IDs are `one-order`, `freefall`, `inside`, `swing`, `anatomy`, `flowchart`, `erd`, `slides`,
+`architecture`, and `mindmap`. An example opens as an editable local copy; save your changes before
+closing or reloading. Refreshing the example link opens its original again. Arbitrary URLs and paths
+are not accepted in `example`. The [website guide](../website/README.md#editable-showcase-catalog)
+explains catalog additions, preview generation, deployment outputs, and file-size validation.
+
+`showcase/freefall.canvaslide` contains ten frames, embedded photographs, SVG masks, and animated
+fireworks. It is served directly as a current-format document; no extraction is needed. When changing
+embedded image formats, verify camera-motion previews as well as file size and visual fidelity.
+
+`anatomy/inside.canvaslide` contains 13 frames and embedded anatomical artwork. Its current-format
+JSON retains all nine PNG photographs with lossless recompression. At about 24.46 MiB it fits the
+hosting limit without reducing image dimensions or changing the canvas layout, and keeps the masked
+photo preview path available in existing editors. Initial high-resolution detail rendering can still
+take time.
 
 ## Editing a sample
 

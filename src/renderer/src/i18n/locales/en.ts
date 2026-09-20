@@ -1,5 +1,140 @@
 // Source language: every other locale must define exactly these keys (enforced by the type).
 export const en = {
+  'site.showcase.freefall.title': 'FREEFALL. One canvas. No cuts.',
+  'site.showcase.freefall.body':
+    'Follow ten camera stops from Earth to a city, into tiny details, then across a sea of concert lights and animated fireworks. This larger example downloads about {size}.',
+  'site.showcase.freefall.alt': 'Earth seen from space with the FREEFALL title and nested details.',
+
+  'site.showcase.inside.title': 'Inside the human body.',
+  'site.showcase.inside.body':
+    'Travel through thirteen frames of an illustrated anatomy presentation. Layered {svg} artwork and embedded photographs reveal details as you zoom. This larger example downloads about {size}.',
+  'site.showcase.inside.alt':
+    'An illustrated anatomy presentation with detailed organs and embedded photographs.',
+
+  'site.docs.examples.title': 'Explore examples',
+  'site.docs.examples.summary': 'Open ShowCase, follow a story, and save your own version.',
+  'site.docs.examples.openHeading': 'Open a ready-made canvas',
+  'site.docs.examples.openBody':
+    'Choose a presentation in ShowCase and select Open in web editor. A new tab opens an editable copy. Select Slide Show ({present}) to follow its frames; use {overview} for the full canvas and {escape} to return to editing. On a small screen, open the panels from the top bar to see the frame list.',
+  'site.docs.examples.saveHeading': 'Make it yours and save',
+  'site.docs.examples.saveBody':
+    'Edit text, move shapes, or change frame order without changing the original on the server. Use {save} to download an editable {format} copy in the browser, or download the source from ShowCase and open it in the desktop app. Browser edits are not saved automatically. Reloading an example link opens the original again.',
+  'site.docs.examples.linksHeading': 'Direct example links',
+  'site.docs.examples.linksBody':
+    'An editor URL with {query} opens the named example directly, including on refresh. Only catalog IDs work; a file path or another website URL cannot be used. If both a share link and an example ID are present, the share link takes priority. Loading can be cancelled. Unknown IDs and invalid files leave the current canvas unchanged; download failures offer a retry.',
+  'site.docs.media.title': 'Import & video',
+  'site.docs.media.summary': 'Bring designs, page images, and linked video onto your canvas.',
+  'site.docs.media.filesHeading': 'Import images and pages',
+  'site.docs.media.filesBody':
+    'Choose Import file in the toolbar ({import}) or drop a file on the canvas. Images remain movable and resizable. Each imported {pdf} page becomes an image with a presentation frame; its text is not editable. You can undo the import as one action.',
+  'site.docs.media.figmaHeading': 'Bring in a local design file',
+  'site.docs.media.figmaBody':
+    'Import a local {figma} {format} file, choose its pages, then choose Edit text & shapes or Preserve appearance. Editable mode keeps supported text and simple shapes editable; complex artwork becomes images. Preserve appearance makes top-level layers into images. Review the conversion report: effects, layout rules, component overrides, and some masks are not preserved exactly. No account or API token is required, and the source file stays unchanged.',
+  'site.docs.media.videoHeading': 'Link a video',
+  'site.docs.media.videoBody':
+    'Use the video tool and paste a supported {youtube}, {vimeo}, or direct video URL. The document stores the link, not the video bytes. Select the video to adjust its playback options, then test it in Slide Show. Playback needs the provider and network; browser autoplay rules may require a click. {youtube} in an exported {html} presentation needs HTTP(S) hosting. Cloud snapshots allow the supported providers and direct videos on the share service’s own origin.',
+  'site.docs.media.details': 'Read the design import limits',
+  'site.docs.ai.title': 'Create with AI',
+  'site.docs.ai.summary': 'Prepare a prompt for your assistant and open its editable result.',
+  'site.docs.ai.promptHeading': 'Copy a brief to your assistant',
+  'site.docs.ai.promptBody':
+    'Open Create with AI in the top bar. Choose General for a straightforward presentation or Dynamic for a spatial story with varied camera views. Enable Generate an {html} file if you also want a viewing copy. Copy the prompt into your own AI assistant and describe your subject, audience, and desired tone. The app prepares instructions; it does not generate content or connect to an AI service itself.',
+  'site.docs.ai.openHeading': 'Open and check the result',
+  'site.docs.ai.openBody':
+    'Ask for an editable {format} file and open it with {open}. If your assistant only returns JSON, save the complete JSON as UTF-8 with the correct extension. Check text, fonts, frame order, camera motion, and any media before presenting. Save the editable original even when you also export {html}. The authoring guide and optional skill describe the supported file format.',
+  'site.docs.ai.guide': 'Read the authoring guide',
+  'site.docs.frames.directionHeading': 'Direct each move',
+  'site.docs.frames.directionBody':
+    'Select a frame and open Camera in the properties panel. Duration sets travel time, easing shapes the pace, arc changes how far the camera pulls back, roll tilts the view, and spotlight dims the surrounding canvas. Controls show the resolved value, including inherited document settings. Reset restores the application defaults; a field without an override inherits the document setting. Motion marks in the frame list help find frames with non-default effects.',
+  'site.docs.frames.batchHeading': 'Preview and adjust several frames',
+  'site.docs.frames.batchBody':
+    'Select several frames to apply a shared camera setting in one edit. Mixed values remain visible until you change that control. Use Preview to inspect the sequence while keeping editor controls available; Slide Show opens the presentation view. Reorder frames in the list to change the story without moving their content.',
+  'site.docs.sharing.cloudHeading': 'Share a snapshot link',
+  'site.docs.sharing.cloudBody':
+    'Choose Share, then Edit a copy or View slide show only, and press Copy link. View-only links require at least one frame and open without editor controls. Anyone with the link can access the snapshot for 24 hours. Later edits do not update it, and there is no account, manual revocation, or live collaboration. The snapshot limit is {limit}, including embedded images. When sharing is unavailable or too large, save locally or export {html}. Viewing-only controls do not prevent copying content.',
+  'site.docs.sharing.fontHeading': 'Check fonts and linked media',
+  'site.docs.sharing.fontBody':
+    'Desktop export can embed subsets of installed fonts. Browser export depends on available fonts; check the presentation on the receiving device. Embedded images and the player travel with the {html} file, but linked videos still need their host and network. Keep an editable {format} original for later changes.',
+  'example.title': 'Open example',
+  'example.loading': 'Loading the example…',
+  'example.unknown':
+    'This example is not in the catalog. Close this message and choose an example from ShowCase.',
+  'example.missing':
+    'The example file is unavailable on this server. Try again later or choose another example.',
+  'example.network': 'The example could not be downloaded. Check your connection and try again.',
+  'example.invalid':
+    'This example is not a valid document. Choose another example. Your current document has not changed.',
+  'example.changed':
+    'Your document changed while the example was loading. Your work has been kept. Open the example in a new tab to try it.',
+  'example.cancel': 'Cancel loading',
+  'example.dismiss': 'Close',
+  'example.retry': 'Try again',
+  'site.hero.editor': 'Open the web editor',
+  'site.showcase.meta': 'ShowCase — {product}',
+  'site.showcase.description':
+    'Step inside a presentation. Follow its frames, explore the whole canvas, and edit a copy in your browser. No installation or account needed.',
+  'site.showcase.homeTitle': 'See where a canvas can take you.',
+  'site.showcase.browse': 'Browse all examples',
+  'site.showcase.open': 'Open in web editor',
+  'site.showcase.openNamed': 'Open {name} in the web editor',
+  'site.showcase.download': 'Download source',
+  'site.showcase.guide': 'How to explore and save an example',
+  'site.showcase.featured': 'Start here · A story across one canvas',
+  'site.showcase.featuredOpen': 'Open One order, all the way in the web editor',
+  'site.showcase.instructions':
+    'Examples open in a new tab. Choose Slide Show to follow the frames, or edit right away. Download the source for the desktop app. Sample content is in English; save your edits before closing or reloading.',
+  'site.showcase.one-order.title': 'One order, all the way.',
+  'site.showcase.one-order.body':
+    'Follow a checkout through a payment timeout and a safe retry. Twenty-three frames connect the system map to the details of one request.',
+  'site.showcase.one-order.alt':
+    'An order journey with a system map, request envelope, payment and receipt.',
+  'site.showcase.swing.title': 'Across the skyline.',
+  'site.showcase.swing.body':
+    'Twelve camera stops across a wide illustrated city. Explore long flights, changes in scale, and the rhythm of a spatial story.',
+  'site.showcase.swing.alt': 'An illustrated city arranged along a sweeping presentation route.',
+  'site.showcase.anatomy.title': 'From the body to a cell.',
+  'site.showcase.anatomy.body':
+    'An atlas and a standing figure share one canvas. Follow twenty frames from the big picture into nested anatomical details.',
+  'site.showcase.anatomy.alt': 'An anatomical atlas beside a full standing human figure.',
+  'site.showcase.flowchart.title': 'Make the process visible.',
+  'site.showcase.flowchart.body':
+    'Decisions, exception branches, and retry loops turn order fulfillment into a connected flow. Inspect three stage frames and editable connectors.',
+  'site.showcase.flowchart.alt':
+    'An order fulfillment flowchart with decision branches and retry loops.',
+  'site.showcase.erd.title': 'See the relationships.',
+  'site.showcase.erd.body':
+    'Seven tables, cardinality labels, and four cluster frames explain a shop schema. Move a table to see its attached connectors follow.',
+  'site.showcase.erd.alt': 'Seven database tables linked in an entity relationship diagram.',
+  'site.showcase.slides.title': 'A launch, with room to zoom.',
+  'site.showcase.slides.body':
+    'A familiar launch deck opens into a connected canvas. Seven frames include a process, pilot results, a close-up chart, and a roadmap.',
+  'site.showcase.slides.alt':
+    'A launch deck with a results chart and roadmap arranged on one canvas.',
+  'site.showcase.architecture.title': 'Trace a system.',
+  'site.showcase.architecture.body':
+    'Explore a shop platform in four zones. Solid request paths and dashed event routes keep services and their relationships readable.',
+  'site.showcase.architecture.alt': 'A cloud architecture diagram divided into service zones.',
+  'site.showcase.mindmap.title': 'Give a strategy space.',
+  'site.showcase.mindmap.body':
+    'A central idea branches into five color-coded themes. Follow curved connectors and six frames to explain the plan one area at a time.',
+  'site.showcase.mindmap.alt': 'A product strategy mind map with five colored branches.',
+  'site.showcase.one-order.try':
+    'Try the overview, then zoom into the payment retry. Every shape and connector is editable.',
+  'site.workflows.title': 'Bring more into your story.',
+  'site.workflows.description':
+    'From the first idea to the final presentation, keep the detail and the context together.',
+  'site.workflows.motion.title': 'Direct the camera.',
+  'site.workflows.motion.body':
+    'Set the pace, arc, roll, and spotlight for each frame. Preview a move or adjust several frames together.',
+  'site.workflows.import.title': 'Start with what you have.',
+  'site.workflows.import.body':
+    'Bring in {design} files, {pdf} pages, and images. Add linked video when your story needs motion.',
+  'site.workflows.share.title': 'Choose how to share.',
+  'site.workflows.share.body':
+    'Send a 24-hour snapshot link for viewing or editing a copy. Export {html} for a portable presentation.',
+  'site.workflows.ai.title': 'Begin with an AI prompt.',
+  'site.workflows.ai.body':
+    'Copy a General or Dynamic brief to your own assistant, then open its editable presentation here.',
   'menu.file': 'File menu',
   'menu.actions': 'Actions menu',
   'panel.open': 'Open panels',
@@ -439,14 +574,14 @@ Use the skill at {skill} to create the file.`,
     'Three ideas and three frames are enough for your first story. The quick-start guide walks you through it, from an empty canvas to a saved presentation.',
   'site.docs.install.availableHeading': 'Get the desktop app',
   'site.docs.install.availableBody':
-    'Choose an installer for your operating system from the release assets when a release is available. Keep the download from the official repository.',
+    'Download the installer for your operating system from the official Releases page. You can also try the web editor without installing anything, or build the app from source below.',
   'site.docs.install.macBody':
     'Open the {dmg} file, then drag the app into Applications. Launch it from Applications. The app requires {platform} {version} or later.',
   'site.docs.install.windowsBody':
     'Run the {exe} or {msi} installer from the release assets and follow the setup steps. Launch the app from the Start menu. If the installer asks to install WebView2, complete that step.',
   'site.docs.install.sourceHeading': 'Build from source',
   'site.docs.install.sourceBody':
-    'Until installers are published, you can run the current app from source. Install Git, {node} {version} or later, the repository’s pinned {packageManager}, and the stable Rust toolchain. Complete the platform setup in the Tauri prerequisites guide first.',
+    'You can also run the current app from source. Install Git, {node} {version} or later, the repository’s pinned {packageManager}, and the stable Rust toolchain. Complete the platform setup in the Tauri prerequisites guide first.',
   'site.docs.install.prerequisites': 'Platform prerequisites',
   'site.docs.install.buildHeading': 'Create an installer',
   'site.docs.install.buildBody':
@@ -513,7 +648,7 @@ Use the skill at {skill} to create the file.`,
     'Open Export as HTML with {export}. Review the image quality options and estimated file size, then save. The result is one self-contained {format} file with your presentation and a built-in player.',
   'site.docs.sharing.playHeading': 'Open it anywhere you present',
   'site.docs.sharing.playBody':
-    'Open the exported file in a browser. It works offline, and the viewer does not need the desktop app. Use the player navigation or arrow keys, and open its overview to jump to a frame. The exported player interface is in English.',
+    'Open the exported file in a browser. Embedded content works offline, and the viewer does not need the desktop app. Linked videos need a network connection and may require HTTP(S) hosting. Use the player navigation or arrow keys, and open its overview to jump to a frame. The exported player interface is in English.',
   'site.docs.sharing.tip':
     'Keep the original canvas file if you want to edit later. Image-heavy presentations can make larger files; adjust export quality when sharing.',
   'site.docs.shortcuts.heading': 'A few keys go a long way.',
@@ -542,7 +677,7 @@ Use the skill at {skill} to create the file.`,
     'No. The desktop app works without signing in. Your documents are files you save on your computer.',
   'site.docs.faq.offlineQ': 'Can I work and present offline?',
   'site.docs.faq.offlineA':
-    'Yes. You can edit and present in the desktop app without a connection. Exported presentations also run offline in a browser.',
+    'The desktop editor and exported presentations with embedded content work offline. Linked videos need their provider and network. Opening a web example or a cloud snapshot also needs a connection.',
   'site.docs.faq.autosaveQ': 'Where is my work saved?',
   'site.docs.faq.autosaveA':
     'You choose the file location when saving. Save your document regularly; automatic cloud sync and autosave recovery are not part of the current version.',
@@ -558,6 +693,7 @@ Use the skill at {skill} to create the file.`,
 
   // Official website.
   'site.nav.product': 'Product',
+  'site.nav.showcase': 'ShowCase',
   'site.nav.docs': 'Docs',
   'site.nav.download': 'Get the app',
   'site.nav.github': 'Source on GitHub',
@@ -593,15 +729,14 @@ Use the skill at {skill} to create the file.`,
   'site.docs.frames.overviewHeading': 'See every slide and keep the story moving',
   'site.docs.frames.overviewBody':
     'During a presentation, use the overview control to see all your slides together on the canvas. Click a frame to move directly to that moment, then continue with the previous and next controls. Return to the overview whenever you want to show how the parts connect. The overview and frame selection are also available in the exported browser presentation.',
-  'site.hero.title': 'Big ideas.\nOne little file.',
+  'site.hero.title': 'One canvas.\nEvery perspective.',
   'site.hero.description':
-    'Flowcharts, ER diagrams, presentation slides. Shape them on an infinite canvas, zoom into the details, and share the whole story in a single {format} file.',
-  'site.hero.try': 'Explore the possibilities',
+    'Connect ideas, bring in your designs, and guide your audience from the big picture to the smallest detail. Try a real presentation, then make it yours.',
+  'site.hero.try': 'Explore ShowCase',
   'site.hero.platforms': 'Made for {mac} & {windows}',
   'site.hero.note': 'Free & open source. Yours, offline.',
   'site.hero.scroll': 'A canvas full of possibilities',
-  'site.hero.eyebrow': 'An infinite canvas. A portable story.',
-  'site.hero.share': 'Share one {format} file',
+  'site.hero.eyebrow': 'A canvas to think on. A story to move through.',
   'site.hero.ray': 'Ray, the blue {product} mascot, gliding freely with outstretched wings.',
   'site.hero.file': 'Your story, ready to go.',
   'site.possibilities.eyebrow': 'MAKE ROOM FOR EVERY KIND OF IDEA',
@@ -711,7 +846,7 @@ Use the skill at {skill} to create the file.`,
   'site.download.macDetail': '{version} or later',
   'site.download.windowsDetail': 'Desktop application',
   'site.download.pending':
-    'The first public installers are being prepared. Check the releases page for availability, or follow the guide to build from source today.',
+    'Installers for both desktop platforms are available on the Releases page. Choose the file for your device.',
   'site.download.guide': 'Installation guide',
   'site.download.source': 'Build from source',
   'site.footer.tagline': 'Your ideas. Room to fly.',
@@ -721,7 +856,7 @@ Use the skill at {skill} to create the file.`,
   'site.footer.top': 'Back to top',
   'site.meta.home': '{product} — Your ideas. Room to fly.',
   'site.meta.description':
-    'An infinite canvas for your ideas. Frame your story and present with a smooth zoom and pan.',
+    'An infinite canvas for connected ideas, expressive camera motion, {design} and {pdf} imports, and portable presentations. Explore editable examples in your browser.',
   'site.screenshot.editor': 'The canvas editor with shapes, text, and presentation frames',
   'site.screenshot.present': 'A presentation frame in full-screen view',
 

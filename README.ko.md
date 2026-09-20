@@ -8,6 +8,8 @@ macOS와 Windows용 무한 캔버스 프레젠테이션 앱입니다. 하나의 
 
 ![하나의 캔버스에 프레젠테이션 프레임 두 개를 배치한 CanvaSlide 편집기](./website/public/images/editor.png)
 
+[ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) ·
+[웹 편집기 열기](https://canvaslide.pages.dev/) ·
 [릴리즈 다운로드](https://github.com/hwantage/CanvaSlide/releases) ·
 [사용 안내](https://hwantage.github.io/CanvaSlide/docs/?lang=ko) ·
 [문서 목록](./docs/README.md)

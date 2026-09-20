@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, type Plugin } from 'vite'
+import { exampleAssets } from './example-assets.ts'
 
 const repoRoot = resolve(import.meta.dirname, '..')
 const rendererRoot = resolve(repoRoot, 'src/renderer')
@@ -53,7 +54,12 @@ function isLoopback(address: string | undefined): boolean {
 // Why: Tauri watches src-tauri itself; Vite must not restart on Rust changes.
 export default defineConfig({
   root: rendererRoot,
-  plugins: [react(), tailwindcss(), checkoutIdentity()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    checkoutIdentity(),
+    ...(process.env.TAURI_ENV_PLATFORM ? [] : [exampleAssets()])
+  ],
   resolve: {
     alias: {
       '@': resolve(rendererRoot, 'src'),

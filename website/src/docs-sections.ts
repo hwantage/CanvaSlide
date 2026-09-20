@@ -12,6 +12,60 @@ export type DocSection = {
 export function docSections(topic: TopicId): DocSection[] {
   const primary = shortcutLabel
   const sections: Record<TopicId, DocSection[]> = {
+    examples: [
+      {
+        id: 'open-an-example',
+        heading: 'site.docs.examples.openHeading',
+        body: 'site.docs.examples.openBody',
+        params: { present: primary('Enter'), overview: 'O', escape: 'Esc' }
+      },
+      {
+        id: 'save-a-copy',
+        heading: 'site.docs.examples.saveHeading',
+        body: 'site.docs.examples.saveBody',
+        params: { save: primary('S'), format: '.canvaslide' }
+      },
+      {
+        id: 'direct-links',
+        heading: 'site.docs.examples.linksHeading',
+        body: 'site.docs.examples.linksBody',
+        params: { query: '?example=one-order' }
+      }
+    ],
+    media: [
+      {
+        id: 'images-and-pdf',
+        heading: 'site.docs.media.filesHeading',
+        body: 'site.docs.media.filesBody',
+        params: { import: primary('I'), pdf: 'PDF' }
+      },
+      {
+        id: 'figma',
+        heading: 'site.docs.media.figmaHeading',
+        body: 'site.docs.media.figmaBody',
+        params: { figma: 'Figma', format: '.fig' }
+      },
+      {
+        id: 'linked-video',
+        heading: 'site.docs.media.videoHeading',
+        body: 'site.docs.media.videoBody',
+        params: { youtube: 'YouTube', vimeo: 'Vimeo', html: 'HTML' }
+      }
+    ],
+    ai: [
+      {
+        id: 'create-with-ai',
+        heading: 'site.docs.ai.promptHeading',
+        body: 'site.docs.ai.promptBody',
+        params: { html: 'HTML' }
+      },
+      {
+        id: 'open-the-result',
+        heading: 'site.docs.ai.openHeading',
+        body: 'site.docs.ai.openBody',
+        params: { format: '.canvaslide', open: primary('O'), html: 'HTML' }
+      }
+    ],
     overview: [
       {
         id: 'the-canvas',
@@ -39,7 +93,7 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'build-from-source',
         heading: 'site.docs.install.sourceHeading',
         body: 'site.docs.install.sourceBody',
-        params: { node: 'Node.js', version: '22', packageManager: 'pnpm' }
+        params: { node: 'Node.js', version: '22.20', packageManager: 'pnpm' }
       },
       {
         id: 'create-an-installer',
@@ -169,6 +223,16 @@ export function docSections(topic: TopicId): DocSection[] {
         heading: 'site.docs.frames.timingHeading',
         body: 'site.docs.frames.timingBody',
         params: { settings: primary(','), range: '0–3 s' }
+      },
+      {
+        id: 'camera-direction',
+        heading: 'site.docs.frames.directionHeading',
+        body: 'site.docs.frames.directionBody'
+      },
+      {
+        id: 'preview-and-batch',
+        heading: 'site.docs.frames.batchHeading',
+        body: 'site.docs.frames.batchBody'
       }
     ],
     sharing: [
@@ -184,6 +248,12 @@ export function docSections(topic: TopicId): DocSection[] {
         }
       },
       {
+        id: 'cloud-links',
+        heading: 'site.docs.sharing.cloudHeading',
+        body: 'site.docs.sharing.cloudBody',
+        params: { limit: '5 MiB', html: 'HTML' }
+      },
+      {
         id: 'export-html',
         heading: 'site.docs.sharing.exportHeading',
         body: 'site.docs.sharing.exportBody',
@@ -193,6 +263,12 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'play-anywhere',
         heading: 'site.docs.sharing.playHeading',
         body: 'site.docs.sharing.playBody'
+      },
+      {
+        id: 'fonts-and-media',
+        heading: 'site.docs.sharing.fontHeading',
+        body: 'site.docs.sharing.fontBody',
+        params: { html: 'HTML', format: '.canvaslide' }
       }
     ],
     shortcuts: [

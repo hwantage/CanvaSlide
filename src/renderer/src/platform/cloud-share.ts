@@ -8,11 +8,13 @@ import {
   type ShareAccess,
   type SharedSnapshot
 } from '@shared/cloud-share'
-import { parseDocument } from '@shared/canvas/document-file'
+import { canvasDocumentSchema } from '@shared/canvas/element-types'
+import { repairDocumentOrder } from '@shared/canvas/document-file'
 import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '@shared/canvas/share-document'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { isTauriRuntime } from './tauri-runtime'
+import { copyText } from './text-clipboard'
 
 export function cloudShareOrigin(
   configured: string | undefined = import.meta.env.VITE_CLOUD_SHARE_URL,
@@ -134,22 +136,23 @@ export async function fetchCloudShare(id: string, signal: AbortSignal): Promise<
   } catch {
     throw new CloudShareError('invalid')
   }
-  const parsed = parseDocument(JSON.stringify(snapshot.document))
-  if (!parsed.ok || !hasOnlyEmbeddedImages(parsed.document)) {
+  const parsed = canvasDocumentSchema.safeParse(snapshot.document)
+  if (!parsed.success || !hasOnlyEmbeddedImages(parsed.data)) {
     throw new CloudShareError('invalid')
   }
-  if (!hasAllowedShareVideos(parsed.document, cloudShareOrigin())) {
+  const document = repairDocumentOrder(parsed.data)
+  if (!hasAllowedShareVideos(document, cloudShareOrigin())) {
     throw new CloudShareError('unsupportedVideo')
   }
-  if (snapshot.access === 'present' && orderedFrames(parsed.document).length === 0) {
+  if (snapshot.access === 'present' && orderedFrames(document).length === 0) {
     throw new CloudShareError('noFrames')
   }
-  return { access: snapshot.access, document: parsed.document }
+  return { access: snapshot.access, document }
 }
 
 export async function copyShareLink(url: string | Promise<string | null>): Promise<void> {
   if (!isTauriRuntime() && typeof url === 'string') {
-    await navigator.clipboard.writeText(url)
+    await copyText(url)
     return
   }
   const text = Promise.resolve(url).then((value) => {
@@ -160,8 +163,7 @@ export async function copyShareLink(url: string | Promise<string | null>): Promi
   })
   if (isTauriRuntime()) {
     const value = await text
-    const { writeText } = await import('@tauri-apps/plugin-clipboard-manager')
-    await writeText(value)
+    await copyText(value)
     return
   }
   if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
@@ -173,7 +175,7 @@ export async function copyShareLink(url: string | Promise<string | null>): Promi
     return
   }
   const value = await text
-  await navigator.clipboard.writeText(value)
+  await copyText(value)
 }
 
 export function clearShareQuery(): void {

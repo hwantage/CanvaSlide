@@ -1,3 +1,4 @@
+import { encodeDocumentFixture } from './saved-document'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
@@ -533,13 +534,13 @@ test('a viewport resize during the opening flight still ends with the frame fitt
   await expect.poll(fitted, { timeout: 4000 }).toBe(true)
 })
 
-// Why: `.canvas.json` is the pre-0.5 name and must stay openable alongside `.canvaslide`.
-for (const fileName of ['far.canvaslide', 'far.canvas.json']) {
+// Hand-authored JSON and canonical document names use the same file contents.
+for (const fileName of ['far.canvaslide', 'far.json']) {
   test(`opening ${fileName} shows all of its content even if it was saved scrolled away`, async ({
     page
   }) => {
     const saved = {
-      version: 2,
+      version: 1,
       // Why: an unnamed document takes its name from the file, which exercises the suffix stripping.
       name: '',
       elements: {
@@ -566,7 +567,7 @@ for (const fileName of ['far.canvaslide', 'far.canvas.json']) {
     ).setFiles({
       name: fileName,
       mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(saved))
+      buffer: encodeDocumentFixture(saved)
     })
     const frame = page.locator('[data-element-type="frame"]')
     await expect(frame).toHaveCount(1)

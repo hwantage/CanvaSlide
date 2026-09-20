@@ -34,12 +34,13 @@ async function openDeck(page: Page) {
     mimeType: 'application/json',
     buffer: Buffer.from(
       JSON.stringify({
-        version: 2,
+        version: 1,
         name: 'Batch camera',
         elements: Object.fromEntries(frames.map((frame) => [frame.id, frame])),
         order: frames.map((frame) => frame.id),
         settings: { transitionMs: 200 },
         assets: {},
+        resources: {},
         camera: { x: 0, y: 0, zoom: 1 }
       })
     )

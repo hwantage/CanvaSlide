@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "Order Fulfillment Flow",
   "elements": {
     "text-1": {
@@ -801,6 +801,9 @@
   ],
   "settings": {
     "transitionMs": 900,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "dots",
     "frameBorder": "dashed"
   },
@@ -809,5 +812,6 @@
     "x": 117.47037037037036,
     "y": 18.82962962962964,
     "zoom": 0.6985
-  }
+  },
+  "resources": {}
 }

@@ -1,11 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
-import { unzipSync } from 'fflate'
 import { createImageAsset } from '../../src/shared/canvas/document-assets'
 import { createEmptyDocument, type CanvasDocument } from '../../src/shared/canvas/element-types'
 import { primaryModifier } from './canvas-gestures'
-import { readSavedDocument } from './saved-document'
+import { readSavedDocument, encodeDocumentFixture } from './saved-document'
 
 async function openBytes(page: Page, buffer: Buffer) {
   const chooser = page.waitForEvent('filechooser')
@@ -78,7 +77,7 @@ test('shared crops and masks survive save/reopen and offline HTML export @webkit
     }
     doc.order.push(id)
   }
-  await openBytes(page, Buffer.from(JSON.stringify(doc)))
+  await openBytes(page, encodeDocumentFixture(doc))
   await page.mouse.move(0, 0)
   const images = page.locator('img[data-element-type="image"]')
   const before = await images.first().screenshot()
@@ -86,8 +85,10 @@ test('shared crops and masks survive save/reopen and offline HTML export @webkit
   await page.keyboard.press(`${await primaryModifier(page)}+s`)
   const download = await downloaded
   const bytes = await readFile((await download.path())!)
-  expect(bytes.subarray(0, 4)).toEqual(Buffer.from([80, 75, 3, 4]))
-  expect(Object.keys(unzipSync(bytes))).toHaveLength(4)
+  const file = JSON.parse(bytes.toString('utf8'))
+  expect(file.version).toBe(1)
+  expect(Object.keys(file.resources)).toHaveLength(3)
+  expect(bytes.toString('utf8').split(png)).toHaveLength(2)
   expect(readSavedDocument(bytes).assets).toEqual(doc.assets)
   await page.reload()
   await openBytes(page, bytes)

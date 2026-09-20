@@ -7,6 +7,30 @@ export const ko: UiStrings = {
   'panel.open': '패널 펼치기',
   'panel.close': '패널 접기',
   'panel.title': '프레임 및 속성',
+  'aiGuide.button': 'AI와 함께 만들기',
+  'aiGuide.title': 'AI와 함께 {app}를 만들어 보세요',
+  'aiGuide.description': '아래 프롬프트를 복사해 사용 중인 AI 도우미에게 붙여넣으세요.',
+  'aiGuide.example': '예시 프롬프트 · {app} 소개',
+  'aiGuide.style': '발표 스타일',
+  'aiGuide.style.general': '일반',
+  'aiGuide.style.dynamic': '다이나믹',
+  'aiGuide.includeHtml': '{format} 파일 생성하기',
+  'aiGuide.prompt.html': '{format} 파일로도 만들어줘.',
+  'aiGuide.close': 'AI 안내 닫기',
+  'aiGuide.copy': '프롬프트 복사',
+  'aiGuide.copying': '복사 중…',
+  'aiGuide.copied': '프롬프트를 복사했습니다. AI 도우미에게 붙여넣으세요.',
+  'aiGuide.failed': '복사하지 못했습니다. 위 프롬프트를 선택해 직접 복사해 주세요.',
+  'aiGuide.prompt.general': `{website} 의 내용을 분석해, 8장 분량으로 {app}를 소개하는 편집 가능한 한국어 슬라이드를 {file} 파일로 만들어 주세요.
+
+차분한 배치와 절제된 카메라 이동으로 내용을 명료하게 전달하세요.
+
+파일 제작은 {skill} 스킬을 참고하세요.`,
+  'aiGuide.prompt.dynamic': `{website} 의 내용을 분석해, {app}를 소개하는 편집 가능한 한국어 슬라이드를 {file} 파일로 만들어 주세요.
+
+다양한 카메라 효과로 역동적인 분위기를 연출하세요. 강조할 영역에는 내부 프레임을 배치해 확대 효과를 주세요. 내부 확대 장면을 포함해 전체 발표 순서는 8장면으로 구성하세요.
+
+파일 제작은 {skill} 스킬을 참고하세요.`,
   'video.thumbnail': '{provider} 동영상 미리 보기',
   'video.autoplay': '슬라이드 쇼에서 자동 재생',
   'video.exportLinked':

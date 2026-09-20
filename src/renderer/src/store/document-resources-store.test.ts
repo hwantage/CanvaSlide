@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { serializeDocumentArchive, parseDocumentFile } from '@shared/canvas/document-archive'
+import { serializeDocument, parseDocument } from '@shared/canvas/document-file'
 import { createImageAsset } from '@shared/canvas/document-assets'
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import { useDocumentStore } from './document-store'
@@ -21,7 +21,7 @@ it('duplicates, deletes and undoes restored SVG assets without losing their nest
     naturalHeight: 10
   }
   doc.order = ['image']
-  const opened = parseDocumentFile(serializeDocumentArchive(doc))
+  const opened = parseDocument(serializeDocument(doc))
   if (!opened.ok) {
     throw new Error(opened.error)
   }
@@ -35,7 +35,8 @@ it('duplicates, deletes and undoes restored SVG assets without losing their nest
   store.deleteSelected()
   expect(useDocumentStore.getState().document.assets).toEqual({})
   store.undo()
-  expect(parseDocumentFile(serializeDocumentArchive(useDocumentStore.getState().document))).toEqual(
-    { ok: true, document: doc }
-  )
+  expect(parseDocument(serializeDocument(useDocumentStore.getState().document))).toEqual({
+    ok: true,
+    document: doc
+  })
 })

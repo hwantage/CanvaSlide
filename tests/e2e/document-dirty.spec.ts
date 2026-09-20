@@ -1,4 +1,4 @@
-import { readSavedDocument } from './saved-document'
+import { readSavedDocument, encodeDocumentFixture } from './saved-document'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
@@ -60,7 +60,7 @@ test('measured text heights stay clean, while real edits retain history and save
   // A different font or renderer can invalidate the height saved by another machine.
   document.elements['text-1']!.height = 200
   await page.goto('/')
-  await openFile(page, Buffer.from(JSON.stringify(document)))
+  await openFile(page, encodeDocumentFixture(document))
   const text = page.locator('[data-element-id="text-1"]')
   await expect(text).not.toHaveCSS('min-height', '200px')
   await page.screenshot({ path: testInfo.outputPath('measured-open.png') })
@@ -114,7 +114,7 @@ function shapeDocument(name: string): Buffer {
     style: defaultShapeStyle
   }
   document.order = ['box']
-  return Buffer.from(JSON.stringify(document))
+  return encodeDocumentFixture(document)
 }
 
 test('undo to opened content skips discard when opening another file @core-interaction', async ({

@@ -1,23 +1,21 @@
-import { parseDocumentFile } from '@shared/canvas/document-archive'
-import { createDocumentArchiveEncoder } from '@shared/canvas/document-archive-encoder'
-import { parseDocument } from '@shared/canvas/document-file'
-import { base64ToBytes, bytesToBase64 } from '@shared/canvas/binary-data'
+import { createDocumentEncoder } from '@shared/canvas/document-resources'
+import { parseDocument, parseDocumentFile } from '@shared/canvas/document-file'
 import type { DocumentCodecRequest, DocumentCodecResponse } from './document-file-codec'
 
-const TRANSPORT_PREFIX = 'canvaslide-zip:'
-let encode = createDocumentArchiveEncoder()
+let encode = createDocumentEncoder()
 
 self.onmessage = (event: MessageEvent<DocumentCodecRequest>) => {
   try {
     const request = event.data
     if ('document' in request) {
-      const bytes = encode(request.document)
+      const contents = encode(request.document)
       if (request.kind === 'encode-native') {
         self.postMessage({
           kind: 'encoded-native',
-          contents: TRANSPORT_PREFIX + bytesToBase64(bytes)
+          contents
         } satisfies DocumentCodecResponse)
       } else {
+        const bytes = new TextEncoder().encode(contents)
         self.postMessage({ kind: 'encoded', bytes } satisfies DocumentCodecResponse, {
           transfer: [bytes.buffer]
         })
@@ -26,10 +24,8 @@ self.onmessage = (event: MessageEvent<DocumentCodecRequest>) => {
       const result =
         request.kind === 'decode'
           ? parseDocumentFile(request.bytes)
-          : request.contents.startsWith(TRANSPORT_PREFIX)
-            ? parseDocumentFile(base64ToBytes(request.contents.slice(TRANSPORT_PREFIX.length)))
-            : parseDocument(request.contents)
-      encode = createDocumentArchiveEncoder()
+          : parseDocument(request.contents)
+      encode = createDocumentEncoder()
       self.postMessage({ kind: 'decoded', result } satisfies DocumentCodecResponse)
     }
   } catch (error) {

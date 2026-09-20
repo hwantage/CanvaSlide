@@ -1,3 +1,4 @@
+import { encodeDocumentFixture } from './saved-document'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -16,7 +17,7 @@ async function openDistantFrames(page: Page) {
     height: 13_500
   }))
   const document = {
-    version: 2,
+    version: 1,
     name: 'Distant frames',
     elements: {
       ...Object.fromEntries(frames.map((frame) => [frame.id, frame])),
@@ -46,7 +47,7 @@ async function openDistantFrames(page: Page) {
   ).setFiles({
     name: 'distant.canvaslide',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(document))
+    buffer: encodeDocumentFixture(document)
   })
   await expect(page.getByTestId('frame-row')).toHaveCount(3)
 }

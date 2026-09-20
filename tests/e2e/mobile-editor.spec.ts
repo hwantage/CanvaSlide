@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { createEmptyDocument, type CanvasDocument } from '../../src/shared/canvas/element-types'
-import { readSavedDocument } from './saved-document'
+import { encodeDocumentFixture, readSavedDocument } from './saved-document'
 
 const shareId = 'abcdefghijklmnopqr_-1'
 
@@ -75,6 +75,15 @@ test.describe('compact editor', () => {
     await expect(file).toBeFocused()
     await expect(page.getByRole('menu')).toHaveCount(0)
     await actions.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByRole('menuitem', { name: 'Create with AI' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    const guide = page.getByRole('dialog', { name: 'Create with AI and CanvaSlide' })
+    await contained(guide, page)
+    await expect(guide.getByRole('checkbox', { name: 'Generate an HTML file' })).not.toBeChecked()
+    await page.keyboard.press('Escape')
+    await expect(actions).toBeFocused()
+    await page.keyboard.press('ArrowDown')
     await page.keyboard.press('ArrowDown')
     await expect(page.getByRole('menuitem', { name: 'Keyboard shortcuts' })).toBeFocused()
     await page.keyboard.press('End')
@@ -308,7 +317,7 @@ test.describe('compact editor', () => {
     ).setFiles({
       name: 'mobile.canvaslide',
       mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(mobileDocument()))
+      buffer: encodeDocumentFixture(mobileDocument())
     })
     await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue(
       'Mobile presentation'

@@ -1,3 +1,4 @@
+import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 import type { Camera } from '../../src/shared/canvas/element-types'
 
@@ -47,7 +48,7 @@ async function openDetailDocument(page: Page) {
   }
   const frame = { ...photo, id: 'frame', type: 'frame', order: 0, name: 'Detail' }
   const doc = {
-    version: 2,
+    version: 1,
     name: 'Sharp detail',
     settings: { background: 'plain', frameBorder: 'none', transitionMs: 500 },
     assets: { image: { id: 'image', mime: 'image/svg+xml', data, width: 64000, height: 32000 } },
@@ -61,7 +62,7 @@ async function openDetailDocument(page: Page) {
   ).setFiles({
     name: 'detail.canvas.json',
     mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(doc))
+    buffer: encodeDocumentFixture(doc)
   })
   await expect(page.locator('[data-element-id="photo"]')).toHaveAttribute('src', /^blob:/)
   await camera(page, { x: 40, y: 60, zoom: 0.02 })

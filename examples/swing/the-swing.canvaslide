@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "The swing",
   "elements": {
     "frame-1": {
@@ -35491,6 +35491,9 @@
   ],
   "settings": {
     "transitionMs": 1300,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "plain",
     "frameBorder": "none"
   },
@@ -35499,5 +35502,6 @@
     "x": 62.13717814753114,
     "y": 273.842559380206,
     "zoom": 0.0202
-  }
+  },
+  "resources": {}
 }

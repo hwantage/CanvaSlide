@@ -10,6 +10,7 @@ import { SidePanel } from '@/components/panels/side-panel'
 import { SettingsDialog } from '@/components/panels/settings-dialog'
 import { ShortcutHelpDialog } from '@/components/panels/shortcut-help-dialog'
 import { AboutDialog } from '@/components/panels/about-dialog'
+import { AiGuideDialog } from '@/components/panels/ai-guide-dialog'
 import { ToolBar } from '@/components/toolbar/tool-bar'
 import { TopBar } from '@/components/toolbar/top-bar'
 import { ZoomControls } from '@/components/toolbar/zoom-controls'
@@ -120,6 +121,7 @@ function Editor() {
         {!presenting && <SettingsDialog />}
         {!presenting && <ShortcutHelpDialog />}
         {!presenting && <AboutDialog />}
+        {!presenting && <AiGuideDialog />}
         {!presenting && (
           <div
             ref={panelRef}

@@ -95,7 +95,7 @@ it('validates both returned IDs and downloaded documents', async () => {
   await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
 })
 
-it('loads and repairs the document using the existing parser', async () => {
+it('validates and repairs the downloaded snapshot', async () => {
   vi.mocked(fetch).mockResolvedValue(
     Response.json({ ...createEmptyDocument(), order: ['missing'] })
   )
@@ -129,6 +129,10 @@ it('round trips presentation access and rejects a presentation without frames', 
     document
   })
   vi.mocked(fetch).mockResolvedValue(Response.json({ access: 'present', document }))
+  await expect(fetchCloudShare(id, signal())).resolves.toEqual({ access: 'present', document })
+  vi.mocked(fetch).mockResolvedValue(
+    Response.json({ access: 'present', document: { ...document, order: ['missing'] } })
+  )
   await expect(fetchCloudShare(id, signal())).resolves.toEqual({ access: 'present', document })
 })
 

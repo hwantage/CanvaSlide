@@ -1,10 +1,9 @@
 /// <reference types="node" />
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { convertFigFile } from './fig-convert'
 import { readFigFile } from './fig-file'
-import { figPages, figChildren } from './fig-scene'
-import { figId } from './fig-types'
 import { canvasDocumentSchema, createEmptyDocument } from './element-types'
+import { parseDocument, serializeDocument } from './document-file'
 
 const file = () => readFigFile(new Uint8Array(readFileSync('tests/fixtures/figma-basic.fig')))
 const options = {
@@ -44,6 +43,7 @@ test('appearance mode makes self-contained images and produces a valid savable d
     assets: Object.fromEntries(result.assets.map((a) => [a.id, a]))
   }
   expect(canvasDocumentSchema.safeParse(doc).success).toBe(true)
+  expect(parseDocument(serializeDocument(doc))).toEqual({ ok: true, document: doc })
   expect(() => convertFigFile(file(), { ...options, pages: [] })).toThrow('FIG_EMPTY')
 })
 
@@ -120,73 +120,3 @@ test('retains text under masks and translucent ancestors with reported approxima
   expect(result.warnings.mask).toBe(1)
   expect(result.warnings.paint).toBeGreaterThan(0)
 })
-
-test.skipIf(!process.env.CANVASLIDE_FIG_SAMPLE)(
-  'converts the supplied local sample without committing its content',
-  () => {
-    const decoded = readFigFile(new Uint8Array(readFileSync(process.env.CANVASLIDE_FIG_SAMPLE!)))
-    const result = convertFigFile(decoded, {
-      ...options,
-      origin: { x: 0, y: 0 },
-      firstFrameOrder: 0,
-      idPrefix: 'figma1',
-      pages: figPages(decoded).map((page) => page.id)
-    })
-    const doc = {
-      ...createEmptyDocument(decoded.name),
-      elements: Object.fromEntries(result.elements.map((e) => [e.id, e])),
-      order: result.elements.map((e) => e.id),
-      assets: Object.fromEntries(result.assets.map((a) => [a.id, a]))
-    }
-    expect(canvasDocumentSchema.safeParse(doc).success).toBe(true)
-    expect(result.pages).toBe(12)
-    expect(result.warnings.missingImage).toBe(0)
-    const children = figChildren(decoded)
-    const reachableText: string[] = []
-    const visit = (id: string): void => {
-      for (const node of children.get(id) ?? []) {
-        if (node.type === 'TEXT') {
-          reachableText.push(node.textData?.characters ?? '')
-        }
-        visit(figId(node.guid))
-      }
-    }
-    for (const page of figPages(decoded)) {
-      visit(page.id)
-    }
-    const importedText = result.elements.filter((element) => element.type === 'text')
-    expect(importedText).toHaveLength(1419)
-    expect(importedText.map((element) => element.text).sort()).toEqual(reachableText.sort())
-    console.log(
-      JSON.stringify({
-        nodes: decoded.nodes.length,
-        sourceText: reachableText.length,
-        pages: result.pages,
-        elements: result.elements.length,
-        assets: result.assets.length,
-        types: result.elements.reduce<Record<string, number>>((counts, e) => {
-          counts[e.type] = (counts[e.type] ?? 0) + 1
-          return counts
-        }, {}),
-        warnings: result.warnings
-      })
-    )
-    if (process.env.CANVASLIDE_FIG_OUTPUT) {
-      writeFileSync(process.env.CANVASLIDE_FIG_OUTPUT, JSON.stringify(doc))
-      writeFileSync(
-        `${process.env.CANVASLIDE_FIG_OUTPUT}.report.json`,
-        JSON.stringify(
-          {
-            pages: result.pages,
-            elements: result.elements.length,
-            assets: result.assets.length,
-            warnings: result.warnings
-          },
-          null,
-          2
-        )
-      )
-    }
-  },
-  60_000
-)

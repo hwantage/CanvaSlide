@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "Northwind Launch Deck",
   "elements": {
     "frame-1": {
@@ -1695,14 +1695,18 @@
       }
     },
     "StdsIhsfF3": {
+      "x": 2294.1064200680275,
+      "y": 1210.6397959183676,
+      "width": 307.78715986394536,
+      "height": 257.36020408163245,
       "id": "StdsIhsfF3",
       "type": "frame",
       "name": "91%",
       "order": 6,
-      "x": 2294.1064200680275,
-      "y": 1210.6397959183676,
-      "width": 307.78715986394536,
-      "height": 257.36020408163245
+      "transition": {
+        "easing": "overshoot",
+        "arc": 2.2
+      }
     }
   },
   "order": [
@@ -1803,6 +1807,9 @@
   ],
   "settings": {
     "transitionMs": 1100,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "plain",
     "frameBorder": "solid"
   },
@@ -1810,14 +1817,22 @@
     "asset-1": {
       "id": "asset-1",
       "mime": "image/svg+xml",
-      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyMmQzZWUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YjVjZjYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxjaXJjbGUgY3g9IjQ4IiBjeT0iNDgiIHI9IjQ0IiBmaWxsPSJ1cmwoI2cpIi8+CiAgPHBhdGggZD0iTTI4IDU4IEw0NCAzNiBMNTYgNTAgTDcwIDMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==",
       "width": 96,
-      "height": 96
+      "height": 96,
+      "resourceId": "e3a040e197bd7d9ce8"
     }
   },
   "camera": {
-    "x": 25.653846153846036,
-    "y": 181.1057692307692,
-    "zoom": 0.2543
+    "zoom": 2.994254121773324,
+    "x": -6713.934090101097,
+    "y": -3594.1391248373143
+  },
+  "resources": {
+    "e3a040e197bd7d9ce8": {
+      "type": "svg",
+      "parts": [
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\" width=\"96\" height=\"96\">\n  <defs>\n    <linearGradient id=\"g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">\n      <stop offset=\"0\" stop-color=\"#22d3ee\"/><stop offset=\"1\" stop-color=\"#8b5cf6\"/>\n    </linearGradient>\n  </defs>\n  <circle cx=\"48\" cy=\"48\" r=\"44\" fill=\"url(#g)\"/>\n  <path d=\"M28 58 L44 36 L56 50 L70 30\" fill=\"none\" stroke=\"#fff\" stroke-width=\"7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n</svg>"
+      ]
+    }
   }
 }

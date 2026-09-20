@@ -1,53 +1,60 @@
-import { migrateDocumentV1 } from './document-assets'
+import { documentFileSchema, createEmptyDocument, type CanvasDocument } from './element-types'
 import {
-  canvasDocumentSchema,
-  canvasDocumentV1Schema,
-  createEmptyDocument,
-  type CanvasDocument
-} from './element-types'
+  createDocumentEncoder,
+  MAX_DOCUMENT_BYTES,
+  resolveDocumentResources
+} from './document-resources'
 
 export const DOCUMENT_FILE_EXTENSION = 'canvaslide'
-/** Documents written before the single-extension move; still openable, never written. */
-export const LEGACY_DOCUMENT_FILE_EXTENSION = 'canvas.json'
 export const DOCUMENT_FILE_FILTER = {
   name: 'CanvaSlide document',
   extensions: [DOCUMENT_FILE_EXTENSION]
 }
 export const DOCUMENT_OPEN_FILE_FILTER = {
   name: 'CanvaSlide document',
-  // Why: native dialogs match only the last segment, so a legacy `.canvas.json` has to enter as `json`.
-  extensions: [DOCUMENT_FILE_EXTENSION, LEGACY_DOCUMENT_FILE_EXTENSION.split('.').pop() ?? 'json']
+  extensions: [DOCUMENT_FILE_EXTENSION, 'json']
 }
 
 export type ParseDocumentResult =
   | { ok: true; document: CanvasDocument }
   | { ok: false; error: string }
 
-/** Legacy JSON interchange; .canvaslide files are written by serializeDocumentArchive. */
+/** The same readable JSON format is used for authoring and saving. */
 export function serializeDocument(document: CanvasDocument): string {
-  return JSON.stringify(document, null, 2)
+  return createDocumentEncoder()(document)
 }
 
 export function parseDocument(json: string): ParseDocumentResult {
-  let raw: unknown
   try {
-    raw = JSON.parse(json)
-  } catch (error) {
-    return { ok: false, error: `Not valid JSON: ${(error as Error).message}` }
-  }
-  const version = typeof raw === 'object' && raw !== null ? Reflect.get(raw, 'version') : undefined
-  if (version === 1) {
-    const legacy = canvasDocumentV1Schema.safeParse(raw)
-    if (!legacy.success) {
-      return { ok: false, error: describeIssue(legacy.error.issues[0]) }
+    if (
+      json.length > MAX_DOCUMENT_BYTES ||
+      new TextEncoder().encode(json).byteLength > MAX_DOCUMENT_BYTES
+    ) {
+      throw new Error('Document exceeds file size limit')
     }
-    return { ok: true, document: repairDocumentOrder(migrateDocumentV1(legacy.data)) }
+    return parseDocumentContents(json)
+  } catch (error) {
+    return { ok: false, error: `Invalid document: ${(error as Error).message}` }
   }
-  const result = canvasDocumentSchema.safeParse(raw)
+}
+
+export function parseDocumentFile(bytes: Uint8Array): ParseDocumentResult {
+  try {
+    if (bytes.byteLength > MAX_DOCUMENT_BYTES) {
+      throw new Error('Document exceeds file size limit')
+    }
+    return parseDocumentContents(new TextDecoder('utf-8', { fatal: true }).decode(bytes))
+  } catch (error) {
+    return { ok: false, error: `Invalid document: ${(error as Error).message}` }
+  }
+}
+
+function parseDocumentContents(json: string): ParseDocumentResult {
+  const result = documentFileSchema.safeParse(JSON.parse(json))
   if (!result.success) {
     return { ok: false, error: describeIssue(result.error.issues[0]) }
   }
-  return { ok: true, document: repairDocumentOrder(result.data) }
+  return { ok: true, document: repairDocumentOrder(resolveDocumentResources(result.data)) }
 }
 
 function describeIssue(issue: { path: PropertyKey[]; message: string } | undefined): string {
@@ -96,10 +103,7 @@ export function documentFileName(document: CanvasDocument): string {
   return `${fileNameStem(document.name)}.${DOCUMENT_FILE_EXTENSION}`
 }
 
-const DOCUMENT_SUFFIX = new RegExp(
-  `\\.(?:${DOCUMENT_FILE_EXTENSION}|${LEGACY_DOCUMENT_FILE_EXTENSION.replaceAll('.', '\\.')})$`,
-  'i'
-)
+const DOCUMENT_SUFFIX = new RegExp(`\\.(?:${DOCUMENT_FILE_EXTENSION}|json)$`, 'i')
 
 export function documentNameFromPath(path: string): string {
   const fileName = path.split(/[\\/]/).at(-1) ?? ''

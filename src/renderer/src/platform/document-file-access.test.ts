@@ -2,9 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import { encodeNativeDocumentFile } from '@/lib/document-file-codec'
-import { parseDocumentFile, serializeDocumentArchive } from '@shared/canvas/document-archive'
-import { base64ToBytes, bytesToBase64 } from '@shared/canvas/binary-data'
-import { serializeDocument } from '@shared/canvas/document-file'
+import { parseDocument, serializeDocument } from '@shared/canvas/document-file'
 import { useDocumentCommands, useWindowTitle } from '@/hooks/use-document-commands'
 import { useDocumentStore } from '@/store/document-store'
 import { openDocumentAtPath, openDocumentFile, saveDocumentFile } from './document-file-access'
@@ -20,19 +18,14 @@ vi.mock('@tauri-apps/api/core', () => ({ invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen }))
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ setTitle }) }))
 vi.mock('@/lib/document-file-codec', async () => {
-  const codec = await import('@shared/canvas/document-archive')
-  const { parseDocument } = await import('@shared/canvas/document-file')
-  const { bytesToBase64, base64ToBytes } = await import('@shared/canvas/binary-data')
+  const codec = await import('@shared/canvas/document-file')
   return {
-    encodeDocumentFile: vi.fn(codec.serializeDocumentArchive),
-    decodeDocumentFile: codec.parseDocumentFile,
-    encodeNativeDocumentFile: vi.fn(
-      (document) => `canvaslide-zip:${bytesToBase64(codec.serializeDocumentArchive(document))}`
+    encodeDocumentFile: vi.fn((document) =>
+      new TextEncoder().encode(codec.serializeDocument(document))
     ),
-    decodeNativeDocumentFile: (contents: string) =>
-      contents.startsWith('canvaslide-zip:')
-        ? codec.parseDocumentFile(base64ToBytes(contents.slice('canvaslide-zip:'.length)))
-        : parseDocument(contents)
+    decodeDocumentFile: codec.parseDocumentFile,
+    encodeNativeDocumentFile: vi.fn(codec.serializeDocument),
+    decodeNativeDocumentFile: codec.parseDocument
   }
 })
 vi.mock('./tauri-runtime', () => ({ isTauriRuntime: () => true }))
@@ -168,10 +161,9 @@ describe('native path transport', () => {
     unmount()
   })
 
-  it('opens a native archive transport with the original asset payloads', async () => {
-    const document = createEmptyDocument('Archive')
-    const packed = serializeDocumentArchive(document)
-    invoke.mockResolvedValue(`canvaslide-zip:${bytesToBase64(packed)}`)
+  it('opens native JSON without a binary transport wrapper', async () => {
+    const document = createEmptyDocument('JSON')
+    invoke.mockResolvedValue(serializeDocument(document))
     expect((await openDocumentAtPath(native)).document).toEqual(document)
   })
 
@@ -182,8 +174,7 @@ describe('native path transport', () => {
     vi.mocked(encodeNativeDocumentFile).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
-          release = () =>
-            resolve(`canvaslide-zip:${bytesToBase64(serializeDocumentArchive(document))}`)
+          release = () => resolve(serializeDocument(document))
         })
     )
     invoke.mockImplementation((command: string, args?: { path?: FilePath }) =>
@@ -206,9 +197,7 @@ describe('native path transport', () => {
       [windows, true],
       [windows, false]
     ])
-    const last = parseDocumentFile(
-      base64ToBytes(writes[1].contents.slice('canvaslide-zip:'.length))
-    )
+    const last = parseDocument(writes[1].contents)
     expect(last.ok && last.document.name).toBe('Second snapshot')
     expect(useDocumentStore.getState().dirty).toBe(false)
     unmount()

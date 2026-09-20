@@ -41,38 +41,16 @@ describe('document-file', () => {
     }
   })
 
-  it('opens v1 files by migrating them to v2', () => {
-    const v1 = {
-      version: 1,
-      name: 'legacy',
-      elements: {
-        img: {
-          id: 'img',
-          type: 'image',
-          src: 'data:image/png;base64,AAAA',
-          naturalWidth: 2,
-          naturalHeight: 2,
-          x: 0,
-          y: 0,
-          width: 2,
-          height: 2
-        }
-      },
-      order: ['img'],
-      settings: { transitionMs: 300 }
+  it('rejects removed document versions and files without the resource table', () => {
+    const file = JSON.parse(serializeDocument(createEmptyDocument()))
+    for (const version of [2, 3]) {
+      expect(parseDocument(JSON.stringify({ ...file, version })).ok).toBe(false)
     }
-    const parsed = parseDocument(JSON.stringify(v1))
-    expect(parsed.ok).toBe(true)
-    if (parsed.ok) {
-      expect(parsed.document.version).toBe(2)
-      expect(Object.keys(parsed.document.assets)).toHaveLength(1)
-    }
-    expect(parseDocument(JSON.stringify({ ...v1, elements: { img: { id: 'img' } } })).ok).toBe(
-      false
-    )
+    delete file.resources
+    expect(parseDocument(JSON.stringify(file)).ok).toBe(false)
   })
 
-  it('fills in defaults for settings older files do not have', () => {
+  it('supplies defaults for optional authoring settings', () => {
     const doc = createEmptyDocument('d')
     const json = JSON.parse(serializeDocument(doc)) as { settings: Record<string, unknown> }
     json.settings = { transitionMs: 700 }
@@ -142,13 +120,8 @@ describe('document-file', () => {
     expect(documentNameFromPath('/tmp/plan.CANVASLIDE')).toBe('plan')
   })
 
-  it('strips the legacy double extension when opening older documents', () => {
-    expect(documentNameFromPath('C:\\docs\\Deck.canvas.json')).toBe('Deck')
-    expect(documentNameFromPath('/tmp/plan.CANVAS.JSON')).toBe('plan')
-    expect(documentNameFromPath('/tmp/plan.json')).toBe('plan.json')
-  })
-
-  it('lets the native dialog reach legacy documents without offering to write them', () => {
+  it('opens hand-authored JSON while saving with the canonical extension', () => {
+    expect(documentNameFromPath('/tmp/plan.json')).toBe('plan')
     expect(DOCUMENT_OPEN_FILE_FILTER.extensions).toEqual(['canvaslide', 'json'])
     expect(DOCUMENT_FILE_FILTER.extensions).toEqual(['canvaslide'])
   })
@@ -171,6 +144,8 @@ describe('document-file', () => {
     expect(withDocumentName(named, '/tmp/northwind-launch-deck.canvaslide')).toBe(named)
     const unnamed = createEmptyDocument('  ')
     expect(withDocumentName(unnamed, '/tmp/Recovered.canvaslide').name).toBe('Recovered')
-    expect(withDocumentName(createEmptyDocument('  '), '/tmp/Old.canvas.json').name).toBe('Old')
+    expect(withDocumentName(createEmptyDocument('  '), '/tmp/Recovered.json').name).toBe(
+      'Recovered'
+    )
   })
 })

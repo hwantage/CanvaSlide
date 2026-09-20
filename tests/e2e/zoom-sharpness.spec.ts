@@ -55,11 +55,12 @@ async function openLightDeck(page: Page) {
     mimeType: 'application/json',
     buffer: Buffer.from(
       JSON.stringify({
-        version: 2,
+        version: 1,
         name: 'Zoom sharpness',
         elements: Object.fromEntries(elements.map((element) => [element.id, element])),
         order: elements.map((element) => element.id),
         assets: {},
+        resources: {},
         settings: { transitionMs: 300, background: 'plain', frameBorder: 'solid' },
         camera: { x: 0, y: 0, zoom: 1 }
       })

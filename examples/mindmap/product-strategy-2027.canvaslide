@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "Product Strategy 2027 (mind map)",
   "elements": {
     "ellipse-1": {
@@ -1316,6 +1316,9 @@
   ],
   "settings": {
     "transitionMs": 900,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "plain",
     "frameBorder": "solid"
   },
@@ -1324,5 +1327,6 @@
     "x": 101.6842105263158,
     "y": 70.32631578947365,
     "zoom": 0.5568
-  }
+  },
+  "resources": {}
 }

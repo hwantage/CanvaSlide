@@ -17,11 +17,12 @@ test('native Open, Save As and repeated Save retain the exact bridge path', asyn
     }
     const writes: unknown[] = []
     const contents = JSON.stringify({
-      version: 2,
+      version: 1,
       name: '',
       elements: {},
       order: [],
       assets: {},
+      resources: {},
       camera: { x: 0, y: 0, zoom: 1 },
       settings: { transitionMs: 1000, background: 'dots', frameBorder: 'solid' }
     })

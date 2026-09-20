@@ -48,15 +48,14 @@
   잘린 텍스트를 편집하는 동안은 전체 내용을 보여주고, 편집을 끝내면 다시 자른다.
 - SVG로 변환하는 텍스트에 글리프 윤곽선이 없으면 글꼴 기반 SVG 텍스트로 대체한다.
   누락 이미지·벡터 경로는 결과 창에서 보고한다.
-- 저장은 v3 ZIP 컨테이너를 사용한다. 서로 다른 SVG 자르기·그룹에 포함된 같은 비트맵은 공용 리소스로
-  한 번만 저장하며 SVG·문서 정보는 압축한다. 이미지 재인코딩·다운스케일은 하지 않는다.
+- 저장은 단일 UTF-8 JSON을 사용한다. 서로 다른 SVG 자르기·그룹에 포함된 같은 비트맵은 공용 `resources`에
+  한 번만 저장하며 SVG는 읽을 수 있는 XML 조각과 이미지 ID 참조로 표현한다. 이미지 재인코딩·다운스케일은 하지 않는다.
   열 때 자체 포함 SVG를 복원하므로 런타임 메모리와 HTML 내보내기 용량은 별개다.
-- 이전 v1/v2 JSON 문서는 계속 열린다. 다시 저장한 v3 파일은 이전 앱에서 열 수 없다.
-  확장자는 `.canvaslide`를 유지하며, 기존 `.canvas.json`·`.json`에 덮어쓰면 경로도 유지한다.
-- ZIP 문서 및 압축 해제 리소스는 각각 256MiB, 복원된 자산 문자열은 합계 512Mi 문자로 제한한다.
-  Base64를 포함한 이전 JSON 문서는 변환을 위해 입력을 512MiB까지 허용한다.
-  누락된 리소스·잘못된 삽입 위치·손상된 ZIP은 거부한다. 압축·복원·네이티브 전송 변환은 워커에서 실행한다.
-  연속 저장은 변경되지 않은 자산의 분석·압축 결과를 재사용하며, 30초 유휴 후 캐시를 해제한다.
+- 확장자는 `.canvaslide`이며 같은 규격의 `.json`도 열 수 있다. 저장은 선택한 경로를 유지한다.
+  파일 규격은 `documentFileSchema`와 `examples/README.md`를 따르며 구버전 변환은 제공하지 않는다.
+- JSON 입력은 256MiB, 복원된 자산 문자열은 합계 512Mi 문자로 제한한다.
+  누락된 리소스·SVG 간 참조·잘못된 JSON을 거부한다. 직렬화·복원은 워커에서 실행한다.
+  연속 저장은 변경되지 않은 자산의 리소스 구성을 재사용하며, 30초 유휴 후 캐시를 해제한다.
 - 원본 128MiB, 압축 해제 및 결과 자산 256MiB, 노드 100,000개, 중첩 128단계를 넘는 파일은 거부한다.
   최신 `.fig` 형식이 바뀌면 추가 대응이 필요할 수 있다.
 
@@ -78,7 +77,7 @@
 - 빈 SVG는 요소·자산으로 만들지 않는다. 샘플의 빈 요소 35개·자산 6개를 제거했고, 나머지 요소의 내용·좌표·서식·쌓임 순서와 자산 데이터는 동일했다.
 - import·복제·붙여넣기의 요소 삽입을 `document-mutations.insertElements`로 모았다. 한 번의 대량 삽입에서 요소·자산 테이블을 한 번씩 복사한다.
 - import마다 별도 세션을 사용하여 취소한 파일의 늦은 실패·결과를 무시한다. 성공·실패·취소 시 워커를 해제하며 완료 창에는 개수·경고만 보관한다.
-- 워커 메시지 타입은 송신·수신이 공유한다. 파일 생성용 환경변수는 단위 변환 테스트에서만 사용하고, E2E 편집 결과는 테스트별 출력 폴더에 저장한다.
+- 워커 메시지 타입은 송신·수신이 공유한다. E2E 편집 결과는 테스트별 출력 폴더에 저장한다.
 
 바이너리 해석 참고: [Kiwi 원본 문서](https://github.com/evanw/kiwi),
 [FIG 구조 분석](https://github.com/KwiTsukasa/figma-local-context-mcp/blob/main/FIG_DATA_STRUCTURE_ANALYSIS.md),
@@ -90,24 +89,20 @@
 자동 회귀용 `tests/fixtures/figma-basic.fig`와 `figma-nested-text.fig`는 직접 만든 문서다. 사용자 샘플의 내용은 저장소에 넣지 않는다.
 검증은 바이너리 해독, 행렬·클리핑·이미지 자르기, 경로·글리프, 숨김 페이지, 두 변환 모드,
 스키마 검증, 가져오기·취소·실행 취소, 중첩·부분 서식·잘린 텍스트의 실제 더블클릭 편집·저장·다시 열기,
-CSP, 잘못된 파일 처리 등을 포함한다. 실제 샘플은 표시 대상 원본 텍스트와 변환 텍스트를 전체 비교한다.
+CSP, 잘못된 파일 처리 등을 포함한다.
 
-실제 샘플 검증과 결과 파일 생성:
+현재 전체 검사:
 
 ```bash
-mkdir -p out/figma-import
-CANVASLIDE_FIG_SAMPLE="$HOME/Downloads/figma1.fig" \
-CANVASLIDE_FIG_OUTPUT=out/figma-import/figma1-editable.canvaslide \
-pnpm exec vitest run --config config/vitest.config.ts src/shared/canvas/fig-convert.test.ts
-
-CANVASLIDE_FIG_SAMPLE="$HOME/Downloads/figma1.fig" \
-CANVASLIDE_E2E_WEBKIT=1 \
-pnpm exec playwright test --config tests/playwright.config.ts tests/e2e/fig-import.spec.ts
+pnpm check
+CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e
+pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test
 ```
 
-`out/`은 gitignore 대상이다. 변환 결과 옆에 `.report.json`을 저장한다.
+### 과거 검증 기록 (2026-09-18)
 
-2026-09-18 코드 정리 및 최신 `main` 통합 후 전체 검증 결과:
+아래는 당시의 결과이며 현재 자동 검사 목록·개수와는 다르다.
+당시 코드 정리 및 `main` 통합 후 전체 검증 결과:
 
 | 검사                        | 결과                                                      |
 | --------------------------- | --------------------------------------------------------- |
@@ -121,15 +116,6 @@ pnpm exec playwright test --config tests/playwright.config.ts tests/e2e/fig-impo
 전체 E2E 163개와 앱 번들 검증은 해당 수정 전에 수행했다.
 
 실제 샘플의 문구 수정·저장·다시 열기·재편집을 두 브라우저에서 검증했다.
-일반 검사의 로컬 샘플 1건은 환경변수가 없으면 건너뛰며 위 명령으로 별도 실행한다.
-
-전체 검사 재현:
-
-```bash
-pnpm check
-CANVASLIDE_FIG_SAMPLE="$HOME/Downloads/figma1.fig" CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e
-pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test
-```
 
 실제 샘플 `figma1.fig`의 **텍스트·도형 편집** 결과는 12페이지·4,257요소·1,053자산이다.
 

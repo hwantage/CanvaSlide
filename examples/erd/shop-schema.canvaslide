@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "name": "Shop Schema (ERD)",
   "elements": {
     "text-1": {
@@ -1296,6 +1296,9 @@
   ],
   "settings": {
     "transitionMs": 900,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
     "background": "grid",
     "frameBorder": "solid"
   },
@@ -1304,5 +1307,6 @@
     "x": 109.0470588235294,
     "y": 18.007843137254913,
     "zoom": 0.7396
-  }
+  },
+  "resources": {}
 }

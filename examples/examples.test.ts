@@ -1,7 +1,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { parseDocument } from '../src/shared/canvas/document-file.ts'
+import {
+  parseDocumentFile,
+  parseDocument,
+  serializeDocument
+} from '../src/shared/canvas/document-file.ts'
 import { orderedFrames } from '../src/shared/canvas/presentation-sequence.ts'
 
 const examplesDir = import.meta.dirname
@@ -26,7 +30,7 @@ describe('examples/*.canvaslide', () => {
   })
 
   it.each(files)('%s parses and has frames to present', (file) => {
-    const parsed = parseDocument(readFileSync(file, 'utf8'))
+    const parsed = parseDocumentFile(readFileSync(file))
     expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
     if (!parsed.ok) {
       return
@@ -48,4 +52,24 @@ describe('examples/*.canvaslide', () => {
       }
     }
   })
+})
+
+it('keeps the authoring guide JSON loadable and editable after saving', () => {
+  const guide = readFileSync(join(examplesDir, 'README.md'), 'utf8')
+  const snippets = [...guide.matchAll(/```json\r?\n([\s\S]*?)\r?\n```/g)]
+  expect(snippets.length).toBeGreaterThan(0)
+  for (const [, json] of snippets) {
+    const parsed = parseDocumentFile(new TextEncoder().encode(json))
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) {
+      continue
+    }
+    const document = parsed.document
+    expect(orderedFrames(document).length).toBeGreaterThan(0)
+    expect([...document.order].sort()).toEqual(Object.keys(document.elements).sort())
+    for (const [id, element] of Object.entries(document.elements)) {
+      expect(element.id).toBe(id)
+    }
+    expect(parseDocument(serializeDocument(document))).toEqual(parsed)
+  }
 })

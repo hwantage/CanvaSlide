@@ -101,6 +101,11 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
   [detail reveal coordinator](../src/renderer/src/lib/image-detail-reveal.ts) switches overlapping
   images together when ready, with a deadline for slow/failed renders. Cross-fading preview and
   detail would double-composite translucent pixels. Release stale image leases when content or view changes.
+- Masked static photos use bounded previews during camera flights. Embedded WebP is recognized by
+  its [container and bitstream headers](../src/shared/canvas/webp-container.ts), including chunk bounds
+  and animation markers; a MIME label alone is insufficient. Animated or unrecognized WebP keeps its
+  original renderer during motion and detail rendering so rasterization cannot freeze an animation.
+  This is header inspection, not full compressed-bitstream validation; decoding remains the browser's job.
 
 Relevant regressions live beside the shared modules and in
 [`tests/e2e/`](../tests/e2e/). `CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e` adds rendering scenarios to the

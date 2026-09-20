@@ -1,6 +1,7 @@
 import type { ImageAsset } from '@shared/canvas/element-types'
 import type { ImageDetailRegion } from '@shared/canvas/image-detail'
 import { svgPreviewSize } from '@shared/canvas/image-rendering'
+import { isStaticWebp } from '@shared/canvas/webp-container'
 import { imageHref, parseViewBox, rasterizeSvg, type ImagePreview } from './svg-raster'
 import { prepareSvgBitmapDetail } from './svg-bitmap-detail'
 
@@ -56,12 +57,23 @@ function staticBitmap(data: string): boolean {
   return false
 }
 
-function maskedBitmapSvg(root: SVGSVGElement): boolean {
-  if (root.querySelector('text, foreignObject') || !root.querySelector('mask, filter')) {
+function staticWebpBitmap(data: string): boolean | null {
+  const comma = data.indexOf(',')
+  const header = data
+    .slice(0, comma < 0 ? undefined : comma)
+    .replace(/[\t\n\r]/g, '')
+    .trim()
+  if (!/^data:\s*image\/webp\s*(?:;|$)/i.test(header)) {
+    return null
+  }
+  if (comma < 0 || !/^data:\s*image\/webp\s*;(?:.*;)?base64$/i.test(header)) {
     return false
   }
-  const images = [...root.querySelectorAll('image')]
-  return images.length > 0 && images.every((image) => staticBitmap(imageHref(image)))
+  try {
+    return isStaticWebp(atob(data.slice(comma + 1)))
+  } catch {
+    return false
+  }
 }
 
 function stillSvg(data: string): SVGSVGElement | null {
@@ -78,17 +90,40 @@ function stillSvg(data: string): SVGSVGElement | null {
 }
 
 export function staticMaskedSvg(data: string): SVGSVGElement | null {
-  const root = stillSvg(data)
-  return root && maskedBitmapSvg(root) ? root : null
+  const source = parseSvgSource(data)
+  return source?.masked ? source.root : null
 }
 
 type SvgSource = { root: SVGSVGElement; masked: boolean } | null
 const sources = new WeakMap<ImageAsset, SvgSource>()
 
+function parseSvgSource(data: string): SvgSource {
+  const root = stillSvg(data)
+  if (!root) {
+    return null
+  }
+  const images = root.querySelectorAll('image')
+  let masked =
+    !root.querySelector('text, foreignObject') &&
+    Boolean(root.querySelector('mask, filter')) &&
+    images.length > 0
+  for (const image of images) {
+    const href = imageHref(image)
+    const webp = staticWebpBitmap(href)
+    // Detail crops also rasterize; uncertain or animated WebP must remain live at every zoom.
+    if (webp === false) {
+      return null
+    }
+    if (masked && webp !== true && !staticBitmap(href)) {
+      masked = false
+    }
+  }
+  return { root, masked }
+}
+
 function svgSource(asset: ImageAsset): SvgSource {
   if (!sources.has(asset)) {
-    const root = stillSvg(asset.data)
-    sources.set(asset, root ? { root, masked: maskedBitmapSvg(root) } : null)
+    sources.set(asset, parseSvgSource(asset.data))
   }
   return sources.get(asset)!
 }

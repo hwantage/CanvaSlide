@@ -83,6 +83,21 @@ describe('static masked bitmap SVG detection', () => {
     }
   })
 
+  it('rejects a masked PNG with invalid base64 without throwing', () => {
+    expect(staticMaskedSvg(svg('', 'data:image/png;base64,?'))).toBeNull()
+  })
+
+  it('falls back to the original masked SVG when its PNG cannot be decoded', async () => {
+    const data = svg('', 'data:image/png;base64,?')
+    await expect(
+      createSvgImagePreview(
+        { id: 'invalid-masked-photo', mime: 'image/svg+xml', data, width: 1602, height: 981 },
+        2
+      )
+    ).resolves.toMatchObject({ src: data })
+    expect(rasterizeSvg).not.toHaveBeenCalled()
+  })
+
   it('keeps vector detail available when an unrelated embedded PNG cannot be decoded', async () => {
     const data = svg('<text>Sharp caption</text>', 'data:image/png;base64,?')
     const preview = { src: 'blob:caption', bytes: 128, dispose: vi.fn() }

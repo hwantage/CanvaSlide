@@ -35,7 +35,12 @@ function staticBitmap(data: string): boolean {
     return false
   }
   // APNG declares animation before IDAT; unknown or oversized headers keep the original image.
-  const header = atob(data.slice(data.indexOf(',') + 1, data.indexOf(',') + 1 + 65536))
+  let header: string
+  try {
+    header = atob(data.slice(data.indexOf(',') + 1, data.indexOf(',') + 1 + 65536))
+  } catch {
+    return false
+  }
   if (header.slice(0, 8) !== '\x89PNG\r\n\x1a\n') {
     return false
   }

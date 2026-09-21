@@ -43,7 +43,9 @@ test('Shift+F5 starts from the selected frame @core-interaction', async ({ page 
   await expect(counter(page)).toContainText('2 / 2')
 })
 
-test('F5 does not start a show while editing text @core-interaction', async ({ page }) => {
+test('F5 starts a show from the text editor and keeps the typed text @core-interaction', async ({
+  page
+}) => {
   await drawTwoFrames(page)
   await page.keyboard.press('t')
   await page.getByTestId('canvas-viewport').click({ position: { x: 300, y: 600 } })
@@ -51,8 +53,10 @@ test('F5 does not start a show while editing text @core-interaction', async ({ p
   await expect(editor).toBeFocused()
   await page.keyboard.type('Talk notes')
   await page.keyboard.press('F5')
-  await expect(controls(page)).toHaveCount(0)
-  await expect(editor).toBeFocused()
+  await expect(controls(page)).toBeVisible()
+  await expect(counter(page)).toContainText('1 / 2')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('[data-element-type="text"]')).toContainText('Talk notes')
 })
 
 test('F5 does not start a show while a modal dialog is open @core-interaction', async ({

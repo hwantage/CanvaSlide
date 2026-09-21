@@ -270,6 +270,15 @@ function handlePlainKeys(event: KeyboardEvent): boolean {
   if (key === 'F2') {
     return startEditingSelection({ frames: true })
   }
+  // Why: PowerPoint's F5 / ⇧F5 aliases; ⌘⏎ stays primary because Apple keyboards need fn+F5.
+  if (key === 'F5' && !event.altKey && !event.ctrlKey && !event.metaKey) {
+    if (event.shiftKey) {
+      presentFromSelection()
+    } else {
+      usePresentationStore.getState().start()
+    }
+    return true
+  }
   if (
     key.toLowerCase() === 'k' &&
     !['Alt', 'Control', 'Meta', 'Shift'].some((modifier) => event.getModifierState(modifier))

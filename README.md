@@ -42,7 +42,7 @@ the editor also runs in a browser.
 
 1. Create content with the text or shape tools, paste an image, or import a file.
 2. Draw frames with **F** and arrange their sequence in the frame list.
-3. Start **Slide Show** with ⌘Enter / Ctrl+Enter. Use → and ← to navigate, **O** for overview,
+3. Start **Slide Show** with ⌘Enter / Ctrl+Enter, or F5. Use → and ← to navigate, **O** for overview,
    and **Esc** to return to the editor.
 4. Save an editable `.canvaslide` with ⌘S / Ctrl+S, or export HTML with ⌘E / Ctrl+E.
 

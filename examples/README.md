@@ -1,7 +1,7 @@
 # Examples
 
 Sample `.canvaslide` documents that show what CanvaSlide is good at. Open any of them with
-**Open** (⌘O / Ctrl+O), then start **Slide Show** with **⌘Enter / Ctrl+Enter** or the toolbar button.
+**Open** (⌘O / Ctrl+O), then start **Slide Show** with **⌘Enter / Ctrl+Enter**, **F5**, or the toolbar button.
 Use **→ / Space** to advance, **←** to go back, **O** for the overview and **Esc** to exit.
 
 Start with **`showcase/one-order.canvaslide`** — a 23-frame journey through an order, a lost

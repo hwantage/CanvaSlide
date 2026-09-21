@@ -22,6 +22,22 @@ for (const lang of ['en', 'ko']) {
     await expect(page.locator('.header-nav [aria-current="page"]')).toHaveText('ShowCase')
     await expect(page.locator('main article')).toHaveCount(exampleCatalog.length)
     await expect(page.locator('main')).not.toContainText(/undefined|site\.showcase\.|\{\w+\}/)
+    expect(
+      await page.locator('.showcase-card h2').evaluateAll((headings) => headings.map((h) => h.id))
+    ).toEqual([
+      'example-flowchart',
+      'example-erd',
+      'example-slides',
+      'example-architecture',
+      'example-mindmap',
+      'example-swing',
+      'example-anatomy',
+      'example-freefall',
+      'example-inside',
+      'example-canvaslide-claude',
+      'example-canvaslide-codex'
+    ])
+
     for (const { id, source } of exampleCatalog) {
       const link = page.locator(`main a.button[href$="?example=${id}"]`)
       await expect(link).toHaveAttribute('href', `https://canvaslide.pages.dev/?example=${id}`)

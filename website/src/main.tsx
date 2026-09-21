@@ -34,7 +34,10 @@ function Website() {
   }, [theme])
   return (
     <div id="top" lang={locale} className={isDocs ? 'docs-page' : 'home-page'}>
-      <SiteShell showRay={!isDocs && !isShowcase}>
+      <SiteShell
+        currentPage={isDocs ? 'docs' : isShowcase ? 'showcase' : 'product'}
+        showRay={!isDocs && !isShowcase}
+      >
         {isDocs ? <Documentation /> : isShowcase ? <Showcase /> : <Landing />}
       </SiteShell>
       {!isDocs && !isShowcase && <RayJourney />}

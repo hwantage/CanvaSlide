@@ -171,6 +171,13 @@ p {
   height: 60px;
   object-fit: contain;
 }
+/* Both approved wordmarks share geometry; the dark asset supplies the transparent silhouette. */
+html[data-theme='light'] .brand-full {
+  mask-image: url('../public/brand/canvaslide-dark.png');
+  mask-size: contain;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
 .brand-compact {
   display: none;
 }
@@ -178,14 +185,23 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 30px;
+  gap: 6px;
   margin-left: auto;
   font-size: 14px;
   font-weight: 550;
 }
+.header-nav > a {
+  padding: 10px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
 .header-nav a:hover,
 .site-footer a:hover {
   color: var(--site-blue);
+}
+.header-nav a[aria-current='page'] {
+  background: var(--foreground);
+  color: var(--background);
 }
 .source-link {
   display: inline-flex;
@@ -303,8 +319,9 @@ p {
   font-size: 10px;
   margin-top: 24px;
 }
-.footer-bottom a {
+.footer-bottom .source-link {
   margin-left: auto;
+  font-size: 13px;
 }
 
 @media (max-width: 1100px) {
@@ -316,7 +333,7 @@ p {
     gap: 22px;
   }
   .header-nav {
-    gap: 22px;
+    gap: 2px;
   }
   .header-nav .source-link {
     display: none;
@@ -326,10 +343,6 @@ p {
   }
 }
 @media (max-width: 800px) {
-  .header-download {
-    display: none;
-  }
-
   .site-footer nav {
     flex-wrap: wrap;
     gap: 16px;
@@ -367,7 +380,9 @@ p {
     left: 0;
     right: 0;
     margin: 0;
-    padding: 20px;
+    padding: 16px;
+    flex-wrap: wrap;
+    gap: 6px;
     background: var(--background);
     border-bottom: 1px solid var(--border);
   }

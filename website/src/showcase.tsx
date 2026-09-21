@@ -6,6 +6,28 @@ import { asset, siteHref, useSitePreferences } from './site-preferences'
 import { exampleEditorUrl } from './example-links'
 import { updateMetadata } from './site-metadata'
 
+const closingExamples: readonly ExampleId[] = [
+  'swing',
+  'anatomy',
+  'freefall',
+  'inside',
+  'canvaslide-claude',
+  'canvaslide-codex'
+]
+const exampleCopyParams = {
+  app: 'CanvaSlide',
+  claude: 'Claude',
+  codex: 'Codex',
+  svg: 'SVG',
+  size: '25 MiB'
+}
+const showcaseIds = [
+  ...exampleCatalog
+    .map(({ id }) => id)
+    .filter((id) => id !== 'one-order' && !closingExamples.includes(id)),
+  ...closingExamples
+]
+
 export function ExampleActions({ id }: { id: ExampleId }) {
   return (
     <div className="showcase-actions">
@@ -98,32 +120,32 @@ export function Showcase() {
       <FeaturedExample />
       <p className="showcase-instructions">{t('site.showcase.instructions')}</p>
       <div className="showcase-grid">
-        {exampleCatalog
-          .filter((example) => example.id !== 'one-order')
-          .map(({ id }) => (
-            <article className="showcase-card" key={id} aria-labelledby={`example-${id}`}>
-              <a
-                className="showcase-image"
-                href={exampleEditorUrl(id)}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={t('site.showcase.openNamed', { name: t(`site.showcase.${id}.title`) })}
-              >
-                <img
-                  src={asset(`examples/${id}-showcase.png`)}
-                  width="1400"
-                  height="1000"
-                  loading="lazy"
-                  alt={t(`site.showcase.${id}.alt`)}
-                />
-              </a>
-              <div className="showcase-card-copy">
-                <h2 id={`example-${id}`}>{t(`site.showcase.${id}.title`)}</h2>
-                <p>{t(`site.showcase.${id}.body`, { svg: 'SVG', size: '25 MiB' })}</p>
-                <ExampleActions id={id} />
-              </div>
-            </article>
-          ))}
+        {showcaseIds.map((id) => (
+          <article className="showcase-card" key={id} aria-labelledby={`example-${id}`}>
+            <a
+              className="showcase-image"
+              href={exampleEditorUrl(id)}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={t('site.showcase.openNamed', {
+                name: t(`site.showcase.${id}.title`, exampleCopyParams)
+              })}
+            >
+              <img
+                src={asset(`examples/${id}-showcase.png`)}
+                width="1400"
+                height="1000"
+                loading="lazy"
+                alt={t(`site.showcase.${id}.alt`, exampleCopyParams)}
+              />
+            </a>
+            <div className="showcase-card-copy">
+              <h2 id={`example-${id}`}>{t(`site.showcase.${id}.title`, exampleCopyParams)}</h2>
+              <p>{t(`site.showcase.${id}.body`, exampleCopyParams)}</p>
+              <ExampleActions id={id} />
+            </div>
+          </article>
+        ))}
       </div>
     </main>
   )

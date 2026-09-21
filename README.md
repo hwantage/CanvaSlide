@@ -1,3 +1,5 @@
+![CanvaSlide official logo](./website/public/brand/canvaslide-readme.png)
+
 # CanvaSlide
 
 **English** | [한국어](./README.ko.md)
@@ -7,7 +9,7 @@ board, place **presentation frames** around the views you want to show, then pre
 to move between them with continuous zoom/pan. Built with **Tauri 2 + React 19 + TypeScript**;
 the editor also runs in a browser.
 
-![CanvaSlide editor with two presentation frames on one canvas](./website/public/images/editor.png)
+![CanvaSlide — zoom from the big picture into connected details](./website/public/images/canvaslide-showcase.webp)
 
 [ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) ·
 [Try the web editor](https://canvaslide.pages.dev/) ·

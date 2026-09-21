@@ -1,0 +1,2999 @@
+{
+  "version": 1,
+  "name": "CanvaSlide — 생각을 펼치고, 시선을 움직이다",
+  "elements": {
+    "frame-01": {
+      "id": "frame-01",
+      "type": "frame",
+      "name": "01 · 생각을 펼치고, 시선을 움직이다",
+      "order": 1,
+      "x": 0,
+      "y": 0,
+      "width": 1600,
+      "height": 900,
+      "transition": {
+        "ms": 900,
+        "easing": "smooth",
+        "arc": 0.8,
+        "roll": 0,
+        "spotlight": 0.8
+      }
+    },
+    "bg-1": {
+      "id": "bg-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 0,
+      "y": 0,
+      "width": 1600,
+      "height": 900,
+      "style": {
+        "fill": "#EEF4FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "brand-1": {
+      "id": "brand-1",
+      "type": "text",
+      "x": 100,
+      "y": 64,
+      "width": 650,
+      "height": 37.5,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "num-1": {
+      "id": "num-1",
+      "type": "text",
+      "x": 1320,
+      "y": 66,
+      "width": 180,
+      "height": 31.0,
+      "text": "01 / 08",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 20,
+        "align": "right",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-rule-1": {
+      "id": "footer-rule-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 100,
+      "y": 792,
+      "width": 1400,
+      "height": 1,
+      "style": {
+        "fill": "#CDDAED",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-1": {
+      "id": "footer-1",
+      "type": "text",
+      "x": 100,
+      "y": 817,
+      "width": 1100,
+      "height": 28.400000000000002,
+      "text": "하나의 캔버스, 이어지는 이야기",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "title-product": {
+      "id": "title-product",
+      "type": "text",
+      "x": 100,
+      "y": 157,
+      "width": 750,
+      "height": 41.4,
+      "text": "무한 캔버스 프레젠테이션",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 28,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "title-main": {
+      "id": "title-main",
+      "type": "text",
+      "x": 94,
+      "y": 235,
+      "width": 1080,
+      "height": 231.56,
+      "text": "생각을 펼치고,\n시선을 움직이다.",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 96,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.18,
+        "fontFamily": "Arial"
+      }
+    },
+    "title-sub": {
+      "id": "title-sub",
+      "type": "text",
+      "x": 100,
+      "y": 515,
+      "width": 900,
+      "height": 94.6,
+      "text": "아이디어의 전체와 디테일을\n하나의 흐름으로 전하는 CanvaSlide",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 32,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4,
+        "fontFamily": "Arial"
+      }
+    },
+    "title-platform": {
+      "id": "title-platform",
+      "type": "text",
+      "x": 100,
+      "y": 704,
+      "width": 1050,
+      "height": 34.900000000000006,
+      "text": "무료 · 오픈 소스     /     macOS · Windows · 웹",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 23,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "cover-plane": {
+      "id": "cover-plane",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1140,
+      "y": 195,
+      "width": 320,
+      "height": 455,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "cover-frame-outer": {
+      "id": "cover-frame-outer",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1055,
+      "y": 255,
+      "width": 355,
+      "height": 235,
+      "style": {
+        "fill": "transparent",
+        "stroke": "#FFFFFF",
+        "strokeWidth": 4,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "cover-frame-middle": {
+      "id": "cover-frame-middle",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1165,
+      "y": 358,
+      "width": 220,
+      "height": 146,
+      "style": {
+        "fill": "transparent",
+        "stroke": "#FFFFFF",
+        "strokeWidth": 4,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "cover-frame-inner": {
+      "id": "cover-frame-inner",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1275,
+      "y": 431,
+      "width": 80,
+      "height": 53,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "cover-zoom-trail": {
+      "id": "cover-zoom-trail",
+      "type": "connector",
+      "x": 1090,
+      "y": 485,
+      "width": 200,
+      "height": 105,
+      "start": {
+        "x": 1090,
+        "y": 590
+      },
+      "end": {
+        "x": 1290,
+        "y": 485
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#FFFFFF",
+        "strokeWidth": 3,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "cover-frame-label": {
+      "id": "cover-frame-label",
+      "type": "text",
+      "x": 1165,
+      "y": 556,
+      "width": 245,
+      "height": 80.4,
+      "text": "전체에서\n디테일까지",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 29,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-02": {
+      "id": "frame-02",
+      "type": "frame",
+      "name": "02 · 무한 캔버스에 생각을 연결하다",
+      "order": 2,
+      "x": 2100,
+      "y": -300,
+      "width": 1600,
+      "height": 900,
+      "transition": {
+        "ms": 1500,
+        "easing": "accelerate",
+        "arc": 1.35,
+        "roll": -2,
+        "spotlight": 0.65
+      }
+    },
+    "bg-2": {
+      "id": "bg-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2100,
+      "y": -300,
+      "width": 1600,
+      "height": 900,
+      "style": {
+        "fill": "#FFFFFF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "brand-2": {
+      "id": "brand-2",
+      "type": "text",
+      "x": 2200,
+      "y": -236,
+      "width": 650,
+      "height": 37.5,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "num-2": {
+      "id": "num-2",
+      "type": "text",
+      "x": 3420,
+      "y": -234,
+      "width": 180,
+      "height": 31.0,
+      "text": "02 / 08",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 20,
+        "align": "right",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-rule-2": {
+      "id": "footer-rule-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2200,
+      "y": 492,
+      "width": 1400,
+      "height": 1,
+      "style": {
+        "fill": "#CDDAED",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-2": {
+      "id": "footer-2",
+      "type": "text",
+      "x": 2200,
+      "y": 517,
+      "width": 1100,
+      "height": 28.400000000000002,
+      "text": "하나의 캔버스, 이어지는 이야기",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-kicker": {
+      "id": "canvas-kicker",
+      "type": "text",
+      "x": 2200,
+      "y": -129,
+      "width": 600,
+      "height": 37.5,
+      "text": "무한 캔버스",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-title": {
+      "id": "canvas-title",
+      "type": "text",
+      "x": 2200,
+      "y": -70,
+      "width": 640,
+      "height": 153.79999999999998,
+      "text": "아이디어는 자유롭게,\n설명은 연결되게.",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 62,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.2,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-body": {
+      "id": "canvas-body",
+      "type": "text",
+      "x": 2200,
+      "y": 131,
+      "width": 585,
+      "height": 86.2,
+      "text": "텍스트, 도형, 이미지, 연결선으로\n생각의 구조를 한 화면에 담습니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.45,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-use": {
+      "id": "canvas-use",
+      "type": "text",
+      "x": 2200,
+      "y": 328,
+      "width": 550,
+      "height": 85.0,
+      "text": "순서도 · ERD · 마인드맵\n아키텍처 · 기획 · 발표",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.6,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-context": {
+      "id": "frame-context",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2826,
+      "y": -96,
+      "width": 770,
+      "height": 530,
+      "style": {
+        "fill": "#EEF4FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-context-label": {
+      "id": "frame-context-label",
+      "type": "text",
+      "x": 2854,
+      "y": -76,
+      "width": 600,
+      "height": 32.3,
+      "text": "아이디어 위에 발표 경로를 더하세요",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 21,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-03": {
+      "id": "frame-03",
+      "type": "frame",
+      "name": "03 · 내부 확대 — 프레임이 만드는 발표 흐름",
+      "order": 3,
+      "x": 2850,
+      "y": -28,
+      "width": 720,
+      "height": 405,
+      "transition": {
+        "ms": 1150,
+        "easing": "decelerate",
+        "arc": 0.65,
+        "roll": 0,
+        "spotlight": 0.94
+      }
+    },
+    "detail-flow-bg": {
+      "id": "detail-flow-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2850,
+      "y": -28,
+      "width": 720,
+      "height": 405,
+      "style": {
+        "fill": "#FFFFFF",
+        "stroke": "#2463EB",
+        "strokeWidth": 2,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-detail-kicker": {
+      "id": "flow-detail-kicker",
+      "type": "text",
+      "x": 2886,
+      "y": -3,
+      "width": 630,
+      "height": 25.8,
+      "text": "03 / 프레임으로 구성하기",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-detail-title": {
+      "id": "flow-detail-title",
+      "type": "text",
+      "x": 2886,
+      "y": 36,
+      "width": 660,
+      "height": 47.9,
+      "text": "영역을 정하면, 이야기가 됩니다.",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 33,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-arrow-1": {
+      "id": "flow-arrow-1",
+      "type": "connector",
+      "x": 3065,
+      "y": 183,
+      "width": 52,
+      "height": 1,
+      "start": {
+        "x": 3065,
+        "y": 183
+      },
+      "end": {
+        "x": 3117,
+        "y": 183
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#2463EB",
+        "strokeWidth": 3,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-arrow-2": {
+      "id": "flow-arrow-2",
+      "type": "connector",
+      "x": 3297,
+      "y": 183,
+      "width": 52,
+      "height": 1,
+      "start": {
+        "x": 3297,
+        "y": 183
+      },
+      "end": {
+        "x": 3349,
+        "y": 183
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#2463EB",
+        "strokeWidth": 3,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-1": {
+      "id": "flow-node-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2886,
+      "y": 128,
+      "width": 180,
+      "height": 108,
+      "style": {
+        "fill": "#EEF4FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 4
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-label-1": {
+      "id": "flow-node-label-1",
+      "type": "text",
+      "x": 2898,
+      "y": 143,
+      "width": 156,
+      "height": 37.5,
+      "text": "아이디어",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 25,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-sub-1": {
+      "id": "flow-node-sub-1",
+      "type": "text",
+      "x": 2894,
+      "y": 190,
+      "width": 164,
+      "height": 25.8,
+      "text": "자유롭게 배치",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-2": {
+      "id": "flow-node-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3118,
+      "y": 128,
+      "width": 180,
+      "height": 108,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 4
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-label-2": {
+      "id": "flow-node-label-2",
+      "type": "text",
+      "x": 3130,
+      "y": 143,
+      "width": 156,
+      "height": 37.5,
+      "text": "프레임",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 25,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-sub-2": {
+      "id": "flow-node-sub-2",
+      "type": "text",
+      "x": 3126,
+      "y": 190,
+      "width": 164,
+      "height": 25.8,
+      "text": "영역과 순서",
+      "textStyle": {
+        "color": "#D8E7FF",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-3": {
+      "id": "flow-node-3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3350,
+      "y": 128,
+      "width": 180,
+      "height": 108,
+      "style": {
+        "fill": "#EEF4FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 4
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-label-3": {
+      "id": "flow-node-label-3",
+      "type": "text",
+      "x": 3362,
+      "y": 143,
+      "width": 156,
+      "height": 37.5,
+      "text": "발표",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 25,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-node-sub-3": {
+      "id": "flow-node-sub-3",
+      "type": "text",
+      "x": 3358,
+      "y": 190,
+      "width": 164,
+      "height": 25.8,
+      "text": "시선을 안내",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "flow-detail-body": {
+      "id": "flow-detail-body",
+      "type": "text",
+      "x": 2886,
+      "y": 272,
+      "width": 650,
+      "height": 65.9,
+      "text": "프레임 목록에서 순서를 바꾸면\n캔버스 배치 그대로 발표 흐름을 바꿀 수 있습니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 21,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.45,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-04": {
+      "id": "frame-04",
+      "type": "frame",
+      "name": "04 · 카메라로 이야기를 연출하다",
+      "order": 4,
+      "x": 4600,
+      "y": 1000,
+      "width": 1600,
+      "height": 900,
+      "transition": {
+        "ms": 1900,
+        "easing": "smooth",
+        "arc": 2.35,
+        "roll": 3,
+        "spotlight": 0.8
+      }
+    },
+    "bg-4": {
+      "id": "bg-4",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4600,
+      "y": 1000,
+      "width": 1600,
+      "height": 900,
+      "style": {
+        "fill": "#102B57",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "brand-4": {
+      "id": "brand-4",
+      "type": "text",
+      "x": 4700,
+      "y": 1064,
+      "width": 650,
+      "height": 37.5,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "num-4": {
+      "id": "num-4",
+      "type": "text",
+      "x": 5920,
+      "y": 1066,
+      "width": 180,
+      "height": 31.0,
+      "text": "04 / 08",
+      "textStyle": {
+        "color": "#ABBFDF",
+        "fontSize": 20,
+        "align": "right",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-rule-4": {
+      "id": "footer-rule-4",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4700,
+      "y": 1792,
+      "width": 1400,
+      "height": 1,
+      "style": {
+        "fill": "#365176",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-4": {
+      "id": "footer-4",
+      "type": "text",
+      "x": 4700,
+      "y": 1817,
+      "width": 1100,
+      "height": 28.400000000000002,
+      "text": "하나의 캔버스, 이어지는 이야기",
+      "textStyle": {
+        "color": "#ABBFDF",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-kicker": {
+      "id": "motion-kicker",
+      "type": "text",
+      "x": 4700,
+      "y": 1166,
+      "width": 600,
+      "height": 37.5,
+      "text": "카메라 연출",
+      "textStyle": {
+        "color": "#8FB8FF",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-title": {
+      "id": "motion-title",
+      "type": "text",
+      "x": 4700,
+      "y": 1231,
+      "width": 655,
+      "height": 163.4,
+      "text": "카메라로\n이야기를 연출하다.",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 66,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.2,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-body": {
+      "id": "motion-body",
+      "type": "text",
+      "x": 4700,
+      "y": 1431,
+      "width": 605,
+      "height": 86.0,
+      "text": "줌과 팬으로 맥락을 잇고,\n속도·곡선·회전으로 리듬을 만듭니다.",
+      "textStyle": {
+        "color": "#C2D1E8",
+        "fontSize": 27,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.5,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-foot": {
+      "id": "motion-foot",
+      "type": "text",
+      "x": 4700,
+      "y": 1626,
+      "width": 560,
+      "height": 83.0,
+      "text": "프레임마다 조절하고,\n이동을 미리 보며 완성하세요.",
+      "textStyle": {
+        "color": "#8FB8FF",
+        "fontSize": 26,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.5,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-path": {
+      "id": "motion-path",
+      "type": "connector",
+      "x": 5410,
+      "y": 1211,
+      "width": 545,
+      "height": 63,
+      "start": {
+        "x": 5410,
+        "y": 1211
+      },
+      "end": {
+        "x": 5955,
+        "y": 1274
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#7CA9F5",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-dot-0": {
+      "id": "motion-dot-0",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 5408,
+      "y": 1201,
+      "width": 24,
+      "height": 24,
+      "style": {
+        "fill": "#8FB8FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-dot-label-0": {
+      "id": "motion-dot-label-0",
+      "type": "text",
+      "x": 5365,
+      "y": 1146,
+      "width": 110,
+      "height": 34.900000000000006,
+      "text": "팬",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 23,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-dot-1": {
+      "id": "motion-dot-1",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 5658,
+      "y": 1208,
+      "width": 24,
+      "height": 24,
+      "style": {
+        "fill": "#8FB8FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-dot-label-1": {
+      "id": "motion-dot-label-1",
+      "type": "text",
+      "x": 5615,
+      "y": 1153,
+      "width": 110,
+      "height": 34.900000000000006,
+      "text": "곡선",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 23,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-dot-2": {
+      "id": "motion-dot-2",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 5928,
+      "y": 1259,
+      "width": 24,
+      "height": 24,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "motion-dot-label-2": {
+      "id": "motion-dot-label-2",
+      "type": "text",
+      "x": 5885,
+      "y": 1204,
+      "width": 110,
+      "height": 34.900000000000006,
+      "text": "회전",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 23,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-05": {
+      "id": "frame-05",
+      "type": "frame",
+      "name": "05 · 내부 확대 — 디테일에 시선을 모으다",
+      "order": 5,
+      "x": 5415,
+      "y": 1361,
+      "width": 640,
+      "height": 360,
+      "transition": {
+        "ms": 1250,
+        "easing": "overshoot",
+        "arc": 0.72,
+        "roll": 0,
+        "spotlight": 0.97
+      }
+    },
+    "detail-focus-bg": {
+      "id": "detail-focus-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5415,
+      "y": 1361,
+      "width": 640,
+      "height": 360,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "#95B9FF",
+        "strokeWidth": 2,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-kicker": {
+      "id": "focus-kicker",
+      "type": "text",
+      "x": 5449,
+      "y": 1386,
+      "width": 530,
+      "height": 24.5,
+      "text": "05 / 더 가까이 보는 프레임",
+      "textStyle": {
+        "color": "#D5E5FF",
+        "fontSize": 15,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-title": {
+      "id": "focus-title",
+      "type": "text",
+      "x": 5449,
+      "y": 1435,
+      "width": 350,
+      "height": 87.96,
+      "text": "디테일에,\n시선을 모으다.",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 34,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.22,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-body": {
+      "id": "focus-body",
+      "type": "text",
+      "x": 5449,
+      "y": 1568,
+      "width": 345,
+      "height": 65.0,
+      "text": "차트·표·핵심 문장 주위에\n작은 프레임을 더하세요.",
+      "textStyle": {
+        "color": "#E5EEFF",
+        "fontSize": 20,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.5,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-caption": {
+      "id": "focus-caption",
+      "type": "text",
+      "x": 5449,
+      "y": 1671,
+      "width": 565,
+      "height": 27.1,
+      "text": "전체 맥락은 그대로, 중요한 부분은 더 선명하게.",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 17,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-box": {
+      "id": "focus-box",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5853,
+      "y": 1478,
+      "width": 152,
+      "height": 108,
+      "style": {
+        "fill": "transparent",
+        "stroke": "#B5CFFF",
+        "strokeWidth": 1,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-h-0": {
+      "id": "focus-corner-h-0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5853,
+      "y": 1476,
+      "width": 24,
+      "height": 4,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-v-0": {
+      "id": "focus-corner-v-0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5851,
+      "y": 1478,
+      "width": 4,
+      "height": 24,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-h-1": {
+      "id": "focus-corner-h-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5981,
+      "y": 1476,
+      "width": 24,
+      "height": 4,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-v-1": {
+      "id": "focus-corner-v-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 6003,
+      "y": 1478,
+      "width": 4,
+      "height": 24,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-h-2": {
+      "id": "focus-corner-h-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5853,
+      "y": 1584,
+      "width": 24,
+      "height": 4,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-v-2": {
+      "id": "focus-corner-v-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5851,
+      "y": 1562,
+      "width": 4,
+      "height": 24,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-h-3": {
+      "id": "focus-corner-h-3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5981,
+      "y": 1584,
+      "width": 24,
+      "height": 4,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-corner-v-3": {
+      "id": "focus-corner-v-3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 6003,
+      "y": 1562,
+      "width": 4,
+      "height": 24,
+      "style": {
+        "fill": "#FF765D",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "focus-word": {
+      "id": "focus-word",
+      "type": "text",
+      "x": 5865,
+      "y": 1508,
+      "width": 128,
+      "height": 49.2,
+      "text": "핵심",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 34,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-06": {
+      "id": "frame-06",
+      "type": "frame",
+      "name": "06 · 자료와 AI에서 시작하는 제작",
+      "order": 6,
+      "x": 2350,
+      "y": 2450,
+      "width": 1600,
+      "height": 900,
+      "transition": {
+        "ms": 1700,
+        "easing": "decelerate",
+        "arc": 1.9,
+        "roll": -2,
+        "spotlight": 0.75
+      }
+    },
+    "bg-6": {
+      "id": "bg-6",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2350,
+      "y": 2450,
+      "width": 1600,
+      "height": 900,
+      "style": {
+        "fill": "#EEF4FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "brand-6": {
+      "id": "brand-6",
+      "type": "text",
+      "x": 2450,
+      "y": 2514,
+      "width": 650,
+      "height": 37.5,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "num-6": {
+      "id": "num-6",
+      "type": "text",
+      "x": 3670,
+      "y": 2516,
+      "width": 180,
+      "height": 31.0,
+      "text": "06 / 08",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 20,
+        "align": "right",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-rule-6": {
+      "id": "footer-rule-6",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2450,
+      "y": 3242,
+      "width": 1400,
+      "height": 1,
+      "style": {
+        "fill": "#CDDAED",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-6": {
+      "id": "footer-6",
+      "type": "text",
+      "x": 2450,
+      "y": 3267,
+      "width": 1100,
+      "height": 28.400000000000002,
+      "text": "하나의 캔버스, 이어지는 이야기",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-title": {
+      "id": "create-title",
+      "type": "text",
+      "x": 2450,
+      "y": 2615,
+      "width": 1420,
+      "height": 85.60000000000001,
+      "text": "가지고 있는 자료에서, 발표까지.",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 62,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-sub": {
+      "id": "create-sub",
+      "type": "text",
+      "x": 2450,
+      "y": 2722,
+      "width": 1330,
+      "height": 41.4,
+      "text": "직접 만들거나 자료를 가져오고, AI 초안을 내 이야기로 다듬으세요.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-arrow-1": {
+      "id": "create-arrow-1",
+      "type": "connector",
+      "x": 2842,
+      "y": 2892,
+      "width": 78,
+      "height": 1,
+      "start": {
+        "x": 2842,
+        "y": 2892
+      },
+      "end": {
+        "x": 2920,
+        "y": 2892
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#2463EB",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-arrow-2": {
+      "id": "create-arrow-2",
+      "type": "connector",
+      "x": 3341,
+      "y": 2892,
+      "width": 78,
+      "height": 1,
+      "start": {
+        "x": 3341,
+        "y": 2892
+      },
+      "end": {
+        "x": 3419,
+        "y": 2892
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#2463EB",
+        "strokeWidth": 4,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-num-1": {
+      "id": "create-step-num-1",
+      "type": "text",
+      "x": 2450,
+      "y": 2818,
+      "width": 350,
+      "height": 96.0,
+      "text": "01",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 70,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-title-1": {
+      "id": "create-step-title-1",
+      "type": "text",
+      "x": 2450,
+      "y": 2925,
+      "width": 370,
+      "height": 47.9,
+      "text": "자료를 모으고",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 33,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-rule-1": {
+      "id": "create-step-rule-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2450,
+      "y": 2996,
+      "width": 360,
+      "height": 3,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-body-1": {
+      "id": "create-step-body-1",
+      "type": "text",
+      "x": 2450,
+      "y": 3028,
+      "width": 380,
+      "height": 79.4,
+      "text": "이미지 · PDF 페이지\n로컬 Figma 파일 가져오기",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 24,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.55,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-num-2": {
+      "id": "create-step-num-2",
+      "type": "text",
+      "x": 2948,
+      "y": 2818,
+      "width": 350,
+      "height": 96.0,
+      "text": "02",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 70,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-title-2": {
+      "id": "create-step-title-2",
+      "type": "text",
+      "x": 2948,
+      "y": 2925,
+      "width": 370,
+      "height": 47.9,
+      "text": "AI로 초안을 만들고",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 33,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-rule-2": {
+      "id": "create-step-rule-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2948,
+      "y": 2996,
+      "width": 360,
+      "height": 3,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-body-2": {
+      "id": "create-step-body-2",
+      "type": "text",
+      "x": 2948,
+      "y": 3028,
+      "width": 380,
+      "height": 79.4,
+      "text": "일반 / 다이나믹 프롬프트를\n내 AI 도우미에 전달",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 24,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.55,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-num-3": {
+      "id": "create-step-num-3",
+      "type": "text",
+      "x": 3446,
+      "y": 2818,
+      "width": 350,
+      "height": 96.0,
+      "text": "03",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 70,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-title-3": {
+      "id": "create-step-title-3",
+      "type": "text",
+      "x": 3446,
+      "y": 2925,
+      "width": 370,
+      "height": 47.9,
+      "text": "내 발표로 완성",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 33,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-rule-3": {
+      "id": "create-step-rule-3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3446,
+      "y": 2996,
+      "width": 360,
+      "height": 3,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-step-body-3": {
+      "id": "create-step-body-3",
+      "type": "text",
+      "x": 3446,
+      "y": 3028,
+      "width": 380,
+      "height": 79.4,
+      "text": "생성된 .canvaslide를 열어\n내용·배치·전환 편집",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 24,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.55,
+        "fontFamily": "Arial"
+      }
+    },
+    "create-ai-note": {
+      "id": "create-ai-note",
+      "type": "text",
+      "x": 2450,
+      "y": 3164,
+      "width": 1360,
+      "height": 32.3,
+      "text": "AI 생성은 사용자가 선택한 외부 도우미에서 진행됩니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 21,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-07": {
+      "id": "frame-07",
+      "type": "frame",
+      "name": "07 · 편집하고, 발표하고, 공유하다",
+      "order": 7,
+      "x": -100,
+      "y": 2100,
+      "width": 1600,
+      "height": 900,
+      "transition": {
+        "ms": 1350,
+        "easing": "linear",
+        "arc": 1.15,
+        "roll": 0,
+        "spotlight": 0.8
+      }
+    },
+    "bg-7": {
+      "id": "bg-7",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": -100,
+      "y": 2100,
+      "width": 1600,
+      "height": 900,
+      "style": {
+        "fill": "#FFFFFF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "brand-7": {
+      "id": "brand-7",
+      "type": "text",
+      "x": 0,
+      "y": 2164,
+      "width": 650,
+      "height": 37.5,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "num-7": {
+      "id": "num-7",
+      "type": "text",
+      "x": 1220,
+      "y": 2166,
+      "width": 180,
+      "height": 31.0,
+      "text": "07 / 08",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 20,
+        "align": "right",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-rule-7": {
+      "id": "footer-rule-7",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 0,
+      "y": 2892,
+      "width": 1400,
+      "height": 1,
+      "style": {
+        "fill": "#CDDAED",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-7": {
+      "id": "footer-7",
+      "type": "text",
+      "x": 0,
+      "y": 2917,
+      "width": 1100,
+      "height": 28.400000000000002,
+      "text": "하나의 캔버스, 이어지는 이야기",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-title": {
+      "id": "share-title",
+      "type": "text",
+      "x": 0,
+      "y": 2262,
+      "width": 1370,
+      "height": 83.0,
+      "text": "작업은 내 곁에. 이야기는 어디로든.",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 60,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-sub": {
+      "id": "share-sub",
+      "type": "text",
+      "x": 0,
+      "y": 2369,
+      "width": 1320,
+      "height": 42.7,
+      "text": "목적에 맞는 형식으로 저장하고 전달하세요.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 29,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-divider-1": {
+      "id": "share-divider-1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 459,
+      "y": 2466,
+      "width": 2,
+      "height": 286,
+      "style": {
+        "fill": "#CDDAED",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-divider-2": {
+      "id": "share-divider-2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 951,
+      "y": 2466,
+      "width": 2,
+      "height": 286,
+      "style": {
+        "fill": "#CDDAED",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-edit-ext": {
+      "id": "share-edit-ext",
+      "type": "text",
+      "x": 0,
+      "y": 2478,
+      "width": 430,
+      "height": 70.0,
+      "text": ".canvaslide",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 50,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-edit-head": {
+      "id": "share-edit-head",
+      "type": "text",
+      "x": 0,
+      "y": 2565,
+      "width": 430,
+      "height": 42.7,
+      "text": "계속 편집할 원본",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 29,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-edit-body": {
+      "id": "share-edit-body",
+      "type": "text",
+      "x": 0,
+      "y": 2630,
+      "width": 430,
+      "height": 83.0,
+      "text": "텍스트·도형·프레임을\n다시 열어 수정합니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 26,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.5,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-html-ext": {
+      "id": "share-html-ext",
+      "type": "text",
+      "x": 510,
+      "y": 2478,
+      "width": 400,
+      "height": 70.0,
+      "text": ".html",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 50,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-html-head": {
+      "id": "share-html-head",
+      "type": "text",
+      "x": 510,
+      "y": 2565,
+      "width": 400,
+      "height": 42.7,
+      "text": "브라우저로 보는 발표",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 29,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-html-body": {
+      "id": "share-html-body",
+      "type": "text",
+      "x": 510,
+      "y": 2630,
+      "width": 390,
+      "height": 83.0,
+      "text": "플레이어·이미지·전환을\n파일 하나에 담습니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 26,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.5,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-cloud-ext": {
+      "id": "share-cloud-ext",
+      "type": "text",
+      "x": 1000,
+      "y": 2478,
+      "width": 400,
+      "height": 60.9,
+      "text": "24시간 링크",
+      "textStyle": {
+        "color": "#2463EB",
+        "fontSize": 43,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-cloud-head": {
+      "id": "share-cloud-head",
+      "type": "text",
+      "x": 1000,
+      "y": 2565,
+      "width": 390,
+      "height": 42.7,
+      "text": "클라우드 스냅샷",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 29,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-cloud-body": {
+      "id": "share-cloud-body",
+      "type": "text",
+      "x": 1000,
+      "y": 2630,
+      "width": 400,
+      "height": 80.0,
+      "text": "발표 보기 또는\n사본 편집용으로 공유합니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 25,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.5,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-band": {
+      "id": "share-band",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 0,
+      "y": 2783,
+      "width": 1400,
+      "height": 67,
+      "style": {
+        "fill": "#EEF4FF",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-offline": {
+      "id": "share-offline",
+      "type": "text",
+      "x": 22,
+      "y": 2801,
+      "width": 1345,
+      "height": 36.2,
+      "text": "데스크톱에서 오프라인 제작·발표 가능 · HTML도 오프라인 재생 가능¹",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 24,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "share-note": {
+      "id": "share-note",
+      "type": "text",
+      "x": 0,
+      "y": 2854,
+      "width": 1390,
+      "height": 25.8,
+      "text": "¹ 외부 동영상 링크는 인터넷 연결이 필요합니다. 클라우드 공유에는 네트워크와 공유 서비스가 필요합니다.",
+      "textStyle": {
+        "color": "#56667E",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "frame-08": {
+      "id": "frame-08",
+      "type": "frame",
+      "name": "08 · 첫 프레임에서 시작하세요",
+      "order": 8,
+      "x": -2350,
+      "y": 800,
+      "width": 1600,
+      "height": 900,
+      "transition": {
+        "ms": 1800,
+        "easing": "smooth",
+        "arc": 2.15,
+        "roll": 0,
+        "spotlight": 0.86
+      }
+    },
+    "bg-8": {
+      "id": "bg-8",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": -2350,
+      "y": 800,
+      "width": 1600,
+      "height": 900,
+      "style": {
+        "fill": "#2463EB",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "brand-8": {
+      "id": "brand-8",
+      "type": "text",
+      "x": -2250,
+      "y": 864,
+      "width": 650,
+      "height": 37.5,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "num-8": {
+      "id": "num-8",
+      "type": "text",
+      "x": -1030,
+      "y": 866,
+      "width": 180,
+      "height": 31.0,
+      "text": "08 / 08",
+      "textStyle": {
+        "color": "#ABBFDF",
+        "fontSize": 20,
+        "align": "right",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-rule-8": {
+      "id": "footer-rule-8",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": -2250,
+      "y": 1592,
+      "width": 1400,
+      "height": 1,
+      "style": {
+        "fill": "#365176",
+        "stroke": "transparent",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "footer-8": {
+      "id": "footer-8",
+      "type": "text",
+      "x": -2250,
+      "y": 1617,
+      "width": 1100,
+      "height": 28.400000000000002,
+      "text": "CanvaSlide 공식 사이트·저장소·제작 스킬을 바탕으로 구성 · 2026.09.21",
+      "textStyle": {
+        "color": "#D4E4FF",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-kicker": {
+      "id": "end-kicker",
+      "type": "text",
+      "x": -2250,
+      "y": 964,
+      "width": 1250,
+      "height": 37.5,
+      "text": "CanvaSlide로 시작하기",
+      "textStyle": {
+        "color": "#D4E4FF",
+        "fontSize": 25,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-title": {
+      "id": "end-title",
+      "type": "text",
+      "x": -2256,
+      "y": 1039,
+      "width": 1370,
+      "height": 187.4,
+      "text": "생각 하나를 놓고,\n첫 프레임을 그려보세요.",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 76,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.2,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-actions": {
+      "id": "end-actions",
+      "type": "text",
+      "x": -2250,
+      "y": 1270,
+      "width": 1280,
+      "height": 44.0,
+      "text": "예제 열기    →    내 내용으로 편집    →    슬라이드 쇼 시작",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 30,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-shortcuts": {
+      "id": "end-shortcuts",
+      "type": "text",
+      "x": -2250,
+      "y": 1348,
+      "width": 1280,
+      "height": 34.900000000000006,
+      "text": "⌘/Ctrl + Enter  발표 시작      ·      ← →  장면 이동      ·      O  전체 보기",
+      "textStyle": {
+        "color": "#D4E4FF",
+        "fontSize": 23,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-web": {
+      "id": "end-web",
+      "type": "text",
+      "x": -2250,
+      "y": 1435,
+      "width": 1350,
+      "height": 40.1,
+      "text": "웹 편집기  canvaslide.pages.dev",
+      "textStyle": {
+        "color": "#FFFFFF",
+        "fontSize": 27,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-source-site": {
+      "id": "end-source-site",
+      "type": "text",
+      "x": -2250,
+      "y": 1491,
+      "width": 1370,
+      "height": 31.0,
+      "text": "제품·사용법  https://hwantage.github.io/CanvaSlide/",
+      "textStyle": {
+        "color": "#D4E4FF",
+        "fontSize": 20,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "end-source-repo": {
+      "id": "end-source-repo",
+      "type": "text",
+      "x": -2250,
+      "y": 1527,
+      "width": 1370,
+      "height": 28.400000000000002,
+      "text": "소스·스킬  https://github.com/hwantage/CanvaSlide  ·  skills/canvaslide/SKILL.md",
+      "textStyle": {
+        "color": "#D4E4FF",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-path-1": {
+      "id": "canvas-path-1",
+      "type": "connector",
+      "x": 1600,
+      "y": 150,
+      "width": 500,
+      "height": 300,
+      "start": {
+        "x": 1600,
+        "y": 450
+      },
+      "end": {
+        "x": 2100,
+        "y": 150
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#93B9F7",
+        "strokeWidth": 12,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-path-2": {
+      "id": "canvas-path-2",
+      "type": "connector",
+      "x": 3700,
+      "y": 150,
+      "width": 900,
+      "height": 1300,
+      "start": {
+        "x": 3700,
+        "y": 150
+      },
+      "end": {
+        "x": 4600,
+        "y": 1450
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#93B9F7",
+        "strokeWidth": 12,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-path-3": {
+      "id": "canvas-path-3",
+      "type": "connector",
+      "x": 3950,
+      "y": 1900,
+      "width": 650,
+      "height": 650,
+      "start": {
+        "x": 4600,
+        "y": 1900
+      },
+      "end": {
+        "x": 3950,
+        "y": 2550
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#93B9F7",
+        "strokeWidth": 12,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-path-4": {
+      "id": "canvas-path-4",
+      "type": "connector",
+      "x": 1500,
+      "y": 2550,
+      "width": 850,
+      "height": 350,
+      "start": {
+        "x": 2350,
+        "y": 2900
+      },
+      "end": {
+        "x": 1500,
+        "y": 2550
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#93B9F7",
+        "strokeWidth": 12,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    },
+    "canvas-path-5": {
+      "id": "canvas-path-5",
+      "type": "connector",
+      "x": -750,
+      "y": 1500,
+      "width": 650,
+      "height": 900,
+      "start": {
+        "x": -100,
+        "y": 2400
+      },
+      "end": {
+        "x": -750,
+        "y": 1500
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#93B9F7",
+        "strokeWidth": 12,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#12233F",
+        "fontSize": 28,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.3,
+        "fontFamily": "Arial"
+      }
+    }
+  },
+  "order": [
+    "canvas-path-1",
+    "canvas-path-2",
+    "canvas-path-3",
+    "canvas-path-4",
+    "canvas-path-5",
+    "frame-01",
+    "bg-1",
+    "brand-1",
+    "num-1",
+    "footer-rule-1",
+    "footer-1",
+    "title-product",
+    "title-main",
+    "title-sub",
+    "title-platform",
+    "cover-plane",
+    "cover-frame-outer",
+    "cover-frame-middle",
+    "cover-frame-inner",
+    "cover-zoom-trail",
+    "cover-frame-label",
+    "frame-02",
+    "bg-2",
+    "brand-2",
+    "num-2",
+    "footer-rule-2",
+    "footer-2",
+    "canvas-kicker",
+    "canvas-title",
+    "canvas-body",
+    "canvas-use",
+    "frame-context",
+    "frame-context-label",
+    "frame-03",
+    "detail-flow-bg",
+    "flow-detail-kicker",
+    "flow-detail-title",
+    "flow-arrow-1",
+    "flow-arrow-2",
+    "flow-node-1",
+    "flow-node-label-1",
+    "flow-node-sub-1",
+    "flow-node-2",
+    "flow-node-label-2",
+    "flow-node-sub-2",
+    "flow-node-3",
+    "flow-node-label-3",
+    "flow-node-sub-3",
+    "flow-detail-body",
+    "frame-04",
+    "bg-4",
+    "brand-4",
+    "num-4",
+    "footer-rule-4",
+    "footer-4",
+    "motion-kicker",
+    "motion-title",
+    "motion-body",
+    "motion-foot",
+    "motion-path",
+    "motion-dot-0",
+    "motion-dot-label-0",
+    "motion-dot-1",
+    "motion-dot-label-1",
+    "motion-dot-2",
+    "motion-dot-label-2",
+    "frame-05",
+    "detail-focus-bg",
+    "focus-kicker",
+    "focus-title",
+    "focus-body",
+    "focus-caption",
+    "focus-box",
+    "focus-corner-h-0",
+    "focus-corner-v-0",
+    "focus-corner-h-1",
+    "focus-corner-v-1",
+    "focus-corner-h-2",
+    "focus-corner-v-2",
+    "focus-corner-h-3",
+    "focus-corner-v-3",
+    "focus-word",
+    "frame-06",
+    "bg-6",
+    "brand-6",
+    "num-6",
+    "footer-rule-6",
+    "footer-6",
+    "create-title",
+    "create-sub",
+    "create-arrow-1",
+    "create-arrow-2",
+    "create-step-num-1",
+    "create-step-title-1",
+    "create-step-rule-1",
+    "create-step-body-1",
+    "create-step-num-2",
+    "create-step-title-2",
+    "create-step-rule-2",
+    "create-step-body-2",
+    "create-step-num-3",
+    "create-step-title-3",
+    "create-step-rule-3",
+    "create-step-body-3",
+    "create-ai-note",
+    "frame-07",
+    "bg-7",
+    "brand-7",
+    "num-7",
+    "footer-rule-7",
+    "footer-7",
+    "share-title",
+    "share-sub",
+    "share-divider-1",
+    "share-divider-2",
+    "share-edit-ext",
+    "share-edit-head",
+    "share-edit-body",
+    "share-html-ext",
+    "share-html-head",
+    "share-html-body",
+    "share-cloud-ext",
+    "share-cloud-head",
+    "share-cloud-body",
+    "share-band",
+    "share-offline",
+    "share-note",
+    "frame-08",
+    "bg-8",
+    "brand-8",
+    "num-8",
+    "footer-rule-8",
+    "footer-8",
+    "end-kicker",
+    "end-title",
+    "end-actions",
+    "end-shortcuts",
+    "end-web",
+    "end-source-site",
+    "end-source-repo"
+  ],
+  "settings": {
+    "transitionMs": 1400,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4,
+    "spotlight": 0.75,
+    "background": "plain",
+    "frameBorder": "none"
+  },
+  "assets": {},
+  "resources": {},
+  "camera": {
+    "x": -40,
+    "y": -30,
+    "zoom": 0.8
+  }
+}

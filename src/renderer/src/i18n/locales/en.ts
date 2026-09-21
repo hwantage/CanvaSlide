@@ -38,11 +38,18 @@ export const en = {
   'site.docs.ai.summary': 'Prepare a prompt for your assistant and open its editable result.',
   'site.docs.ai.promptHeading': 'Copy a brief to your assistant',
   'site.docs.ai.promptBody':
-    'Open Create with AI in the top bar. Choose General for a straightforward presentation or Dynamic for a spatial story with varied camera views. Enable Generate an {html} file if you also want a viewing copy. Copy the prompt into your own AI assistant and describe your subject, audience, and desired tone. The app prepares instructions; it does not generate content or connect to an AI service itself.',
+    'Start here with an introduction to the app. Choose General for eight slides with calm layouts and restrained camera movement, or Dynamic for eight scenes with varied camera views and nested zoom frames. The same prompt is available from Create with AI in the editor’s top bar.',
+  'site.docs.ai.customizeHeading': 'Make the prompt your own',
+  'site.docs.ai.customizeBody':
+    'After pasting, replace the website address and introduction topic with your own source or subject. Specify your audience, language, scene count, tone, and output filename. For Dynamic, count close-up frames toward the total scene count. Keep the skill link so your assistant can follow the file format and authoring instructions. Use an assistant that can read the source and create files; if it cannot open a link, provide the content directly. This page prepares a prompt for your assistant; it does not send requests to an AI service.',
+  'site.docs.ai.outputHeading': 'Choose the files you need',
+  'site.docs.ai.outputBody':
+    'By default, the prompt requests an editable {format} file. Enable Generate an {html} file to ask your assistant for both the editable original and a standalone presentation you can open in a browser. The checkbox adds this request to the prompt. You can also open the original in {app} and export {html} after editing. For offline playback, ask for embedded images and no externally linked videos.',
   'site.docs.ai.openHeading': 'Open and check the result',
   'site.docs.ai.openBody':
     'Ask for an editable {format} file and open it with {open}. If your assistant only returns JSON, save the complete JSON as UTF-8 with the correct extension. Check text, fonts, frame order, camera motion, and any media before presenting. Save the editable original even when you also export {html}. The authoring guide and optional skill describe the supported file format.',
   'site.docs.ai.guide': 'Read the authoring guide',
+  'site.docs.ai.skill': 'View the authoring skill',
   'site.docs.frames.directionHeading': 'Direct each move',
   'site.docs.frames.directionBody':
     'Select a frame and open Camera in the properties panel. Duration sets travel time, easing shapes the pace, arc changes how far the camera pulls back, roll tilts the view, and spotlight dims the surrounding canvas. Controls show the resolved value, including inherited document settings. Reset restores the application defaults; a field without an override inherits the document setting. Motion marks in the frame list help find frames with non-default effects.',
@@ -82,7 +89,7 @@ export const en = {
   'site.showcase.featured': 'Start here · A story across one canvas',
   'site.showcase.featuredOpen': 'Open One order, all the way in the web editor',
   'site.showcase.instructions':
-    'Examples open in a new tab. Choose Slide Show to follow the frames, or edit right away. Download the source for the desktop app. Sample content is in English; save your edits before closing or reloading.',
+    'Examples open in a new tab. Choose Slide Show to follow the frames, or edit right away. Download the source for the desktop app. Most examples are in English; the AI-generated introductions are in Korean. Save your edits before closing or reloading.',
   'site.showcase.one-order.title': 'One order, all the way.',
   'site.showcase.one-order.body':
     'Follow a checkout through a payment timeout and a safe retry. Twenty-three frames connect the system map to the details of one request.',
@@ -118,6 +125,16 @@ export const en = {
   'site.showcase.mindmap.body':
     'A central idea branches into five color-coded themes. Follow curved connectors and six frames to explain the plan one area at a time.',
   'site.showcase.mindmap.alt': 'A product strategy mind map with five colored branches.',
+  'site.showcase.canvaslide-claude.title': '{app} · {claude}',
+  'site.showcase.canvaslide-claude.body':
+    'An introduction to {app} created by {claude} from an AI prompt. Eight editable scenes in Korean explore the canvas, frames, camera direction, and sharing.',
+  'site.showcase.canvaslide-claude.alt':
+    'The Korean cover of a {claude}-generated {app} introduction.',
+  'site.showcase.canvaslide-codex.title': '{app} · {codex}',
+  'site.showcase.canvaslide-codex.body':
+    'An introduction to {app} created by {codex} from an AI prompt. Eight editable scenes in Korean connect the big picture with detail zooms, creation, and sharing.',
+  'site.showcase.canvaslide-codex.alt':
+    'The Korean cover of a {codex}-generated {app} introduction.',
   'site.showcase.one-order.try':
     'Try the overview, then zoom into the payment retry. Every shape and connector is editable.',
   'site.workflows.title': 'Bring more into your story.',

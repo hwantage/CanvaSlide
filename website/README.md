@@ -17,6 +17,7 @@ The home page is `/`, ShowCase is `/showcase/`, and documentation is `/docs/`. D
 - The initial theme follows the operating system. `public/appearance.js` applies preferences before the page renders; storage failures are nonfatal.
 - Visible copy uses the shared typed `t()` dictionary in `src/renderer/src/i18n/locales/{en,ko}.ts`, under `site.*`. Add English keys first and provide Korean equivalents.
 - Documentation covers installation, first steps, examples, navigation, editing, connectors, Figma/PDF/image imports, linked video, AI-assisted authoring, frame camera direction and batch editing, saving, cloud snapshots, HTML export, shortcuts, and common questions.
+- The AI guide includes the editor’s shared introduction prompt, General/Dynamic style selection, an optional HTML request, and prompt copying. It also explains how to adapt the brief, choose output files, and open the result. Prompt text and the authoring skill URL come from `src/renderer/src/lib/ai-prompt.ts` so the website and editor stay aligned.
 - Download links open the [official Releases page](https://github.com/hwantage/CanvaSlide/releases). Installer availability comes from published releases; source-build instructions describe the checkout. Keep availability wording and download links aligned when maintaining installation copy.
 - Screenshots show the actual editor and presentation view. Verify feature copy against the current code, tests and [maintained guides](../docs/README.md); historical plans and implementation reports are not a source for current behavior. Platform prerequisites link to the official Tauri guide.
 
@@ -24,13 +25,13 @@ For navigation and drawing keys, check [`keyboard-shortcuts.ts`](../src/renderer
 
 ## Brand and motion
 
-The approved Round 07 logo artwork is copied into `public/brand/` from `discuss/round-07/`. The hero uses the original transparent Ray Master illustration from `discuss/round-02/ray/ray-master.png`, as requested. These copies are necessary because `discuss/` is ignored by Git. Wordmark geometry, the small blue S, and Wing Smile are preserved. `public/og.png` is the existing Round 07 social banner. Shared palette tokens live in `src/renderer/src/assets/brand.css`.
+The approved Round 07 logo artwork is copied into `public/brand/` from `discuss/round-07/`. The hero uses the original transparent Ray Master illustration from `discuss/round-02/ray/ray-master.png`, as requested. These copies are necessary because `discuss/` is ignored by Git. Wordmark geometry, the small blue S, and Wing Smile are preserved. `public/og.png` is the existing Round 07 social banner. The light wordmark PNG includes a white matte. Its matching dark asset supplies an alpha mask that removes the rectangle while retaining the approved wordmark geometry, colors, and circular symbol plate. The dark wordmark and compact icons already have transparent outer pixels. Shared palette tokens live in `src/renderer/src/assets/brand.css`.
 
-The GitHub navigation link uses the official black and white Invertocat SVGs from the [GitHub brand toolkit](https://brand.github.com/foundations/logo), downloaded from its [official logo archive](https://brand.github.com/GitHub_Logos.zip). The artwork is unmodified; the black or white file is selected for the current theme.
+The header and footer GitHub links use the official black and white Invertocat SVGs from the [GitHub brand toolkit](https://brand.github.com/foundations/logo), downloaded from its [official logo archive](https://brand.github.com/GitHub_Logos.zip). The artwork is unmodified; the black or white file is selected for the current theme.
 
 The canvas demonstration uses the same tested zoom/pan interpolation as the product. Playback starts only on request. The desktop story section advances frames with scroll and also has manual controls; focused controls take priority over scroll-driven changes. Small screens use a compact, manually navigable story without a long sticky section. Reduced-motion preferences disable animated camera transitions, autoplay, and entrance effects. Arrow keys and Escape work inside the focused demonstration.
 
-The hero links to ShowCase and the web editor, followed by a featured editable example, current workflows, single-file sharing, and an interactive close-up of one slide. Installation remains available in the header, download section, and documentation. The close-up uses an actual rendered slide image and the product's camera interpolation to illustrate whole-slide and detail frames. Its chart values are sample presentation content, not product metrics. The frame guide explains how to create these views in the app.
+The hero links to ShowCase and the web editor, followed by a featured editable example, current workflows, single-file sharing, and an interactive close-up of one slide. Installation remains available in the download section and documentation. The close-up uses an actual rendered slide image and the product's camera interpolation to illustrate whole-slide and detail frames. Its chart values are sample presentation content, not product metrics. The frame guide explains how to create these views in the app.
 
 The presentation overview shows all six example slides together. Visitors can select any frame, continue through the sequence, and return to the full canvas. Its clickable regions are captured from the actual HTML player's frame positions into `src/slide-preview-frames.json`; regenerating examples refreshes both the screenshot and these regions. The frame guide also explains overview navigation in the app and exported presentation.
 
@@ -58,6 +59,8 @@ setting; it does not change the app's cloud-share service configuration.
 time. Files come from `examples/`, not a remote service. Website downloads use the
 website base path; editor fetches use the editor base path on the same origin, so no cross-origin
 example fetch or new CORS policy is needed. Native builds omit these web-only assets.
+
+The website keeps its closing cards in `website/src/showcase.tsx` in the order Swing, Anatomy, Freefall, Inside, CanvaSlide · Claude, CanvaSlide · Codex, without changing the shared catalog order or IDs. The last two are Korean introductions created from AI prompts. All other cards retain their catalog order after the featured example.
 
 To add an example:
 

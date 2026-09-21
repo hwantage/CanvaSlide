@@ -20,6 +20,8 @@ text, connectors, and presentation frames.
 | `slides/`       | `northwind-launch-deck.canvaslide` | Seven scenes: launch slides, a step diagram, a chart detail zoom and a roadmap                                     |
 | `architecture/` | `shop-platform.canvaslide`         | Cloud system architecture in zones; solid request path, dashed event lane                                          |
 | `mindmap/`      | `product-strategy-2027.canvaslide` | Central topic with five colour-coded branches on curved connectors, one frame each                                 |
+| `./`            | `canvaslide-claude.canvaslide`     | Eight-scene Korean introduction to CanvaSlide, created by Claude from an AI prompt                                 |
+| `./`            | `canvaslide-codex.canvaslide`      | Eight-scene Korean introduction to CanvaSlide, created by Codex from an AI prompt                                  |
 
 ## Open examples in the browser
 
@@ -28,9 +30,13 @@ Browse [ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) or open the w
 - [One order](https://canvaslide.pages.dev/?example=one-order)
 - [Inside the human body](https://canvaslide.pages.dev/?example=inside)
 - [FREEFALL](https://canvaslide.pages.dev/?example=freefall)
+- [CanvaSlide · Claude](https://canvaslide.pages.dev/?example=canvaslide-claude)
+- [CanvaSlide · Codex](https://canvaslide.pages.dev/?example=canvaslide-codex)
 
 The shared catalog IDs are `one-order`, `freefall`, `inside`, `swing`, `anatomy`, `flowchart`, `erd`, `slides`,
-`architecture`, and `mindmap`. An example opens as an editable local copy; save your changes before
+`architecture`, `mindmap`, `canvaslide-claude`, and `canvaslide-codex`. The two AI-generated introductions
+are in Korean and close the ShowCase gallery in Claude, Codex order.
+An example opens as an editable local copy; save your changes before
 closing or reloading. Refreshing the example link opens its original again. Arbitrary URLs and paths
 are not accepted in `example`. The [website guide](../website/README.md#editable-showcase-catalog)
 explains catalog additions, preview generation, deployment outputs, and file-size validation.

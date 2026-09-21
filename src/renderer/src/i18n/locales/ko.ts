@@ -39,11 +39,18 @@ export const ko: UiStrings = {
   'site.docs.ai.summary': 'AI 도우미에 전달할 프롬프트를 준비하고 편집 가능한 결과를 여세요.',
   'site.docs.ai.promptHeading': 'AI 도우미에 프롬프트 전달하기',
   'site.docs.ai.promptBody':
-    '상단의 AI와 함께 만들기를 여세요. 일반적인 발표는 일반, 다양한 카메라 시점으로 공간을 활용하는 이야기는 다이나믹을 선택하세요. 발표용 사본도 필요하면 {html} 파일 생성을 켜세요. 프롬프트를 원하는 AI 도우미에 붙여넣고 주제, 청중과 분위기를 설명하세요. 앱은 작성 지침을 준비하며 직접 콘텐츠를 생성하거나 AI 서비스에 연결하지 않습니다.',
+    '앱을 소개하는 예시로 바로 시작해 보세요. 일반은 차분한 배치와 절제된 카메라 이동으로 8장을 구성하고, 다이나믹은 다양한 카메라 시점과 내부 확대 프레임을 포함해 8장면을 구성합니다. 편집기 상단의 AI와 함께 만들기에서도 같은 프롬프트를 사용할 수 있습니다.',
+  'site.docs.ai.customizeHeading': '내 주제에 맞게 바꾸기',
+  'site.docs.ai.customizeBody':
+    '붙여넣은 뒤 웹사이트 주소와 소개 주제를 원하는 자료나 주제로 바꾸세요. 청중, 언어, 장면 수, 분위기와 저장할 파일 이름을 구체적으로 적으면 좋습니다. 다이나믹에서는 내부 확대 프레임도 전체 장면 수에 포함하세요. AI가 파일 형식과 작성 지침을 참고할 수 있도록 스킬 링크는 유지하세요. 자료를 읽고 파일을 만들 수 있는 AI 도우미를 사용하고, 링크를 읽지 못하면 자료 내용을 직접 전달하세요. 이 페이지는 프롬프트를 준비하며 AI 서비스에 요청을 보내지는 않습니다.',
+  'site.docs.ai.outputHeading': '필요한 결과 파일 선택하기',
+  'site.docs.ai.outputBody':
+    '기본 프롬프트는 편집 가능한 {format} 파일을 요청합니다. {html} 파일 생성하기를 켜면 편집용 원본과 브라우저에서 바로 열 수 있는 발표용 파일을 함께 요청합니다. 체크박스는 이 요청을 프롬프트에 추가합니다. 원본을 {app}에서 열어 수정한 뒤 {html}로 내보내도 됩니다. 오프라인으로 발표하려면 이미지를 파일에 포함하고 외부 동영상 링크는 사용하지 않도록 요청하세요.',
   'site.docs.ai.openHeading': '결과를 열고 확인하기',
   'site.docs.ai.openBody':
     '편집 가능한 {format} 파일을 요청하고 {open}으로 여세요. AI가 JSON만 반환하면 전체 JSON을 UTF-8로 저장하고 올바른 확장자를 붙이세요. 발표 전에 텍스트, 글꼴, 프레임 순서, 카메라 이동과 미디어를 확인하세요. {html}로 내보내더라도 편집 가능한 원본을 보관하세요. 작성 가이드와 선택 설치 스킬에서 지원 파일 형식을 안내합니다.',
   'site.docs.ai.guide': '작성 가이드 읽기',
+  'site.docs.ai.skill': '파일 제작 스킬 보기',
   'site.docs.frames.directionHeading': '프레임별 이동 연출하기',
   'site.docs.frames.directionBody':
     '프레임을 선택하고 속성 패널의 카메라를 여세요. 전환 시간은 이동 시간을, 이징은 속도 변화를, 아크는 카메라가 뒤로 빠지는 정도를 정합니다. 회전은 시점을 기울이고 스포트라이트는 주변 캔버스를 어둡게 합니다. 조절 항목에는 문서 기본값을 포함한 실제 적용값이 표시됩니다. 초기화는 앱 기본값으로 되돌리며, 재정의가 없는 항목은 문서 설정을 따릅니다. 프레임 목록의 표시로 기본과 다른 효과가 적용된 프레임을 찾을 수 있습니다.',
@@ -82,7 +89,7 @@ export const ko: UiStrings = {
   'site.showcase.featured': '여기서 시작하세요 · 하나의 캔버스에 담긴 이야기',
   'site.showcase.featuredOpen': '웹 편집기에서 주문 하나의 여정 열기',
   'site.showcase.instructions':
-    '예제는 새 탭에서 열립니다. 슬라이드 쇼로 프레임을 따라가거나 바로 편집하세요. 데스크톱 앱에서는 원본 파일을 다운로드해 열 수 있습니다. 예제 본문은 영어이며, 닫거나 새로고침하기 전에 변경 내용을 저장하세요.',
+    '예제는 새 탭에서 열립니다. 슬라이드 쇼로 프레임을 따라가거나 바로 편집하세요. 데스크톱 앱에서는 원본 파일을 다운로드해 열 수 있습니다. 대부분의 예제는 영어이며, AI로 만든 소개 슬라이드는 한국어입니다. 닫거나 새로고침하기 전에 변경 내용을 저장하세요.',
   'site.showcase.one-order.title': '주문 하나의 여정.',
   'site.showcase.one-order.body':
     '결제 시간 초과와 안전한 재시도를 거쳐 완료되는 주문을 따라갑니다. 23개 프레임이 시스템 전체 지도와 요청 하나의 세부 과정을 연결합니다.',
@@ -115,6 +122,14 @@ export const ko: UiStrings = {
   'site.showcase.mindmap.body':
     '중심 아이디어에서 색상별로 구분된 다섯 주제가 뻗어 나갑니다. 곡선 연결선과 6개 프레임을 따라 계획을 차례로 설명하세요.',
   'site.showcase.mindmap.alt': '다섯 색상 가지로 구성된 제품 전략 마인드맵.',
+  'site.showcase.canvaslide-claude.title': '{app} · {claude}',
+  'site.showcase.canvaslide-claude.body':
+    'AI 프롬프트를 이용해 {claude}가 작성한 {app} 소개 슬라이드입니다. 편집 가능한 한국어 8개 장면으로 캔버스, 프레임, 카메라 연출과 공유를 소개합니다.',
+  'site.showcase.canvaslide-claude.alt': '{claude}가 만든 {app} 소개 슬라이드의 한국어 표지.',
+  'site.showcase.canvaslide-codex.title': '{app} · {codex}',
+  'site.showcase.canvaslide-codex.body':
+    'AI 프롬프트를 이용해 {codex}가 작성한 {app} 소개 슬라이드입니다. 편집 가능한 한국어 8개 장면으로 전체 흐름과 세부 확대, 제작과 공유를 연결합니다.',
+  'site.showcase.canvaslide-codex.alt': '{codex}가 만든 {app} 소개 슬라이드의 한국어 표지.',
   'site.showcase.one-order.try':
     '전체 보기를 연 다음 결제 재시도로 확대해 보세요. 모든 도형과 연결선을 편집할 수 있습니다.',
   'site.workflows.title': '이야기에 더 많은 것을 담으세요.',
@@ -729,7 +744,7 @@ export const ko: UiStrings = {
   'site.docs.frames.overviewHeading': '슬라이드 전체를 조망하며 발표 이어가기',
   'site.docs.frames.overviewBody':
     '발표 중 전체 보기 컨트롤을 사용하면 모든 슬라이드를 캔버스 위에서 한눈에 볼 수 있습니다. 프레임을 클릭해 원하는 장면으로 바로 이동한 뒤 이전·다음 컨트롤로 발표를 이어가세요. 각 장면의 관계를 설명하고 싶을 때는 다시 전체 보기로 돌아올 수 있습니다. 내보낸 브라우저 프레젠테이션에서도 전체 조망과 프레임 선택을 사용할 수 있습니다.',
-  'site.hero.title': '하나의 캔버스,\n다양한 시선.',
+  'site.hero.title': '무한 Canvas + Slide Show',
   'site.hero.description':
     '아이디어를 연결하고 디자인을 가져와 전체 흐름에서 작은 디테일까지 안내하세요. 실제 프레젠테이션을 열고 나만의 이야기로 바꿔보세요.',
   'site.hero.try': 'ShowCase 둘러보기',

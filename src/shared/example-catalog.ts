@@ -10,7 +10,9 @@ export const exampleCatalog = [
   { id: 'erd', source: 'erd/shop-schema.canvaslide' },
   { id: 'slides', source: 'slides/northwind-launch-deck.canvaslide' },
   { id: 'architecture', source: 'architecture/shop-platform.canvaslide' },
-  { id: 'mindmap', source: 'mindmap/product-strategy-2027.canvaslide' }
+  { id: 'mindmap', source: 'mindmap/product-strategy-2027.canvaslide' },
+  { id: 'canvaslide-claude', source: 'canvaslide-claude.canvaslide' },
+  { id: 'canvaslide-codex', source: 'canvaslide-codex.canvaslide' }
 ] as const
 
 export type ExampleId = (typeof exampleCatalog)[number]['id']

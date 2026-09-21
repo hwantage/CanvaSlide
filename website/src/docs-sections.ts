@@ -56,8 +56,18 @@ export function docSections(topic: TopicId): DocSection[] {
       {
         id: 'create-with-ai',
         heading: 'site.docs.ai.promptHeading',
-        body: 'site.docs.ai.promptBody',
-        params: { html: 'HTML' }
+        body: 'site.docs.ai.promptBody'
+      },
+      {
+        id: 'adapt-the-prompt',
+        heading: 'site.docs.ai.customizeHeading',
+        body: 'site.docs.ai.customizeBody'
+      },
+      {
+        id: 'choose-output-files',
+        heading: 'site.docs.ai.outputHeading',
+        body: 'site.docs.ai.outputBody',
+        params: { format: '.canvaslide', html: 'HTML', app: 'CanvaSlide' }
       },
       {
         id: 'open-the-result',

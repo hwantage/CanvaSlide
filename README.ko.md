@@ -1,3 +1,5 @@
+![CanvaSlide official logo](./website/public/brand/canvaslide-readme.png)
+
 # CanvaSlide
 
 [English](./README.md) | **한국어**
@@ -6,7 +8,7 @@ macOS와 Windows용 무한 캔버스 프레젠테이션 앱입니다. 하나의 
 보여줄 영역에 **프레젠테이션 프레임**을 놓은 뒤 **슬라이드 쇼**를 시작하면 카메라가 프레임 사이를
 연속적으로 확대·이동합니다. **Tauri 2 + React 19 + TypeScript**로 만들었으며 브라우저에서도 실행됩니다.
 
-![하나의 캔버스에 프레젠테이션 프레임 두 개를 배치한 CanvaSlide 편집기](./website/public/images/editor.png)
+![CanvaSlide — 큰 그림에서 연결된 세부 장면으로 확대·이동하는 애니메이션](./website/public/images/canvaslide-showcase.webp)
 
 [ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) ·
 [웹 편집기 열기](https://canvaslide.pages.dev/) ·

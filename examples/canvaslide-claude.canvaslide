@@ -1,0 +1,3963 @@
+{
+  "version": 1,
+  "name": "CanvaSlide 소개",
+  "elements": {
+    "frame-01": {
+      "id": "frame-01",
+      "type": "frame",
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720,
+      "name": "01 · 표지 / 하나의 캔버스, 다양한 시선",
+      "order": 1,
+      "transition": {
+        "ms": 900,
+        "easing": "decelerate",
+        "arc": 0.8
+      }
+    },
+    "frame-02": {
+      "id": "frame-02",
+      "type": "frame",
+      "x": 1900,
+      "y": -560,
+      "width": 1280,
+      "height": 720,
+      "name": "02 · 이야기의 세 단계",
+      "order": 2,
+      "transition": {
+        "ms": 1700,
+        "easing": "smooth",
+        "arc": 2.2,
+        "roll": 2
+      }
+    },
+    "frame-03": {
+      "id": "frame-03",
+      "type": "frame",
+      "x": 3700,
+      "y": 260,
+      "width": 1280,
+      "height": 720,
+      "name": "03 · 핵심 기능과 캔버스",
+      "order": 3,
+      "transition": {
+        "ms": 1300,
+        "easing": "overshoot",
+        "arc": 1.5,
+        "roll": 0
+      }
+    },
+    "frame-04": {
+      "id": "frame-04",
+      "type": "frame",
+      "x": 4360,
+      "y": 460,
+      "width": 560,
+      "height": 315,
+      "name": "04 · 내부 확대 / 프레임이 곧 장면",
+      "order": 4,
+      "transition": {
+        "ms": 1000,
+        "easing": "accelerate",
+        "arc": 0.7,
+        "roll": 0,
+        "spotlight": 0.55
+      }
+    },
+    "frame-05": {
+      "id": "frame-05",
+      "type": "frame",
+      "x": 2200,
+      "y": 1420,
+      "width": 1280,
+      "height": 720,
+      "name": "05 · 카메라 연출",
+      "order": 5,
+      "transition": {
+        "ms": 1800,
+        "easing": "smooth",
+        "arc": 2.6,
+        "roll": -3
+      }
+    },
+    "frame-06": {
+      "id": "frame-06",
+      "type": "frame",
+      "x": 2860,
+      "y": 1610,
+      "width": 560,
+      "height": 315,
+      "name": "06 · 내부 확대 / 프레임별 카메라 설정",
+      "order": 6,
+      "transition": {
+        "ms": 900,
+        "easing": "decelerate",
+        "arc": 0.6,
+        "roll": 0,
+        "spotlight": 0.6
+      }
+    },
+    "frame-07": {
+      "id": "frame-07",
+      "type": "frame",
+      "x": 4400,
+      "y": 1760,
+      "width": 1280,
+      "height": 720,
+      "name": "07 · 공유 / HTML 하나에",
+      "order": 7,
+      "transition": {
+        "ms": 1500,
+        "easing": "overshoot",
+        "arc": 1.8,
+        "roll": 2
+      }
+    },
+    "frame-08": {
+      "id": "frame-08",
+      "type": "frame",
+      "x": 1200,
+      "y": 2760,
+      "width": 1280,
+      "height": 720,
+      "name": "08 · 시작하기",
+      "order": 8,
+      "transition": {
+        "ms": 2000,
+        "easing": "smooth",
+        "arc": 2.8,
+        "roll": 0
+      }
+    },
+    "board-title": {
+      "id": "board-title",
+      "type": "text",
+      "x": 0,
+      "y": -150,
+      "width": 1200,
+      "height": 56.0,
+      "text": "CanvaSlide 소개 · 여덟 장면의 다이나믹 발표",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 40,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "board-note": {
+      "id": "board-note",
+      "type": "text",
+      "x": 0,
+      "y": -90,
+      "width": 1200,
+      "height": 25.2,
+      "text": "프레임을 그리고 순서를 정하면, 카메라가 장면 사이를 날아갑니다. 내부 확대 장면(04, 06)도 같은 캔버스 위의 프레임입니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s1-bg": {
+      "id": "s1-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720,
+      "style": {
+        "fill": "#0b1220",
+        "stroke": "#0b1220",
+        "strokeWidth": 0,
+        "cornerRadius": 28
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-orb1": {
+      "id": "s1-orb1",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 800,
+      "y": 60,
+      "width": 470,
+      "height": 470,
+      "style": {
+        "fill": "#12203a",
+        "stroke": "#12203a",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-orb2": {
+      "id": "s1-orb2",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 960,
+      "y": 380,
+      "width": 290,
+      "height": 290,
+      "style": {
+        "fill": "#0e3a55",
+        "stroke": "#0e3a55",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-orb3": {
+      "id": "s1-orb3",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 760,
+      "y": 470,
+      "width": 120,
+      "height": 120,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-orb4": {
+      "id": "s1-orb4",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 1090,
+      "y": 150,
+      "width": 60,
+      "height": 60,
+      "style": {
+        "fill": "#fbbf24",
+        "stroke": "#fbbf24",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-brand": {
+      "id": "s1-brand",
+      "type": "text",
+      "x": 980,
+      "y": 96,
+      "width": 220,
+      "height": 30.8,
+      "text": "CanvaSlide",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 22,
+        "align": "right",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s1-eyebrow": {
+      "id": "s1-eyebrow",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 80,
+      "y": 92,
+      "width": 520,
+      "height": 46,
+      "style": {
+        "fill": "#0e3a55",
+        "stroke": "#38bdf8",
+        "strokeWidth": 1,
+        "cornerRadius": 23
+      },
+      "text": "생각을 펼치는 캔버스, 시선을 이끄는 이야기.",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 18,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-title": {
+      "id": "s1-title",
+      "type": "text",
+      "x": 80,
+      "y": 176,
+      "width": 760,
+      "height": 171.6,
+      "text": "하나의 캔버스,\n다양한 시선.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 66,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3
+      }
+    },
+    "s1-sub": {
+      "id": "s1-sub",
+      "type": "text",
+      "x": 80,
+      "y": 372,
+      "width": 720,
+      "height": 42.0,
+      "text": "당신의 생각에, 날아갈 공간을.",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 30,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s1-desc": {
+      "id": "s1-desc",
+      "type": "text",
+      "x": 80,
+      "y": 432,
+      "width": 720,
+      "height": 61.6,
+      "text": "아이디어를 연결하고 디자인을 가져와\n전체 흐름에서 작은 디테일까지 안내하세요.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 22,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s1-chip1": {
+      "id": "s1-chip1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 80,
+      "y": 588,
+      "width": 180,
+      "height": 48,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 24
+      },
+      "text": "macOS 앱",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 18,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-chip2": {
+      "id": "s1-chip2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 276,
+      "y": 588,
+      "width": 190,
+      "height": 48,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 24
+      },
+      "text": "Windows 앱",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 18,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-chip3": {
+      "id": "s1-chip3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 482,
+      "y": 588,
+      "width": 260,
+      "height": 48,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 24
+      },
+      "text": "브라우저 웹 편집기",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 18,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s1-note": {
+      "id": "s1-note",
+      "type": "text",
+      "x": 80,
+      "y": 660,
+      "width": 700,
+      "height": 22.4,
+      "text": "무료 오픈 소스 · MIT 라이선스 · 오프라인에서도 자유롭게.",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-bg": {
+      "id": "s2-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1900,
+      "y": -560,
+      "width": 1280,
+      "height": 720,
+      "style": {
+        "fill": "#0b1220",
+        "stroke": "#0b1220",
+        "strokeWidth": 0,
+        "cornerRadius": 28
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s2-eyebrow": {
+      "id": "s2-eyebrow",
+      "type": "text",
+      "x": 1980,
+      "y": -484,
+      "width": 600,
+      "height": 22.4,
+      "text": "STORY · 이야기가 만들어지는 세 단계",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-title": {
+      "id": "s2-title",
+      "type": "text",
+      "x": 1980,
+      "y": -448,
+      "width": 1000,
+      "height": 119.6,
+      "text": "생각할 공간이 생기면,\n발표의 방식도 달라집니다.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 46,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3
+      }
+    },
+    "s2-card0": {
+      "id": "s2-card0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1980,
+      "y": -260,
+      "width": 360,
+      "height": 300,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 22
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s2-num0": {
+      "id": "s2-num0",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2008,
+      "y": -232,
+      "width": 56,
+      "height": 56,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "1",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 24,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s2-head0": {
+      "id": "s2-head0",
+      "type": "text",
+      "x": 2008,
+      "y": -150,
+      "width": 312,
+      "height": 32.2,
+      "text": "어디든 자유롭게 놓으세요.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 23,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-body0": {
+      "id": "s2-body0",
+      "type": "text",
+      "x": 2008,
+      "y": -104,
+      "width": 312,
+      "height": 67.2,
+      "text": "메모, 이미지, 다이어그램을\n생각의 흐름대로 배치하세요.\n공간은 언제나 충분합니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-card1": {
+      "id": "s2-card1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2370,
+      "y": -260,
+      "width": 360,
+      "height": 300,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 22
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s2-num1": {
+      "id": "s2-num1",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2398,
+      "y": -232,
+      "width": 56,
+      "height": 56,
+      "style": {
+        "fill": "#fbbf24",
+        "stroke": "#fbbf24",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "2",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 24,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s2-head1": {
+      "id": "s2-head1",
+      "type": "text",
+      "x": 2398,
+      "y": -150,
+      "width": 312,
+      "height": 32.2,
+      "text": "중요한 순간을 담으세요.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 23,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-body1": {
+      "id": "s2-body1",
+      "type": "text",
+      "x": 2398,
+      "y": -104,
+      "width": 312,
+      "height": 67.2,
+      "text": "보여주고 싶은 영역에 프레임을\n그리고 순서를 정하세요.\n캔버스에 이야기의 길이 생깁니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-card2": {
+      "id": "s2-card2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2760,
+      "y": -260,
+      "width": 360,
+      "height": 300,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 22
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s2-num2": {
+      "id": "s2-num2",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2788,
+      "y": -232,
+      "width": 56,
+      "height": 56,
+      "style": {
+        "fill": "#34d399",
+        "stroke": "#34d399",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "3",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 24,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s2-head2": {
+      "id": "s2-head2",
+      "type": "text",
+      "x": 2788,
+      "y": -150,
+      "width": 312,
+      "height": 32.2,
+      "text": "함께 이야기를 따라가세요.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 23,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-body2": {
+      "id": "s2-body2",
+      "type": "text",
+      "x": 2788,
+      "y": -104,
+      "width": 312,
+      "height": 67.2,
+      "text": "전체에서 세부로 자연스럽게\n이동하세요. 카메라가 프레임을\n따라 움직이며 흐름을 전합니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s2-arrow0": {
+      "id": "s2-arrow0",
+      "type": "connector",
+      "x": 2340,
+      "y": -110.0,
+      "width": 30,
+      "height": 1,
+      "start": {
+        "x": 2340,
+        "y": -110.0,
+        "elementId": "s2-card0",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 2370,
+        "y": -110.0,
+        "elementId": "s2-card1",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s2-arrow1": {
+      "id": "s2-arrow1",
+      "type": "connector",
+      "x": 2730,
+      "y": -110.0,
+      "width": 30,
+      "height": 1,
+      "start": {
+        "x": 2730,
+        "y": -110.0,
+        "elementId": "s2-card1",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 2760,
+        "y": -110.0,
+        "elementId": "s2-card2",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s2-foot": {
+      "id": "s2-foot",
+      "type": "text",
+      "x": 1980,
+      "y": 88,
+      "width": 1100,
+      "height": 25.2,
+      "text": "빈 캔버스 위 작은 생각이 하나의 발표가 되는 순간을 따라가세요.",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-bg": {
+      "id": "s3-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3700,
+      "y": 260,
+      "width": 1280,
+      "height": 720,
+      "style": {
+        "fill": "#0b1220",
+        "stroke": "#0b1220",
+        "strokeWidth": 0,
+        "cornerRadius": 28
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-eyebrow": {
+      "id": "s3-eyebrow",
+      "type": "text",
+      "x": 3780,
+      "y": 336,
+      "width": 560,
+      "height": 22.4,
+      "text": "FEATURES · 핵심 기능",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-title": {
+      "id": "s3-title",
+      "type": "text",
+      "x": 3780,
+      "y": 372,
+      "width": 560,
+      "height": 119.6,
+      "text": "다음 아이디어에\n필요한 것들.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 46,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.3
+      }
+    },
+    "s3-desc": {
+      "id": "s3-desc",
+      "type": "text",
+      "x": 3780,
+      "y": 506,
+      "width": 560,
+      "height": 50.4,
+      "text": "꼭 필요한 도구와 넓은 캔버스.\n보여주고 싶은 생각에 집중하세요.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-bar0": {
+      "id": "s3-bar0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3780,
+      "y": 596,
+      "width": 6,
+      "height": 78,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-head0": {
+      "id": "s3-head0",
+      "type": "text",
+      "x": 3806,
+      "y": 594,
+      "width": 520,
+      "height": 30.8,
+      "text": "모든 방향으로 생각하세요.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 22,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-body0": {
+      "id": "s3-body0",
+      "type": "text",
+      "x": 3806,
+      "y": 628,
+      "width": 520,
+      "height": 44.8,
+      "text": "텍스트, 도형, 이미지, 연결선을 놓고\n이동하고 확대하세요.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-bar1": {
+      "id": "s3-bar1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3780,
+      "y": 708,
+      "width": 6,
+      "height": 78,
+      "style": {
+        "fill": "#fbbf24",
+        "stroke": "#fbbf24",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-head1": {
+      "id": "s3-head1",
+      "type": "text",
+      "x": 3806,
+      "y": 706,
+      "width": 520,
+      "height": 30.8,
+      "text": "익숙해서 더 편하게.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 22,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-body1": {
+      "id": "s3-body1",
+      "type": "text",
+      "x": 3806,
+      "y": 740,
+      "width": 520,
+      "height": 44.8,
+      "text": "맞추고, 복제하고, 되돌리세요.\n익숙한 단축키와 정밀한 편집 도구.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-bar2": {
+      "id": "s3-bar2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3780,
+      "y": 820,
+      "width": 6,
+      "height": 78,
+      "style": {
+        "fill": "#34d399",
+        "stroke": "#34d399",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-head2": {
+      "id": "s3-head2",
+      "type": "text",
+      "x": 3806,
+      "y": 818,
+      "width": 520,
+      "height": 30.8,
+      "text": "작업은 내 곁에.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 22,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-body2": {
+      "id": "s3-body2",
+      "type": "text",
+      "x": 3806,
+      "y": 852,
+      "width": 520,
+      "height": 44.8,
+      "text": "계정이나 인터넷 연결 없이\n내 컴퓨터에서 만들고 발표합니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-panel": {
+      "id": "s3-panel",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4360,
+      "y": 370,
+      "width": 560,
+      "height": 540,
+      "style": {
+        "fill": "#f8fafc",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 1,
+        "cornerRadius": 18
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-toolbar": {
+      "id": "s3-toolbar",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4384,
+      "y": 390,
+      "width": 512,
+      "height": 34,
+      "style": {
+        "fill": "#e2e8f0",
+        "stroke": "#e2e8f0",
+        "strokeWidth": 0,
+        "cornerRadius": 17
+      },
+      "text": "선택 · 손 · 텍스트 · 사각형 · 타원 · 커넥터 · 프레임 (F)",
+      "textStyle": {
+        "color": "#475569",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-panel-cap": {
+      "id": "s3-panel-cap",
+      "type": "text",
+      "x": 4384,
+      "y": 436,
+      "width": 512,
+      "height": 15.4,
+      "text": "편집기 캔버스 · 프레임을 그리고 순서를 정하면 카메라가 따라갑니다.",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 11,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-f1-box": {
+      "id": "s3-f1-box",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4400,
+      "y": 484,
+      "width": 190,
+      "height": 100,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#2563eb",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f1-badge": {
+      "id": "s3-f1-badge",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 4390,
+      "y": 474,
+      "width": 22,
+      "height": 22,
+      "style": {
+        "fill": "#2563eb",
+        "stroke": "#2563eb",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "1",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 11,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s3-f1-label": {
+      "id": "s3-f1-label",
+      "type": "text",
+      "x": 4410,
+      "y": 492,
+      "width": 170,
+      "height": 16.8,
+      "text": "표지",
+      "textStyle": {
+        "color": "#1e293b",
+        "fontSize": 12,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-f1-l1": {
+      "id": "s3-f1-l1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4410,
+      "y": 514,
+      "width": 133.0,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f1-l2": {
+      "id": "s3-f1-l2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4410,
+      "y": 524,
+      "width": 95.0,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f2-box": {
+      "id": "s3-f2-box",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4700,
+      "y": 506,
+      "width": 190,
+      "height": 100,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#2563eb",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f2-badge": {
+      "id": "s3-f2-badge",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 4690,
+      "y": 496,
+      "width": 22,
+      "height": 22,
+      "style": {
+        "fill": "#2563eb",
+        "stroke": "#2563eb",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "2",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 11,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s3-f2-label": {
+      "id": "s3-f2-label",
+      "type": "text",
+      "x": 4710,
+      "y": 514,
+      "width": 170,
+      "height": 16.8,
+      "text": "핵심 기능",
+      "textStyle": {
+        "color": "#1e293b",
+        "fontSize": 12,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-f2-l1": {
+      "id": "s3-f2-l1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4710,
+      "y": 536,
+      "width": 133.0,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f2-l2": {
+      "id": "s3-f2-l2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4710,
+      "y": 546,
+      "width": 95.0,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f3-box": {
+      "id": "s3-f3-box",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4460,
+      "y": 632,
+      "width": 250,
+      "height": 128,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#2563eb",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f3-badge": {
+      "id": "s3-f3-badge",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 4450,
+      "y": 622,
+      "width": 22,
+      "height": 22,
+      "style": {
+        "fill": "#2563eb",
+        "stroke": "#2563eb",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "3",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 11,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s3-f3-label": {
+      "id": "s3-f3-label",
+      "type": "text",
+      "x": 4470,
+      "y": 640,
+      "width": 230,
+      "height": 16.8,
+      "text": "카메라 연출",
+      "textStyle": {
+        "color": "#1e293b",
+        "fontSize": 12,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-f3-l1": {
+      "id": "s3-f3-l1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4470,
+      "y": 662,
+      "width": 175.0,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f3-l2": {
+      "id": "s3-f3-l2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4470,
+      "y": 672,
+      "width": 125.0,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f3-l3": {
+      "id": "s3-f3-l3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4470,
+      "y": 682,
+      "width": 150,
+      "height": 5,
+      "style": {
+        "fill": "#cbd5e1",
+        "stroke": "#cbd5e1",
+        "strokeWidth": 0,
+        "cornerRadius": 2
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f4-box": {
+      "id": "s3-f4-box",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4590,
+      "y": 692,
+      "width": 100,
+      "height": 56,
+      "style": {
+        "fill": "#fff7ed",
+        "stroke": "#f59e0b",
+        "strokeWidth": 2,
+        "cornerRadius": 4
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-f4-badge": {
+      "id": "s3-f4-badge",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 4580,
+      "y": 682,
+      "width": 22,
+      "height": 22,
+      "style": {
+        "fill": "#f59e0b",
+        "stroke": "#f59e0b",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "4",
+      "textStyle": {
+        "color": "#ffffff",
+        "fontSize": 11,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s3-f4-label": {
+      "id": "s3-f4-label",
+      "type": "text",
+      "x": 4598,
+      "y": 706,
+      "width": 90,
+      "height": 15.4,
+      "text": "내부 확대",
+      "textStyle": {
+        "color": "#9a3412",
+        "fontSize": 11,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s3-path1": {
+      "id": "s3-path1",
+      "type": "connector",
+      "x": 4590,
+      "y": 534.0,
+      "width": 110,
+      "height": 22.0,
+      "start": {
+        "x": 4590,
+        "y": 534.0,
+        "elementId": "s3-f1-box",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 4700,
+        "y": 556.0,
+        "elementId": "s3-f2-box",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#0ea5e9",
+        "strokeWidth": 2,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#1e293b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s3-path2": {
+      "id": "s3-path2",
+      "type": "connector",
+      "x": 4585.0,
+      "y": 606,
+      "width": 210.0,
+      "height": 26,
+      "start": {
+        "x": 4795.0,
+        "y": 606,
+        "elementId": "s3-f2-box",
+        "side": "bottom",
+        "pinned": true
+      },
+      "end": {
+        "x": 4585.0,
+        "y": 632,
+        "elementId": "s3-f3-box",
+        "side": "top",
+        "pinned": true
+      },
+      "route": "curved",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#0ea5e9",
+        "strokeWidth": 2,
+        "dashed": true
+      },
+      "label": "",
+      "textStyle": {
+        "color": "#1e293b",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s3-path-tag": {
+      "id": "s3-path-tag",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4720,
+      "y": 730,
+      "width": 180,
+      "height": 26,
+      "style": {
+        "fill": "#e0f2fe",
+        "stroke": "#7dd3fc",
+        "strokeWidth": 1,
+        "cornerRadius": 13
+      },
+      "text": "카메라 경로 1→2→3→4",
+      "textStyle": {
+        "color": "#0369a1",
+        "fontSize": 11,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s3-panel-foot": {
+      "id": "s3-panel-foot",
+      "type": "text",
+      "x": 4384,
+      "y": 820,
+      "width": 512,
+      "height": 36.4,
+      "text": "지금 보고 있는 이 장면도 이런 프레임입니다.\n다음 장면에서 이 캔버스 안으로 들어갑니다.",
+      "textStyle": {
+        "color": "#475569",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-bg": {
+      "id": "s5-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2200,
+      "y": 1420,
+      "width": 1280,
+      "height": 720,
+      "style": {
+        "fill": "#0b1220",
+        "stroke": "#0b1220",
+        "strokeWidth": 0,
+        "cornerRadius": 28
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-orb": {
+      "id": "s5-orb",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 3180,
+      "y": 1890,
+      "width": 220,
+      "height": 220,
+      "style": {
+        "fill": "#12203a",
+        "stroke": "#12203a",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-eyebrow": {
+      "id": "s5-eyebrow",
+      "type": "text",
+      "x": 2280,
+      "y": 1496,
+      "width": 560,
+      "height": 22.4,
+      "text": "MOTION · 카메라 연출",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-title": {
+      "id": "s5-title",
+      "type": "text",
+      "x": 2280,
+      "y": 1532,
+      "width": 560,
+      "height": 135.0,
+      "text": "카메라를\n연출하세요.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 54,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.25
+      }
+    },
+    "s5-desc": {
+      "id": "s5-desc",
+      "type": "text",
+      "x": 2280,
+      "y": 1688,
+      "width": 560,
+      "height": 75.6,
+      "text": "프레임마다 속도, 이동 곡선, 회전과 스포트라이트를\n설정하세요. 미리 보거나 여러 프레임을 한 번에\n조절할 수 있습니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 18,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-list-head": {
+      "id": "s5-list-head",
+      "type": "text",
+      "x": 2280,
+      "y": 1800,
+      "width": 560,
+      "height": 22.4,
+      "text": "이 발표에서 쓰인 연출",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-dot0": {
+      "id": "s5-dot0",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2284,
+      "y": 1842,
+      "width": 10,
+      "height": 10,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-b0": {
+      "id": "s5-b0",
+      "type": "text",
+      "x": 2306,
+      "y": 1834,
+      "width": 540,
+      "height": 22.4,
+      "text": "표지 → 세 단계 : 1.7초, 높은 아크로 멀리 날아가기",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-dot1": {
+      "id": "s5-dot1",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2284,
+      "y": 1878,
+      "width": 10,
+      "height": 10,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-b1": {
+      "id": "s5-b1",
+      "type": "text",
+      "x": 2306,
+      "y": 1870,
+      "width": 540,
+      "height": 22.4,
+      "text": "핵심 기능 → 내부 확대 : 가속하며 캔버스 속으로",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-dot2": {
+      "id": "s5-dot2",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2284,
+      "y": 1914,
+      "width": 10,
+      "height": 10,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-b2": {
+      "id": "s5-b2",
+      "type": "text",
+      "x": 2306,
+      "y": 1906,
+      "width": 540,
+      "height": 22.4,
+      "text": "카메라 연출 : 살짝 기울인 시점(-3°)에서 다시 수평으로",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-dot3": {
+      "id": "s5-dot3",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2284,
+      "y": 1950,
+      "width": 10,
+      "height": 10,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-b3": {
+      "id": "s5-b3",
+      "type": "text",
+      "x": 2306,
+      "y": 1942,
+      "width": 540,
+      "height": 22.4,
+      "text": "시작하기 : 2초, 가장 높은 아크로 마무리",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 16,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-chip1": {
+      "id": "s5-chip1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2280,
+      "y": 2008,
+      "width": 150,
+      "height": 40,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 20
+      },
+      "text": "5가지 이징",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-chip2": {
+      "id": "s5-chip2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2444,
+      "y": 2008,
+      "width": 170,
+      "height": 40,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 20
+      },
+      "text": "아크 0.6 – 3.0",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-chip3": {
+      "id": "s5-chip3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2628,
+      "y": 2008,
+      "width": 170,
+      "height": 40,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 20
+      },
+      "text": "회전 ±180°",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-panel": {
+      "id": "s5-panel",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2860,
+      "y": 1520,
+      "width": 560,
+      "height": 540,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 18
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-panel-head": {
+      "id": "s5-panel-head",
+      "type": "text",
+      "x": 2884,
+      "y": 1542,
+      "width": 300,
+      "height": 21.0,
+      "text": "카메라 · 프레임 05",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 15,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-panel-tag": {
+      "id": "s5-panel-tag",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3280,
+      "y": 1538,
+      "width": 116,
+      "height": 28,
+      "style": {
+        "fill": "#0e3a55",
+        "stroke": "#38bdf8",
+        "strokeWidth": 1,
+        "cornerRadius": 14
+      },
+      "text": "재정의됨",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-panel-rule": {
+      "id": "s5-panel-rule",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1580,
+      "width": 512,
+      "height": 1,
+      "style": {
+        "fill": "#334155",
+        "stroke": "#334155",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r0-label": {
+      "id": "s5-r0-label",
+      "type": "text",
+      "x": 2884,
+      "y": 1626,
+      "width": 120,
+      "height": 18.2,
+      "text": "전환 시간",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r0-val": {
+      "id": "s5-r0-val",
+      "type": "text",
+      "x": 3296,
+      "y": 1626,
+      "width": 100,
+      "height": 18.2,
+      "text": "1,800 ms",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "right",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r0-track": {
+      "id": "s5-r0-track",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1654,
+      "width": 512,
+      "height": 6,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#0f172a",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r0-fill": {
+      "id": "s5-r0-fill",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1654,
+      "width": 92,
+      "height": 6,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r0-knob": {
+      "id": "s5-r0-knob",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2968,
+      "y": 1649,
+      "width": 16,
+      "height": 16,
+      "style": {
+        "fill": "#f8fafc",
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r1-label": {
+      "id": "s5-r1-label",
+      "type": "text",
+      "x": 2884,
+      "y": 1684,
+      "width": 120,
+      "height": 18.2,
+      "text": "이징",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r1-val": {
+      "id": "s5-r1-val",
+      "type": "text",
+      "x": 3296,
+      "y": 1684,
+      "width": 100,
+      "height": 18.2,
+      "text": "smooth",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "right",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r1-chip0": {
+      "id": "s5-r1-chip0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1706,
+      "width": 74,
+      "height": 22,
+      "style": {
+        "fill": "#0e3a55",
+        "stroke": "#38bdf8",
+        "strokeWidth": 1,
+        "cornerRadius": 11
+      },
+      "text": "smooth",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 11,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s5-r1-chip1": {
+      "id": "s5-r1-chip1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2966,
+      "y": 1706,
+      "width": 66,
+      "height": 22,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 11
+      },
+      "text": "linear",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 11,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r1-chip2": {
+      "id": "s5-r1-chip2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3040,
+      "y": 1706,
+      "width": 97,
+      "height": 22,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 11
+      },
+      "text": "accelerate",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 11,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r1-chip3": {
+      "id": "s5-r1-chip3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3145,
+      "y": 1706,
+      "width": 97,
+      "height": 22,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 11
+      },
+      "text": "decelerate",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 11,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r1-chip4": {
+      "id": "s5-r1-chip4",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3250,
+      "y": 1706,
+      "width": 93,
+      "height": 22,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 11
+      },
+      "text": "overshoot",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 11,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r2-label": {
+      "id": "s5-r2-label",
+      "type": "text",
+      "x": 2884,
+      "y": 1742,
+      "width": 120,
+      "height": 18.2,
+      "text": "아크",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r2-val": {
+      "id": "s5-r2-val",
+      "type": "text",
+      "x": 3296,
+      "y": 1742,
+      "width": 100,
+      "height": 18.2,
+      "text": "2.6",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "right",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r2-track": {
+      "id": "s5-r2-track",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1770,
+      "width": 512,
+      "height": 6,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#0f172a",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r2-fill": {
+      "id": "s5-r2-fill",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1770,
+      "width": 425,
+      "height": 6,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r2-knob": {
+      "id": "s5-r2-knob",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 3301,
+      "y": 1765,
+      "width": 16,
+      "height": 16,
+      "style": {
+        "fill": "#f8fafc",
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r3-label": {
+      "id": "s5-r3-label",
+      "type": "text",
+      "x": 2884,
+      "y": 1800,
+      "width": 120,
+      "height": 18.2,
+      "text": "회전",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r3-val": {
+      "id": "s5-r3-val",
+      "type": "text",
+      "x": 3296,
+      "y": 1800,
+      "width": 100,
+      "height": 18.2,
+      "text": "-3°",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "right",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r3-track": {
+      "id": "s5-r3-track",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1828,
+      "width": 512,
+      "height": 6,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#0f172a",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r3-fill": {
+      "id": "s5-r3-fill",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1828,
+      "width": 251,
+      "height": 6,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r3-knob": {
+      "id": "s5-r3-knob",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 3127,
+      "y": 1823,
+      "width": 16,
+      "height": 16,
+      "style": {
+        "fill": "#f8fafc",
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r4-label": {
+      "id": "s5-r4-label",
+      "type": "text",
+      "x": 2884,
+      "y": 1858,
+      "width": 120,
+      "height": 18.2,
+      "text": "스포트라이트",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 13,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r4-val": {
+      "id": "s5-r4-val",
+      "type": "text",
+      "x": 3296,
+      "y": 1858,
+      "width": 100,
+      "height": 18.2,
+      "text": "0.6",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 13,
+        "align": "right",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-r4-track": {
+      "id": "s5-r4-track",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1886,
+      "width": 512,
+      "height": 6,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#0f172a",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r4-fill": {
+      "id": "s5-r4-fill",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 1886,
+      "width": 307,
+      "height": 6,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-r4-knob": {
+      "id": "s5-r4-knob",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 3183,
+      "y": 1881,
+      "width": 16,
+      "height": 16,
+      "style": {
+        "fill": "#f8fafc",
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "cornerRadius": 8
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s5-panel-foot": {
+      "id": "s5-panel-foot",
+      "type": "text",
+      "x": 2884,
+      "y": 1942,
+      "width": 512,
+      "height": 33.6,
+      "text": "값을 비우면 문서 기본값을 따릅니다. 여러 프레임을 선택하면\n같은 설정을 한 번에 적용할 수 있습니다.",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 12,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s5-panel-btn1": {
+      "id": "s5-panel-btn1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 2884,
+      "y": 2004,
+      "width": 120,
+      "height": 36,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 0,
+        "cornerRadius": 18
+      },
+      "text": "미리 보기",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s5-panel-btn2": {
+      "id": "s5-panel-btn2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 3016,
+      "y": 2004,
+      "width": 120,
+      "height": 36,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 18
+      },
+      "text": "초기화",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 13,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-bg": {
+      "id": "s7-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4400,
+      "y": 1760,
+      "width": 1280,
+      "height": 720,
+      "style": {
+        "fill": "#0b1220",
+        "stroke": "#0b1220",
+        "strokeWidth": 0,
+        "cornerRadius": 28
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-eyebrow": {
+      "id": "s7-eyebrow",
+      "type": "text",
+      "x": 4480,
+      "y": 1836,
+      "width": 600,
+      "height": 22.4,
+      "text": "SHARE · 공유",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-title": {
+      "id": "s7-title",
+      "type": "text",
+      "x": 4480,
+      "y": 1872,
+      "width": 640,
+      "height": 130.0,
+      "text": "이야기 전체를,\nHTML 하나에.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 52,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.25
+      }
+    },
+    "s7-desc": {
+      "id": "s7-desc",
+      "type": "text",
+      "x": 4480,
+      "y": 2018,
+      "width": 640,
+      "height": 47.6,
+      "text": "캔버스, 이미지, 발표 프레임과 확대 전환까지 파일 하나에.\n받는 사람은 앱 설치 없이 브라우저에서, 오프라인으로도 봅니다.",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 17,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-src": {
+      "id": "s7-src",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4480,
+      "y": 2104,
+      "width": 240,
+      "height": 190,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 20
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-src-ext": {
+      "id": "s7-src-ext",
+      "type": "text",
+      "x": 4500,
+      "y": 2132,
+      "width": 200,
+      "height": 36.4,
+      "text": ".canvaslide",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 26,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-src-kind": {
+      "id": "s7-src-kind",
+      "type": "text",
+      "x": 4500,
+      "y": 2176,
+      "width": 200,
+      "height": 21.0,
+      "text": "편집 가능한 캔버스",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "center",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-src-l0": {
+      "id": "s7-src-l0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4525,
+      "y": 2216,
+      "width": 150,
+      "height": 6,
+      "style": {
+        "fill": "#263247",
+        "stroke": "#263247",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-src-l1": {
+      "id": "s7-src-l1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4525,
+      "y": 2232,
+      "width": 110,
+      "height": 6,
+      "style": {
+        "fill": "#263247",
+        "stroke": "#263247",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-src-l2": {
+      "id": "s7-src-l2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4525,
+      "y": 2248,
+      "width": 130,
+      "height": 6,
+      "style": {
+        "fill": "#263247",
+        "stroke": "#263247",
+        "strokeWidth": 0,
+        "cornerRadius": 3
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-dst": {
+      "id": "s7-dst",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4860,
+      "y": 2104,
+      "width": 240,
+      "height": 190,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "cornerRadius": 20
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-dst-ext": {
+      "id": "s7-dst-ext",
+      "type": "text",
+      "x": 4880,
+      "y": 2132,
+      "width": 200,
+      "height": 36.4,
+      "text": ".html",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 26,
+        "align": "center",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-dst-kind": {
+      "id": "s7-dst-kind",
+      "type": "text",
+      "x": 4880,
+      "y": 2176,
+      "width": 200,
+      "height": 21.0,
+      "text": "발표할 준비 완료",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "center",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-dst-tag": {
+      "id": "s7-dst-tag",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 4910,
+      "y": 2222,
+      "width": 140,
+      "height": 30,
+      "style": {
+        "fill": "#0e3a55",
+        "stroke": "#38bdf8",
+        "strokeWidth": 1,
+        "cornerRadius": 15
+      },
+      "text": "플레이어 포함",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 12,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-flow": {
+      "id": "s7-flow",
+      "type": "connector",
+      "x": 4720,
+      "y": 2199.0,
+      "width": 140,
+      "height": 1,
+      "start": {
+        "x": 4720,
+        "y": 2199.0,
+        "elementId": "s7-src",
+        "side": "right",
+        "pinned": true
+      },
+      "end": {
+        "x": 4860,
+        "y": 2199.0,
+        "elementId": "s7-dst",
+        "side": "left",
+        "pinned": true
+      },
+      "route": "straight",
+      "startHead": "none",
+      "endHead": "arrow",
+      "style": {
+        "stroke": "#38bdf8",
+        "strokeWidth": 2,
+        "dashed": false
+      },
+      "label": "내보내기 ⌘E / Ctrl+E",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 12,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s7-file-note": {
+      "id": "s7-file-note",
+      "type": "text",
+      "x": 4480,
+      "y": 2316,
+      "width": 620,
+      "height": 19.6,
+      "text": "이미지와 플레이어까지 하나의 파일에. 편집 원본은 .canvaslide로 보관하세요.",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 14,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-check0": {
+      "id": "s7-check0",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 5180,
+      "y": 2110,
+      "width": 32,
+      "height": 32,
+      "style": {
+        "fill": "#34d399",
+        "stroke": "#34d399",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "✓",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s7-benefit0": {
+      "id": "s7-benefit0",
+      "type": "text",
+      "x": 5226,
+      "y": 2113,
+      "width": 380,
+      "height": 25.2,
+      "text": "보는 사람에게 필요한 건 브라우저뿐",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 18,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-check1": {
+      "id": "s7-check1",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 5180,
+      "y": 2168,
+      "width": 32,
+      "height": 32,
+      "style": {
+        "fill": "#34d399",
+        "stroke": "#34d399",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "✓",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s7-benefit1": {
+      "id": "s7-benefit1",
+      "type": "text",
+      "x": 5226,
+      "y": 2171,
+      "width": 380,
+      "height": 25.2,
+      "text": "인터넷 연결 없이도 재생",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 18,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-check2": {
+      "id": "s7-check2",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 5180,
+      "y": 2226,
+      "width": 32,
+      "height": 32,
+      "style": {
+        "fill": "#34d399",
+        "stroke": "#34d399",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "✓",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 16,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s7-benefit2": {
+      "id": "s7-benefit2",
+      "type": "text",
+      "x": 5226,
+      "y": 2229,
+      "width": 380,
+      "height": 25.2,
+      "text": "확대 전환까지 그대로 전달",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 18,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-card-cloud": {
+      "id": "s7-card-cloud",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5180,
+      "y": 2300,
+      "width": 200,
+      "height": 100,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 16
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-cloud-h": {
+      "id": "s7-cloud-h",
+      "type": "text",
+      "x": 5196,
+      "y": 2316,
+      "width": 170,
+      "height": 21.0,
+      "text": "클라우드 링크",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 15,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-cloud-b": {
+      "id": "s7-cloud-b",
+      "type": "text",
+      "x": 5196,
+      "y": 2342,
+      "width": 170,
+      "height": 33.6,
+      "text": "편집 사본 또는 슬라이드 쇼\n전용 링크를 24시간 공유",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 12,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-card-ai": {
+      "id": "s7-card-ai",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 5400,
+      "y": 2300,
+      "width": 200,
+      "height": 100,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 16
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s7-ai-h": {
+      "id": "s7-ai-h",
+      "type": "text",
+      "x": 5416,
+      "y": 2316,
+      "width": 170,
+      "height": 21.0,
+      "text": "AI와 함께 만들기",
+      "textStyle": {
+        "color": "#fbbf24",
+        "fontSize": 15,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-ai-b": {
+      "id": "s7-ai-b",
+      "type": "text",
+      "x": 5416,
+      "y": 2342,
+      "width": 170,
+      "height": 33.6,
+      "text": "일반·다이나믹 프롬프트로\n편집 가능한 발표 파일 생성",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 12,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s7-foot": {
+      "id": "s7-foot",
+      "type": "text",
+      "x": 4480,
+      "y": 2424,
+      "width": 700,
+      "height": 19.6,
+      "text": "공유 → 링크 복사 · 공유 → HTML 내보내기",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 14,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-bg": {
+      "id": "s8-bg",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1200,
+      "y": 2760,
+      "width": 1280,
+      "height": 720,
+      "style": {
+        "fill": "#0b1220",
+        "stroke": "#0b1220",
+        "strokeWidth": 0,
+        "cornerRadius": 28
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-orb1": {
+      "id": "s8-orb1",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 1230,
+      "y": 2790,
+      "width": 300,
+      "height": 300,
+      "style": {
+        "fill": "#12203a",
+        "stroke": "#12203a",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-orb2": {
+      "id": "s8-orb2",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2200,
+      "y": 3200,
+      "width": 260,
+      "height": 260,
+      "style": {
+        "fill": "#0e3a55",
+        "stroke": "#0e3a55",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-orb3": {
+      "id": "s8-orb3",
+      "type": "shape",
+      "shape": "ellipse",
+      "x": 2380,
+      "y": 2820,
+      "width": 80,
+      "height": 80,
+      "style": {
+        "fill": "#fbbf24",
+        "stroke": "#fbbf24",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-eyebrow": {
+      "id": "s8-eyebrow",
+      "type": "text",
+      "x": 1280,
+      "y": 2844,
+      "width": 600,
+      "height": 22.4,
+      "text": "GET STARTED · 시작하기",
+      "textStyle": {
+        "color": "#38bdf8",
+        "fontSize": 16,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-title": {
+      "id": "s8-title",
+      "type": "text",
+      "x": 1280,
+      "y": 2880,
+      "width": 640,
+      "height": 140.0,
+      "text": "다음 아이디어는\n여기서 시작됩니다.",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 56,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.25
+      }
+    },
+    "s8-sub": {
+      "id": "s8-sub",
+      "type": "text",
+      "x": 1280,
+      "y": 3034,
+      "width": 600,
+      "height": 36.4,
+      "text": "작은 시작, 무한한 가능성.",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 26,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-cta0": {
+      "id": "s8-cta0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1280,
+      "y": 3100,
+      "width": 560,
+      "height": 66,
+      "style": {
+        "fill": "#38bdf8",
+        "stroke": "#38bdf8",
+        "strokeWidth": 1,
+        "cornerRadius": 16
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-cta0-h": {
+      "id": "s8-cta0-h",
+      "type": "text",
+      "x": 1304,
+      "y": 3110,
+      "width": 520,
+      "height": 26.6,
+      "text": "릴리스 다운로드",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 19,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-cta0-s": {
+      "id": "s8-cta0-s",
+      "type": "text",
+      "x": 1304,
+      "y": 3136,
+      "width": 520,
+      "height": 18.2,
+      "text": "macOS · Windows 데스크톱 앱",
+      "textStyle": {
+        "color": "#0b1220",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-cta1": {
+      "id": "s8-cta1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1280,
+      "y": 3182,
+      "width": 560,
+      "height": 66,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 16
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-cta1-h": {
+      "id": "s8-cta1-h",
+      "type": "text",
+      "x": 1304,
+      "y": 3192,
+      "width": 520,
+      "height": 26.6,
+      "text": "웹 편집기 열기",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 19,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-cta1-s": {
+      "id": "s8-cta1-s",
+      "type": "text",
+      "x": 1304,
+      "y": 3218,
+      "width": 520,
+      "height": 18.2,
+      "text": "canvaslide.pages.dev · 설치 없이 바로",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-cta2": {
+      "id": "s8-cta2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1280,
+      "y": 3264,
+      "width": 560,
+      "height": 66,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 16
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-cta2-h": {
+      "id": "s8-cta2-h",
+      "type": "text",
+      "x": 1304,
+      "y": 3274,
+      "width": 520,
+      "height": 26.6,
+      "text": "ShowCase 둘러보기",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 19,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-cta2-s": {
+      "id": "s8-cta2-s",
+      "type": "text",
+      "x": 1304,
+      "y": 3300,
+      "width": 520,
+      "height": 18.2,
+      "text": "hwantage.github.io/CanvaSlide",
+      "textStyle": {
+        "color": "#94a3b8",
+        "fontSize": 13,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-keys": {
+      "id": "s8-keys",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1900,
+      "y": 3090,
+      "width": 500,
+      "height": 330,
+      "style": {
+        "fill": "#131c31",
+        "stroke": "#263247",
+        "strokeWidth": 1,
+        "cornerRadius": 20
+      },
+      "text": "",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 16,
+        "align": "center",
+        "bold": false
+      }
+    },
+    "s8-keys-head": {
+      "id": "s8-keys-head",
+      "type": "text",
+      "x": 1924,
+      "y": 3110,
+      "width": 452,
+      "height": 21.0,
+      "text": "기본 단축키",
+      "textStyle": {
+        "color": "#7dd3fc",
+        "fontSize": 15,
+        "align": "left",
+        "bold": true,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-key0": {
+      "id": "s8-key0",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1924,
+      "y": 3144,
+      "width": 96,
+      "height": 32,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 8
+      },
+      "text": "F",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s8-key0-d": {
+      "id": "s8-key0-d",
+      "type": "text",
+      "x": 2036,
+      "y": 3150,
+      "width": 340,
+      "height": 21.0,
+      "text": "프레임 그리기",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-key1": {
+      "id": "s8-key1",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1924,
+      "y": 3188,
+      "width": 96,
+      "height": 32,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 8
+      },
+      "text": "⌘ Enter",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s8-key1-d": {
+      "id": "s8-key1-d",
+      "type": "text",
+      "x": 2036,
+      "y": 3194,
+      "width": 340,
+      "height": 21.0,
+      "text": "슬라이드 쇼 시작 (Ctrl+Enter)",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-key2": {
+      "id": "s8-key2",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1924,
+      "y": 3232,
+      "width": 96,
+      "height": 32,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 8
+      },
+      "text": "O",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s8-key2-d": {
+      "id": "s8-key2-d",
+      "type": "text",
+      "x": 2036,
+      "y": 3238,
+      "width": 340,
+      "height": 21.0,
+      "text": "발표 중 전체 보기",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-key3": {
+      "id": "s8-key3",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1924,
+      "y": 3276,
+      "width": 96,
+      "height": 32,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 8
+      },
+      "text": "⌘ S",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s8-key3-d": {
+      "id": "s8-key3-d",
+      "type": "text",
+      "x": 2036,
+      "y": 3282,
+      "width": 340,
+      "height": 21.0,
+      "text": "편집 가능한 .canvaslide 저장",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-key4": {
+      "id": "s8-key4",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1924,
+      "y": 3320,
+      "width": 96,
+      "height": 32,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 8
+      },
+      "text": "⌘ E",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s8-key4-d": {
+      "id": "s8-key4-d",
+      "type": "text",
+      "x": 2036,
+      "y": 3326,
+      "width": 340,
+      "height": 21.0,
+      "text": "HTML 내보내기",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-key5": {
+      "id": "s8-key5",
+      "type": "shape",
+      "shape": "rectangle",
+      "x": 1924,
+      "y": 3364,
+      "width": 96,
+      "height": 32,
+      "style": {
+        "fill": "#0f172a",
+        "stroke": "#334155",
+        "strokeWidth": 1,
+        "cornerRadius": 8
+      },
+      "text": "K",
+      "textStyle": {
+        "color": "#f8fafc",
+        "fontSize": 13,
+        "align": "center",
+        "bold": true
+      }
+    },
+    "s8-key5-d": {
+      "id": "s8-key5-d",
+      "type": "text",
+      "x": 2036,
+      "y": 3370,
+      "width": 340,
+      "height": 21.0,
+      "text": "전체 단축키 보기",
+      "textStyle": {
+        "color": "#cbd5e1",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    },
+    "s8-foot": {
+      "id": "s8-foot",
+      "type": "text",
+      "x": 1280,
+      "y": 3424,
+      "width": 900,
+      "height": 21.0,
+      "text": "무료 오픈 소스 · MIT 라이선스 · github.com/hwantage/CanvaSlide",
+      "textStyle": {
+        "color": "#64748b",
+        "fontSize": 15,
+        "align": "left",
+        "bold": false,
+        "lineHeight": 1.4
+      }
+    }
+  },
+  "order": [
+    "frame-01",
+    "frame-02",
+    "frame-03",
+    "frame-04",
+    "frame-05",
+    "frame-06",
+    "frame-07",
+    "frame-08",
+    "board-title",
+    "board-note",
+    "s1-bg",
+    "s1-orb1",
+    "s1-orb2",
+    "s1-orb3",
+    "s1-orb4",
+    "s1-brand",
+    "s1-eyebrow",
+    "s1-title",
+    "s1-sub",
+    "s1-desc",
+    "s1-chip1",
+    "s1-chip2",
+    "s1-chip3",
+    "s1-note",
+    "s2-bg",
+    "s2-eyebrow",
+    "s2-title",
+    "s2-card0",
+    "s2-num0",
+    "s2-head0",
+    "s2-body0",
+    "s2-card1",
+    "s2-num1",
+    "s2-head1",
+    "s2-body1",
+    "s2-card2",
+    "s2-num2",
+    "s2-head2",
+    "s2-body2",
+    "s2-arrow0",
+    "s2-arrow1",
+    "s2-foot",
+    "s3-bg",
+    "s3-eyebrow",
+    "s3-title",
+    "s3-desc",
+    "s3-bar0",
+    "s3-head0",
+    "s3-body0",
+    "s3-bar1",
+    "s3-head1",
+    "s3-body1",
+    "s3-bar2",
+    "s3-head2",
+    "s3-body2",
+    "s3-panel",
+    "s3-toolbar",
+    "s3-panel-cap",
+    "s3-f1-box",
+    "s3-f1-badge",
+    "s3-f1-label",
+    "s3-f1-l1",
+    "s3-f1-l2",
+    "s3-f2-box",
+    "s3-f2-badge",
+    "s3-f2-label",
+    "s3-f2-l1",
+    "s3-f2-l2",
+    "s3-f3-box",
+    "s3-f3-badge",
+    "s3-f3-label",
+    "s3-f3-l1",
+    "s3-f3-l2",
+    "s3-f3-l3",
+    "s3-f4-box",
+    "s3-f4-badge",
+    "s3-f4-label",
+    "s3-path1",
+    "s3-path2",
+    "s3-path-tag",
+    "s3-panel-foot",
+    "s5-bg",
+    "s5-orb",
+    "s5-eyebrow",
+    "s5-title",
+    "s5-desc",
+    "s5-list-head",
+    "s5-dot0",
+    "s5-b0",
+    "s5-dot1",
+    "s5-b1",
+    "s5-dot2",
+    "s5-b2",
+    "s5-dot3",
+    "s5-b3",
+    "s5-chip1",
+    "s5-chip2",
+    "s5-chip3",
+    "s5-panel",
+    "s5-panel-head",
+    "s5-panel-tag",
+    "s5-panel-rule",
+    "s5-r0-label",
+    "s5-r0-val",
+    "s5-r0-track",
+    "s5-r0-fill",
+    "s5-r0-knob",
+    "s5-r1-label",
+    "s5-r1-val",
+    "s5-r1-chip0",
+    "s5-r1-chip1",
+    "s5-r1-chip2",
+    "s5-r1-chip3",
+    "s5-r1-chip4",
+    "s5-r2-label",
+    "s5-r2-val",
+    "s5-r2-track",
+    "s5-r2-fill",
+    "s5-r2-knob",
+    "s5-r3-label",
+    "s5-r3-val",
+    "s5-r3-track",
+    "s5-r3-fill",
+    "s5-r3-knob",
+    "s5-r4-label",
+    "s5-r4-val",
+    "s5-r4-track",
+    "s5-r4-fill",
+    "s5-r4-knob",
+    "s5-panel-foot",
+    "s5-panel-btn1",
+    "s5-panel-btn2",
+    "s7-bg",
+    "s7-eyebrow",
+    "s7-title",
+    "s7-desc",
+    "s7-src",
+    "s7-src-ext",
+    "s7-src-kind",
+    "s7-src-l0",
+    "s7-src-l1",
+    "s7-src-l2",
+    "s7-dst",
+    "s7-dst-ext",
+    "s7-dst-kind",
+    "s7-dst-tag",
+    "s7-flow",
+    "s7-file-note",
+    "s7-check0",
+    "s7-benefit0",
+    "s7-check1",
+    "s7-benefit1",
+    "s7-check2",
+    "s7-benefit2",
+    "s7-card-cloud",
+    "s7-cloud-h",
+    "s7-cloud-b",
+    "s7-card-ai",
+    "s7-ai-h",
+    "s7-ai-b",
+    "s7-foot",
+    "s8-bg",
+    "s8-orb1",
+    "s8-orb2",
+    "s8-orb3",
+    "s8-eyebrow",
+    "s8-title",
+    "s8-sub",
+    "s8-cta0",
+    "s8-cta0-h",
+    "s8-cta0-s",
+    "s8-cta1",
+    "s8-cta1-h",
+    "s8-cta1-s",
+    "s8-cta2",
+    "s8-cta2-h",
+    "s8-cta2-s",
+    "s8-keys",
+    "s8-keys-head",
+    "s8-key0",
+    "s8-key0-d",
+    "s8-key1",
+    "s8-key1-d",
+    "s8-key2",
+    "s8-key2-d",
+    "s8-key3",
+    "s8-key3-d",
+    "s8-key4",
+    "s8-key4-d",
+    "s8-key5",
+    "s8-key5-d",
+    "s8-foot"
+  ],
+  "settings": {
+    "transitionMs": 1200,
+    "transitionEasing": "smooth",
+    "transitionArc": 1.4142135623730951,
+    "spotlight": 0,
+    "background": "dots",
+    "frameBorder": "dashed"
+  },
+  "assets": {},
+  "resources": {},
+  "camera": {
+    "x": -200,
+    "y": -300,
+    "zoom": 0.16
+  }
+}

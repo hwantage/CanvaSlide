@@ -25,11 +25,23 @@ export function Brand() {
   )
 }
 
+function GitHubLink() {
+  const theme = useSitePreferences((s) => s.theme)
+  return (
+    <a href={repositoryUrl} target="_blank" rel="noreferrer" className="source-link">
+      <img src={asset(`brand/github-mark-${theme}.svg`)} width="20" height="20" alt="" />
+      GitHub
+    </a>
+  )
+}
+
 export function SiteShell({
   children,
+  currentPage,
   showRay = false
 }: {
   children: ReactNode
+  currentPage: 'product' | 'docs' | 'showcase'
   showRay?: boolean
 }) {
   const locale = useSitePreferences((s) => s.locale)
@@ -61,20 +73,23 @@ export function SiteShell({
             className={`header-nav ${menuOpen ? 'is-open' : ''}`}
             aria-label={t('site.nav.label')}
           >
-            <a href={`${siteHref()}#product`} onClick={() => setMenuOpen(false)}>
+            <a
+              href={`${siteHref()}#product`}
+              aria-current={currentPage === 'product' ? 'page' : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
               {t('site.nav.product')}
             </a>
-            <a href={siteHref('docs/')}>{t('site.nav.docs')}</a>
             <a
               href={siteHref('showcase/')}
-              aria-current={location.pathname.includes('/showcase/') ? 'page' : undefined}
+              aria-current={currentPage === 'showcase' ? 'page' : undefined}
             >
               {t('site.nav.showcase')}
             </a>
-            <a href={repositoryUrl} target="_blank" rel="noreferrer" className="source-link">
-              <img src={asset(`brand/github-mark-${theme}.svg`)} width="20" height="20" alt="" />
-              GitHub
+            <a href={siteHref('docs/')} aria-current={currentPage === 'docs' ? 'page' : undefined}>
+              {t('site.nav.docs')}
             </a>
+            <GitHubLink />
           </nav>
           <div className="header-actions">
             <div className="language-switch" role="group" aria-label={t('site.language')}>
@@ -104,9 +119,6 @@ export function SiteShell({
             >
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <a className="button button-small header-download" href={`${siteHref()}#download`}>
-              {t('site.nav.download')}
-            </a>
             <button
               className="icon-button mobile-menu"
               type="button"
@@ -139,6 +151,7 @@ export function SiteShell({
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} CanvaSlide</span>
           <span>{t('site.footer.license')}</span>
+          <GitHubLink />
           <a href="#top" aria-label={t('site.footer.top')}>
             <ArrowUp size={18} />
           </a>

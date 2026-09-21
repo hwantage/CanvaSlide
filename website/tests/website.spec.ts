@@ -15,7 +15,7 @@ test('language and theme survive navigation and reload', async ({ page }) => {
   await page.getByRole('button', { name: '다크 테마로 전환' }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('하나의 캔버스, 다양한 시선.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('무한 Canvas + Slide Show')
   await page.locator('.header-nav').getByRole('link', { name: '사용 문서' }).click()
   await expect(page.getByRole('heading', { level: 1 })).toContainText('첫 캔버스부터')
   await page.reload()

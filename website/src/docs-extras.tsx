@@ -4,7 +4,8 @@ import { t, type UiStringKey } from '@app/i18n/ui-strings'
 import { isMacPlatform, shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
 import { asset, repositoryUrl, siteHref } from './site-preferences'
 import type { TopicId } from './docs-topics'
-import { exampleEditorUrl } from './example-links'
+import { exampleEditorUrl, webAppUrl } from './example-links'
+import { DocsAiPrompt } from './docs-ai-prompt'
 
 export function CommandBlock({ command }: { command: string }) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -164,17 +165,26 @@ export function DocsExtra({ topic, section }: { topic: TopicId; section: string 
       </a>
     )
   }
+  if (topic === 'ai' && section === 'create-with-ai') {
+    return <DocsAiPrompt />
+  }
   if (topic === 'ai' && section === 'open-the-result') {
     return (
-      <a
-        className="doc-text-link"
-        href={`${repositoryUrl}/blob/main/examples/README.md#authoring-with-ai`}
-        target="_blank"
-        rel="noreferrer"
-      >
-        {t('site.docs.ai.guide')}
-        <ArrowUpRight size={14} />
-      </a>
+      <div className="prompt-actions">
+        <a className="button" href={webAppUrl} target="_blank" rel="noreferrer">
+          {t('site.hero.editor')}
+          <ArrowUpRight size={16} />
+        </a>
+        <a
+          className="doc-text-link"
+          href={`${repositoryUrl}/blob/main/examples/README.md#authoring-with-ai`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {t('site.docs.ai.guide')}
+          <ArrowUpRight size={14} />
+        </a>
+      </div>
     )
   }
   if (topic === 'installation') {

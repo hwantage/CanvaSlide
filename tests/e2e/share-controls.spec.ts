@@ -122,7 +122,7 @@ test('one copy click publishes the chosen mode, reuses the link, and resets it w
   expect(editable).not.toBe(original)
   expect(copied.at(-1)).toBe(editable)
   expect(modes).toEqual(['present', 'edit'])
-  for (const label of ['Export HTML', 'Export CanvaSlide']) {
+  for (const label of ['Export .canvaslide', 'Export PDF', 'Export HTML']) {
     const button = share.getByRole('button', { name: label, exact: true })
     await button.hover()
     await expect(button).toHaveCSS('cursor', 'pointer')
@@ -158,7 +158,7 @@ test('closing during upload aborts copying and reopening restores slideshow shar
   await started
   await expect(share.getByRole('button', { name: 'Copying link…' })).toBeDisabled()
   await expect(share.getByRole('status')).toHaveText('Copying link…')
-  for (const name of ['Copying link…', 'Export HTML', 'Export CanvaSlide']) {
+  for (const name of ['Copying link…', 'Export .canvaslide', 'Export PDF', 'Export HTML']) {
     await expect(share.getByRole('button', { name, exact: true })).toHaveCSS('cursor', 'default')
   }
   await expect(

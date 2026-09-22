@@ -1,4 +1,5 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
+import { defaultExportFormat, type ExportFormat } from '@/lib/export-format'
 import { useFigImportStore } from './fig-import-store'
 import { useCloudShareStore } from './cloud-share-store'
 
@@ -18,7 +19,21 @@ function createDialogStore(): UseBoundStore<StoreApi<DialogStore>> {
   }))
 }
 
-export const useExportDialogStore = createDialogStore()
+/** The export dialog also carries the format it is showing, so a caller can open it on one. */
+export type ExportDialogStore = Omit<DialogStore, 'show'> & {
+  format: ExportFormat
+  /** Opens the dialog; without a format it reopens on whichever one was last used. */
+  show: (format?: ExportFormat) => void
+}
+
+export const useExportDialogStore = create<ExportDialogStore>()((set) => ({
+  open: false,
+  format: defaultExportFormat,
+  show: (format) => set(format ? { open: true, format } : { open: true }),
+  hide: () => set({ open: false }),
+  toggle: () => set((s) => ({ open: !s.open }))
+}))
+
 export const useSettingsDialogStore = createDialogStore()
 export const useShortcutHelpStore = createDialogStore()
 export const useAboutDialogStore = createDialogStore()

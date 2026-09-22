@@ -9,6 +9,7 @@ import { inputClass } from '@/components/ui/field-row'
 import type { DocumentCommands } from '@/hooks/use-document-commands'
 import { t } from '@/i18n/ui-strings'
 import { cn } from '@/lib/cn'
+import { exportFormatNames } from '@/lib/export-format'
 import { copyShareLink } from '@/platform/cloud-share'
 import { useCloudShareStore } from '@/store/cloud-share-store'
 import { useDocumentStore } from '@/store/document-store'
@@ -34,6 +35,13 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
   const [copyState, setCopyState] = useState<'idle' | 'copying' | 'copied' | 'failed'>('idle')
   const copying = copyState === 'copying'
   const title = t(mode === 'load' ? 'share.openTitle' : 'share.title')
+
+  /** What the reader ends up holding: the editable original first, then the two read-only formats. */
+  const saveTargets = [
+    { name: `.${DOCUMENT_FILE_EXTENSION}`, run: () => void commands.saveDocumentAs() },
+    { name: exportFormatNames.html, run: () => showExport('html') },
+    { name: exportFormatNames.pdf, run: () => showExport('pdf') }
+  ]
 
   const copy = async () => {
     if (copying || useCloudShareStore.getState().busy) {
@@ -157,23 +165,21 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
         </p>
       )}
       {mode === 'publish' && (
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
-          <TextButton
-            className="h-9 cursor-pointer justify-center disabled:cursor-default"
-            disabled={busy || copying}
-            onClick={showExport}
-          >
-            <FileDown size={14} aria-hidden />
-            {t('share.exportFile', { format: 'HTML' })}
-          </TextButton>
-          <TextButton
-            className="h-9 cursor-pointer justify-center disabled:cursor-default"
-            disabled={busy || copying}
-            onClick={() => void commands.saveDocumentAs()}
-          >
-            <FileDown size={14} aria-hidden />
-            {t('share.exportFile', { format: 'CanvaSlide' })}
-          </TextButton>
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
+          {saveTargets.map((target) => (
+            <TextButton
+              key={target.name}
+              className="h-9 cursor-pointer justify-center px-1 disabled:cursor-default"
+              disabled={busy || copying}
+              // Why the button says only the format: the three sit together under one heading, and
+              // the accessible name still carries the verb for anyone who cannot see that.
+              aria-label={t('share.exportFile', { format: target.name })}
+              onClick={target.run}
+            >
+              <FileDown size={14} aria-hidden />
+              {target.name}
+            </TextButton>
+          ))}
         </div>
       )}
       <div className="mt-4 flex justify-end gap-2">

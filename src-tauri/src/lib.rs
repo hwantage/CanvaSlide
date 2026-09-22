@@ -78,6 +78,7 @@ pub fn run() {
             document_io::read_document,
             document_io::write_document,
             document_io::write_html_export,
+            document_io::write_pdf_export,
             system_fonts::list_system_fonts,
             font_embed::subset_fonts,
             launch_document::take_launch_document,

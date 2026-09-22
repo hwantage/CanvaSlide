@@ -82,7 +82,8 @@ function shapeSvg(element: ShapeElement): SVGElement {
   return svg
 }
 
-function renderElement(element: CanvasElement, doc: CanvasDocument): HTMLElement | null {
+/** One element's static node. The PDF export reuses this so both renderers stay in step. */
+export function renderElement(element: CanvasElement, doc: CanvasDocument): HTMLElement | null {
   switch (element.type) {
     case 'video': {
       const node = el('div', 'uc-el')

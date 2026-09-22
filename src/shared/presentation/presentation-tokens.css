@@ -1,0 +1,16 @@
+:root {
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --border: #e4e4e7;
+  --ring: #2563eb;
+  --laser: #ff3b30;
+  --laser-core: #fff5f4;
+  --laser-glow: rgb(255 59 48 / 0.45);
+  --ink: #ff3b30;
+  --chrome-fade-ms: 200ms;
+  --chrome-fade-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}

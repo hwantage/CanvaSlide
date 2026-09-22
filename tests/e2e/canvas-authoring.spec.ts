@@ -360,7 +360,7 @@ test('slideshow controls keep the arrow pair centred whatever the frame name len
   await expect(counter).toContainText('Quarterly business review and roadmap')
   // Order: overview · previous · next · counter + name · annotation tools · exit.
   const order = await bar
-    .locator('button, [data-testid="presentation-counter"]')
+    .locator('button:visible, [data-testid="presentation-counter"]')
     .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? el.dataset.testid))
   expect(order).toEqual([
     'Overview (O)',

@@ -1,5 +1,4 @@
 import type { DocumentCommands } from '@/hooks/use-document-commands'
-import { presentationKeyAction } from '@shared/canvas/presentation-keys'
 import { importPickedFiles } from './external-content'
 import { copySelection, cutSelection, requestKeyboardPaste } from './object-clipboard'
 import { hasPrimaryModifier, isEditableTarget, isMacPlatform } from './platform-keys'
@@ -21,7 +20,6 @@ import {
   useSettingsDialogStore,
   useShortcutHelpStore
 } from '@/store/modal-dialogs'
-import { usePresentationAnnotationStore } from '@/store/presentation-annotation-store'
 import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore, type ToolId } from '@/store/tool-store'
 
@@ -41,6 +39,11 @@ export function handleCanvasKeyDown(event: KeyboardEvent, commands: DocumentComm
       closeModalDialogs()
       event.preventDefault()
     }
+    return
+  }
+  // The shared presentation binder owns slide-show keys; editor shortcuts stay dormant.
+  const presentation = usePresentationStore.getState()
+  if (presentation.active && presentation.previewFrameId === null) {
     return
   }
   if (handlePresentationKeys(event)) {
@@ -79,30 +82,7 @@ function handlePresentationKeys(event: KeyboardEvent): boolean {
     }
     return false
   }
-  switch (presentationKeyAction(event.key)) {
-    case 'next':
-      presentation.next()
-      break
-    case 'previous':
-      presentation.previous()
-      break
-    case 'escape':
-      presentation.exit()
-      break
-    case 'toggleOverview':
-      presentation.toggleOverview()
-      break
-    case 'togglePointer':
-      usePresentationAnnotationStore.getState().togglePointer()
-      break
-    case 'clearInk':
-      usePresentationAnnotationStore.getState().clearInk()
-      break
-    case null:
-      break
-  }
-  // Why: a slide show owns the keyboard; even unmapped keys must not reach editor shortcuts.
-  return true
+  return false
 }
 
 /** Shortcuts that need the primary modifier (⌘ / Ctrl). Returns true when handled. */

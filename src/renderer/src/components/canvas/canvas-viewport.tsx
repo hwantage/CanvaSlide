@@ -5,10 +5,6 @@ import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { useSwipeNavigation } from '@/hooks/use-swipe-navigation'
 import { useWheelZoom } from '@/hooks/use-wheel-zoom'
 import {
-  selectAnnotationCursor,
-  usePresentationAnnotationStore
-} from '@/store/presentation-annotation-store'
-import {
   selectPresentationActive,
   selectSlideShowActive,
   usePresentationStore
@@ -17,9 +13,7 @@ import { selectEffectiveTool, useToolStore } from '@/store/tool-store'
 import { ContextMenu } from './context-menu'
 import { DragOverlays } from './drag-overlays'
 import { GridBackground } from './grid-background'
-import { LaserPointerOverlay } from './laser-pointer-overlay'
 import { PresentationFramePicker } from './presentation-frame-picker'
-import { PresentationInkOverlay } from './presentation-ink-overlay'
 import { PresentationOverlay } from './presentation-overlay'
 import { PresentationStage } from './presentation-stage'
 import { PreviewControls } from './preview-controls'
@@ -44,7 +38,6 @@ export function CanvasViewport() {
   const tool = useToolStore(selectEffectiveTool)
   const presenting = usePresentationStore(selectPresentationActive)
   const slideShow = usePresentationStore(selectSlideShowActive)
-  const annotationCursor = usePresentationAnnotationStore(selectAnnotationCursor)
   useViewportSize(ref)
   useWheelZoom(ref)
   useSwipeNavigation(ref)
@@ -69,7 +62,7 @@ export function CanvasViewport() {
       ref={ref}
       data-testid="canvas-viewport"
       className="relative h-full w-full overflow-hidden touch-none"
-      style={{ cursor: presenting ? annotationCursor : cursorByTool[tool] }}
+      style={{ cursor: presenting ? 'default' : cursorByTool[tool] }}
       onPointerDown={handlers.onPointerDown}
       onPointerMove={handlers.onPointerMove}
       onDoubleClick={handlers.onDoubleClick}
@@ -81,7 +74,6 @@ export function CanvasViewport() {
       <PresentationStage>
         <WorldLayer />
         <SpotlightOverlay />
-        <PresentationInkOverlay />
       </PresentationStage>
       <FrameChromeOverlay />
       <SelectionOverlay
@@ -91,8 +83,6 @@ export function CanvasViewport() {
       <DragOverlays />
       <PresentationFramePicker />
       <PresentationOverlay />
-      {/* Last, so the dot paints over the control bar: while pointing it is the cursor there too. */}
-      <LaserPointerOverlay />
       <PreviewControls />
       {!presenting && <ContextMenu />}
     </div>

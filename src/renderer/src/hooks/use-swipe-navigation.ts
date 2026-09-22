@@ -1,26 +1,23 @@
 import { useEffect, type RefObject } from 'react'
 import { bindSwipeNavigation } from '@shared/presentation/swipe-navigation'
-import { usePresentationStore } from '@/store/presentation-store'
+import { selectPreviewing, usePresentationStore } from '@/store/presentation-store'
 
-/**
- * Touch and pen swipes step a running slide show, through the same binder the exported player
- * uses. The canvas pointer session already ignores everything while presenting, so this never
- * competes with panning, selection or the tools.
- */
+/** Preview gestures stay in the editor; the shared experience owns slide-show gestures. */
 export function useSwipeNavigation(ref: RefObject<HTMLElement | null>): void {
+  const previewing = usePresentationStore(selectPreviewing)
   useEffect(() => {
     const node = ref.current
-    if (!node) {
+    if (!previewing || !node) {
       return
     }
     return bindSwipeNavigation(node, {
       isNavigable: () => {
         const presentation = usePresentationStore.getState()
-        return presentation.active && !presentation.overview
+        return presentation.active && presentation.previewFrameId !== null && !presentation.overview
       },
       next: () => usePresentationStore.getState().next(),
       previous: () => usePresentationStore.getState().previous(),
       chromeSelector: '[data-canvas-ui]'
     })
-  }, [ref])
+  }, [ref, previewing])
 }

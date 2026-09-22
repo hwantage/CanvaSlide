@@ -145,6 +145,19 @@ describe('bindSwipeNavigation', () => {
     expect(h.next).not.toHaveBeenCalled()
   })
 
+  it('forgets a gesture after blur or a release outside its surface', () => {
+    for (const outside of [false, true]) {
+      h.press('pointerdown', { clientX: 300, clientY: 400, time: 1000 })
+      if (outside) {
+        window.dispatchEvent(pointer('pointerup', { clientX: 80, clientY: 400, time: 1180 }))
+      } else {
+        window.dispatchEvent(new Event('blur'))
+      }
+      h.press('pointerup', { clientX: 80, clientY: 400, time: 1180 })
+      expect(h.next).not.toHaveBeenCalled()
+    }
+  })
+
   it('only answers the release of the pointer that started the gesture', () => {
     h.press('pointerdown', { clientX: 300, clientY: 400, time: 1000 })
     h.press('pointerup', { pointerId: 9, clientX: 80, clientY: 400, time: 1180 })

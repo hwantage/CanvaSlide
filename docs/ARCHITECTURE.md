@@ -52,6 +52,37 @@ This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`).
   timing travel with the file. Keep platform shortcuts and labels in
   [`platform-keys.ts`](../src/renderer/src/lib/platform-keys.ts).
 
+## Shared presentation experience
+
+[`mountPresentationExperience`](../src/shared/presentation/presentation-experience.ts) owns the control
+DOM, SVG icons, keyboard commands, swipe ownership, auto-hide, laser and ink lifetime in the editor
+slideshow, cloud viewer and standalone HTML. Host adapters supply state/view subscriptions, labels and
+optional exit. Camera notifications follow existing animation/shot updates; there is no extra camera loop.
+Label updates preserve the session. View snapshots are refreshed by camera notifications, so drawing
+does not read layout on every pointer sample; the app caches ordered frames until its document changes.
+Pure command, annotation and auto-hide policy lives in `shared/canvas`; DOM bindings and CSS live in
+`shared/presentation`. The React adapter is [`PresentationOverlay`](../src/renderer/src/components/canvas/presentation-overlay.tsx).
+
+Ink points stay in world coordinates in a session painter, with screen-width strokes; laser positions
+stay in viewport coordinates. Pointer movement updates DOM directly, without React renders or document
+store writes. Changing frame identity, erasing or ending the session clears ink; overview on the same
+frame and disabling the pointer preserve it. Controls and media own their gestures, and drawing disables
+swipe navigation. The compact tool disclosure holds chrome open and restores focus when closed.
+Slide clicks, taps and drawing leave hidden controls hidden; bottom-edge movement or touch and Tab
+reveal them, keeping the tools reachable without interrupting presentation content.
+Escape closes tools, then leaves overview, then exits only when an editor exists.
+P/E/O also resolve physical letter keys with Korean/IME input on the presentation surface.
+Editable content, dialogs and media retain their keys; IME confirmation/cancellation never navigates.
+
+Shared light tokens and presentation CSS are imported by the app and inlined by the player. App theme
+and localization remain device preferences; HTML stays light and English. Exports embed the runtime at
+creation, so previously distributed HTML needs regeneration. Temporary ink is never serialized.
+[`presentation-contract.spec.ts`](../tests/e2e/presentation-contract.spec.ts) runs the same contract
+against the app and an actual downloaded HTML opened over `file://`, including default cross-browser
+core input, compact controls, camera/roll and maximum-zoom ink. Build output includes an ignored
+`player.modules.json` report; the [module boundary](../config/scripts/player-module-boundary.mjs)
+rejects packages, renderer code and schema runtime before the built-byte budget check.
+
 ## Document formats
 
 A `.canvaslide` file is readable UTF-8 JSON with `version: 1` before and after Save. The file and

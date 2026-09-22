@@ -1,13 +1,10 @@
 :root {
+  color-scheme: light;
   --video-backdrop: #000000;
   --canvas: #f7f7f8;
   --selection: #2563eb;
   --frame-stroke: #a1a1aa;
   --frame-label: #52525b;
-  --popover: rgba(255, 255, 255, 0.92);
-  --popover-fg: #18181b;
-  --border: #e4e4e7;
-  --muted-fg: #71717a;
   font-family:
     ui-sans-serif,
     system-ui,
@@ -159,66 +156,11 @@ body {
 .uc-overview .uc-frame:hover .uc-frame-label b {
   background: var(--selection);
 }
-.uc-nav {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 16px;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-.uc-nav-bar {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--popover);
-  color: var(--popover-fg);
-  padding: 4px 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(8px);
-}
-.uc-nav-bar button {
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 16px;
-  cursor: pointer;
-}
-.uc-nav-bar button:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-.uc-nav-bar button[aria-pressed='true'] {
-  background: var(--popover-fg);
-  color: #fff;
-}
-.uc-nav-bar button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.uc-counter {
-  min-width: 96px;
-  padding: 0 8px;
-  text-align: center;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.uc-counter span {
-  margin-left: 8px;
-  color: var(--muted-fg);
-}
 .uc-empty {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--muted-fg);
+  color: var(--muted-foreground);
   font-size: 14px;
 }

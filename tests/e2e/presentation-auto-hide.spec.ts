@@ -65,6 +65,8 @@ test('the control bar leaves once the pointer rests and the bottom edge brings i
   // Tab is the keyboard's way back to a bar it can no longer reach.
   await page.keyboard.press('Tab')
   await expect(controls(page)).toBeVisible()
+  await expect(controls(page).getByRole('button', { name: /^Overview/ })).toBeFocused()
+  await page.mouse.click(200, 200)
   await expect(controls(page)).toBeHidden({ timeout: HIDE_TIMEOUT })
 
   const { width, height } = page.viewportSize()!

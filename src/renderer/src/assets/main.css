@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import './brand.css';
+@import '../../../shared/presentation/presentation-tokens.css';
+@import '../../../shared/presentation/presentation.css';
 
 [data-modal-pointer-focus]:focus-visible {
   outline: none;
@@ -15,21 +17,13 @@
   --foreground: #18181b;
   --card: #ffffff;
   --card-foreground: #18181b;
-  --popover: #ffffff;
-  --popover-foreground: #18181b;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
   --accent-foreground: #18181b;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #e4e4e7;
   --input: #e4e4e7;
-  --ring: #2563eb;
   --canvas: #f7f7f8;
   --canvas-grid: #d4d4d8;
   /* Why: continuous lines read much heavier than dots; keep them barely visible. */
@@ -41,16 +35,7 @@
   --frame-label: #52525b;
   --snap: #ef4444;
   --frame-selected: #ec4899;
-  /* Why: annotations paint over slide content rather than chrome, so one set of values reads in
-     both themes; red is what an audience already takes for "the presenter is pointing". */
-  --laser: #ff3b30;
-  --laser-core: #fff5f4;
-  --laser-glow: rgb(255 59 48 / 0.45);
-  --ink: #ff3b30;
   --radius: 0.5rem;
-  /* One pace for chrome that shows and hides itself, so nothing races anything else off screen. */
-  --chrome-fade-ms: 200ms;
-  --chrome-fade-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root[data-theme='dark'] {
@@ -147,21 +132,6 @@ select {
   font: inherit;
 }
 
-/* Why: no transition — a dot that eases toward the cursor reads as lag, not as a steady hand. */
-.laser-pointer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, var(--laser-core) 0%, var(--laser) 40%, transparent 72%);
-  box-shadow: 0 0 18px 6px var(--laser-glow);
-  pointer-events: none;
-  will-change: transform;
-}
-
 .canvas-text-editor {
   outline: none;
   user-select: text;
@@ -175,28 +145,6 @@ select {
   pointer-events: none;
 }
 
-/* Why: the slide show's bar leaves the screen between uses. The move is `transform`, which the
-   compact layout's `translate` override and Tailwind's translate utilities leave alone. */
-.presentation-chrome {
-  transition:
-    transform var(--chrome-fade-ms) var(--chrome-fade-ease),
-    opacity var(--chrome-fade-ms) var(--chrome-fade-ease),
-    visibility var(--chrome-fade-ms) var(--chrome-fade-ease);
-}
-.presentation-chrome[data-hidden='true'] {
-  /* Past the bottom edge: its own height plus the `bottom-4` the wrapper holds it off the floor. */
-  transform: translateY(calc(100% + var(--spacing) * 4));
-  opacity: 0;
-  /* Why: opacity alone would leave the buttons clickable and in the tab order under the slide. */
-  visibility: hidden;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .presentation-chrome {
-    transition: none;
-  }
-}
-
 @media (max-width: 1100px) {
   .editor-top-bar {
     min-height: 52px;
@@ -206,7 +154,6 @@ select {
   .editor-top-bar button,
   .editor-tool-bar button,
   .editor-zoom-controls button,
-  [data-testid='presentation-controls'] button,
   [data-testid='preview-controls'] button {
     min-width: 44px;
     min-height: 44px;
@@ -264,13 +211,6 @@ select {
   }
   dialog button {
     min-height: 44px;
-  }
-  [data-testid='presentation-controls'] {
-    max-width: calc(100% - 16px);
-    translate: -50% 0;
-  }
-  [data-testid='presentation-counter'] {
-    white-space: nowrap;
   }
   [data-testid='preview-controls'] {
     top: 116px;

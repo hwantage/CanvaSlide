@@ -24,14 +24,20 @@ test('accepts the exact raw limit and reports gzip without using it as the budge
     gzip: gzipSync(source).length
   })
   writeFileSync(artifact, Buffer.alloc(MAX_PLAYER_BYTES + 1, 'a'))
-  assert.throws(() => checkPlayerSize(artifact), /50001 B raw > 50000 B limit/)
+  assert.throws(
+    () => checkPlayerSize(artifact),
+    new RegExp(`${MAX_PLAYER_BYTES + 1} B raw > ${MAX_PLAYER_BYTES} B limit`)
+  )
 })
 
 test('counts encoded bytes, not JavaScript string length', () => {
   const source = '가'.repeat(Math.floor(MAX_PLAYER_BYTES / 3) + 1)
   assert.ok(source.length < MAX_PLAYER_BYTES)
   writeFileSync(artifact, source)
-  assert.throws(() => checkPlayerSize(artifact), /50001 B raw > 50000 B limit/)
+  assert.throws(
+    () => checkPlayerSize(artifact),
+    new RegExp(`${Buffer.byteLength(source)} B raw > ${MAX_PLAYER_BYTES} B limit`)
+  )
 })
 
 test('missing and empty artifacts fail instead of reporting a zero-byte success', () => {
@@ -58,5 +64,8 @@ test('CLI resolves its own checkout from another cwd and exits nonzero for every
   writeFileSync(artifact, '(() => {})()')
   const result = run()
   assert.equal(result.status, 0, result.stderr)
-  assert.match(result.stdout, /12 B raw \/ 50000 B limit; \d+ B gzip \(report only\)/)
+  assert.match(
+    result.stdout,
+    new RegExp(`12 B raw / ${MAX_PLAYER_BYTES} B limit; \\d+ B gzip \\(report only\\)`)
+  )
 })

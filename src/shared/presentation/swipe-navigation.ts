@@ -1,8 +1,5 @@
-import {
-  SWIPE_INTERACTIVE_SELECTOR,
-  presentationSwipeAction,
-  type SwipePoint
-} from '../canvas/presentation-swipe'
+import { presentationSwipeAction, type SwipePoint } from '../canvas/presentation-swipe'
+import { ownsPresentationPointer } from './presentation-input'
 
 /** What a surface must tell the binder to take swipes; the app and the player both supply it. */
 export type SwipeNavigation = {
@@ -24,18 +21,23 @@ function point(event: PointerEvent): SwipePoint {
  * so the exported HTML and the app cannot drift apart. Returns a disposer.
  */
 export function bindSwipeNavigation(node: HTMLElement, navigation: SwipeNavigation): () => void {
-  const owned = `${navigation.chromeSelector}, ${SWIPE_INTERACTIVE_SELECTOR}`
   let start: { pointerId: number; at: SwipePoint } | null = null
 
   const owns = (target: EventTarget | null) =>
-    target instanceof Element && target.closest(owned) !== null
+    ownsPresentationPointer(target) ||
+    (target instanceof Element && target.closest(navigation.chromeSelector) !== null)
 
   const onPointerDown = (event: PointerEvent) => {
     if (event.pointerType === 'mouse') {
       return
     }
     // Why: a second finger is a pinch, and chrome or slide content keeps its own gestures.
-    if (!event.isPrimary || !navigation.isNavigable() || owns(event.target)) {
+    if (
+      event.defaultPrevented ||
+      !event.isPrimary ||
+      !navigation.isNavigable() ||
+      owns(event.target)
+    ) {
       start = null
       return
     }
@@ -63,14 +65,20 @@ export function bindSwipeNavigation(node: HTMLElement, navigation: SwipeNavigati
     }
   }
 
-  const onPointerUp = (event: PointerEvent) => release(event, true)
+  const onPointerUp = (event: PointerEvent) =>
+    release(event, event.target instanceof Node && node.contains(event.target))
+  const onBlur = () => {
+    start = null
+  }
   const onPointerCancel = (event: PointerEvent) => release(event, false)
   node.addEventListener('pointerdown', onPointerDown)
-  node.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('blur', onBlur)
   node.addEventListener('pointercancel', onPointerCancel)
   return () => {
     node.removeEventListener('pointerdown', onPointerDown)
-    node.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('blur', onBlur)
     node.removeEventListener('pointercancel', onPointerCancel)
   }
 }

@@ -1,5 +1,5 @@
-import type { Point } from '@shared/canvas/element-types'
-import { inkPathData, shouldAppendInkPoint } from '@shared/canvas/presentation-ink'
+import type { Point } from '../canvas/element-types'
+import { inkPathData, shouldAppendInkPoint } from '../canvas/presentation-ink'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 /** Screen px: `non-scaling-stroke` keeps the nib that width however far the camera flies. */
@@ -44,8 +44,11 @@ export function createInkPainter(group: SVGGElement): InkPainter {
         return
       }
       drawing.points.push(point)
-      drawing.node ??= createNode()
-      drawing.node.setAttribute('d', inkPathData(drawing.points))
+      const path = inkPathData(drawing.points)
+      if (path) {
+        drawing.node ??= createNode()
+        drawing.node.setAttribute('d', path)
+      }
     },
     end: () => {
       drawing = null

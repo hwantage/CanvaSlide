@@ -99,6 +99,12 @@ export function PresentationInkOverlay() {
       painterRef.current?.begin(worldAt(event))
       event.preventDefault()
     }
+    const sample = (event: PointerEvent) =>
+      painterRef.current?.extend(
+        worldAt(event),
+        inkPointSpacing(useCameraStore.getState().camera.zoom)
+      )
+    /** Ends the stroke where it already reached. Used wherever the release point is not known. */
     const finish = () => {
       drawing = -1
       painterRef.current?.end()
@@ -109,16 +115,24 @@ export function PresentationInkOverlay() {
       }
       // Why: a release outside the window sends no pointerup, and the stroke would latch onto the
       // cursor. The editor's own pointer session guards the same case (see use-canvas-interaction).
+      // The cursor has travelled since that release, so this position is not part of the stroke.
       if ((event.buttons & 1) === 0) {
         finish()
         return
       }
-      painterRef.current?.extend(
-        worldAt(event),
-        inkPointSpacing(useCameraStore.getState().camera.zoom)
-      )
+      sample(event)
     }
     const onUp = (event: PointerEvent) => {
+      if (event.pointerId !== drawing) {
+        return
+      }
+      // Why: the release carries a position a move may never have reported — without it a short
+      // drag can draw nothing at all, and a longer one stops short of where the hand let go.
+      sample(event)
+      finish()
+    }
+    // A cancelled pointer has no release position, so it must not extend the stroke.
+    const onCancel = (event: PointerEvent) => {
       if (event.pointerId === drawing) {
         finish()
       }
@@ -126,14 +140,14 @@ export function PresentationInkOverlay() {
     window.addEventListener('pointerdown', onDown, true)
     window.addEventListener('pointermove', onMove, true)
     window.addEventListener('pointerup', onUp, true)
-    window.addEventListener('pointercancel', onUp, true)
+    window.addEventListener('pointercancel', onCancel, true)
     window.addEventListener('blur', finish)
     return () => {
       finish()
       window.removeEventListener('pointerdown', onDown, true)
       window.removeEventListener('pointermove', onMove, true)
       window.removeEventListener('pointerup', onUp, true)
-      window.removeEventListener('pointercancel', onUp, true)
+      window.removeEventListener('pointercancel', onCancel, true)
       window.removeEventListener('blur', finish)
     }
   }, [active, armed])

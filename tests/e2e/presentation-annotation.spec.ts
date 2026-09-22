@@ -273,3 +273,46 @@ test('a release the page never sees does not latch the stroke to the cursor', as
   await expect(strokes(page)).toHaveCount(1)
   await page.mouse.up()
 })
+
+test('a drag whose release no move reported still draws, and a cancel does not', async ({
+  page
+}) => {
+  await openDeck(page)
+  await startShow(page)
+  await page.keyboard.press('p')
+  const box = (await page.getByTestId('canvas-viewport').boundingBox())!
+  const at = (type: string, x: number, y: number) =>
+    page.evaluate(
+      ({ type, x, y }) =>
+        window.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: 1,
+            isPrimary: true,
+            buttons: type === 'pointerup' ? 0 : 1,
+            clientX: x,
+            clientY: y,
+            bubbles: true
+          })
+        ),
+      { type, x, y }
+    )
+
+  // Press and release 90px apart with no pointermove in between: the release is the whole stroke.
+  await page.mouse.move(box.x + 300, box.y + 300)
+  await page.mouse.down()
+  await at('pointerup', box.x + 390, box.y + 300)
+  await expect(strokes(page)).toHaveCount(1)
+  expect(await strokes(page).first().getAttribute('d')).toMatch(
+    /^M[\d.-]+,[\d.-]+L[\d.-]+,[\d.-]+$/
+  )
+  await page.mouse.up()
+  await page.keyboard.press('e')
+  await expect(strokes(page)).toHaveCount(0)
+
+  // A cancelled pointer has no release position, so it must not reach for one.
+  await page.mouse.move(box.x + 300, box.y + 400)
+  await page.mouse.down()
+  await at('pointercancel', box.x + 390, box.y + 400)
+  await expect(strokes(page)).toHaveCount(0)
+  await page.mouse.up()
+})

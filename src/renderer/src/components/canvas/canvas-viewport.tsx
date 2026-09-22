@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { trackCanvasPastePointer } from '@/lib/canvas-paste-pointer'
 import { useCanvasInteraction } from '@/hooks/use-canvas-interaction'
 import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
+import { useSwipeNavigation } from '@/hooks/use-swipe-navigation'
 import { useWheelZoom } from '@/hooks/use-wheel-zoom'
 import {
   selectPresentationActive,
@@ -39,6 +40,7 @@ export function CanvasViewport() {
   const slideShow = usePresentationStore(selectSlideShowActive)
   useViewportSize(ref)
   useWheelZoom(ref)
+  useSwipeNavigation(ref)
   const handlers = useCanvasInteraction(ref)
 
   useEffect(() => {

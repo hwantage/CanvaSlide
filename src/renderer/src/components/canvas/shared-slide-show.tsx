@@ -4,6 +4,7 @@ import { presentationKeyAction } from '@shared/canvas/presentation-keys'
 import { useCloseGuard } from '@/hooks/use-close-guard'
 import { useWindowTitle } from '@/hooks/use-document-commands'
 import { useSystemTheme } from '@/hooks/use-system-theme'
+import { useSwipeNavigation } from '@/hooks/use-swipe-navigation'
 import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { t } from '@/i18n/ui-strings'
 import { preventPageContextMenu } from '@/lib/native-context-menu'
@@ -24,6 +25,7 @@ export function SharedSlideShow({ document }: { document: CanvasDocument }) {
   const ref = useRef<HTMLDivElement>(null)
   const locale = useLanguageStore(selectLocale)
   useViewportSize(ref)
+  useSwipeNavigation(ref)
   useWindowTitle()
   useCloseGuard()
   useSystemTheme()

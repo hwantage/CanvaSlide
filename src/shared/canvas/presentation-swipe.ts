@@ -14,7 +14,8 @@ export const SWIPE_HORIZONTAL_RATIO = 1.5
  * Elements that own their own gestures: a swipe starting here belongs to them, never to the deck.
  * Both surfaces add their own chrome selector (the player's nav bar, the app's canvas UI).
  */
-export const SWIPE_INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, video, iframe'
+export const SWIPE_INTERACTIVE_SELECTOR =
+  'a, button, input, select, textarea, video, iframe, [contenteditable]:not([contenteditable="false"])'
 
 /**
  * Maps one finished pointer gesture onto a navigation step. Only a short horizontal flick counts;

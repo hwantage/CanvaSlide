@@ -29,7 +29,11 @@ function harness() {
   const chrome = document.createElement('div')
   chrome.className = 'chrome'
   const button = document.createElement('button')
-  node.append(chrome, button)
+  const editor = document.createElement('div')
+  editor.setAttribute('contenteditable', 'true')
+  const label = document.createElement('div')
+  label.setAttribute('contenteditable', 'false')
+  node.append(chrome, button, editor, label)
   document.body.append(node)
   const next = vi.fn(() => {})
   const previous = vi.fn(() => {})
@@ -44,6 +48,8 @@ function harness() {
     node,
     chrome,
     button,
+    editor,
+    label,
     next,
     previous,
     dispose,
@@ -110,6 +116,14 @@ describe('bindSwipeNavigation', () => {
     h.flick({ from: h.chrome })
     h.flick({ from: h.button })
     expect(h.next).not.toHaveBeenCalled()
+  })
+
+  it('leaves an editable surface alone, so selecting text cannot turn the page', () => {
+    h.flick({ from: h.editor })
+    expect(h.next).not.toHaveBeenCalled()
+    // Why: contenteditable="false" is ordinary content, and still swipes.
+    h.flick({ from: h.label })
+    expect(h.next).toHaveBeenCalledOnce()
   })
 
   it('does nothing while the surface is not navigable', () => {

@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { expect, test, type CDPSession, type Page } from '@playwright/test'
+import { expect, test, type CDPSession, type Locator, type Page } from '@playwright/test'
 import { createEmptyDocument, type CanvasDocument } from '../../src/shared/canvas/element-types'
 import { buildStandaloneHtml } from '../../src/shared/canvas/html-export'
 import { primaryModifier } from './canvas-gestures'
@@ -54,6 +54,22 @@ async function swipe(cdp: CDPSession, from: Point, to: Point): Promise<void> {
   await touch(cdp, 'touchEnd', [])
 }
 
+/**
+ * Why: every touch here goes through this one CDP session. Mixing it with Playwright's own
+ * touchscreen leaves a tap that follows a swipe unhandled on Linux, which would quietly turn the
+ * "a tap does nothing" assertions into assertions about a lost event.
+ */
+async function tap(cdp: CDPSession, at: Point): Promise<void> {
+  await touch(cdp, 'touchStart', [at])
+  await touch(cdp, 'touchEnd', [])
+}
+
+async function tapCentre(cdp: CDPSession, locator: Locator): Promise<void> {
+  await locator.waitFor({ state: 'visible' })
+  const box = (await locator.boundingBox())!
+  await tap(cdp, [box.x + box.width / 2, box.y + box.height / 2])
+}
+
 const counterOf = (page: Page) => page.getByTestId('presentation-counter')
 
 /** The same gesture contract on every surface: the export must not drift from the app. */
@@ -67,9 +83,9 @@ async function assertSwipeContract(page: Page, cdp: CDPSession) {
   await expect(counter).toContainText('1 / 3')
 
   // A tap belongs to the slide, so content interactions never advance the deck.
-  await page.touchscreen.tap(20, MID_Y)
-  await page.touchscreen.tap(PHONE.width - 20, MID_Y)
-  await page.touchscreen.tap(PHONE.width / 2, MID_Y)
+  await tap(cdp, [20, MID_Y])
+  await tap(cdp, [PHONE.width - 20, MID_Y])
+  await tap(cdp, [PHONE.width / 2, MID_Y])
   await expect(counter).toContainText('1 / 3')
 
   // A gesture the reader is still shaping: past the flick window, so it is not navigation.
@@ -128,19 +144,17 @@ test.describe('presentation swipe navigation', () => {
     const nav = page.getByRole('button', { name: 'Next frame (→)' })
     const box = (await nav.boundingBox())!
     const onBar: Point = [box.x + box.width / 2, box.y + box.height / 2]
-    await page.touchscreen.tap(...onBar)
+    await tap(cdp, onBar)
     await expect(counterOf(page)).toContainText('3 / 3')
     await swipe(cdp, onBar, [40, onBar[1]])
     await expect(counterOf(page)).toContainText('3 / 3')
 
     // The overview maps taps to frames; a flick must not steal them.
-    await page.getByRole('button', { name: 'Overview (O)' }).tap()
+    await tapCentre(cdp, page.getByRole('button', { name: 'Overview (O)' }))
     await expect(page.locator('.uc-overview')).toHaveCount(1)
     await swipe(cdp, [300, MID_Y], [80, MID_Y])
     await expect(page.locator('.uc-overview')).toHaveCount(1)
-    const frame = page.locator('.uc-frame').first()
-    const frameBox = (await frame.boundingBox())!
-    await page.touchscreen.tap(frameBox.x + frameBox.width / 2, frameBox.y + frameBox.height / 2)
+    await tapCentre(cdp, page.locator('.uc-frame').first())
     await expect(counterOf(page)).toContainText('1 / 3')
     await expect(page.locator('.uc-overview')).toHaveCount(0)
   })
@@ -158,10 +172,11 @@ test.describe('presentation swipe navigation', () => {
     await assertSwipeContract(page, cdp)
 
     // The overview picker owns its taps here too.
-    await page.getByRole('button', { name: /Overview/ }).tap()
-    await swipe(cdp, [300, MID_Y], [80, MID_Y])
+    await tapCentre(cdp, page.getByRole('button', { name: /Overview/ }))
     await expect(page.getByTestId('overview-frame')).toHaveCount(3)
-    await page.getByTestId('overview-frame').last().tap()
+    await swipe(cdp, [300, MID_Y], [80, MID_Y])
+    await expect(counterOf(page)).toContainText('2 / 3')
+    await tapCentre(cdp, page.getByTestId('overview-frame').last())
     await expect(counterOf(page)).toContainText('3 / 3')
   })
 

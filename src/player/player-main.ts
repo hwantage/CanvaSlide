@@ -2,6 +2,7 @@ import css from './player.css?inline'
 import videoCss from '@shared/media/linked-video.css?inline'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { presentationKeyAction } from '@shared/canvas/presentation-keys'
+import { bindSwipeNavigation } from '@shared/presentation/swipe-navigation'
 import { renderDocument } from './player-dom'
 import { createPlayerPresentation, type PlayerPresentation } from './player-presentation'
 
@@ -133,6 +134,13 @@ function mount(): void {
     viewport.append(empty)
   }
   bindKeyboard(presentation)
+  bindSwipeNavigation(viewport, {
+    // Why: the overview maps taps to frames itself, so a flick there is not a page turn.
+    isNavigable: () => !presentation.overview,
+    next: presentation.next,
+    previous: presentation.previous,
+    chromeSelector: '.uc-nav'
+  })
   new ResizeObserver(() => presentation.refit()).observe(viewport)
   presentation.start()
 }

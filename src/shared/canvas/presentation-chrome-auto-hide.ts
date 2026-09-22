@@ -16,12 +16,12 @@ export function inChromeHotZone(
 }
 
 /** Why the chrome is pinned open: the pointer rests on it, or the keyboard is inside it. */
-export type ChromeHold = 'pointer' | 'focus'
+export type ChromeHold = 'pointer' | 'focus' | 'menu'
 
 export type ChromeAutoHide = {
   /** The pointer moved to `y` in a viewport `viewportHeight` px tall. */
   pointerMovedTo: (y: number, viewportHeight: number) => void
-  /** A tap, a key press, or anything else that should put the chrome back on screen. */
+  /** An explicit keyboard request to put the chrome back on screen. */
   reveal: () => void
   hold: (reason: ChromeHold, held: boolean) => void
   dispose: () => void
@@ -32,7 +32,7 @@ type Options = { idleMs?: number; hotZonePx?: number }
 /**
  * Decides when a slide show's controls are on screen, the way a video player does: they leave once
  * the pointer has been still for `idleMs`, and come back when it reaches the bottom hot zone or the
- * audience taps. Movement elsewhere only restarts the idle wait, so pointing at the slide never
+ * keyboard requests them. Movement elsewhere only restarts the idle wait, so pointing at the slide never
  * pops the chrome up. While a hold is on — the pointer rests on the bar, or focus sits inside it —
  * no timer runs, so the bar cannot vanish under the cursor or strand the keyboard.
  */

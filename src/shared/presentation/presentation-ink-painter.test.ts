@@ -15,6 +15,15 @@ beforeEach(() => {
 afterEach(() => group.remove())
 
 describe('createInkPainter', () => {
+  it('does not turn a subpixel release into a zero-length WebKit cap', () => {
+    const painter = createInkPainter(group)
+    painter.begin({ x: 1, y: 2 })
+    painter.extend({ x: 1.001, y: 2.001 }, Number.EPSILON)
+    expect(paths()).toHaveLength(0)
+    painter.extend({ x: 2, y: 3 }, Number.EPSILON)
+    expect(paths()).toHaveLength(1)
+  })
+
   it('adds nothing at all for a press and release that never moved', () => {
     const painter = createInkPainter(group)
     painter.begin({ x: 0, y: 0 })

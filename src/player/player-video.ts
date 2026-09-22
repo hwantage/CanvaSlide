@@ -65,5 +65,13 @@ export function createPlayerVideos(
     }
   }
   show(null)
-  return { show }
+  return {
+    show,
+    dispose: () => {
+      for (const cleanup of cleanups.values()) {
+        cleanup()
+      }
+      cleanups.clear()
+    }
+  }
 }

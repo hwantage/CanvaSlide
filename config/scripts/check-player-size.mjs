@@ -6,8 +6,8 @@ const playerFile = fileURLToPath(
   new URL('../../src/renderer/src/generated/player.iife.js', import.meta.url)
 )
 
-// Raw bytes land in every exported HTML; leave room for player features without admitting Zod again.
-export const MAX_PLAYER_BYTES = 50_000
+// Includes shared presentation controls and annotations; validation/framework runtimes stay excluded.
+export const MAX_PLAYER_BYTES = 55_000
 
 export function checkPlayerSize(file = playerFile) {
   const source = readFileSync(file)

@@ -74,16 +74,15 @@ async function documentState(page: Page) {
         .filter((url) => url.includes(`/src/store/${name}.ts`))
         .at(-1)!
     const { useDocumentStore } = await import(storeUrl('document-store'))
-    const { usePresentationAnnotationStore } = await import(
-      storeUrl('presentation-annotation-store')
-    )
+    const { annotationSession } = await import(storeUrl('presentation-annotation-store'))
     const doc = useDocumentStore.getState()
     return {
+      document: doc.document,
       elements: doc.document.elements,
       past: doc.past.length,
       future: doc.future.length,
       dirty: doc.dirty,
-      pointing: usePresentationAnnotationStore.getState().pointing
+      pointing: annotationSession.getState().pointing
     }
   })
 }
@@ -112,6 +111,7 @@ test('ink drawn during a show paints, clears and never reaches the document @cor
   expect(await strokes(page).first().getAttribute('d')).toMatch(/^M[\d.-]/)
 
   const drawn = await documentState(page)
+  expect(drawn.document).toEqual(before.document)
   expect(drawn.elements).toEqual(before.elements)
   expect(drawn.past).toBe(0)
   expect(drawn.future).toBe(0)
@@ -149,6 +149,7 @@ test('ink drawn during a show paints, clears and never reaches the document @cor
   await expect(page.getByTestId('presentation-controls')).toHaveCount(0)
   await expect(page.getByTestId('presentation-ink')).toHaveCount(0)
   const after = await documentState(page)
+  expect(after.document).toEqual(before.document)
   expect(after.elements).toEqual(before.elements)
   expect(after.past).toBe(0)
   expect(after.future).toBe(0)

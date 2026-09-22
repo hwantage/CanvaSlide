@@ -69,7 +69,7 @@ describe('presentation chrome auto-hide', () => {
     expect(changed).toHaveBeenCalledTimes(3)
   })
 
-  it('reveals on a tap, which is all touch and pen have', () => {
+  it('reveals on an explicit keyboard request', () => {
     vi.useFakeTimers()
     const changed = vi.fn()
     const chrome = createChromeAutoHide(changed)

@@ -1,5 +1,5 @@
 import { MIN_ZOOM, screenToWorld } from './camera-transform'
-import type { Camera, Point, Rect, Size } from './element-types'
+import type { Camera, Point, Size } from './element-types'
 
 /**
  * Geometry for the temporary ink a presenter draws during a slide show. Strokes are world units so
@@ -36,7 +36,10 @@ const round = (value: number) => Math.round(value * 100) / 100
  */
 export function inkPathData(points: readonly Point[]): string {
   const first = points[0]
-  if (!first || points.length === 1) {
+  if (
+    !first ||
+    !points.some((point) => round(point.x) !== round(first.x) || round(point.y) !== round(first.y))
+  ) {
     return ''
   }
   let data = `M${round(first.x)},${round(first.y)}`
@@ -58,17 +61,6 @@ function rotateAround(point: Point, center: Point, degrees: number): Point {
   const x = point.x - center.x
   const y = point.y - center.y
   return { x: center.x + x * cos - y * sin, y: center.y + x * sin + y * cos }
-}
-
-/**
- * Where the viewport's top-left sits in client coordinates, read off the presentation stage. The
- * stage fills the viewport and rolls about its own centre, so its box grows but its centre holds.
- */
-export function viewportOriginFromStage(stageBox: Rect, viewport: Size): Point {
-  return {
-    x: stageBox.x + stageBox.width / 2 - viewport.width / 2,
-    y: stageBox.y + stageBox.height / 2 - viewport.height / 2
-  }
 }
 
 /**

@@ -1,0 +1,165 @@
+.presentation-chrome {
+  --presentation-target-size: 28px;
+  --presentation-target-padding: 0px;
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 30;
+  bottom: 16px;
+  left: calc(50% - var(--presentation-target-size) * 2 - 13px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  height: 36px;
+  max-width: calc(50% + var(--presentation-target-size) * 2 - 3px);
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  pointer-events: auto;
+  transition:
+    transform var(--chrome-fade-ms) var(--chrome-fade-ease),
+    opacity var(--chrome-fade-ms) var(--chrome-fade-ease);
+}
+.presentation-chrome[data-hidden='true'] {
+  transition-property: transform, opacity, visibility;
+  transform: translateY(calc(100% + 16px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.presentation-chrome button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--presentation-target-size);
+  width: var(--presentation-target-size);
+  height: var(--presentation-target-size);
+  padding: var(--presentation-target-padding);
+  border: 0;
+  border-radius: calc(6px + var(--presentation-target-padding));
+  background: transparent;
+  background-clip: content-box;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.presentation-chrome button:hover {
+  background-color: var(--accent);
+}
+.presentation-chrome button[aria-pressed='true'] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.presentation-chrome button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.presentation-chrome button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.presentation-counter {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.presentation-frame-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted-foreground);
+}
+.presentation-tool-group {
+  display: flex;
+  gap: 4px;
+}
+.presentation-chrome .presentation-tools-toggle {
+  display: none;
+}
+.presentation-ink,
+.presentation-laser-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.presentation-ink {
+  z-index: 20;
+  overflow: visible;
+}
+.presentation-laser-layer {
+  z-index: 40;
+  overflow: hidden;
+}
+[data-presentation-pointing='true'] {
+  cursor: none !important;
+}
+/* A laser follows the hand without an easing delay. */
+.laser-pointer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--laser-core) 0%, var(--laser) 40%, transparent 72%);
+  box-shadow: 0 0 18px 6px var(--laser-glow);
+  pointer-events: none;
+  will-change: transform;
+}
+@media (max-width: 900px) {
+  .presentation-chrome {
+    left: 8px;
+    right: 8px;
+    margin-inline: auto;
+    max-width: calc(100% - 16px);
+  }
+}
+@media (max-width: 720px), (any-pointer: coarse) {
+  .presentation-chrome {
+    --presentation-target-size: 44px;
+    --presentation-target-padding: 8px;
+  }
+}
+@media (max-width: 720px) {
+  .presentation-chrome .presentation-tools-toggle {
+    display: inline-flex;
+  }
+  .presentation-tool-group {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--popover);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  }
+  .presentation-chrome[data-tools-open='true'] .presentation-tool-group {
+    display: flex;
+  }
+}
+@media (max-width: 480px) {
+  .presentation-frame-name {
+    display: none;
+  }
+  .presentation-counter {
+    gap: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presentation-chrome {
+    transition: none;
+  }
+}

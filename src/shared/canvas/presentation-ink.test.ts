@@ -5,8 +5,7 @@ import {
   inkPathData,
   inkPointSpacing,
   presentationWorldPoint,
-  shouldAppendInkPoint,
-  viewportOriginFromStage
+  shouldAppendInkPoint
 } from './presentation-ink'
 
 describe('inkPointSpacing', () => {
@@ -36,6 +35,15 @@ describe('shouldAppendInkPoint', () => {
 })
 
 describe('inkPathData', () => {
+  it('omits release samples that round to the initial point', () => {
+    expect(
+      inkPathData([
+        { x: 1, y: 2 },
+        { x: 1.001, y: 2.001 }
+      ])
+    ).toBe('')
+  })
+
   it('paints nothing until a stroke is a line, so a bare click leaves no mark', () => {
     expect(inkPathData([])).toBe('')
     expect(inkPathData([{ x: 4, y: 6 }])).toBe('')
@@ -68,25 +76,6 @@ describe('inkPathData', () => {
         { x: 3.456_78, y: 4.567_89 }
       ])
     ).toBe('M1.23,2.35L3.46,4.57')
-  })
-})
-
-describe('viewportOriginFromStage', () => {
-  it('reads the origin straight off a level stage', () => {
-    const viewport = { width: 800, height: 600 }
-    expect(viewportOriginFromStage({ x: 40, y: 90, width: 800, height: 600 }, viewport)).toEqual({
-      x: 40,
-      y: 90
-    })
-  })
-
-  it('recovers the origin from the grown box of a rolled stage', () => {
-    const viewport = { width: 800, height: 600 }
-    // A roll keeps the centre (440, 390) and only widens the box around it.
-    expect(viewportOriginFromStage({ x: 20, y: 30, width: 840, height: 720 }, viewport)).toEqual({
-      x: 40,
-      y: 90
-    })
   })
 })
 

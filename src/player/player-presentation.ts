@@ -37,6 +37,7 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
   let index = 0
   let overview = false
   const listeners = new Set<() => void>()
+  const viewListeners = new Set<() => void>()
 
   const viewportSize = (): Size => ({
     width: Math.max(1, mount.viewport.clientWidth),
@@ -52,6 +53,9 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
 
   const paintShot = () => {
     Object.assign(mount.stage.style, stageRollStyle(shot.roll))
+    for (const listener of viewListeners) {
+      listener()
+    }
     const mask = spotlightMaskPath(shot, camera, viewportSize())
     if (!mask) {
       mount.spotlight.style.display = 'none'
@@ -146,7 +150,26 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
       return frames.length
     },
     frames,
-    onChange: (listener: () => void) => listeners.add(listener),
+    getView: () => ({ camera, viewport: viewportSize(), roll: shot.roll }),
+    onViewChange: (listener: () => void) => {
+      viewListeners.add(listener)
+      return () => {
+        viewListeners.delete(listener)
+      }
+    },
+    onChange: (listener: () => void) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
+    },
+    dispose: () => {
+      flight++
+      animator.cancel()
+      videos.dispose()
+      listeners.clear()
+      viewListeners.clear()
+    },
     goTo: (i: number) => {
       if (i < 0 || i >= frames.length) {
         return
@@ -215,5 +238,3 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
   paint()
   return api
 }
-
-export type PlayerPresentation = ReturnType<typeof createPlayerPresentation>

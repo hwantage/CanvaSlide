@@ -1,10 +1,11 @@
 import css from './player.css?inline'
 import videoCss from '@shared/media/linked-video.css?inline'
 import type { CanvasDocument } from '@shared/canvas/element-types'
-import { presentationKeyAction } from '@shared/canvas/presentation-keys'
-import { bindSwipeNavigation } from '@shared/presentation/swipe-navigation'
+import presentationCss from '@shared/presentation/presentation.css?inline'
+import presentationTokens from '@shared/presentation/presentation-tokens.css?inline'
+import { mountPresentationExperience } from '@shared/presentation/presentation-experience'
 import { renderDocument } from './player-dom'
-import { createPlayerPresentation, type PlayerPresentation } from './player-presentation'
+import { createPlayerPresentation } from './player-presentation'
 
 /**
  * Standalone player entry. The exported HTML embeds the document as
@@ -19,72 +20,9 @@ function readDocument(): CanvasDocument {
   return JSON.parse(holder.textContent) as CanvasDocument
 }
 
-function buildNav(presentation: PlayerPresentation): HTMLElement {
-  const nav = document.createElement('div')
-  nav.className = 'uc-nav'
-  const bar = document.createElement('div')
-  bar.className = 'uc-nav-bar'
-  const button = (label: string, text: string, onClick: () => void) => {
-    const b = document.createElement('button')
-    b.type = 'button'
-    b.title = label
-    b.setAttribute('aria-label', label)
-    b.textContent = text
-    b.addEventListener('click', onClick)
-    return b
-  }
-  const overviewButton = button('Overview (O)', '▦', presentation.toggleOverview)
-  const prev = button('Previous frame (←)', '‹', presentation.previous)
-  const next = button('Next frame (→)', '›', presentation.next)
-  const counter = document.createElement('div')
-  counter.className = 'uc-counter'
-  counter.dataset.testid = 'presentation-counter'
-  const sync = () => {
-    const name = presentation.frames[presentation.index]?.name ?? ''
-    counter.textContent = `${presentation.index + 1} / ${presentation.count}`
-    const span = document.createElement('span')
-    span.textContent = name
-    counter.append(span)
-    prev.disabled = presentation.index === 0 && !presentation.overview
-    next.disabled = presentation.index >= presentation.count - 1 && !presentation.overview
-    overviewButton.setAttribute('aria-pressed', String(presentation.overview))
-  }
-  presentation.onChange(sync)
-  sync()
-  bar.append(overviewButton, prev, counter, next)
-  nav.append(bar)
-  return nav
-}
-
-function bindKeyboard(presentation: PlayerPresentation): void {
-  window.addEventListener('keydown', (event) => {
-    switch (presentationKeyAction(event.key)) {
-      case 'next':
-        presentation.next()
-        break
-      case 'previous':
-        presentation.previous()
-        break
-      case 'toggleOverview':
-        presentation.toggleOverview()
-        break
-      case 'escape':
-        // Why: there is no editor to go back to; Escape only leaves the overview.
-        if (presentation.overview) {
-          presentation.goTo(presentation.index)
-        }
-        break
-      // Why: the key map is shared with the editor; ignore the actions this player does not have.
-      default:
-        return
-    }
-    event.preventDefault()
-  })
-}
-
 function mount(): void {
   const style = document.createElement('style')
-  style.textContent = css + videoCss
+  style.textContent = presentationTokens + css + videoCss + presentationCss
   document.head.append(style)
 
   const doc = readDocument()
@@ -95,6 +33,7 @@ function mount(): void {
   viewport.dataset.testid = 'canvas-viewport'
   const stage = document.createElement('div')
   stage.className = 'uc-stage'
+  stage.dataset.testid = 'presentation-stage'
   const world = document.createElement('div')
   world.className = 'uc-world'
   world.dataset.testid = 'world-layer'
@@ -126,23 +65,53 @@ function mount(): void {
   for (const { node, index } of frameNodes) {
     node.addEventListener('click', () => presentation.goTo(index))
   }
+  let disposeExperience: (() => void) | undefined
   if (frameNodes.length > 0) {
-    viewport.append(buildNav(presentation))
+    disposeExperience = mountPresentationExperience(
+      viewport,
+      {
+        getState: () => ({
+          index: presentation.index,
+          count: presentation.count,
+          overview: presentation.overview,
+          frameId: presentation.frames[presentation.index]?.id ?? null,
+          name: presentation.frames[presentation.index]?.name ?? ''
+        }),
+        getView: presentation.getView,
+        subscribeState: presentation.onChange,
+        subscribeView: presentation.onViewChange,
+        next: presentation.next,
+        previous: presentation.previous,
+        toggleOverview: presentation.toggleOverview
+      },
+      {
+        controls: 'Slide Show',
+        toggleOverview: 'Overview (O)',
+        previous: 'Previous frame (←)',
+        next: 'Next frame (→)',
+        togglePointer: 'Laser pointer — drag to draw (P)',
+        clearInk: 'Erase all ink (E)',
+        tools: 'Tools',
+        exit: 'Exit presentation (Esc)'
+      }
+    ).dispose
   } else {
     const empty = document.createElement('div')
     empty.className = 'uc-empty'
     empty.textContent = 'This board has no presentation frames.'
     viewport.append(empty)
   }
-  bindKeyboard(presentation)
-  bindSwipeNavigation(viewport, {
-    // Why: the overview maps taps to frames itself, so a flick there is not a page turn.
-    isNavigable: () => !presentation.overview,
-    next: presentation.next,
-    previous: presentation.previous,
-    chromeSelector: '.uc-nav'
+  const resize = new ResizeObserver(() => presentation.refit())
+  resize.observe(viewport)
+  // A bfcache restore resumes the intact session; permanent page teardown releases every binding.
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted) {
+      return
+    }
+    resize.disconnect()
+    disposeExperience?.()
+    presentation.dispose()
   })
-  new ResizeObserver(() => presentation.refit()).observe(viewport)
   presentation.start()
 }
 

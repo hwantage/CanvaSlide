@@ -226,7 +226,14 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'slideshow',
         heading: 'site.docs.frames.presentHeading',
         body: 'site.docs.frames.presentBody',
-        params: { start: primary('Enter'), next: '→ / Space', previous: '←', escape: 'Esc' }
+        params: {
+          start: primary('Enter'),
+          next: '→ / Space',
+          previous: '←',
+          escape: 'Esc',
+          pointer: 'P',
+          erase: 'E'
+        }
       },
       {
         id: 'transition-timing',

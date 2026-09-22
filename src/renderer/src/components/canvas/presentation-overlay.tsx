@@ -1,80 +1,111 @@
-import { ChevronLeft, ChevronRight, LayoutGrid, X } from 'lucide-react'
+import { useLayoutEffect, useRef } from 'react'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
-import { IconButton } from '@/components/ui/icon-button'
-import { usePresentationChrome } from '@/hooks/use-presentation-chrome'
+import { mountPresentationExperience } from '@shared/presentation/presentation-experience'
 import { t } from '@/i18n/ui-strings'
-import { selectDocument, useDocumentStore } from '@/store/document-store'
-import { selectPreviewing, usePresentationStore } from '@/store/presentation-store'
-import { PresentationAnnotationControls } from './presentation-annotation-controls'
+import { useCameraStore } from '@/store/camera-store'
+import { useDocumentStore } from '@/store/document-store'
+import { selectLocale, useLanguageStore } from '@/store/language-store'
+import { isModalDialogOpen } from '@/store/modal-dialogs'
+import { annotationSession } from '@/store/presentation-annotation-store'
+import {
+  selectPresentationRoll,
+  selectSlideShowActive,
+  usePresentationStore
+} from '@/store/presentation-store'
+
+function presentationLabels() {
+  return {
+    controls: t('present.start'),
+    toggleOverview: `${t('present.overview')} (O)`,
+    previous: `${t('present.previous')} (←)`,
+    next: `${t('present.next')} (→)`,
+    togglePointer: `${t('present.pointer')} (P)`,
+    clearInk: `${t('present.clearInk')} (E)`,
+    tools: t('help.tools'),
+    exit: `${t('present.exit')} (Esc)`
+  }
+}
 
 export function PresentationOverlay({ allowExit = true }: { allowExit?: boolean }) {
-  const active = usePresentationStore((s) => s.active)
-  // Why: a preview is one flight long; nav controls would outlive it and invite a stray click.
-  const previewing = usePresentationStore(selectPreviewing)
-  const index = usePresentationStore((s) => s.index)
-  const next = usePresentationStore((s) => s.next)
-  const previous = usePresentationStore((s) => s.previous)
-  const exit = usePresentationStore((s) => s.exit)
-  const overview = usePresentationStore((s) => s.overview)
-  const toggleOverview = usePresentationStore((s) => s.toggleOverview)
-  const document = useDocumentStore(selectDocument)
-  const presenting = active && !previewing
-  const { visible, hold } = usePresentationChrome(presenting)
-  if (!presenting) {
-    return null
-  }
-  const frames = orderedFrames(document)
-  const current = frames[index]
-  return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-4">
-      {/* Why: anchors the arrow pair at the viewport centre; 19.5 spacing = px-2 + overview + gap + half the arrow pair, plus the 1px border. */}
-      <div
-        data-canvas-ui
-        data-testid="presentation-controls"
-        data-hidden={!visible}
-        onPointerEnter={() => hold('pointer', true)}
-        onPointerLeave={() => hold('pointer', false)}
-        onFocus={() => hold('focus', true)}
-        onBlur={() => hold('focus', false)}
-        className="presentation-chrome pointer-events-auto absolute bottom-0 left-1/2 flex -translate-x-[calc(var(--spacing)*19.5+1px)] items-center gap-1 rounded-full border border-border bg-popover/90 px-2 py-1 text-popover-foreground shadow-lg backdrop-blur"
-      >
-        <IconButton
-          label={`${t('present.overview')} (O)`}
-          active={overview}
-          onClick={toggleOverview}
-        >
-          <LayoutGrid size={16} />
-        </IconButton>
-        <IconButton
-          label={`${t('present.previous')} (←)`}
-          onClick={previous}
-          disabled={index === 0}
-        >
-          <ChevronLeft size={16} />
-        </IconButton>
-        <IconButton
-          label={`${t('present.next')} (→)`}
-          onClick={next}
-          disabled={index >= frames.length - 1}
-        >
-          <ChevronRight size={16} />
-        </IconButton>
-        <span
-          data-testid="presentation-counter"
-          className="flex min-w-0 items-center px-2 text-xs tabular-nums"
-        >
-          {index + 1} / {frames.length}
-          <span className="ml-2 max-w-48 truncate text-muted-foreground" title={current?.name}>
-            {current?.name}
-          </span>
-        </span>
-        <PresentationAnnotationControls />
-        {allowExit && (
-          <IconButton label={`${t('present.exit')} (Esc)`} onClick={exit}>
-            <X size={16} />
-          </IconButton>
-        )}
-      </div>
-    </div>
-  )
+  const ref = useRef<HTMLDivElement>(null)
+  const experience = useRef<ReturnType<typeof mountPresentationExperience> | null>(null)
+  const active = usePresentationStore(selectSlideShowActive)
+  const locale = useLanguageStore(selectLocale)
+  const documentSession = useDocumentStore((state) => state.session)
+  useLayoutEffect(() => {
+    const viewport = ref.current?.parentElement
+    if (!active || !viewport) {
+      return
+    }
+    let document = useDocumentStore.getState().document
+    let frames = orderedFrames(document)
+    const mounted = mountPresentationExperience(
+      viewport,
+      {
+        getState: () => {
+          const { index, overview } = usePresentationStore.getState()
+          const current = useDocumentStore.getState().document
+          if (current !== document) {
+            document = current
+            frames = orderedFrames(current)
+          }
+          return {
+            index,
+            overview,
+            count: frames.length,
+            frameId: frames[index]?.id ?? null,
+            name: frames[index]?.name ?? ''
+          }
+        },
+        getView: () => {
+          const { camera, viewport } = useCameraStore.getState()
+          return { camera, viewport, roll: selectPresentationRoll(usePresentationStore.getState()) }
+        },
+        subscribeState: (notify) => {
+          const presentation = usePresentationStore.subscribe((state, previous) => {
+            if (state.index !== previous.index || state.overview !== previous.overview) {
+              notify()
+            }
+          })
+          const document = useDocumentStore.subscribe((state, previous) => {
+            if (state.document !== previous.document) {
+              notify()
+            }
+          })
+          return () => {
+            presentation()
+            document()
+          }
+        },
+        subscribeView: (notify) => {
+          const camera = useCameraStore.subscribe(notify)
+          const roll = usePresentationStore.subscribe((state, previous) => {
+            if (state.roll !== previous.roll) {
+              notify()
+            }
+          })
+          return () => {
+            camera()
+            roll()
+          }
+        },
+        next: () => usePresentationStore.getState().next(),
+        previous: () => usePresentationStore.getState().previous(),
+        toggleOverview: () => usePresentationStore.getState().toggleOverview(),
+        exit: allowExit ? () => usePresentationStore.getState().exit() : undefined,
+        isInputBlocked: isModalDialogOpen
+      },
+      presentationLabels(),
+      annotationSession
+    )
+    experience.current = mounted
+    return () => {
+      mounted.dispose()
+      experience.current = null
+    }
+  }, [active, allowExit, documentSession])
+  useLayoutEffect(() => {
+    experience.current?.updateLabels(presentationLabels())
+  }, [locale])
+  return <div ref={ref} />
 }

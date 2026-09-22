@@ -1,6 +1,6 @@
 /**
  * What a key does inside a running slide show; the editor and the export player agree on it.
- * Renderers ignore the actions they do not implement, so this union can grow without breaking them.
+ * The shared presentation controller resolves supported commands for both hosts.
  */
 export type PresentationKeyAction =
   | 'next'
@@ -10,7 +10,27 @@ export type PresentationKeyAction =
   | 'togglePointer'
   | 'clearInk'
 
-export function presentationKeyAction(key: string): PresentationKeyAction | null {
+function letterCodeAction(code: string): PresentationKeyAction | null {
+  switch (code) {
+    case 'KeyP':
+      return 'togglePointer'
+    case 'KeyE':
+      return 'clearInk'
+    case 'KeyO':
+      return 'toggleOverview'
+    default:
+      return null
+  }
+}
+
+export function presentationKeyAction(
+  key: string,
+  { code = '', composing = false }: { code?: string; composing?: boolean } = {}
+): PresentationKeyAction | null {
+  // IMEs can report Process/229 even on the non-editable presentation surface.
+  if (composing) {
+    return letterCodeAction(code)
+  }
   switch (key) {
     case 'ArrowRight':
     case 'ArrowDown':
@@ -36,6 +56,6 @@ export function presentationKeyAction(key: string): PresentationKeyAction | null
     case 'Escape':
       return 'escape'
     default:
-      return null
+      return letterCodeAction(code)
   }
 }

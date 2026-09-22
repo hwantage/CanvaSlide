@@ -74,6 +74,45 @@ The full list is in [`AGENTS.md`](./AGENTS.md). The ones that most often come up
 - **Styling:** use design tokens from `src/renderer/src/assets/main.css`; no ad-hoc hex in components.
 - **Comments** explain _why_, one line, only when it is not obvious from the code.
 
+## Presentation Experience Across App and HTML Export
+
+Presentation features must work consistently in the desktop app, the browser editor's slide show,
+and newly exported HTML. Changes to shared presentation code must also preserve the cloud-share
+slide show. A presentation feature is complete when both the app and the standalone player support
+it; implementing only one and leaving the other for a follow-up is not the default contribution path.
+
+- **Ship both experiences in the same PR.** New or changed presentation controls, shortcuts,
+  navigation, auto-hide behavior, laser pointing, ink, and accessibility must be implemented and
+  verified in the app and HTML player together.
+- **Share the implementation.** Keep control definitions, icon geometry, state transitions,
+  input ownership, and presentation styling in shared modules. Framework adapters should connect
+  lifecycle, camera state, labels, and supported host actions; they should not own duplicate behavior.
+  Pure geometry and policy belong in `src/shared/canvas/`; shared DOM bindings, painters, and
+  presentation CSS belong in `src/shared/presentation/`.
+- **Keep runtime boundaries intact.** Shared presentation modules must not depend on React,
+  Zustand, Tauri, renderer-only imports, or app localization. The HTML player remains a single
+  self-contained file with inline styles and SVG icons, without an added framework, icon runtime,
+  or CDN dependency. Preserve the player dependency boundary and built-artifact size budget.
+  Existing externally linked media keep their documented provider and protocol requirements.
+- **Preserve temporary annotations.** Laser pointing and ink are presentation-session state, not
+  document edits. They must not change document contents, dirty state, undo history, or serialized
+  exports. Share their clearing, retention, coordinate, and pointer-cancellation rules across hosts.
+- **Keep controls usable across input methods.** Mouse, keyboard, touch, and pen must follow the
+  same input policy. Drawing must not also trigger swipe navigation. Hidden controls must not retain
+  keyboard focus, and compact layouts must keep the presentation tools reachable.
+- **Test the same behavior in both hosts.** Reuse presentation scenarios against the app and an
+  actual exported HTML opened locally. Cover focus and auto-hide, reduced motion, narrow viewports,
+  pointer/ink lifecycle, navigation, and input conflicts. Include core input coverage in Chromium,
+  Firefox, and WebKit, and record the native platforms actually checked in the PR.
+- **Document intentional differences.** The app uses its localized labels and appearance
+  preference; HTML uses English and its existing fixed light theme. Do not copy the author's app
+  theme into the document or switch the exported board using the viewer's color-scheme preference.
+  Return-to-editor controls exist only when an editor is available. These host differences do not
+  justify omitting presentation tools from HTML.
+
+An export embeds its player at creation time. Player changes apply to newly generated HTML;
+previously distributed files remain unchanged until they are regenerated and redistributed.
+
 ## Documentation and Temporary Files
 
 - Update the maintained documentation affected by the change; keep the English and Korean README

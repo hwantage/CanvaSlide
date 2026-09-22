@@ -671,7 +671,7 @@ Use the skill at {skill} to create the file.`,
     'Use the frame list to drag frames into order. Double-click a frame name to rename it. Start with an overview, then add close-ups, or try another order that fits your story.',
   'site.docs.frames.presentHeading': 'Present your canvas',
   'site.docs.frames.presentBody':
-    'Start with {start}. Advance with {next}; go back with {previous}. Press {escape} to leave the slideshow. The camera fits each frame into the window and animates the move between frames. The control bar leaves the screen while you present and comes back when the pointer reaches the bottom edge of the window.',
+    'Start with {start}. Advance with {next}; go back with {previous}. Press {escape} to close the tools, return from overview, or leave the slideshow. The camera fits each frame into the window and animates the move between frames. The control bar leaves the screen while you present and comes back when the pointer reaches the bottom edge of the window. The same controls and temporary ink are available in the app and new exports. Press {pointer} to point, drag to draw, and {erase} to erase. Small screens keep these actions in Tools. Ink stays when pointing stops or overview returns to the same frame; another frame or ending the show clears it. Ink is never saved in the document.',
   'site.docs.frames.timingHeading': 'Set the pace',
   'site.docs.frames.timingBody':
     'Open Settings with {settings} and adjust the transition duration from {range}. That is the document default, and every frame uses it until you give one its own: select a frame and the Camera section of the properties panel overrides the duration, easing, arc, roll and spotlight for the move into that frame. Set a duration to zero for an instant change.',
@@ -683,7 +683,7 @@ Use the skill at {skill} to create the file.`,
     'Open the export dialog with {export} and choose a format. {html} gives one self-contained file with your presentation and a built-in player, after you review the image quality options and estimated file size. {pdf} gives one page per frame in presentation order, each page shaped like its frame, at the page resolution you pick. Pages are rendered as images, so their text is not selectable and videos appear as a still.',
   'site.docs.sharing.playHeading': 'Open it anywhere you present',
   'site.docs.sharing.playBody':
-    'Open the exported file in a browser. Embedded content works offline, and the viewer does not need the desktop app. Linked videos need a network connection and may require HTTP(S) hosting. Use the player navigation or arrow keys, and open its overview to jump to a frame. The exported player interface is in English.',
+    'Open the exported file in a browser. Embedded content works offline, and the viewer does not need the desktop app. Linked videos need a network connection and may require HTTP(S) hosting. Use the player navigation or arrow keys, and open its overview to jump to a frame. HTML keeps its light theme and English interface, with the same auto-hiding controls, laser and ink tools. Existing distributed files need regeneration to receive player updates.',
   'site.docs.sharing.tip':
     'Keep the original canvas file if you want to edit later. Image-heavy presentations can make larger files; adjust export quality when sharing.',
   'site.docs.shortcuts.heading': 'A few keys go a long way.',

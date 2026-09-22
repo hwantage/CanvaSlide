@@ -358,7 +358,7 @@ test('slideshow controls keep the arrow pair centred whatever the frame name len
   const counter = page.getByTestId('presentation-counter')
   await expect(counter).toContainText('1 / 2')
   await expect(counter).toContainText('Quarterly business review and roadmap')
-  // Order: overview · previous · next · counter + name · exit.
+  // Order: overview · previous · next · counter + name · annotation tools · exit.
   const order = await bar
     .locator('button, [data-testid="presentation-counter"]')
     .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? el.dataset.testid))
@@ -367,6 +367,8 @@ test('slideshow controls keep the arrow pair centred whatever the frame name len
     'Previous frame (←)',
     'Next frame (→)',
     'presentation-counter',
+    'Laser pointer — drag to draw (P)',
+    'Erase all ink (E)',
     'Exit presentation (Esc)'
   ])
   const arrowCentre = async () => {

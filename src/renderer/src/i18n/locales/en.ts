@@ -326,6 +326,8 @@ Use the skill at {skill} to create the file.`,
   'present.previous': 'Previous frame',
   'present.next': 'Next frame',
   'present.exit': 'Exit presentation',
+  'present.pointer': 'Laser pointer — drag to draw',
+  'present.clearInk': 'Erase all ink',
 
   'align.left': 'Align left',
   'align.centerX': 'Align horizontal center',

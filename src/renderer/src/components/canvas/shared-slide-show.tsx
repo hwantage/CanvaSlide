@@ -11,9 +11,15 @@ import { hasPrimaryModifier } from '@/lib/platform-keys'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
+import {
+  selectAnnotationCursor,
+  usePresentationAnnotationStore
+} from '@/store/presentation-annotation-store'
 import { usePresentationStore } from '@/store/presentation-store'
 import { GridBackground } from './grid-background'
+import { LaserPointerOverlay } from './laser-pointer-overlay'
 import { PresentationFramePicker } from './presentation-frame-picker'
+import { PresentationInkOverlay } from './presentation-ink-overlay'
 import { PresentationOverlay } from './presentation-overlay'
 import { PresentationStage } from './presentation-stage'
 import { SpotlightOverlay } from './spotlight-overlay'
@@ -23,6 +29,7 @@ import { WorldLayer } from './world-layer'
 export function SharedSlideShow({ document }: { document: CanvasDocument }) {
   const ref = useRef<HTMLDivElement>(null)
   const locale = useLanguageStore(selectLocale)
+  const annotationCursor = usePresentationAnnotationStore(selectAnnotationCursor)
   useViewportSize(ref)
   useWindowTitle()
   useCloseGuard()
@@ -56,6 +63,7 @@ export function SharedSlideShow({ document }: { document: CanvasDocument }) {
         return
       }
       const presentation = usePresentationStore.getState()
+      const annotation = usePresentationAnnotationStore.getState()
       switch (presentationKeyAction(event.key)) {
         case 'next':
           presentation.next()
@@ -70,6 +78,12 @@ export function SharedSlideShow({ document }: { document: CanvasDocument }) {
           if (presentation.overview) {
             presentation.goTo(presentation.index)
           }
+          break
+        case 'togglePointer':
+          annotation.togglePointer()
+          break
+        case 'clearInk':
+          annotation.clearInk()
           break
         case null:
           return
@@ -94,14 +108,18 @@ export function SharedSlideShow({ document }: { document: CanvasDocument }) {
         ref={ref}
         data-testid="canvas-viewport"
         className="relative h-full overflow-hidden touch-none"
+        style={{ cursor: annotationCursor }}
       >
         <GridBackground />
         <PresentationStage>
           <WorldLayer readOnly />
           <SpotlightOverlay />
+          <PresentationInkOverlay />
         </PresentationStage>
         <PresentationFramePicker />
         <PresentationOverlay allowExit={false} />
+        {/* Last, so the dot paints over the control bar: while pointing it is the cursor there too. */}
+        <LaserPointerOverlay />
       </div>
     </main>
   )

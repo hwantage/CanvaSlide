@@ -41,6 +41,12 @@
   --frame-label: #52525b;
   --snap: #ef4444;
   --frame-selected: #ec4899;
+  /* Why: annotations paint over slide content rather than chrome, so one set of values reads in
+     both themes; red is what an audience already takes for "the presenter is pointing". */
+  --laser: #ff3b30;
+  --laser-core: #fff5f4;
+  --laser-glow: rgb(255 59 48 / 0.45);
+  --ink: #ff3b30;
   --radius: 0.5rem;
   /* One pace for chrome that shows and hides itself, so nothing races anything else off screen. */
   --chrome-fade-ms: 200ms;
@@ -139,6 +145,21 @@ button,
 input,
 select {
   font: inherit;
+}
+
+/* Why: no transition — a dot that eases toward the cursor reads as lag, not as a steady hand. */
+.laser-pointer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--laser-core) 0%, var(--laser) 40%, transparent 72%);
+  box-shadow: 0 0 18px 6px var(--laser-glow);
+  pointer-events: none;
+  will-change: transform;
 }
 
 .canvas-text-editor {

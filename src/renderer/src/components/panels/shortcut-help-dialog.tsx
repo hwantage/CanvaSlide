@@ -97,6 +97,8 @@ function sections(): Section[] {
         [t('present.next'), '→ / Space'],
         [t('present.previous'), '←'],
         [t('present.overview'), 'O'],
+        [t('present.pointer'), 'P'],
+        [t('present.clearInk'), 'E'],
         [t('present.exit'), 'Esc']
       ]
     }

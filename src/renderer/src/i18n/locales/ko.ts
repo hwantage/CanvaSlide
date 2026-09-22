@@ -323,6 +323,8 @@ export const ko: UiStrings = {
   'present.previous': '이전 프레임',
   'present.next': '다음 프레임',
   'present.exit': '프레젠테이션 종료',
+  'present.pointer': '레이저 포인터 — 드래그하면 그려집니다',
+  'present.clearInk': '잉크 모두 지우기',
 
   'align.left': '왼쪽 맞춤',
   'align.centerX': '가로 가운데 맞춤',

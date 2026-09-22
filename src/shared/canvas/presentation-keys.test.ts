@@ -14,8 +14,15 @@ describe('presentationKeyAction', () => {
     expect(presentationKeyAction('Escape')).toBe('escape')
   })
 
+  it('maps the pen key to the one pointer, in either case', () => {
+    expect(presentationKeyAction('p')).toBe('togglePointer')
+    expect(presentationKeyAction('P')).toBe('togglePointer')
+    expect(presentationKeyAction('e')).toBe('clearInk')
+    expect(presentationKeyAction('E')).toBe('clearInk')
+  })
+
   it('leaves editor keys alone', () => {
-    for (const key of ['a', 'Delete', 'Tab', 'F2', '?']) {
+    for (const key of ['a', 'l', 'L', 'Delete', 'Tab', 'F2', '?']) {
       expect(presentationKeyAction(key)).toBeNull()
     }
   })

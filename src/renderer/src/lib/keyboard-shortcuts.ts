@@ -21,6 +21,7 @@ import {
   useSettingsDialogStore,
   useShortcutHelpStore
 } from '@/store/modal-dialogs'
+import { usePresentationAnnotationStore } from '@/store/presentation-annotation-store'
 import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore, type ToolId } from '@/store/tool-store'
 
@@ -90,6 +91,12 @@ function handlePresentationKeys(event: KeyboardEvent): boolean {
       break
     case 'toggleOverview':
       presentation.toggleOverview()
+      break
+    case 'togglePointer':
+      usePresentationAnnotationStore.getState().togglePointer()
+      break
+    case 'clearInk':
+      usePresentationAnnotationStore.getState().clearInk()
       break
     case null:
       break

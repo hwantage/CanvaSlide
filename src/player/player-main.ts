@@ -74,7 +74,8 @@ function bindKeyboard(presentation: PlayerPresentation): void {
           presentation.goTo(presentation.index)
         }
         break
-      case null:
+      // Why: the key map is shared with the editor; ignore the actions this player does not have.
+      default:
         return
     }
     event.preventDefault()

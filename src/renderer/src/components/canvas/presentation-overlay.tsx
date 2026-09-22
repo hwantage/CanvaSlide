@@ -5,6 +5,7 @@ import { usePresentationChrome } from '@/hooks/use-presentation-chrome'
 import { t } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { selectPreviewing, usePresentationStore } from '@/store/presentation-store'
+import { PresentationAnnotationControls } from './presentation-annotation-controls'
 
 export function PresentationOverlay({ allowExit = true }: { allowExit?: boolean }) {
   const active = usePresentationStore((s) => s.active)
@@ -67,6 +68,7 @@ export function PresentationOverlay({ allowExit = true }: { allowExit?: boolean 
             {current?.name}
           </span>
         </span>
+        <PresentationAnnotationControls />
         {allowExit && (
           <IconButton label={`${t('present.exit')} (Esc)`} onClick={exit}>
             <X size={16} />

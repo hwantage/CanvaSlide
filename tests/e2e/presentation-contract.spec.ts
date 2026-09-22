@@ -239,6 +239,23 @@ for (const surface of ['app', 'html'] as const) {
           expect(rect.width).toBeCloseTo(targetSize, 2)
           expect(rect.height).toBeCloseTo(targetSize, 2)
         }
+        await page.keyboard.press('Tab')
+        const overview = presentationControls(page).getByRole('button', { name: /^Overview/ })
+        await overview.focus()
+        const ring = await overview.evaluate((button) => {
+          const rect = button.getBoundingClientRect()
+          const style = getComputedStyle(button)
+          const outside =
+            Number.parseFloat(style.outlineWidth) + Number.parseFloat(style.outlineOffset)
+          return {
+            visible: button.matches(':focus-visible'),
+            top: rect.top - outside,
+            bottom: rect.bottom + outside
+          }
+        })
+        expect(ring.visible).toBe(true)
+        expect(ring.top).toBeGreaterThanOrEqual(box.y)
+        expect(ring.bottom).toBeLessThanOrEqual(box.y + box.height)
       }
       await page.keyboard.press('o')
       await page.getByTestId('presentation-tools').click()
@@ -570,9 +587,13 @@ test.describe('real touchscreen presentation input', () => {
       await openPresentation(page, surface)
       await page.setViewportSize({ width: 390, height: 844 })
       const cdp = await page.context().newCDPSession(page)
-      await page.getByTestId('presentation-tools').tap()
+      const tools = page.getByTestId('presentation-tools')
+      await tools.tap()
+      await expect(tools).toHaveAttribute('aria-expanded', 'true')
       await page.getByTestId('pointer-toggle').tap()
-      await page.getByTestId('presentation-tools').tap()
+      await expect(page.getByTestId('pointer-toggle')).toHaveAttribute('aria-pressed', 'true')
+      await tools.tap()
+      await expect(tools).toHaveAttribute('aria-expanded', 'false')
       await cdp.send('Input.dispatchTouchEvent', {
         type: 'touchStart',
         touchPoints: [{ x: 300, y: 350 }]
@@ -586,7 +607,8 @@ test.describe('real touchscreen presentation input', () => {
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
       await expect(inkStrokes(page)).toHaveCount(1)
       await expect(page.getByTestId('presentation-counter')).toContainText('1 / 3')
-      await page.getByTestId('presentation-tools').tap()
+      await tools.tap()
+      await expect(tools).toHaveAttribute('aria-expanded', 'true')
       await page.getByTestId('ink-clear').tap()
       await expect(inkStrokes(page)).toHaveCount(0)
     })

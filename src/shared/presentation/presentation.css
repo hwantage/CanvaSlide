@@ -56,7 +56,7 @@
 }
 .presentation-chrome button:focus-visible {
   outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  outline-offset: calc(2px - var(--presentation-target-padding));
 }
 .presentation-chrome button:disabled {
   opacity: 0.4;

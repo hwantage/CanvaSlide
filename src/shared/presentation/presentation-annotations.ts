@@ -104,6 +104,21 @@ export function mountPresentationAnnotations(
     },
     options
   )
+  viewport.addEventListener(
+    'touchstart',
+    (event) => {
+      // Cancel native touch handling only after the pointer handler has claimed an ink stroke.
+      if (
+        drawing !== null &&
+        event.cancelable &&
+        event.target instanceof Node &&
+        !ownsPresentationPointer(event.target)
+      ) {
+        event.preventDefault()
+      }
+    },
+    { ...options, passive: false }
+  )
   window.addEventListener(
     'pointermove',
     (event) => {

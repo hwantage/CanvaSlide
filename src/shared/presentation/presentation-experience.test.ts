@@ -188,6 +188,57 @@ describe('shared presentation lifetime and input', () => {
     expect(host.next).toHaveBeenCalledOnce()
   })
 
+  it('cancels native touch handling only for an owned ink stroke', () => {
+    const { key, host, viewport, setState, dispose } = fixture()
+    const pointer = (type: string, target: EventTarget = viewport) =>
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: 'touch',
+          isPrimary: true,
+          button: 0,
+          buttons: 1
+        })
+      )
+    const touch = (target: EventTarget = viewport) => {
+      const event = new Event('touchstart', { bubbles: true, cancelable: true })
+      target.dispatchEvent(event)
+      return event.defaultPrevented
+    }
+    pointer('pointerdown')
+    expect(touch()).toBe(false)
+    pointer('pointerup')
+    key('p')
+    const button = viewport.querySelector('button')!
+    const video = document.createElement('video')
+    viewport.append(video)
+    for (const target of [button, video]) {
+      pointer('pointerdown', target)
+      expect(touch(target)).toBe(false)
+      pointer('pointerup', target)
+    }
+    setState({ overview: true })
+    pointer('pointerdown')
+    expect(touch()).toBe(false)
+    setState({ overview: false })
+    host.isInputBlocked = () => true
+    pointer('pointerdown')
+    expect(touch()).toBe(false)
+    host.isInputBlocked = () => false
+    pointer('pointerdown')
+    expect(touch()).toBe(true)
+    expect(touch(button)).toBe(false)
+    expect(touch(video)).toBe(false)
+    pointer('pointercancel')
+    expect(touch()).toBe(false)
+    pointer('pointerdown')
+    expect(touch()).toBe(true)
+    dispose()
+    expect(touch()).toBe(false)
+  })
+
   it('unsubscribes views, stops timers and removes all session input on teardown', () => {
     const { host, key, session, dispose, stateListeners, viewListeners, viewport } = fixture()
     key('p')

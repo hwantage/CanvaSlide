@@ -653,7 +653,7 @@ Use the skill at {skill} to create the file.`,
     'Use the frame list to drag frames into order. Double-click a frame name to rename it. Start with an overview, then add close-ups, or try another order that fits your story.',
   'site.docs.frames.presentHeading': 'Present your canvas',
   'site.docs.frames.presentBody':
-    'Start with {start}. Advance with {next}; go back with {previous}. Press {escape} to leave the slideshow. The camera fits each frame into the window and animates the move between frames.',
+    'Start with {start}. Advance with {next}; go back with {previous}. Press {escape} to leave the slideshow. The camera fits each frame into the window and animates the move between frames. The control bar leaves the screen while you present and comes back when the pointer reaches the bottom edge of the window.',
   'site.docs.frames.timingHeading': 'Set the pace',
   'site.docs.frames.timingBody':
     'Open Settings with {settings} and adjust the transition duration from {range}. That is the document default, and every frame uses it until you give one its own: select a frame and the Camera section of the properties panel overrides the duration, easing, arc, roll and spotlight for the move into that frame. Set a duration to zero for an instant change.',

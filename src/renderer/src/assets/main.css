@@ -42,6 +42,9 @@
   --snap: #ef4444;
   --frame-selected: #ec4899;
   --radius: 0.5rem;
+  /* One pace for chrome that shows and hides itself, so nothing races anything else off screen. */
+  --chrome-fade-ms: 200ms;
+  --chrome-fade-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root[data-theme='dark'] {
@@ -149,6 +152,28 @@ select {
   content: attr(data-placeholder);
   color: #a1a1aa;
   pointer-events: none;
+}
+
+/* Why: the slide show's bar leaves the screen between uses. The move is `transform`, which the
+   compact layout's `translate` override and Tailwind's translate utilities leave alone. */
+.presentation-chrome {
+  transition:
+    transform var(--chrome-fade-ms) var(--chrome-fade-ease),
+    opacity var(--chrome-fade-ms) var(--chrome-fade-ease),
+    visibility var(--chrome-fade-ms) var(--chrome-fade-ease);
+}
+.presentation-chrome[data-hidden='true'] {
+  /* Past the bottom edge: its own height plus the `bottom-4` the wrapper holds it off the floor. */
+  transform: translateY(calc(100% + var(--spacing) * 4));
+  opacity: 0;
+  /* Why: opacity alone would leave the buttons clickable and in the tab order under the slide. */
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presentation-chrome {
+    transition: none;
+  }
 }
 
 @media (max-width: 1100px) {

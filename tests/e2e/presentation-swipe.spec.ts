@@ -51,6 +51,9 @@ async function swipe(cdp: CDPSession, from: Point, to: Point): Promise<void> {
       [from[0] + (to[0] - from[0]) * step, from[1] + (to[1] - from[1]) * step]
     ])
   }
+  // Why: releasing while still moving reads as a fling, and Chromium spends the next tap stopping
+  // it. Settling first keeps the gesture a flick — still far inside SWIPE_MAX_DURATION_MS.
+  await touch(cdp, 'touchMove', [to])
   await touch(cdp, 'touchEnd', [])
 }
 
@@ -75,17 +78,26 @@ const counterOf = (page: Page) => page.getByTestId('presentation-counter')
 /** The same gesture contract on every surface: the export must not drift from the app. */
 async function assertSwipeContract(page: Page, cdp: CDPSession) {
   const counter = counterOf(page)
+  const next = page.getByRole('button', { name: /Next frame/ })
+  const previous = page.getByRole('button', { name: /Previous frame/ })
+  await expect(counter).toContainText('1 / 3')
+
+  // Taps come before any flick: Chromium spends a tap that follows one, which would leave these
+  // asserting a lost event rather than the behaviour. A tap belongs to the slide, never the deck.
+  await tap(cdp, [20, MID_Y])
+  await tap(cdp, [PHONE.width - 20, MID_Y])
+  await tap(cdp, [PHONE.width / 2, MID_Y])
+  await expect(counter).toContainText('1 / 3')
+
+  // Control for the three above: taps are landing, and the nav bar still owns its own.
+  await tapCentre(cdp, next)
+  await expect(counter).toContainText('2 / 3')
+  await tapCentre(cdp, previous)
   await expect(counter).toContainText('1 / 3')
 
   await swipe(cdp, [300, MID_Y], [80, MID_Y])
   await expect(counter).toContainText('2 / 3')
   await swipe(cdp, [80, MID_Y], [300, MID_Y])
-  await expect(counter).toContainText('1 / 3')
-
-  // A tap belongs to the slide, so content interactions never advance the deck.
-  await tap(cdp, [20, MID_Y])
-  await tap(cdp, [PHONE.width - 20, MID_Y])
-  await tap(cdp, [PHONE.width / 2, MID_Y])
   await expect(counter).toContainText('1 / 3')
 
   // A gesture the reader is still shaping: past the flick window, so it is not navigation.
@@ -123,6 +135,25 @@ async function assertSwipeContract(page: Page, cdp: CDPSession) {
   await expect(counter).toContainText('2 / 3')
 }
 
+/**
+ * The overview keeps tap-to-select, and a flick there must not steal it. The two are separate
+ * sequences, each opened from the keyboard, so that no tap ever follows a flick.
+ */
+async function assertOverviewContract(page: Page, cdp: CDPSession, frames: Locator, open: Locator) {
+  const counter = counterOf(page)
+  await page.keyboard.press('o')
+  await expect(open).toHaveCount(1)
+  await tapCentre(cdp, frames.last())
+  await expect(counter).toContainText('3 / 3')
+  await expect(open).toHaveCount(0)
+
+  await page.keyboard.press('o')
+  await expect(open).toHaveCount(1)
+  await swipe(cdp, [300, MID_Y], [80, MID_Y])
+  await expect(counter).toContainText('3 / 3')
+  await expect(open).toHaveCount(1)
+}
+
 test.describe('presentation swipe navigation', () => {
   test.use({ viewport: PHONE, hasTouch: true })
 
@@ -140,23 +171,12 @@ test.describe('presentation swipe navigation', () => {
     const cdp = await page.context().newCDPSession(page)
     await assertSwipeContract(page, cdp)
 
-    // The nav bar keeps its own taps, and a flick that starts on it is the bar's.
-    const nav = page.getByRole('button', { name: 'Next frame (→)' })
-    const box = (await nav.boundingBox())!
-    const onBar: Point = [box.x + box.width / 2, box.y + box.height / 2]
-    await tap(cdp, onBar)
-    await expect(counterOf(page)).toContainText('3 / 3')
-    await swipe(cdp, onBar, [40, onBar[1]])
-    await expect(counterOf(page)).toContainText('3 / 3')
+    // A flick that starts on the nav bar is the bar's, not the deck's.
+    const box = (await page.getByRole('button', { name: /Next frame/ }).boundingBox())!
+    await swipe(cdp, [box.x + box.width / 2, box.y + box.height / 2], [40, box.y + box.height / 2])
+    await expect(counterOf(page)).toContainText('2 / 3')
 
-    // The overview maps taps to frames; a flick must not steal them.
-    await tapCentre(cdp, page.getByRole('button', { name: 'Overview (O)' }))
-    await expect(page.locator('.uc-overview')).toHaveCount(1)
-    await swipe(cdp, [300, MID_Y], [80, MID_Y])
-    await expect(page.locator('.uc-overview')).toHaveCount(1)
-    await tapCentre(cdp, page.locator('.uc-frame').first())
-    await expect(counterOf(page)).toContainText('1 / 3')
-    await expect(page.locator('.uc-overview')).toHaveCount(0)
+    await assertOverviewContract(page, cdp, page.locator('.uc-frame'), page.locator('.uc-overview'))
   })
 
   test('the editor slide show honours the same gesture contract', async ({ page }) => {
@@ -171,13 +191,12 @@ test.describe('presentation swipe navigation', () => {
     const cdp = await page.context().newCDPSession(page)
     await assertSwipeContract(page, cdp)
 
-    // The overview picker owns its taps here too.
-    await tapCentre(cdp, page.getByRole('button', { name: /Overview/ }))
-    await expect(page.getByTestId('overview-frame')).toHaveCount(3)
-    await swipe(cdp, [300, MID_Y], [80, MID_Y])
-    await expect(counterOf(page)).toContainText('2 / 3')
-    await tapCentre(cdp, page.getByTestId('overview-frame').last())
-    await expect(counterOf(page)).toContainText('3 / 3')
+    await assertOverviewContract(
+      page,
+      cdp,
+      page.getByTestId('overview-frame'),
+      page.getByTestId('overview-frame').first()
+    )
   })
 
   test('the shared slide show honours the same gesture contract', async ({ page }) => {

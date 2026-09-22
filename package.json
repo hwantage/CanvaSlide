@@ -25,6 +25,7 @@
     "lint": "oxlint && pnpm run check:max-lines",
     "lint:fix": "oxlint --fix",
     "check:max-lines": "node config/scripts/check-max-lines.mjs",
+    "check:player-size": "node config/scripts/check-player-size.mjs",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "test": "pnpm run test:tooling && vitest run --config config/vitest.config.ts",
@@ -40,7 +41,7 @@
     "prepare": "husky",
     "tc:e2e": "tsc --noEmit -p config/tsconfig.e2e.json",
     "test:e2e": "playwright test --config tests/playwright.config.ts",
-    "build:player": "vite build --config config/vite.player.config.ts",
+    "build:player": "vite build --config config/vite.player.config.ts && pnpm run check:player-size",
     "build:pdfjs": "node config/scripts/copy-pdfjs-assets.mjs",
     "tc:examples": "tsc --noEmit -p config/tsconfig.examples.json"
   },

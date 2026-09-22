@@ -1,11 +1,6 @@
+import { isFrameElement } from './element-runtime'
 import { rectContainsRect } from './element-bounds'
-import {
-  isFrameElement,
-  type CanvasDocument,
-  type CanvasElement,
-  type ElementId,
-  type FrameElement
-} from './element-types'
+import type { CanvasDocument, CanvasElement, ElementId, FrameElement } from './element-types'
 import { visibleTextRect } from './text-clip'
 
 function contains(frame: FrameElement, element: CanvasElement): boolean {

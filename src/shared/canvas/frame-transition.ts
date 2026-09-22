@@ -7,7 +7,7 @@ import {
   MAX_ROLL_DEGREES,
   MAX_TRANSITION_MS,
   MIN_CAMERA_ARC
-} from './element-types'
+} from './element-runtime'
 import type { DocumentSettings, FrameElement, FrameTransition } from './element-types'
 
 /** A frame's camera direction with every document-level default already applied. */

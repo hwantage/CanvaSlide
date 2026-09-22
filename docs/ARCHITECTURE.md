@@ -20,6 +20,14 @@ the linked code and tests. It is not a release report or a performance guarantee
 Browser E2E can exercise the editor without Rust, but does not establish native menu, clipboard,
 font or window behaviour. See the contribution guide for platform checks.
 
+The player imports shared constants, defaults and guards from
+[`element-runtime.ts`](../src/shared/canvas/element-runtime.ts). Keep its dependencies free of
+validation code; schema-derived types from `element-types.ts` must use `import type` on playback
+paths. Document and cloud input validation still uses the schemas in `element-types.ts`.
+`pnpm build:player` checks the newly built IIFE against the raw byte budget in
+[`check-player-size.mjs`](../config/scripts/check-player-size.mjs); gzip is reported for comparison.
+This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`).
+
 ## Document editing and presentation
 
 - [`document-store.ts`](../src/renderer/src/store/document-store.ts) owns document edits and history.

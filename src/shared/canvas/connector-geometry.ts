@@ -7,7 +7,7 @@ import type {
   Point,
   Rect
 } from './element-types'
-import { anchorSides } from './element-types'
+import { anchorSides } from './element-runtime'
 import { cubicAt, curveControls, orthogonalPoints } from './connector-routing'
 
 /** Midpoint of one side of a rect: the four connection points every element offers. */

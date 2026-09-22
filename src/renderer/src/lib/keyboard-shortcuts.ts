@@ -29,7 +29,9 @@ export function handleCanvasKeyDown(event: KeyboardEvent, commands: DocumentComm
   if (event.defaultPrevented || event.isComposing || event.keyCode === 229) {
     return
   }
-  if (isEditableTarget(event.target) && event.key !== 'Escape') {
+  // Why: F5 cannot be typed into text, so the slide-show alias stays reachable mid-edit, as in
+  // PowerPoint; an open modal still swallows it through the check below.
+  if (isEditableTarget(event.target) && event.key !== 'Escape' && event.key !== 'F5') {
     return
   }
   // Why: with a modal open, Delete/arrows/tool keys must not reach the canvas behind it.
@@ -269,6 +271,17 @@ function handlePlainKeys(event: KeyboardEvent): boolean {
   }
   if (key === 'F2') {
     return startEditingSelection({ frames: true })
+  }
+  // Why: PowerPoint's F5 / ⇧F5 aliases; ⌘⏎ stays primary because Apple keyboards need fn+F5.
+  if (key === 'F5' && !event.altKey && !event.ctrlKey && !event.metaKey) {
+    // Leaving the editor commits the typed text as one undo step, the way Escape does.
+    tools.setEditingTextId(null)
+    if (event.shiftKey) {
+      presentFromSelection()
+    } else {
+      usePresentationStore.getState().start()
+    }
+    return true
   }
   if (
     key.toLowerCase() === 'k' &&

@@ -92,8 +92,8 @@ function sections(): Section[] {
     {
       title: t('help.present'),
       rows: [
-        [t('present.start'), shortcutLabel('⏎')],
-        [t('present.fromSelection'), shortcutLabel('⏎', { shift: true })],
+        [t('present.start'), `${shortcutLabel('⏎')} / F5`],
+        [t('present.fromSelection'), `${shortcutLabel('⏎', { shift: true })} / ${shift}F5`],
         [t('present.next'), '→ / Space'],
         [t('present.previous'), '←'],
         [t('present.overview'), 'O'],

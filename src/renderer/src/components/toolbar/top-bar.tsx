@@ -179,7 +179,7 @@ export function TopBar({
           title={
             frameCount === 0
               ? t('present.needsFrame')
-              : `${t('present.start')} (${shortcutLabel('⏎')})`
+              : `${t('present.start')} (${shortcutLabel('⏎')} / F5)`
           }
           onClick={() => start(0)}
         >
@@ -248,7 +248,7 @@ export function TopBar({
             title={
               frameCount === 0
                 ? t('present.needsFrame')
-                : `${t('present.start')} (${shortcutLabel('⏎')})`
+                : `${t('present.start')} (${shortcutLabel('⏎')} / F5)`
             }
             onClick={() => start(0)}
           >

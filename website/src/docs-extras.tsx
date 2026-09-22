@@ -94,7 +94,7 @@ function ShortcutsTable() {
     ['site.docs.shortcuts.save', p('S')],
     ['site.docs.shortcuts.saveAs', p('S', { shift: true })],
     ['site.docs.shortcuts.export', p('E')],
-    ['site.docs.shortcuts.present', p('Enter')],
+    ['site.docs.shortcuts.present', `${p('Enter')} / F5`],
     ['site.docs.shortcuts.copy', `${p('C')} / ${p('V')}`],
     ['site.docs.shortcuts.duplicate', p('D')],
     ['site.docs.shortcuts.undo', p('Z')],

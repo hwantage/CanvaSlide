@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, LayoutGrid, X } from 'lucide-react'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { IconButton } from '@/components/ui/icon-button'
+import { usePresentationChrome } from '@/hooks/use-presentation-chrome'
 import { t } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { selectPreviewing, usePresentationStore } from '@/store/presentation-store'
@@ -16,7 +17,9 @@ export function PresentationOverlay({ allowExit = true }: { allowExit?: boolean 
   const overview = usePresentationStore((s) => s.overview)
   const toggleOverview = usePresentationStore((s) => s.toggleOverview)
   const document = useDocumentStore(selectDocument)
-  if (!active || previewing) {
+  const presenting = active && !previewing
+  const { visible, hold } = usePresentationChrome(presenting)
+  if (!presenting) {
     return null
   }
   const frames = orderedFrames(document)
@@ -27,7 +30,12 @@ export function PresentationOverlay({ allowExit = true }: { allowExit?: boolean 
       <div
         data-canvas-ui
         data-testid="presentation-controls"
-        className="pointer-events-auto absolute bottom-0 left-1/2 flex -translate-x-[calc(var(--spacing)*19.5+1px)] items-center gap-1 rounded-full border border-border bg-popover/90 px-2 py-1 text-popover-foreground shadow-lg backdrop-blur"
+        data-hidden={!visible}
+        onPointerEnter={() => hold('pointer', true)}
+        onPointerLeave={() => hold('pointer', false)}
+        onFocus={() => hold('focus', true)}
+        onBlur={() => hold('focus', false)}
+        className="presentation-chrome pointer-events-auto absolute bottom-0 left-1/2 flex -translate-x-[calc(var(--spacing)*19.5+1px)] items-center gap-1 rounded-full border border-border bg-popover/90 px-2 py-1 text-popover-foreground shadow-lg backdrop-blur"
       >
         <IconButton
           label={`${t('present.overview')} (O)`}

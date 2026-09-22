@@ -84,7 +84,7 @@ for the boundary between file data and the runtime model. Earlier JSON/ZIP forma
 Deliver the file itself when possible. If only text output is available, provide the complete JSON
 in one code block; the user saves its contents without the Markdown fences as UTF-8 `.canvaslide`
 (not `.canvaslide.txt`). Open it with **Open** in CanvaSlide. Saving keeps the file editable as JSON;
-use **Share → Export HTML** for a standalone presentation. HTML is a viewing copy, not the editable source.
+use **Share → HTML** or **Share → PDF** for a standalone presentation. Those are viewing copies, not the editable source.
 
 An assistant with code execution can use a small Node or Python script to assemble the JSON and
 write the file. A local checkout is only needed to run the repository checks, not to author JSON.
@@ -235,7 +235,7 @@ that frame also counts toward the total. The player's **O** overview is a separa
 
 ### HTML output
 
-For standalone HTML, open the native document in CanvaSlide and use **Share → Export HTML**.
+For standalone HTML, open the native document in CanvaSlide and use **Share → HTML**.
 An assistant with code execution can also use the existing export path from the public repository:
 
 1. Obtain the repository source and install its dependencies, then run `pnpm build:player`.

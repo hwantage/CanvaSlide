@@ -459,31 +459,48 @@ export const ko: UiStrings = {
   'settings.done': '완료',
 
   'export.dialog': '프레젠테이션 내보내기',
-  'export.title': 'HTML로 내보내기',
-  'export.summary':
-    '플레이어가 포함된 단일 HTML 파일입니다. {frames}, {images} (문서 내 이미지 {bytes}).',
+  'export.title': '{format}로 내보내기',
   'export.frames.one': '프레임 {n}개',
   'export.frames.other': '프레임 {n}개',
   'export.images.one': '이미지 {n}개',
   'export.images.other': '이미지 {n}개',
-  'export.imageQuality': '이미지 품질',
-  'export.quality.original': '원본',
-  'export.quality.originalHint': '저장된 그대로 유지',
-  'export.quality.balanced': '균형',
-  'export.quality.balancedHint': '최대 1600px, 품질 0.85',
-  'export.quality.small': '작게',
-  'export.quality.smallHint': '최대 1200px, 품질 0.75',
   'export.estimatedSize': '예상 파일 크기:',
-  'export.fonts.one': '설치 글꼴 {n}개',
-  'export.fonts.other': '설치 글꼴 {n}개',
-  'export.embedFonts': '이 문서에 쓰인 {fonts} 포함',
-  'export.embedFontsHint':
-    '사용한 글자만 담아 어느 컴퓨터에서나 같은 모습으로 보입니다. 글꼴 라이선스가 임베딩을 허용하는지 확인하세요.',
-  'export.embedFontsUnavailable': '글꼴 포함은 데스크톱 앱에서 가능합니다.',
-  'export.fontsIncluded': '({fonts}, {bytes} 포함)',
   'export.calculating': '계산 중…',
   'export.cancel': '취소',
   'export.confirm': '내보내기…',
+  'export.html.summary':
+    '플레이어가 포함된 단일 HTML 파일입니다. {frames}, {images} (문서 내 이미지 {bytes}).',
+  'export.html.imageQuality': '이미지 품질',
+  'export.html.quality.original': '원본',
+  'export.html.quality.originalHint': '저장된 그대로 유지',
+  'export.html.quality.balanced': '균형',
+  'export.html.quality.balancedHint': '최대 1600px, 품질 0.85',
+  'export.html.quality.small': '작게',
+  'export.html.quality.smallHint': '최대 1200px, 품질 0.75',
+  'export.html.fonts.one': '설치 글꼴 {n}개',
+  'export.html.fonts.other': '설치 글꼴 {n}개',
+  'export.html.embedFonts': '이 문서에 쓰인 {fonts} 포함',
+  'export.html.embedFontsHint':
+    '사용한 글자만 담아 어느 컴퓨터에서나 같은 모습으로 보입니다. 글꼴 라이선스가 임베딩을 허용하는지 확인하세요.',
+  'export.html.embedFontsUnavailable': '글꼴 포함은 데스크톱 앱에서 가능합니다.',
+  'export.html.fontsIncluded': '({fonts}, {bytes} 포함)',
+  'export.pdf.summary':
+    '발표 순서대로 프레임 하나당 한 페이지씩 만듭니다. 페이지 비율은 각 프레임을 따릅니다. {pages}, {images}.',
+  'export.pdf.pages.one': '{n}페이지',
+  'export.pdf.pages.other': '{n}페이지',
+  'export.pdf.resolution': '페이지 해상도',
+  'export.pdf.resolution.high': '높음',
+  'export.pdf.resolution.highHint': '파일이 가장 크고 인쇄물에 적합',
+  'export.pdf.resolution.medium': '보통',
+  'export.pdf.resolution.mediumHint': '화면과 일반 인쇄에서 선명함',
+  'export.pdf.resolution.low': '낮음',
+  'export.pdf.resolution.lowHint': '파일이 가장 작고 화면으로 보기 좋음',
+  'export.pdf.pageText':
+    '페이지를 이미지로 렌더링하므로 텍스트를 선택할 수 없고 글꼴을 포함할 필요도 없습니다.',
+  'export.pdf.videos':
+    'PDF에서는 동영상을 재생할 수 없습니다. 해당 자리는 정지 화면으로 표시됩니다.',
+  'export.pdf.rendering': '{total}페이지 중 {done}페이지 렌더링 중…',
+  'export.pdf.empty': 'PDF로 내보내려면 프레임을 하나 이상 추가하세요.',
 
   'edit.cut': '잘라내기',
   'edit.copy': '복사',
@@ -659,7 +676,7 @@ export const ko: UiStrings = {
     '{save}로 {format} 파일을 저장하세요. {saveAs}로 다른 이름의 복사본을 만들고 {open}으로 다시 열 수 있습니다. 파일에는 캔버스, 프레임 순서, 설정, 이미지 데이터가 들어 있습니다.',
   'site.docs.sharing.exportHeading': '발표 파일 내보내기',
   'site.docs.sharing.exportBody':
-    '{export}로 HTML 내보내기를 여세요. 이미지 품질 옵션과 예상 파일 크기를 확인한 뒤 저장합니다. 발표 내용과 플레이어가 포함된 하나의 {format} 파일이 만들어집니다.',
+    '{export}로 내보내기 대화상자를 열고 형식을 선택하세요. {html}은 이미지 품질 옵션과 예상 파일 크기를 확인한 뒤 저장하면 발표 내용과 플레이어가 포함된 단일 파일이 됩니다. {pdf}는 발표 순서대로 프레임 하나당 한 페이지씩, 각 페이지를 해당 프레임 비율로 만들며 페이지 해상도를 선택할 수 있습니다. 페이지는 이미지로 렌더링하므로 텍스트를 선택할 수 없고 동영상은 정지 화면으로 표시됩니다.',
   'site.docs.sharing.playHeading': '발표할 곳에서 열기',
   'site.docs.sharing.playBody':
     '내보낸 파일을 브라우저에서 여세요. 내장 콘텐츠는 오프라인에서 작동하며 보는 사람에게 데스크톱 앱이 필요하지 않습니다. 연결된 동영상은 네트워크와 HTTP(S) 호스팅이 필요할 수 있습니다. 플레이어 버튼이나 방향키로 이동하고 전체 보기에서 원하는 프레임으로 이동하세요. 내보낸 플레이어의 인터페이스는 영어입니다.',
@@ -888,5 +905,6 @@ export const ko: UiStrings = {
   'error.decodePasted': '붙여넣은 이미지를 디코딩할 수 없습니다',
   'error.canvasContext': 'Canvas 2D 컨텍스트를 사용할 수 없습니다',
   'error.decodePdf': 'PDF 파일을 읽을 수 없습니다',
-  'error.pdfPassword': '암호가 걸린 PDF 파일은 지원하지 않습니다'
+  'error.pdfPassword': '암호가 걸린 PDF 파일은 지원하지 않습니다',
+  'error.renderPdfPage': 'PDF로 내보낼 페이지를 렌더링할 수 없습니다'
 }

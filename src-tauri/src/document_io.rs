@@ -4,6 +4,7 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use base64::Engine;
 use serde::Serialize;
 
 use crate::file_path::FilePath;
@@ -20,6 +21,8 @@ pub enum DocumentIoError {
     InvalidExtension(PathBuf),
     #[error("document is not valid JSON: {0}")]
     InvalidJson(String),
+    #[error("export payload is not valid base64: {0}")]
+    InvalidBase64(String),
     #[error("document exceeds file size limit")]
     TooLarge,
     #[error("io error: {0}")]
@@ -125,24 +128,48 @@ pub fn write_document_file(
     Ok(target)
 }
 
-pub fn write_html_export_file(path: &Path, contents: &str) -> Result<PathBuf, DocumentIoError> {
+/// An export lands on the extension its format dictates, whatever name the save dialog returned,
+/// and goes through a sibling temp file so a crash never leaves a half-written export behind.
+fn write_export_file(
+    path: &Path,
+    extension: &str,
+    bytes: &[u8],
+) -> Result<PathBuf, DocumentIoError> {
     let target = if path
         .extension()
-        .is_some_and(|e| e.eq_ignore_ascii_case("html"))
+        .is_some_and(|e| e.eq_ignore_ascii_case(extension))
     {
         path.to_path_buf()
     } else {
-        path.with_extension("html")
+        path.with_extension(extension)
     };
-    let tmp = target.with_extension("html.tmp");
-    std::fs::write(&tmp, contents)?;
+    let tmp = target.with_extension(format!("{extension}.tmp"));
+    std::fs::write(&tmp, bytes)?;
     std::fs::rename(&tmp, &target)?;
     Ok(target)
+}
+
+pub fn write_html_export_file(path: &Path, contents: &str) -> Result<PathBuf, DocumentIoError> {
+    write_export_file(path, "html", contents.as_bytes())
+}
+
+pub fn write_pdf_export_file(path: &Path, bytes: &[u8]) -> Result<PathBuf, DocumentIoError> {
+    write_export_file(path, "pdf", bytes)
 }
 
 #[tauri::command]
 pub fn write_html_export(path: String, contents: String) -> Result<String, DocumentIoError> {
     write_html_export_file(Path::new(&path), &contents).map(|p| p.to_string_lossy().into_owned())
+}
+
+/// Why base64 rather than the bytes themselves: the IPC bridge serializes command arguments as
+/// JSON, and a byte array would arrive as one JSON number per byte.
+#[tauri::command]
+pub fn write_pdf_export(path: String, contents_base64: String) -> Result<String, DocumentIoError> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(contents_base64.as_bytes())
+        .map_err(|e| DocumentIoError::InvalidBase64(e.to_string()))?;
+    write_pdf_export_file(Path::new(&path), &bytes).map(|p| p.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
@@ -206,6 +233,28 @@ mod tests {
             "<!doctype html>"
         );
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn writes_pdf_export_bytes_with_forced_extension() {
+        let dir = std::env::temp_dir().join(format!("uc-pdf-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let bytes: Vec<u8> = b"%PDF-1.7\n\xe2\xe3\xcf\xd3".to_vec();
+        let written = write_pdf_export_file(&dir.join("deck"), &bytes).unwrap();
+        assert!(written.ends_with("deck.pdf"));
+        assert_eq!(std::fs::read(&written).unwrap(), bytes);
+        // A name the save dialog already gave the right extension keeps it, rather than doubling it.
+        let kept = write_pdf_export_file(&dir.join("deck.pdf"), &bytes).unwrap();
+        assert_eq!(kept, written);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn rejects_a_pdf_export_payload_that_is_not_base64() {
+        assert!(matches!(
+            write_pdf_export("/tmp/x.pdf".into(), "not base64!!".into()),
+            Err(DocumentIoError::InvalidBase64(_))
+        ));
     }
 
     #[test]

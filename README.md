@@ -21,7 +21,8 @@ the editor also runs in a browser.
 
 - **Present the big picture and the detail.** Arrange frames on one canvas and guide attention with
   continuous zoom/pan and per-frame camera motion.
-- **Share one HTML file.** Export a presentation with a built-in player that opens in a browser.
+- **Share one file.** Export a presentation as HTML with a built-in player, or as a PDF with one page
+  per frame.
 - **Start with an AI prompt.** Choose General or Dynamic, then ask your assistant to create an editable
   presentation, optionally with HTML output.
 - **Send a cloud snapshot.** Share an editable copy or a slideshow viewer with a link that lasts 24 hours.
@@ -33,8 +34,8 @@ the editor also runs in a browser.
 - **Presenting:** order and preview frames, move them with their contents, and edit transitions together.
   Set duration, easing, arc, roll and spotlight; navigate through the overview and play linked videos.
 - **Import & export:** import images, PDF pages and [local Figma files](./docs/FIGMA-IMPORT.md);
-  open/save editable JSON `.canvaslide` files. Export HTML with image quality controls and a size estimate;
-  desktop export can embed installed fonts.
+  open/save editable JSON `.canvaslide` files. Export HTML with image quality controls and a size estimate,
+  or PDF with one page per frame at a chosen page resolution; desktop HTML export can embed installed fonts.
 - **Sharing:** use a configured cloud service for editable copies or slideshow-only snapshots,
   or send an exported HTML file.
 
@@ -44,7 +45,7 @@ the editor also runs in a browser.
 2. Draw frames with **F** and arrange their sequence in the frame list.
 3. Start **Slide Show** with ⌘Enter / Ctrl+Enter. Use → and ← to navigate, **O** for overview,
    and **Esc** to return to the editor.
-4. Save an editable `.canvaslide` with ⌘S / Ctrl+S, or export HTML with ⌘E / Ctrl+E.
+4. Save an editable `.canvaslide` with ⌘S / Ctrl+S, or export HTML or PDF with ⌘E / Ctrl+E.
 
 Ready-made flowcharts, diagrams and presentations are in [examples](./examples/README.md).
 Open one and start Slide Show to explore it.

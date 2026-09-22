@@ -267,7 +267,7 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'export-html',
         heading: 'site.docs.sharing.exportHeading',
         body: 'site.docs.sharing.exportBody',
-        params: { export: primary('E'), format: '.html' }
+        params: { export: primary('E'), html: 'HTML', pdf: 'PDF' }
       },
       {
         id: 'play-anywhere',

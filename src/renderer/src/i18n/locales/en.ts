@@ -280,6 +280,35 @@ Use the skill at {skill} to create the file.`,
   'file.unsaved': 'Unsaved',
   'file.discardTitle': 'Unsaved changes',
   'file.discardQuestion': 'You have unsaved changes. Discard them?',
+  'file.recoveryFailed': 'Recovery needs attention',
+  'recovery.quarantined':
+    'This recovery copy uses an unsupported format or cannot be validated. It has been kept. You can open it with a compatible app version or discard it here.',
+  'recovery.retryError': 'Recovery could not finish. Try again.',
+  'recovery.sourceMayDiffer':
+    'The original file may have changed. Compare it before saving over it.',
+  'recovery.later': 'Later',
+  'recovery.scanError':
+    'Some recovery copies could not be checked. Retry when storage is available.',
+  'recovery.retryScan': 'Check recovery copies again',
+  'settings.recoveryLocationUnknown': 'Location unavailable',
+  'recovery.title': 'Recover unsaved work',
+  'recovery.namedDocument':
+    'The last session was editing {document} and closed before it was saved.',
+  'recovery.unnamedDocument': 'The last session closed before its document was saved.',
+  'recovery.copyTime': 'The copy is from {time}.',
+  'recovery.oneAtATime':
+    'Only one document can be open at a time, so restoring closes this. Whatever is left waits in Settings.',
+  'recovery.remaining': '({n} left)',
+  'recovery.unsupportedError':
+    'This browser cannot tell one open tab from another, so unsaved work is not being copied. Save it to a file.',
+  'recovery.restore': 'Restore',
+  'recovery.discard': 'Discard',
+  'recovery.discardHint': 'Discarding deletes the copy. The saved file is not touched either way.',
+  'recovery.quotaError':
+    'There is not enough room to keep a copy of this document, so unsaved work is not protected. Save it to a file.',
+  'recovery.unavailableError':
+    'Local storage is unavailable here, so unsaved work is not being copied. Save it to a file.',
+  'recovery.failedError': 'A recovery copy could not be kept: {message}',
 
   'share.button': 'Share',
   'share.title': 'Share',
@@ -461,6 +490,22 @@ Use the skill at {skill} to create the file.`,
   'settings.frameBorder.solid': 'Solid',
   'settings.frameBorder.dashed': 'Dashed',
   'settings.frameBorder.none': 'Hidden',
+  'settings.recovery': 'Recovery',
+  'settings.recoveryAutosave': 'Unsaved work',
+  'settings.recoveryPreference': 'Recovery copies',
+  'settings.recoveryOn': 'Keep a copy',
+  'settings.recoveryOff': 'Off',
+  'settings.recoveryLocation': 'Stored in',
+  'settings.recoveryBrowser': 'This browser, on this computer',
+  'settings.recoveryWaitingLabel': 'Lost sessions',
+  'settings.recoveryWaiting.one': '{n} lost session is still waiting for an answer.',
+  'settings.recoveryWaiting.other': '{n} lost sessions are still waiting for an answer.',
+  'settings.recoveryReview': 'Review',
+  'settings.recoveryHint':
+    'Unsaved changes are copied periodically when local storage is available. Recovery can offer the last completed copy after a restart; recent edits may be missing. Save your document regularly.',
+  'settings.recoveryIdle': 'No recovery copy has been kept yet.',
+  'settings.recoverySaved': 'Last copy kept at {time}.',
+  'settings.recoveryOffHint': 'Unsaved work is not being copied anywhere.',
   'settings.done': 'Done',
 
   'export.dialog': 'Export presentation',
@@ -715,7 +760,7 @@ Use the skill at {skill} to create the file.`,
     'The desktop editor and exported presentations with embedded content work offline. Linked videos need their provider and network. Opening a web example or a cloud snapshot also needs a connection.',
   'site.docs.faq.autosaveQ': 'Where is my work saved?',
   'site.docs.faq.autosaveA':
-    'You choose the file location when saving. Save your document regularly; automatic cloud sync and autosave recovery are not part of the current version.',
+    'You choose the file location when saving. When enabled and local storage is available, recovery periodically keeps a copy on this computer and can offer the last completed copy after a restart. Recent edits may be missing, and browser reloads can also show a recovery offer. Saving schedules cleanup of the recovery copy. There is no automatic cloud sync, so keep saving your document as you work.',
   'site.docs.faq.editQ': 'Can someone edit my exported presentation?',
   'site.docs.faq.editA':
     'The exported file is for presenting. To continue editing in the app, open the original canvas document. Keep both files when you need an editable source and a portable presentation.',

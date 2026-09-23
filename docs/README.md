@@ -14,6 +14,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | Change rendering, history, presentation or document IO | [Architecture and constraints](./ARCHITECTURE.md)                                                 |
 | Import a local Figma file                              | [Figma import](./FIGMA-IMPORT.md)                                                                 |
 | Use or host cloud snapshot sharing                     | [Cloud share](./CLOUD-SHARE.md)                                                                   |
+| Change how unsaved work is copied and offered back     | [Crash recovery](./CRASH-RECOVERY.md)                                                             |
 | Edit or author a sample document                       | [Examples](../examples/README.md)                                                                 |
 | Create a presentation with an AI assistant             | [Authoring guide](../examples/README.md#authoring-with-ai), [portable skill](../skills/README.md) |
 | Maintain the website and its user guide                | [Website contributor guide](../website/README.md)                                                 |

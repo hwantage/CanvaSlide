@@ -4,6 +4,7 @@ mod document_io;
 mod file_path;
 mod font_embed;
 mod launch_document;
+mod recovery_store;
 mod system_fonts;
 mod video_embed;
 
@@ -61,6 +62,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(recovery_store::RecoveryState::default())
         .manage(launch_document::PendingDocument::default())
         .manage(video_embed::VideoEmbedServer::default())
         .setup(|app| {
@@ -79,6 +81,15 @@ pub fn run() {
             document_io::write_document,
             document_io::write_html_export,
             document_io::write_pdf_export,
+            recovery_store::recovery_directory,
+            recovery_store::start_recovery_session,
+            recovery_store::claim_recovery_session,
+            recovery_store::release_recovery_session,
+            recovery_store::read_recovery_info,
+            recovery_store::list_recovery_sessions,
+            recovery_store::read_recovery_snapshot,
+            recovery_store::write_recovery_snapshot,
+            recovery_store::clear_recovery_snapshots,
             system_fonts::list_system_fonts,
             font_embed::subset_fonts,
             launch_document::take_launch_document,

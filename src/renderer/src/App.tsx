@@ -7,6 +7,7 @@ import { ExportDialog } from '@/components/panels/export-dialog'
 import { FigImportDialog } from '@/components/panels/fig-import-dialog'
 import { CloudShareDialog } from '@/components/panels/cloud-share-dialog'
 import { SidePanel } from '@/components/panels/side-panel'
+import { RecoveryDialog } from '@/components/panels/recovery-dialog'
 import { SettingsDialog } from '@/components/panels/settings-dialog'
 import { ShortcutHelpDialog } from '@/components/panels/shortcut-help-dialog'
 import { AboutDialog } from '@/components/panels/about-dialog'
@@ -19,6 +20,7 @@ import { useClipboard } from '@/hooks/use-clipboard'
 import { useCloseGuard } from '@/hooks/use-close-guard'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useLaunchDocument } from '@/hooks/use-launch-document'
+import { useRecoverySnapshot } from '@/hooks/use-recovery-snapshot'
 import { useSharedDocument } from '@/hooks/use-shared-document'
 import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
@@ -89,6 +91,7 @@ function Editor() {
   useClipboard()
   useWindowTitle()
   useCloseGuard()
+  useRecoverySnapshot()
   useLaunchDocument(commands)
   useUpdateCheck()
   useSystemTheme()
@@ -126,6 +129,7 @@ function Editor() {
         {!presenting && <ExampleDialog />}
         {!presenting && <FigImportDialog />}
         {!presenting && <SettingsDialog />}
+        {!presenting && <RecoveryDialog />}
         {!presenting && <ShortcutHelpDialog />}
         {!presenting && <AboutDialog />}
         {!presenting && <AiGuideDialog />}

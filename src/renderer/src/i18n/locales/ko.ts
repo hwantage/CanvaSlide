@@ -276,6 +276,36 @@ export const ko: UiStrings = {
   'file.unsaved': '저장되지 않음',
   'file.discardTitle': '저장되지 않은 변경 사항',
   'file.discardQuestion': '저장하지 않은 변경 사항이 있습니다. 버리시겠습니까?',
+  'file.recoveryFailed': '복구 상태 확인 필요',
+  'recovery.quarantined':
+    '지원하지 않는 형식이거나 확인할 수 없는 복구본을 보관했습니다. 호환되는 앱 버전에서 열거나 여기에서 삭제할 수 있습니다.',
+  'recovery.retryError': '복구를 완료하지 못했습니다. 다시 시도해 주세요.',
+  'recovery.sourceMayDiffer':
+    '원본 파일이 변경되었을 수 있습니다. 덮어쓰기 전에 내용을 비교하세요.',
+  'recovery.later': '나중에',
+  'recovery.scanError':
+    '일부 복구본을 확인하지 못했습니다. 저장소를 사용할 수 있을 때 다시 시도해 주세요.',
+  'recovery.retryScan': '복구본 다시 확인',
+  'settings.recoveryLocationUnknown': '위치를 확인할 수 없음',
+  'recovery.title': '저장하지 않은 작업 복구',
+  'recovery.namedDocument':
+    '이전 세션에서 편집하던 문서({document})가 저장되지 않은 채 종료되었습니다.',
+  'recovery.unnamedDocument': '이전 세션이 문서를 저장하지 않은 채 종료되었습니다.',
+  'recovery.copyTime': '복구본 시점: {time}.',
+  'recovery.oneAtATime':
+    '문서는 한 번에 하나만 열 수 있어 복구하면 이 창이 닫힙니다. 남은 복구본은 설정에서 이어서 확인할 수 있습니다.',
+  'recovery.remaining': '({n}개 남음)',
+  'recovery.unsupportedError':
+    '이 브라우저는 열려 있는 탭을 구분할 수 없어 저장하지 않은 작업이 복사되지 않습니다. 파일로 저장해 주세요.',
+  'recovery.restore': '복구',
+  'recovery.discard': '삭제',
+  'recovery.discardHint':
+    '삭제하면 복구본이 지워집니다. 어느 쪽을 선택하든 저장된 파일은 변경되지 않습니다.',
+  'recovery.quotaError':
+    '이 문서의 복구본을 보관할 공간이 부족해 저장하지 않은 작업이 보호되지 않습니다. 파일로 저장해 주세요.',
+  'recovery.unavailableError':
+    '여기서는 로컬 저장소를 사용할 수 없어 저장하지 않은 작업이 복사되지 않습니다. 파일로 저장해 주세요.',
+  'recovery.failedError': '복구본을 보관하지 못했습니다: {message}',
 
   'share.button': '공유',
   'share.title': '공유',
@@ -458,6 +488,22 @@ export const ko: UiStrings = {
   'settings.frameBorder.solid': '실선',
   'settings.frameBorder.dashed': '점선',
   'settings.frameBorder.none': '숨김',
+  'settings.recovery': '복구',
+  'settings.recoveryAutosave': '저장하지 않은 작업',
+  'settings.recoveryPreference': '복구본',
+  'settings.recoveryOn': '복구본 보관',
+  'settings.recoveryOff': '사용 안 함',
+  'settings.recoveryLocation': '보관 위치',
+  'settings.recoveryBrowser': '이 컴퓨터의 브라우저',
+  'settings.recoveryWaitingLabel': '복구 대기',
+  'settings.recoveryWaiting.one': '답변을 기다리는 복구본이 {n}개 있습니다.',
+  'settings.recoveryWaiting.other': '답변을 기다리는 복구본이 {n}개 있습니다.',
+  'settings.recoveryReview': '확인',
+  'settings.recoveryHint':
+    '로컬 저장소를 사용할 수 있으면 저장하지 않은 변경 사항을 주기적으로 복사합니다. 다시 시작할 때 마지막으로 저장된 복구 사본을 제안하며, 최근 편집 내용은 포함되지 않을 수 있습니다. 문서를 자주 저장하세요.',
+  'settings.recoveryIdle': '아직 복구 사본이 저장되지 않았습니다.',
+  'settings.recoverySaved': '마지막 복구본: {time}.',
+  'settings.recoveryOffHint': '저장하지 않은 작업이 어디에도 복사되지 않습니다.',
   'settings.done': '완료',
 
   'export.dialog': '프레젠테이션 내보내기',
@@ -713,7 +759,7 @@ export const ko: UiStrings = {
     '데스크톱 편집기와 콘텐츠가 내장된 내보내기 파일은 오프라인에서 작동합니다. 연결된 동영상은 제공 서비스와 네트워크가 필요하며 웹 예제와 클라우드 스냅샷을 여는 데도 연결이 필요합니다.',
   'site.docs.faq.autosaveQ': '작업은 어디에 저장되나요?',
   'site.docs.faq.autosaveA':
-    '저장할 때 파일 위치를 직접 선택합니다. 현재 버전에는 자동 클라우드 동기화나 자동 저장 복구 기능이 없으므로 문서를 자주 저장해 주세요.',
+    '저장할 때 파일 위치를 직접 선택합니다. 복구 기능이 켜져 있고 로컬 저장소를 사용할 수 있으면 복구 사본을 이 컴퓨터에 주기적으로 보관하고, 다시 시작할 때 마지막으로 저장된 사본을 제안합니다. 최근 편집 내용은 포함되지 않을 수 있으며 브라우저 새로고침 후에도 복구 안내가 나타날 수 있습니다. 문서를 저장하면 복구 사본 정리가 시작됩니다. 자동 클라우드 동기화는 지원하지 않으므로 작업하면서 문서를 계속 저장하세요.',
   'site.docs.faq.editQ': '내보낸 발표를 다시 편집할 수 있나요?',
   'site.docs.faq.editA':
     '내보낸 파일은 발표용입니다. 앱에서 편집을 계속하려면 원본 캔버스 문서를 여세요. 편집용 원본과 휴대용 발표 파일이 모두 필요하다면 두 파일을 함께 보관하세요.',

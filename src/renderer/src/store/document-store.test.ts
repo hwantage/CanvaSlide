@@ -172,3 +172,24 @@ describe('document-store', () => {
     expect(state.dirty).toBe(true)
   })
 })
+
+describe('restoreDocument', () => {
+  it('lands in one update, never showing restored work as clean', () => {
+    // Why this matters: the recovery scheduler reacts to every store update, and a single clean
+    // frame would tell it the work is saved and make it delete the copy it was just restored from.
+    const seen: { dirty: boolean; name: string }[] = []
+    const unsubscribe = useDocumentStore.subscribe((s) =>
+      seen.push({ dirty: s.dirty, name: s.document.name })
+    )
+    useDocumentStore.getState().restoreDocument(createEmptyDocument('Recovered'), null)
+    unsubscribe()
+
+    expect(seen).toEqual([{ dirty: true, name: 'Recovered' }])
+  })
+
+  it('starts a new session so an in-flight save cannot claim the restored document', () => {
+    const before = useDocumentStore.getState().session
+    useDocumentStore.getState().restoreDocument(createEmptyDocument('Recovered'), null)
+    expect(useDocumentStore.getState().session).toBe(before + 1)
+  })
+})

@@ -48,7 +48,8 @@ export type DocumentState = HistoryStacks & {
   selectedIds: ElementId[]
   filePath: FilePath | null
   dirty: boolean
-  savedDocument: CanvasDocument
+  /** The content last written to or read from disk; null after a crash recovery, where none is known. */
+  savedDocument: CanvasDocument | null
   /** Bumped on new/open so an in-flight save can't attach its path to another document. */
   session: number
   /** Snapshot taken at the start of a drag; committed as one undo step on end. */
@@ -56,6 +57,8 @@ export type DocumentState = HistoryStacks & {
 }
 export type DocumentActions = {
   loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
+  /** Loads a crash-recovery snapshot: the work is unsaved until the author writes it out. */
+  restoreDocument: (document: CanvasDocument, filePath: FilePath | null) => void
   newDocument: () => void
   takeSaveSnapshot: () => SaveSnapshot
   /** Applies a finished save: path + baseline, preserving any content that differs from the saved snapshot. */
@@ -116,6 +119,9 @@ export const newElementId = (): ElementId => nanoid(10)
 
 export const useDocumentStore = create<DocumentStore>()((set, get) => {
   const sameDocumentContent = createDocumentContentComparator()
+  /** No saved baseline means nothing on disk matches, so the document is dirty whatever it holds. */
+  const isDirty = (next: CanvasDocument, saved: CanvasDocument | null) =>
+    saved === null || !sameDocumentContent(next, saved)
   const recorded = (updater: (document: CanvasDocument) => CanvasDocument) => {
     const { document, savedDocument, past, future } = get()
     const next = syncConnectorGeometry(updater(document))
@@ -124,7 +130,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     }
     set({
       document: next,
-      dirty: !sameDocumentContent(next, savedDocument),
+      dirty: isDirty(next, savedDocument),
       ...pushSnapshot({ past, future }, document)
     })
   }
@@ -147,25 +153,33 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     set({
       document: result.document,
       ...result.stacks,
-      dirty: !sameDocumentContent(result.document, savedDocument),
+      dirty: isDirty(result.document, savedDocument),
       editBaseline: null,
       selectedIds: selectedIds.filter((id) => result.document.elements[id] !== undefined)
     })
   }
 
+  /** Replaces the open document; `recovered` work has no baseline on disk, so it starts dirty. */
+  const replace = (document: CanvasDocument, filePath: FilePath | null, recovered: boolean) => {
+    const loaded = syncConnectorGeometry(document)
+    set((s) => ({
+      ...initialState,
+      document: loaded,
+      savedDocument: recovered ? null : loaded,
+      dirty: recovered,
+      filePath,
+      session: s.session + 1
+    }))
+  }
+
   return {
     ...initialState,
 
-    loadDocument: (document, filePath) => {
-      const loaded = syncConnectorGeometry(document)
-      set((s) => ({
-        ...initialState,
-        document: loaded,
-        savedDocument: loaded,
-        filePath,
-        session: s.session + 1
-      }))
-    },
+    loadDocument: (document, filePath) => replace(document, filePath, false),
+    // Why one update and not `loadDocument` plus a correction: the recovery scheduler reacts to
+    // every store update, and a single clean frame would tell it this work is saved and make it
+    // delete the very copy it was restored from.
+    restoreDocument: (document, filePath) => replace(document, filePath, true),
     newDocument: () => get().loadDocument(createEmptyDocument(), null),
     takeSaveSnapshot: () => ({
       document: get().document,
@@ -179,7 +193,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
         return {
           filePath,
           savedDocument: snapshot.document,
-          dirty: !sameDocumentContent(s.document, snapshot.document)
+          dirty: isDirty(s.document, snapshot.document)
         }
       }),
 
@@ -201,7 +215,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
           ? s
           : {
               document: next,
-              dirty: !sameDocumentContent(next, s.savedDocument)
+              dirty: isDirty(next, s.savedDocument)
             }
       }),
     syncTextHeight: (id, measuredHeight) =>
@@ -218,7 +232,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
         s.editBaseline
           ? {
               document: s.editBaseline,
-              dirty: !sameDocumentContent(s.editBaseline, s.savedDocument),
+              dirty: isDirty(s.editBaseline, s.savedDocument),
               editBaseline: null
             }
           : s
@@ -326,3 +340,16 @@ export const selectDocument = (s: DocumentStore) => s.document
 export const selectSelectedIds = (s: DocumentStore) => s.selectedIds
 export const selectCanUndo = (s: DocumentStore) => s.past.length > 0
 export const selectCanRedo = (s: DocumentStore) => s.future.length > 0
+
+/** Latches even an edit followed by undo while an asynchronous decision is pending. */
+export function watchDocumentChanges(onChange: () => void): () => void {
+  const sameDocumentContent = createDocumentContentComparator()
+  return useDocumentStore.subscribe((state, previous) => {
+    if (
+      state.session !== previous.session ||
+      !sameDocumentContent(state.document, previous.document)
+    ) {
+      onChange()
+    }
+  })
+}

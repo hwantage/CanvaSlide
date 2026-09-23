@@ -9,7 +9,7 @@ import {
 import { ModalDialog } from '@/components/ui/modal-dialog'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { TextButton } from '@/components/ui/text-button'
-import { t, type UiStringKey } from '@/i18n/ui-strings'
+import { currentLocale, t, tn, type UiStringKey } from '@/i18n/ui-strings'
 import { selectDocument, useDocumentStore } from '@/store/document-store'
 import { useSliderEditSession } from '@/hooks/use-slider-edit-session'
 import {
@@ -19,6 +19,14 @@ import {
   type LanguagePreference
 } from '@/store/language-store'
 import { useSettingsDialogStore } from '@/store/modal-dialogs'
+import {
+  isRecoveryFailure,
+  selectRecoveryEnabled,
+  selectRecoveryOffers,
+  selectRecoveryStatus,
+  useRecoveryStore,
+  type RecoveryStatus
+} from '@/store/recovery-store'
 import {
   selectThemePreference,
   themePreferences,
@@ -76,6 +84,97 @@ const frameBorderLabels: Record<FrameBorderStyle, UiStringKey> = {
   solid: 'settings.frameBorder.solid',
   dashed: 'settings.frameBorder.dashed',
   none: 'settings.frameBorder.none'
+}
+/** What each recovery state says for itself; the three failures read as warnings. */
+const recoveryStatusLabels: Record<RecoveryStatus, UiStringKey> = {
+  off: 'settings.recoveryOffHint',
+  unsupported: 'recovery.unsupportedError',
+  idle: 'settings.recoveryIdle',
+  saved: 'settings.recoverySaved',
+  quota: 'recovery.quotaError',
+  unavailable: 'recovery.unavailableError',
+  failed: 'recovery.failedError'
+}
+const recoveryChoices = [
+  { value: 'on', label: 'settings.recoveryOn' },
+  { value: 'off', label: 'settings.recoveryOff' }
+] as const
+
+/** Where unsaved work is copied to, whether that is happening, and the switch that stops it. */
+function RecoverySettings() {
+  const enabled = useRecoveryStore(selectRecoveryEnabled)
+  const setEnabled = useRecoveryStore((s) => s.setEnabled)
+  const status = useRecoveryStore(selectRecoveryStatus)
+  const savedAt = useRecoveryStore((s) => s.savedAt)
+  const error = useRecoveryStore((s) => s.error)
+  const location = useRecoveryStore((s) => s.location)
+  const waiting = useRecoveryStore(selectRecoveryOffers)
+  const review = useRecoveryStore((s) => s.reviewOffers)
+  const hide = useSettingsDialogStore((s) => s.hide)
+  const scanError = useRecoveryStore((s) => s.scanError)
+  // Why busy too: a scan cannot start while an offer is being restored or discarded.
+  const scanning = useRecoveryStore((s) => s.scanning || s.busy)
+  const retry = useRecoveryStore((s) => s.initialize)
+  const failed = isRecoveryFailure(status)
+
+  return (
+    <>
+      <Row label={t('settings.recoveryAutosave')}>
+        <SegmentedControl
+          label={t('settings.recoveryPreference')}
+          value={enabled ? 'on' : 'off'}
+          options={recoveryChoices.map((choice) => ({
+            value: choice.value,
+            label: t(choice.label)
+          }))}
+          onChange={(choice) => setEnabled(choice === 'on')}
+        />
+      </Row>
+      <Row label={t('settings.recoveryLocation')}>
+        <span className="min-w-0 flex-1 break-all text-[11px] text-muted-foreground">
+          {location === null
+            ? t('settings.recoveryLocationUnknown')
+            : location.kind === 'directory'
+              ? location.path
+              : t('settings.recoveryBrowser')}
+        </span>
+      </Row>
+      <p
+        data-testid="recovery-status"
+        className={`text-[11px] ${failed ? 'text-destructive' : 'text-muted-foreground'}`}
+      >
+        {t(recoveryStatusLabels[status], {
+          time: savedAt === null ? '' : new Date(savedAt).toLocaleTimeString(currentLocale()),
+          message: error ?? ''
+        })}
+      </p>
+      {scanError && (
+        <p role="alert" className="text-xs text-destructive">
+          {t('recovery.scanError')}
+        </p>
+      )}
+      <TextButton disabled={scanning} onClick={() => void retry()}>
+        {t('recovery.retryScan')}
+      </TextButton>
+      {waiting.length > 0 && (
+        // Restoring can only hand back one document, so the rest are picked up from here.
+        <Row label={t('settings.recoveryWaitingLabel')}>
+          <span className="min-w-0 flex-1 text-[11px] text-muted-foreground">
+            {tn('settings.recoveryWaiting', waiting.length)}
+          </span>
+          <TextButton
+            onClick={() => {
+              hide()
+              review()
+            }}
+          >
+            {t('settings.recoveryReview')}
+          </TextButton>
+        </Row>
+      )}
+      <p className="text-[11px] text-muted-foreground">{t('settings.recoveryHint')}</p>
+    </>
+  )
 }
 
 export function SettingsDialog() {
@@ -169,6 +268,9 @@ export function SettingsDialog() {
           </span>
         </Row>
         <p className="text-[11px] text-muted-foreground">{t('settings.transitionHint')}</p>
+      </Section>
+      <Section title={t('settings.recovery')}>
+        <RecoverySettings />
       </Section>
       <div className="flex justify-end">
         <TextButton variant="primary" onClick={hide}>

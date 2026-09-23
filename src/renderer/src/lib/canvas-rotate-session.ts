@@ -1,3 +1,4 @@
+import { pinEndsOn } from '@shared/canvas/connector-geometry'
 import { selectionBounds } from '@shared/canvas/element-bounds'
 import {
   canRotateSelection,
@@ -46,6 +47,8 @@ export function beginRotateSession(startWorld: Point): RotateSession | null {
   }
   const pivot = rectCenter(box)
   doc.beginEdit()
+  // Lines attached to what turns keep their ports; the same undo step restores them.
+  doc.applyLive((d) => pinEndsOn(d, selectedIds))
   return {
     kind: 'rotate',
     pivot,

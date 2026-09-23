@@ -11,6 +11,8 @@ import {
   Trash2,
   Ungroup
 } from 'lucide-react'
+import { pinEndsOn } from '@shared/canvas/connector-geometry'
+import { patchElements } from '@shared/canvas/document-mutations'
 import type { CanvasElement } from '@shared/canvas/element-types'
 import { canGroup, canUngroup, selectionGroupId } from '@shared/canvas/element-groups'
 import {
@@ -113,8 +115,10 @@ export function PropertiesPanel() {
             label={t('props.rotation')}
             onChange={(degrees) =>
               // Each element turns about its own centre, as a typed angle does in Figma.
-              store.patchElements(selectedIds, (element) =>
-                isRotatable(element) ? { rotation: normalizeRotation(degrees) } : {}
+              store.applyEdit((d) =>
+                patchElements(pinEndsOn(d, selectedIds), selectedIds, (element) =>
+                  isRotatable(element) ? { rotation: normalizeRotation(degrees) } : {}
+                )
               )
             }
           />

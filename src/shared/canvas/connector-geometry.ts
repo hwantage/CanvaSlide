@@ -4,6 +4,7 @@ import type {
   CanvasElement,
   ConnectorElement,
   ConnectorEnd,
+  ElementId,
   Point,
   Rect,
   ShapeKind
@@ -364,6 +365,31 @@ function endsEqual(a: ConnectorEnd, b: ConnectorEnd): boolean {
     a.side === b.side &&
     (a.pinned ?? false) === (b.pinned ?? false)
   )
+}
+
+/**
+ * Pins every automatic end attached to `hostIds` at the port it uses now. Turning a host would
+ * otherwise re-pick the side facing the other end mid-turn, so the line would jump to another side.
+ */
+export function pinEndsOn(document: CanvasDocument, hostIds: readonly ElementId[]): CanvasDocument {
+  const hosts = new Set(hostIds)
+  const pin = (end: ConnectorEnd): ConnectorEnd =>
+    end.elementId && hosts.has(end.elementId) && end.side && !end.pinned
+      ? { ...end, pinned: true }
+      : end
+  let elements: CanvasDocument['elements'] | null = null
+  for (const [id, element] of Object.entries(document.elements)) {
+    if (element.type !== 'connector') {
+      continue
+    }
+    const start = pin(element.start)
+    const end = pin(element.end)
+    if (start !== element.start || end !== element.end) {
+      elements ??= { ...document.elements }
+      elements[id] = { ...element, start, end }
+    }
+  }
+  return elements ? { ...document, elements } : document
 }
 
 /** Re-resolves attached ends and the bounding box; returns the same document when nothing moved. */

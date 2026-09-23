@@ -10,6 +10,7 @@ import {
   facingSide,
   hostsOf,
   nearestAnchorSide,
+  pinEndsOn,
   remapConnectorHosts,
   syncConnectorGeometry,
   translateConnector
@@ -17,6 +18,7 @@ import {
 import {
   duplicateElements,
   insertElement,
+  patchElements,
   removeElements,
   translateElements
 } from './document-mutations'
@@ -132,6 +134,29 @@ describe('connector-geometry', () => {
     const c = syncConnectorGeometry(doc).elements.c as ConnectorElement
     expect(c.start).toEqual({ x: 75, y: 25, elementId: 'a', side: 'right' })
     expect(c.end).toEqual({ x: 300, y: 25, elementId: 'b', side: 'left' })
+  })
+
+  it('keeps the port a line uses while its host turns, instead of jumping to another side', () => {
+    let doc: CanvasDocument = insertElement(createEmptyDocument(), shape('a', 0, 0))
+    doc = insertElement(doc, shape('b', 300, 0))
+    doc = syncConnectorGeometry(
+      insertElement(
+        doc,
+        connector({ start: { x: 0, y: 0, elementId: 'a' }, end: { x: 0, y: 0, elementId: 'b' } })
+      )
+    )
+    const pinned = pinEndsOn(doc, ['a'])
+    const c = pinned.elements.c as ConnectorElement
+    expect(c.start).toMatchObject({ side: 'right', pinned: true })
+    // Only ends on the turning host are pinned; nothing to pin leaves the document as it is.
+    expect(c.end.pinned).toBeUndefined()
+    expect(pinEndsOn(pinned, ['a'])).toBe(pinned)
+    const turned = (from: CanvasDocument) =>
+      syncConnectorGeometry(patchElements(from, ['a'], { rotation: 90 })).elements
+        .c as ConnectorElement
+    // Upright the right port faces b; turned 90° it faces down, but the pinned line stays on it.
+    expect(turned(pinned).start).toMatchObject({ side: 'right', x: 50, y: 75 })
+    expect(turned(doc).start.side).not.toBe('right')
   })
 
   it('builds straight, orthogonal and curved paths with sensible bounds', () => {

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test } from '@playwright/test'
-import { dragOnCanvas } from './canvas-gestures'
+import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 test('draws a triangle whose label, ports, panel fields and HTML export follow its outline', async ({
   page
@@ -83,4 +83,46 @@ test('draws a triangle whose label, ports, panel fields and HTML export follow i
   await expect(exportedLabel).toHaveCSS('left', '40.5px')
   await expect(exportedLabel).toHaveCSS('top', '50px')
   await expect(exportedLabel).toHaveCSS('width', '79px')
+})
+
+test('a line on a turning triangle keeps its port instead of jumping to another side', async ({
+  page
+}) => {
+  await page.goto('/')
+  await page.keyboard.press('r')
+  await dragOnCanvas(page, [100, 300], [260, 400])
+  await page.getByRole('button', { name: 'Triangle', exact: true }).click()
+  // 200×200 box centred on (600, 350); its left port sits on the slant at (550, 350).
+  await dragOnCanvas(page, [500, 250], [700, 450])
+  // Dropped on the body rather than on a port, the end takes the side facing the rectangle.
+  await page.keyboard.press('l')
+  await dragOnCanvas(page, [180, 300], [575, 360])
+  const path = page.locator('[data-testid="connector-path"]')
+  await expect(path).toHaveAttribute('data-route', 'M 180 300 L 550 350')
+  await page.keyboard.press('Escape')
+
+  // Turning by the handle carries the line around on the same port.
+  await page.getByTestId('canvas-viewport').click({ position: { x: 600, y: 400 } })
+  const viewport = await page.getByTestId('canvas-viewport').boundingBox()
+  const handle = await page.getByTestId('rotation-handle').boundingBox()
+  if (!viewport || !handle) {
+    throw new Error('no rotation handle')
+  }
+  await page.keyboard.down('Shift')
+  await dragOnCanvas(
+    page,
+    [handle.x + handle.width / 2 - viewport.x, handle.y + handle.height / 2 - viewport.y],
+    [760, 350]
+  )
+  await page.keyboard.up('Shift')
+  await expect(path).toHaveAttribute('data-route', 'M 180 300 L 600 300')
+  const modifier = await primaryModifier(page)
+  await page.keyboard.press(`${modifier}+z`)
+  await expect(path).toHaveAttribute('data-route', 'M 180 300 L 550 350')
+
+  // So does a typed angle; left to face the rectangle, the end would jump to the base at 60°.
+  const rotation = page.getByRole('spinbutton', { name: 'Rotation' })
+  await rotation.fill('60')
+  await rotation.press('Enter')
+  await expect(path).toHaveAttribute('data-route', /^M 180 300 L 575 306\.69/)
 })

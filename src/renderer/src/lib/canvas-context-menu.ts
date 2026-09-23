@@ -1,4 +1,4 @@
-import { hitTestTopmost, rectContainsPoint, selectionBounds } from '@shared/canvas/element-bounds'
+import { hitTestTopmost, selectionContainsPoint } from '@shared/canvas/element-bounds'
 import type { Point } from '@shared/canvas/element-types'
 import { useCameraStore } from '@/store/camera-store'
 import { useContextMenuStore } from '@/store/context-menu-store'
@@ -18,8 +18,7 @@ export function openContextMenu(screen: Point, world: Point): void {
     useToolStore.getState().setEditingTextId(null)
     doc.setSelection([hit.id])
   } else if (!hit) {
-    const bounds = selectionBounds(doc.document, doc.selectedIds)
-    if (!bounds || !rectContainsPoint(bounds, world)) {
+    if (!selectionContainsPoint(doc.document, doc.selectedIds, world)) {
       doc.clearSelection()
     }
   }

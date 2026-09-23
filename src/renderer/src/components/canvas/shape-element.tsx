@@ -1,4 +1,5 @@
 import type { ShapeElement as ShapeElementModel } from '@shared/canvas/element-types'
+import { rotationTransform } from '@shared/canvas/element-rotation'
 import { shapeGeometry } from '@shared/canvas/shape-svg'
 import { EditableText } from './editable-text'
 
@@ -33,7 +34,13 @@ export function ShapeElement({
       className="absolute"
       data-element-id={element.id}
       data-element-type="shape"
-      style={{ left: element.x, top: element.y, width: element.width, height: element.height }}
+      style={{
+        left: element.x,
+        top: element.y,
+        width: element.width,
+        height: element.height,
+        transform: rotationTransform(element.rotation)
+      }}
     >
       <svg
         className="absolute inset-0 overflow-visible"

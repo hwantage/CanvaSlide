@@ -12,21 +12,24 @@ export function clampRectSize(rect: Rect, minSize = MIN_ELEMENT_SIZE): Rect {
   return width === rect.width && height === rect.height ? rect : { ...rect, width, height }
 }
 
-export function handleCursor(handle: HandlePosition): string {
-  switch (handle) {
-    case 'n':
-    case 's':
-      return 'ns-resize'
-    case 'e':
-    case 'w':
-      return 'ew-resize'
-    case 'ne':
-    case 'sw':
-      return 'nesw-resize'
-    case 'nw':
-    case 'se':
-      return 'nwse-resize'
-  }
+/** Compass direction of each handle, clockwise from north. */
+const handleDegrees: Record<HandlePosition, number> = {
+  n: 0,
+  ne: 45,
+  e: 90,
+  se: 135,
+  s: 180,
+  sw: 225,
+  w: 270,
+  nw: 315
+}
+
+const resizeCursors = ['ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize'] as const
+
+/** Resize cursor for a handle on a box turned `rotation` degrees, to the nearest 45°. */
+export function handleCursor(handle: HandlePosition, rotation = 0): string {
+  const step = Math.round((handleDegrees[handle] + rotation) / 45)
+  return resizeCursors[((step % 4) + 4) % 4] as string
 }
 
 export function handleAnchorPoints(rect: Rect): Record<HandlePosition, Point> {

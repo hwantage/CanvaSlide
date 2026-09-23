@@ -96,6 +96,21 @@ describe('sameDocumentContent', () => {
     expect(sameDocumentContent(a, b)).toBe(true)
   })
 
+  it('treats a re-measured rotated text box as the same content', () => {
+    const upright = document()
+    const saved = {
+      ...upright,
+      elements: { ...upright.elements, text: { ...upright.elements.text!, rotation: 30 } }
+    } as CanvasDocument
+    const measured = syncTextHeight(saved, 'text', 80)
+    expect(measured.elements.text).not.toMatchObject({ x: 0, y: 0 })
+    expect(sameDocumentContent(saved, measured)).toBe(true)
+    const moved = { ...measured.elements.text!, x: measured.elements.text!.x + 1 }
+    expect(
+      sameDocumentContent(saved, { ...measured, elements: { ...measured.elements, text: moved } })
+    ).toBe(false)
+  })
+
   it('ignores navigation and measured text/attached connector geometry', () => {
     const a = document()
     const b = syncTextHeight(a, 'text', 80)

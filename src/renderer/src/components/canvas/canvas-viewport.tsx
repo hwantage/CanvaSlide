@@ -78,6 +78,7 @@ export function CanvasViewport() {
       <FrameChromeOverlay />
       <SelectionOverlay
         onResizeHandleDown={handlers.onResizeHandleDown}
+        onRotateHandleDown={handlers.onRotateHandleDown}
         onConnectorEndDown={handlers.onConnectorEndDown}
       />
       <DragOverlays />

@@ -36,6 +36,7 @@ export type CanvasPointerHandlers = {
   onDragOver: (event: DragEvent<HTMLElement>) => void
   onDrop: (event: DragEvent<HTMLElement>) => void
   onResizeHandleDown: (handle: HandlePosition, event: PointerEvent<HTMLElement>) => void
+  onRotateHandleDown: (event: PointerEvent<HTMLElement>) => void
   onConnectorEndDown: (id: string, which: 'start' | 'end', event: PointerEvent<HTMLElement>) => void
 }
 
@@ -143,6 +144,16 @@ export function useCanvasInteraction(ref: RefObject<HTMLElement | null>): Canvas
         }
         pointers.current?.start(event.nativeEvent, ref.current, () => {
           interaction.startResize(handle, toInfo(event))
+          return interaction.isActive()
+        })
+      },
+      onRotateHandleDown: (event) => {
+        event.stopPropagation()
+        if (event.button !== 0 || !ref.current) {
+          return
+        }
+        pointers.current?.start(event.nativeEvent, ref.current, () => {
+          interaction.startRotate(toInfo(event))
           return interaction.isActive()
         })
       },

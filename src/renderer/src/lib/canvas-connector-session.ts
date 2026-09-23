@@ -5,7 +5,8 @@ import {
   nearestAnchorSide
 } from '@shared/canvas/connector-geometry'
 import { insertElement, patchElements } from '@shared/canvas/document-mutations'
-import { elementRect, rectContainsPoint } from '@shared/canvas/element-bounds'
+import { rectContainsPoint } from '@shared/canvas/element-bounds'
+import { elementBox, toLocalPoint } from '@shared/canvas/element-rotation'
 import type {
   CanvasDocument,
   ConnectorElement,
@@ -39,16 +40,16 @@ function hostAt(document: CanvasDocument, point: Point, excludeId: ElementId) {
     ) {
       continue
     }
-    const rect = elementRect(element)
+    const box = elementBox(element)
     // Why: ports sit on the outline; accept a small halo around the box so they are easy to hit.
     const halo = PORT_SNAP_PX / useCameraStore.getState().camera.zoom
     const padded = {
-      x: rect.x - halo,
-      y: rect.y - halo,
-      width: rect.width + halo * 2,
-      height: rect.height + halo * 2
+      x: box.x - halo,
+      y: box.y - halo,
+      width: box.width + halo * 2,
+      height: box.height + halo * 2
     }
-    if (rectContainsPoint(padded, point)) {
+    if (rectContainsPoint(padded, toLocalPoint(box, point))) {
       return element
     }
   }
@@ -71,7 +72,7 @@ export function resolveConnectorEndAt(
     overlay.setAnchorPreview(null)
     return { x: point.x, y: point.y }
   }
-  const rect = elementRect(host)
+  const rect = elementBox(host)
   const nearest = nearestAnchorSide(rect, point)
   const port = anchorPoint(rect, nearest)
   const snapWorld = PORT_SNAP_PX / useCameraStore.getState().camera.zoom
@@ -93,10 +94,16 @@ export function previewConnectorHostAt(document: CanvasDocument, point: Point): 
     }
     return
   }
-  const rect = elementRect(host)
+  const rect = elementBox(host)
   const side = nearestAnchorSide(rect, point)
   const current = overlay.anchorPreview
-  if (!current || current.side !== side || current.rect.x !== rect.x || current.rect.y !== rect.y) {
+  if (
+    !current ||
+    current.side !== side ||
+    current.rect.x !== rect.x ||
+    current.rect.y !== rect.y ||
+    current.rect.rotation !== rect.rotation
+  ) {
     overlay.setAnchorPreview({ rect, side })
   }
 }

@@ -3,6 +3,7 @@ import {
   anchorPoint,
   connectorBounds,
   connectorDistance,
+  connectorHosts,
   connectorMidpoint,
   connectorPath,
   facingSide,
@@ -119,6 +120,81 @@ describe('connector-geometry', () => {
     expect(facingSide(rect, { x: 50, y: 300 })).toBe('bottom')
     expect(facingSide(rect, { x: -10, y: -400 })).toBe('top')
     expect(facingSide(rect, { x: 400, y: 300 })).toBe('right')
+  })
+
+  it('turns anchors and facing sides with a rotated host', () => {
+    // 100×50 turned a quarter: its top port now faces right.
+    const turned = { x: 0, y: 0, width: 100, height: 50, rotation: 90 }
+    const top = anchorPoint(turned, 'top')
+    expect(top.x).toBeCloseTo(75, 9)
+    expect(top.y).toBeCloseTo(25, 9)
+    expect(facingSide(turned, { x: 400, y: 25 })).toBe('top')
+    expect(nearestAnchorSide(turned, { x: 70, y: 25 })).toBe('top')
+  })
+
+  it('anchors attached ends on the turned outline and leaves along the turned port', () => {
+    let doc: CanvasDocument = insertElement(createEmptyDocument(), {
+      ...shape('a', 0, 0),
+      rotation: 90
+    })
+    doc = insertElement(doc, shape('b', 300, 200))
+    doc = insertElement(
+      doc,
+      connector({
+        route: 'orthogonal',
+        start: { x: 0, y: 0, elementId: 'a', side: 'top', pinned: true },
+        end: { x: 0, y: 0, elementId: 'b' }
+      })
+    )
+    doc = syncConnectorGeometry(doc)
+    const c = doc.elements.c as ConnectorElement
+    expect(c.start).toMatchObject({ elementId: 'a', side: 'top', pinned: true })
+    expect(c.start.x).toBeCloseTo(75, 9)
+    expect(c.start.y).toBeCloseTo(25, 9)
+    expect(c.end).toMatchObject({ x: 300, y: 225, side: 'left' })
+    const hosts = connectorHosts(doc, c)
+    expect(hosts.start?.rotation).toBe(90)
+    expect(hosts.end).toBeUndefined()
+    const { polyline } = connectorPath(c, hosts)
+    // Out of the turned top port, which now points right, rather than up.
+    expect(polyline[1]!.x).toBeGreaterThan(99)
+    expect(polyline[1]!.y).toBeCloseTo(25, 9)
+    expect(hosts.obstacles[0]!.width).toBeCloseTo(50, 9)
+    // Turning the host back carries the pinned end round with it.
+    const upright = syncConnectorGeometry({
+      ...doc,
+      elements: {
+        ...doc.elements,
+        a: { ...(doc.elements.a as ReturnType<typeof shape>), rotation: 0 }
+      }
+    })
+    expect((upright.elements.c as ConnectorElement).start).toMatchObject({ x: 50, y: 0 })
+  })
+
+  it('runs a tilted port elbow stub past its host so the route never cuts through it', () => {
+    // A square turned 45° is a diamond; its left port faces up-left and leaves to the left.
+    let doc: CanvasDocument = insertElement(createEmptyDocument(), {
+      ...shape('a', 0, 0),
+      height: 100,
+      rotation: 45
+    })
+    doc = insertElement(doc, shape('b', 300, 300))
+    doc = insertElement(
+      doc,
+      connector({
+        route: 'orthogonal',
+        start: { x: 0, y: 0, elementId: 'a', side: 'left', pinned: true },
+        end: { x: 0, y: 0, elementId: 'b' }
+      })
+    )
+    doc = syncConnectorGeometry(doc)
+    const c = doc.elements.c as ConnectorElement
+    const hosts = connectorHosts(doc, c)
+    const bounds = hosts.obstacles[0]!
+    const { polyline } = connectorPath(c, hosts)
+    // The first turn happens outside the diamond's bounds, so no later segment crosses it.
+    expect(polyline[1]!.x).toBeLessThan(bounds.x)
+    expect(polyline[1]!.y).toBeCloseTo(c.start.y, 9)
   })
 
   it('measures distance to the path for hit testing', () => {

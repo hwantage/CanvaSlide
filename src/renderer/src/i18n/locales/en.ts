@@ -383,6 +383,7 @@ Use the skill at {skill} to create the file.`,
 
   'props.name': 'Name',
   'props.size': 'Size',
+  'props.rotation': 'Rotation',
   'preview.previous': 'Previous selected frame',
   'preview.next': 'Next selected frame',
   'motion.mixed': 'Mixed',
@@ -576,6 +577,7 @@ Use the skill at {skill} to create the file.`,
 
   'selection.frame': 'Frame selection',
   'selection.zoom': 'Zoom to selection',
+  'selection.rotateHint': 'Rotate · {shift}drag in {step} steps',
 
   'present.fromSelection': 'Slide show from current frame',
   'present.fromFrame': 'Slide show from this frame',
@@ -706,7 +708,7 @@ Use the skill at {skill} to create the file.`,
     'Use {text} for text, {rectangle} for a rectangle, {ellipse} for an ellipse, and {diamond} for a diamond. Double-click text to edit it. Copy an image and paste it with {paste}. Use the properties panel to adjust fill, borders, and text styling.',
   'site.docs.edit.arrangeHeading': 'Select and arrange',
   'site.docs.edit.arrangeBody':
-    'Press {select} for the selection tool. Drag on empty space to select several elements, or hold {shift} to add to a selection. Move and resize with the handles. The alignment controls help line up elements and distribute them evenly.',
+    'Press {select} for the selection tool. Drag on empty space to select several elements, or hold {shift} to add to a selection. Move and resize with the handles, and drag the round handle above a selection to rotate it; hold {shift} to turn in {step} steps. The alignment controls help line up elements and distribute them evenly.',
   'site.docs.edit.connectHeading': 'Make a connection',
   'site.docs.edit.connectBody':
     'Press {key} for the connector tool. Drag between shapes to connect them. Attach an end to a side port or to the shape itself; the line follows when the shape moves. Choose straight, elbow, or curved lines in the properties panel, and pick the start and end shapes separately, such as an arrow, a circle, or none.',

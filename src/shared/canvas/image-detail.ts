@@ -1,5 +1,6 @@
 import { worldRectToScreen } from './camera-transform'
 import type { Camera, Point, Rect, Size } from './element-types'
+import { pointsBounds, rectCenter, rotatedCorners, type RotatedRect } from './element-rotation'
 
 export type ImageDetailRegion = { crop: Rect; pixels: Size }
 export const IMAGE_DETAIL_TILE_EDGE = 2048
@@ -60,8 +61,14 @@ function tileEdges(
   return { offsets, pixels }
 }
 
+/** The viewport as seen from the image's own upright frame, so a turned image crops what shows. */
+function localViewport(screen: Rect, rotation: number, viewport: Size): Rect {
+  const view = { x: 0, y: 0, ...viewport }
+  return rotation === 0 ? view : pointsBounds(rotatedCorners(view, -rotation, rectCenter(screen)))
+}
+
 export function imageDetailRegions(
-  element: Rect,
+  element: RotatedRect,
   camera: Camera,
   viewport: Size,
   pixelRatio: number,
@@ -72,10 +79,11 @@ export function imageDetailRegions(
   if (screen.width * ratio <= preview.width && screen.height * ratio <= preview.height) {
     return []
   }
-  const left = Math.max(0, screen.x)
-  const top = Math.max(0, screen.y)
-  const right = Math.min(viewport.width, screen.x + screen.width)
-  const bottom = Math.min(viewport.height, screen.y + screen.height)
+  const view = localViewport(screen, element.rotation ?? 0, viewport)
+  const left = Math.max(view.x, screen.x)
+  const top = Math.max(view.y, screen.y)
+  const right = Math.min(view.x + view.width, screen.x + screen.width)
+  const bottom = Math.min(view.y + view.height, screen.y + screen.height)
   if (right <= left || bottom <= top) {
     return []
   }

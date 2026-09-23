@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { cameraEasings, DEFAULT_CAMERA_EASING } from './camera-easing'
+import { MAX_ROTATION_DEGREES } from './element-rotation'
 import { parseVideoSource } from './video-source'
 import {
   anchorSides,
@@ -46,6 +47,14 @@ const elementBaseSchema = rectSchema.extend({
   frameContentKey: z.string().min(1).optional()
 })
 
+// Why: absent means upright, so only turned elements carry the field.
+const rotationSchema = z
+  .number()
+  .finite()
+  .min(-MAX_ROTATION_DEGREES)
+  .max(MAX_ROTATION_DEGREES)
+  .optional()
+
 export const shapeStyleSchema = z.object({
   fill: z.string(),
   stroke: z.string(),
@@ -72,7 +81,8 @@ export const shapeElementSchema = elementBaseSchema.extend({
   shape: z.enum(shapeKinds),
   style: shapeStyleSchema,
   text: z.string(),
-  textStyle: textStyleSchema
+  textStyle: textStyleSchema,
+  rotation: rotationSchema
 })
 export type ShapeElement = z.infer<typeof shapeElementSchema>
 
@@ -80,6 +90,7 @@ export const textElementSchema = elementBaseSchema.extend({
   type: z.literal('text'),
   text: z.string(),
   textStyle: textStyleSchema,
+  rotation: rotationSchema,
   // Imported frame clipping follows the text when it is moved or resized.
   clip: z
     .object({
@@ -108,7 +119,8 @@ export const imageElementSchema = elementBaseSchema.extend({
   type: z.literal('image'),
   assetId: z.string().min(1),
   naturalWidth: z.number().positive(),
-  naturalHeight: z.number().positive()
+  naturalHeight: z.number().positive(),
+  rotation: rotationSchema
 })
 export type ImageElement = z.infer<typeof imageElementSchema>
 

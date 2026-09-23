@@ -1,3 +1,4 @@
+import { rotatedOrigin } from './element-rotation'
 import type { CanvasDocument, CanvasElement, ConnectorEnd } from './element-types'
 
 function equalValue(a: unknown, b: unknown): boolean {
@@ -33,7 +34,13 @@ function endpointContent(end: ConnectorEnd): unknown {
 function elementContent(element: CanvasElement): unknown {
   if (element.type === 'text') {
     // Text height is a renderer measurement, including after opening on a different platform.
-    return { ...element, height: undefined }
+    if (!element.rotation) {
+      return { ...element, height: undefined }
+    }
+    // A turned box keeps its visible corner as the measured height changes, so x/y move with it.
+    const origin = rotatedOrigin(element)
+    const round = (value: number) => Math.round(value * 1e6) / 1e6
+    return { ...element, x: round(origin.x), y: round(origin.y), height: undefined }
   }
   if (element.type === 'connector') {
     // Bounds and attached endpoints follow their hosts, including measured text heights.

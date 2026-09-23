@@ -169,6 +169,9 @@ All coordinates are absolute canvas coordinates; a frame does not create a local
   Standalone text height is measured on opening; that measurement does not mark the document dirty.
   Estimate height using the default 1.4 line-height (or explicit `textStyle.lineHeight`) and leave
   room for wrapping and font differences. Measurement does not reposition nearby elements.
+- **Rotation.** Shapes, text and images accept an optional `rotation`: degrees clockwise about the
+  element's centre, `-180..180`. Their `x`, `y`, `width` and `height` still describe the upright box
+  before turning. Omit it for upright elements. Frames, connectors and videos do not rotate.
 - **Connectors.** Both `start` and `end` always need world `x`/`y`. For an attached endpoint,
   `elementId` must reference an existing non-connector element. `side` is `top`, `right`, `bottom`
   or `left`; set `pinned: true` with `side` to keep a specific port. Free endpoints omit `elementId`.

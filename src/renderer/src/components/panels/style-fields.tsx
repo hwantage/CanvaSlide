@@ -14,11 +14,13 @@ export function NumberInput({
   value,
   min,
   max,
+  label,
   onChange
 }: {
   value: number
   min: number
   max: number
+  label?: string
   onChange: (v: number) => void
 }) {
   // Why: a controlled number field can't be cleared while typing unless the draft lives locally.
@@ -29,6 +31,7 @@ export function NumberInput({
   return (
     <input
       type="number"
+      aria-label={label}
       className={`${inputClass} w-16`}
       value={shown}
       min={min}

@@ -16,6 +16,7 @@ import {
   figClips,
   figPages,
   figTreeBounds,
+  figTurnedBox,
   multiplyFigMatrix,
   intersectFigClip
 } from './fig-scene'
@@ -45,12 +46,9 @@ export type FigImportResult = {
 }
 
 function nativeShape(node: FigNode, matrix: FigMatrix, id: string): ShapeElement | null {
+  const box = figTurnedBox(node, matrix)
   if (
-    Math.abs(matrix.m01) > 1e-6 ||
-    Math.abs(matrix.m10) > 1e-6 ||
-    matrix.m00 <= 0 ||
-    matrix.m11 <= 0 ||
-    Math.abs(matrix.m00 - matrix.m11) > 1e-6 ||
+    !box ||
     node.effects?.some((effect) => effect.visible !== false) ||
     node.mask ||
     node.isMask ||
@@ -75,7 +73,7 @@ function nativeShape(node: FigNode, matrix: FigMatrix, id: string): ShapeElement
   const color = fill?.color
     ? figColor(fill.color, (fill.opacity ?? 1) * (node.opacity ?? 1))
     : 'transparent'
-  const base = { id, ...figBounds(node, matrix) }
+  const base = { id, ...box }
   if (
     ['ROUNDED_RECTANGLE', 'RECTANGLE', 'ELLIPSE'].includes(node.type) &&
     ![
@@ -86,8 +84,9 @@ function nativeShape(node: FigNode, matrix: FigMatrix, id: string): ShapeElement
     ].some((value) => value !== undefined) &&
     (!stroke || node.strokeAlign === 'CENTER')
   ) {
-    const strokeWidth = stroke ? (node.strokeWeight ?? 1) * matrix.m00 : 0
-    const cornerRadius = (node.cornerRadius ?? 0) * matrix.m00
+    const scale = Math.hypot(matrix.m00, matrix.m10)
+    const strokeWidth = stroke ? (node.strokeWeight ?? 1) * scale : 0
+    const cornerRadius = (node.cornerRadius ?? 0) * scale
     if (strokeWidth > 64 || cornerRadius > 512) {
       return null
     }
@@ -244,7 +243,7 @@ export function convertFigFile(file: FigFile, options: FigImportOptions): FigImp
       const nested = children.get(figId(node.guid)) ?? []
       node = { ...node, opacity: (node.opacity ?? 1) * opacity }
       if (options.mode === 'editable' && node.type === 'TEXT') {
-        const text = clipFigText(figText(node, matrix, id(), warnings), clip)
+        const text = clipFigText(figText(node, matrix, id(), warnings), clip, warnings)
         if (text) {
           elements.push(place({ ...text, ...(groupId ? { groupId } : {}) }))
         }
@@ -312,13 +311,15 @@ export function convertFigFile(file: FigFile, options: FigImportOptions): FigImp
             Object.entries(FIG_IDENTITY).every(
               ([key, value]) => transform[key as keyof FigMatrix] === value
             )
+      // Upright images may stretch unevenly; a turned one needs a rotation and even scale.
+      const imageBox =
+        matrix.m00 > 0 && matrix.m11 > 0 && matrix.m01 === 0 && matrix.m10 === 0
+          ? figBounds(node, matrix)
+          : figTurnedBox(node, matrix)
       if (
         nested.length === 0 &&
         ['RECTANGLE', 'ROUNDED_RECTANGLE'].includes(node.type) &&
-        matrix.m00 > 0 &&
-        matrix.m11 > 0 &&
-        matrix.m01 === 0 &&
-        matrix.m10 === 0 &&
+        imageBox &&
         paints.length === 1 &&
         paint?.type === 'IMAGE' &&
         paint.image?.hash &&
@@ -358,7 +359,7 @@ export function convertFigFile(file: FigFile, options: FigImportOptions): FigImp
             place({
               id: id(),
               type: 'image',
-              ...figBounds(node, matrix),
+              ...imageBox,
               assetId: asset.id,
               naturalWidth: asset.width,
               naturalHeight: asset.height,

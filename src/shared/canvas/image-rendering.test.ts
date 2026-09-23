@@ -24,6 +24,14 @@ describe('image rendering bounds', () => {
     ).toBe(false)
   })
 
+  it('tests a rotated image by the extent it turns into', () => {
+    const near = { x: 0, y: 0, zoom: 1 }
+    // 20 wide and 4000 tall just right of the margin; turned a quarter it lies across the view.
+    const bar = { x: 1700, y: -1600, width: 20, height: 4000 }
+    expect(imageIntersectsViewport(bar, near, viewport)).toBe(false)
+    expect(imageIntersectsViewport({ ...bar, rotation: 90 }, near, viewport)).toBe(true)
+  })
+
   it('prefetches just outside the viewport and skips subpixel images', () => {
     expect(
       imageIntersectsViewport(

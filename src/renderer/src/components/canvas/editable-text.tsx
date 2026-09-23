@@ -35,13 +35,19 @@ export function EditableText({
     if (!element || !onHeightChange) {
       return
     }
-    // Why: under CSS zoom, engines disagree on whether offset*/contentRect are zoomed; the
-    // rect-to-CSS-width ratio calibrates the measurement so height comes back in world units.
-    const observer = new ResizeObserver(() => {
-      const rect = element.getBoundingClientRect()
+    // Why: under CSS zoom, engines disagree on whether offset* and observer sizes are zoomed, so
+    // the box's aspect scales the CSS width; observer sizes also ignore a rotated element's turn.
+    const observer = new ResizeObserver(([entry]) => {
+      const box = entry?.borderBoxSize[0]
+      if (!box) {
+        return
+      }
       const cssWidth = element.offsetWidth
-      const scale = cssWidth > 0 && rect.width > 0 ? rect.width / cssWidth : 1
-      onHeightChange(rect.height / scale)
+      onHeightChange(
+        cssWidth > 0 && box.inlineSize > 0
+          ? (box.blockSize / box.inlineSize) * cssWidth
+          : box.blockSize
+      )
     })
     observer.observe(element)
     return () => observer.disconnect()

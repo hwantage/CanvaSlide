@@ -2,9 +2,8 @@ import {
   elementsInBox,
   frameContainingPoint,
   hitTestTopmost,
-  rectContainsPoint,
   rectFromPoints,
-  selectionBounds
+  selectionContainsPoint
 } from '@shared/canvas/element-bounds'
 import { expandToGroups } from '@shared/canvas/element-groups'
 import { constrainToSquare } from '@shared/canvas/drag-constraints'
@@ -34,6 +33,7 @@ import {
   type MoveSession
 } from './canvas-move-session'
 import { applyResizeSession, beginResizeSession, type ResizeSession } from './canvas-resize-session'
+import { applyRotateSession, beginRotateSession, type RotateSession } from './canvas-rotate-session'
 import { createElementForTool, isCreateTool, type CreateTool } from './create-element-for-tool'
 import { DRAG_THRESHOLD_PX, frameHitChromeAt } from './frame-chrome'
 
@@ -54,6 +54,7 @@ type Session =
   | BoxSession
   | { kind: 'create'; tool: CreateTool; startWorld: Point }
   | ResizeSession
+  | RotateSession
   | ConnectorCreateSession
   | ConnectorEndSession
 
@@ -65,6 +66,7 @@ export type CanvasInteraction = {
   /** Right-click: selects what is under the cursor (keeping a multi-selection) and opens the menu. */
   contextMenu: (info: PointerInfo) => void
   startResize: (handle: HandlePosition, info: PointerInfo) => void
+  startRotate: (info: PointerInfo) => void
   startConnectorEnd: (id: ElementId, which: 'start' | 'end') => void
   cancel: () => void
   isActive: () => boolean
@@ -105,6 +107,7 @@ export function createCanvasInteraction(): CanvasInteraction {
     overlay.getState().setDragBox(null)
     overlay.getState().setCreatePreview(null)
     overlay.getState().setSnapGuides([])
+    overlay.getState().setRotationGuide(null)
   }
 
   const finish = (info: PointerInfo) => {
@@ -127,6 +130,7 @@ export function createCanvasInteraction(): CanvasInteraction {
         break
       case 'move':
       case 'resize':
+      case 'rotate':
         doc.endEdit()
         break
       case 'create':
@@ -148,6 +152,7 @@ export function createCanvasInteraction(): CanvasInteraction {
     if (
       session?.kind === 'move' ||
       session?.kind === 'resize' ||
+      session?.kind === 'rotate' ||
       session?.kind === 'connector-end'
     ) {
       docStore.getState().endEdit()
@@ -247,6 +252,9 @@ export function createCanvasInteraction(): CanvasInteraction {
         case 'resize':
           applyResizeSession(session, info.world)
           break
+        case 'rotate':
+          applyRotateSession(session, info.world, info.shiftKey)
+          break
         case 'connector-create':
           updateConnectorEnd(session.id, 'end', info.world)
           break
@@ -287,6 +295,13 @@ export function createCanvasInteraction(): CanvasInteraction {
         return
       }
       session = beginResizeSession(handle, info.world, info.shiftKey)
+    },
+
+    startRotate: (info) => {
+      if (session) {
+        return
+      }
+      session = beginRotateSession(info.world)
     },
 
     startConnectorEnd: (id, which) => {
@@ -373,8 +388,7 @@ function beginSelectSession(info: PointerInfo): PressSession | BoxSession | null
     return pressOn(info, frame.id)
   }
   // Why: gaps between multi-selected objects must still grab the group, like Miro/Figma.
-  const bounds = selectionBounds(document, selectedIds)
-  if (bounds && !info.shiftKey && rectContainsPoint(bounds, info.world)) {
+  if (!info.shiftKey && selectionContainsPoint(document, selectedIds, info.world)) {
     return { kind: 'press', start: info, targetId: null, additive: false, targets: [] }
   }
   const baseSelection = selectedIds

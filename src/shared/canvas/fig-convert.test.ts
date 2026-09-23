@@ -120,3 +120,53 @@ test('retains text under masks and translucent ancestors with reported approxima
   expect(result.warnings.mask).toBe(1)
   expect(result.warnings.paint).toBeGreaterThan(0)
 })
+
+test('keeps a rotated plain shape editable, turned about its centre', () => {
+  const decoded = file()
+  decoded.nodes.push({
+    guid: { sessionID: 0, localID: 600 },
+    type: 'RECTANGLE',
+    parentIndex: { guid: { sessionID: 0, localID: 1 }, position: 'z' },
+    size: { x: 40, y: 20 },
+    transform: { m00: 0, m01: -1, m02: 100, m10: 1, m11: 0, m12: 50 },
+    fillPaints: [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
+  })
+  const result = convertFigFile(decoded, { ...options, pages: ['0:1'] })
+  const turned = result.elements.find(
+    (element) => element.type === 'shape' && element.rotation !== undefined
+  )
+  expect(turned).toMatchObject({ type: 'shape', width: 40, height: 20, rotation: 90 })
+  expect(result.warnings).toEqual(convertFigFile(file(), { ...options, pages: ['0:1'] }).warnings)
+})
+
+test('keeps a rotated bitmap as a turned image, while a mirrored one stays flattened', () => {
+  const withImage = (transform: { m00: number; m01: number; m10: number; m11: number }) => {
+    const decoded = file()
+    decoded.images.set('0a0b', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]))
+    decoded.nodes.push({
+      guid: { sessionID: 0, localID: 700 },
+      type: 'RECTANGLE',
+      parentIndex: { guid: { sessionID: 0, localID: 1 }, position: 'z' },
+      size: { x: 40, y: 20 },
+      transform: { ...transform, m02: 100, m12: 50 },
+      fillPaints: [
+        {
+          type: 'IMAGE',
+          image: { hash: new Uint8Array([10, 11]) },
+          imageScaleMode: 'STRETCH',
+          originalImageWidth: 40,
+          originalImageHeight: 20
+        }
+      ]
+    })
+    return convertFigFile(decoded, { ...options, pages: ['0:1'] }).elements.filter(
+      (element) => element.type === 'image'
+    )
+  }
+  expect(withImage({ m00: 0, m01: -1, m10: 1, m11: 0 })).toEqual([
+    expect.objectContaining({ width: 40, height: 20, rotation: 90 })
+  ])
+  expect(withImage({ m00: -1, m01: 0, m10: 0, m11: 1 })).toEqual([
+    expect.not.objectContaining({ rotation: expect.anything() })
+  ])
+})

@@ -13,6 +13,13 @@ import {
 } from 'lucide-react'
 import type { CanvasElement } from '@shared/canvas/element-types'
 import { canGroup, canUngroup, selectionGroupId } from '@shared/canvas/element-groups'
+import {
+  canRotateSelection,
+  elementRotation,
+  isRotatable,
+  normalizeRotation,
+  resizeKeepingOrigin
+} from '@shared/canvas/element-rotation'
 import { MIN_ELEMENT_SIZE } from '@shared/canvas/resize-handles'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { TextButton } from '@/components/ui/text-button'
@@ -47,6 +54,9 @@ export function PropertiesPanel() {
   const connector = firstOfType(elements, 'connector')
   const textStyle = (firstOfType(elements, 'text') ?? shape ?? connector)?.textStyle ?? null
   const first = elements[0] as CanvasElement
+  const turnable = canRotateSelection(document, selectedIds)
+    ? elements.find(isRotatable)
+    : undefined
   // Why: z-order moves nothing a user can see for frames, and wrapping one adds a duplicate slide.
   const onlyFrames = selectionIsOnlyFrames(document, selectedIds)
 
@@ -75,14 +85,35 @@ export function PropertiesPanel() {
             value={first.width}
             min={MIN_ELEMENT_SIZE}
             max={100_000}
-            onChange={(width) => store.patchElements([first.id], { width })}
+            onChange={(width) =>
+              store.patchElements([first.id], resizeKeepingOrigin(first, width, first.height))
+            }
           />
           <NumberInput
             value={first.height}
             min={MIN_ELEMENT_SIZE}
             max={100_000}
-            onChange={(height) => store.patchElements([first.id], { height })}
+            onChange={(height) =>
+              store.patchElements([first.id], resizeKeepingOrigin(first, first.width, height))
+            }
           />
+        </FieldRow>
+      )}
+      {turnable && (
+        <FieldRow label={t('props.rotation')}>
+          <NumberInput
+            value={elementRotation(turnable)}
+            min={-360}
+            max={360}
+            label={t('props.rotation')}
+            onChange={(degrees) =>
+              // Each element turns about its own centre, as a typed angle does in Figma.
+              store.patchElements(selectedIds, (element) =>
+                isRotatable(element) ? { rotation: normalizeRotation(degrees) } : {}
+              )
+            }
+          />
+          <span className="text-xs text-muted-foreground">°</span>
         </FieldRow>
       )}
       {first.type === 'video' && elements.length === 1 && (

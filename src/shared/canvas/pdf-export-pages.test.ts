@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { createEmptyDocument, type CanvasDocument, type FrameElement } from './element-types'
-import { PDF_LONG_EDGE_PT, pdfExportPages, pdfPageSize, pdfRasterSize } from './pdf-export-pages'
+import {
+  createEmptyDocument,
+  defaultShapeStyle,
+  defaultTextStyle,
+  type CanvasDocument,
+  type CanvasElement,
+  type FrameElement
+} from './element-types'
+import {
+  PDF_LONG_EDGE_PT,
+  pdfExportPages,
+  pdfPageElements,
+  pdfPageSize,
+  pdfRasterSize
+} from './pdf-export-pages'
 
 function frame(id: string, order: number, width: number, height: number): FrameElement {
   return { id, type: 'frame', name: id, order, x: 0, y: 0, width, height }
@@ -100,5 +113,36 @@ describe('pdfExportPages', () => {
 
   it('exports nothing from a document with no frames', () => {
     expect(pdfExportPages(createEmptyDocument('Empty'), 'medium')).toEqual([])
+  })
+})
+
+describe('pdfPageElements', () => {
+  it('prints a rotated element that only its turned outline brings onto the page', () => {
+    const page = frame('page', 1, 1000, 500)
+    // A 20×800 bar right of the page; turned a quarter it reaches back across the right edge.
+    const bar: CanvasElement = {
+      id: 'bar',
+      type: 'shape',
+      shape: 'rectangle',
+      x: 1100,
+      y: -150,
+      width: 20,
+      height: 800,
+      style: defaultShapeStyle,
+      text: '',
+      textStyle: defaultTextStyle
+    }
+    const doc = (element: CanvasElement) => {
+      const base = documentWith([page])
+      return {
+        ...base,
+        elements: { ...base.elements, bar: element },
+        order: [...base.order, 'bar']
+      }
+    }
+    expect(pdfPageElements(doc(bar), page)).toEqual([])
+    expect(pdfPageElements(doc({ ...bar, rotation: 90 } as CanvasElement), page)).toEqual([
+      expect.objectContaining({ id: 'bar' })
+    ])
   })
 })

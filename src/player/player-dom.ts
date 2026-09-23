@@ -6,8 +6,9 @@ import type {
   ShapeElement,
   TextStyle
 } from '@shared/canvas/element-types'
-import { connectorMidpoint, connectorObstacles } from '@shared/canvas/connector-geometry'
+import { connectorHosts, connectorMidpoint } from '@shared/canvas/connector-geometry'
 import { connectorDrawing } from '@shared/canvas/connector-markers'
+import { rotationTransform } from '@shared/canvas/element-rotation'
 import { overviewStackRanks, overviewZIndex } from '@shared/canvas/overview-stacking'
 import { connectorCanvasRect, connectorDashArray, shapeGeometry } from '@shared/canvas/shape-svg'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
@@ -75,6 +76,17 @@ function shapeSvg(element: ShapeElement): SVGElement {
 
 /** One element's static node. The PDF export reuses this so both renderers stay in step. */
 export function renderElement(element: CanvasElement, doc: CanvasDocument): HTMLElement | null {
+  const node = elementNode(element, doc)
+  const turn = 'rotation' in element ? rotationTransform(element.rotation) : undefined
+  if (node && turn) {
+    // Why: text can render taller than its stored box; turn about the box centre geometry uses.
+    node.style.transformOrigin = `${element.width / 2}px ${element.height / 2}px`
+    node.style.transform = turn
+  }
+  return node
+}
+
+function elementNode(element: CanvasElement, doc: CanvasDocument): HTMLElement | null {
   switch (element.type) {
     case 'video': {
       const node = el('div', 'uc-el')
@@ -129,7 +141,7 @@ function connectorNode(
   element: Extract<CanvasElement, { type: 'connector' }>,
   doc: CanvasDocument
 ): HTMLElement {
-  const obstacles = connectorObstacles(doc, element)
+  const hosts = connectorHosts(doc, element)
   const box = connectorCanvasRect(element)
   const node = el('div', 'uc-el uc-connector')
   place(node, box)
@@ -140,7 +152,7 @@ function connectorNode(
   })
   svg.style.overflow = 'visible'
   const { stroke, strokeWidth } = element.style
-  const drawing = connectorDrawing(element, obstacles)
+  const drawing = connectorDrawing(element, hosts)
   const path = svgEl('path', {
     d: drawing.d,
     fill: 'none',
@@ -165,7 +177,7 @@ function connectorNode(
   }
   node.append(svg)
   if (element.label !== '') {
-    const mid = connectorMidpoint(element, obstacles)
+    const mid = connectorMidpoint(element, hosts)
     const label = el('div', 'uc-text uc-connector-label')
     label.style.left = `${mid.x - box.x}px`
     label.style.top = `${mid.y - box.y}px`

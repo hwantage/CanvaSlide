@@ -19,7 +19,7 @@ export function sideNormal(side: AnchorSide | undefined): Point | null {
 }
 
 /** Distance a connector travels straight out of its anchor before it may turn. */
-const ELBOW_STUB = 24
+export const ELBOW_STUB = 24
 
 function segmentCrossesRect(a: Point, b: Point, rect: Rect): boolean {
   const minX = Math.min(a.x, b.x)
@@ -77,12 +77,13 @@ export function orthogonalPoints(
   aSide: AnchorSide | undefined,
   b: Point,
   bSide: AnchorSide | undefined,
-  obstacles: Rect[]
+  obstacles: Rect[],
+  stubs: readonly [number, number] = [ELBOW_STUB, ELBOW_STUB]
 ): Point[] {
   const na = sideNormal(aSide)
   const nb = sideNormal(bSide)
-  const s0 = na ? { x: a.x + na.x * ELBOW_STUB, y: a.y + na.y * ELBOW_STUB } : a
-  const s3 = nb ? { x: b.x + nb.x * ELBOW_STUB, y: b.y + nb.y * ELBOW_STUB } : b
+  const s0 = na ? { x: a.x + na.x * stubs[0], y: a.y + na.y * stubs[0] } : a
+  const s3 = nb ? { x: b.x + nb.x * stubs[1], y: b.y + nb.y * stubs[1] } : b
   const arrive = nb ? { x: -nb.x, y: -nb.y } : null
   const midX = (s0.x + s3.x) / 2
   const midY = (s0.y + s3.y) / 2
@@ -119,20 +120,16 @@ export function orthogonalPoints(
   return route.length >= 2 ? route : [a, b]
 }
 
-export function curveControls(
-  a: Point,
-  aSide: AnchorSide | undefined,
-  b: Point,
-  bSide: AnchorSide | undefined
-) {
+/** Bezier controls leaving each end along its port normal; a free end (null) aims at the other. */
+export function curveControls(a: Point, aNormal: Point | null, b: Point, bNormal: Point | null) {
   const distance = Math.hypot(b.x - a.x, b.y - a.y)
   const reach = Math.max(40, distance / 2)
   const na =
-    sideNormal(aSide) ??
+    aNormal ??
     (Math.abs(b.x - a.x) >= Math.abs(b.y - a.y)
       ? { x: Math.sign(b.x - a.x) || 1, y: 0 }
       : { x: 0, y: Math.sign(b.y - a.y) || 1 })
-  const nb = sideNormal(bSide) ?? { x: -na.x, y: -na.y }
+  const nb = bNormal ?? { x: -na.x, y: -na.y }
   return {
     c1: { x: a.x + na.x * reach, y: a.y + na.y * reach },
     c2: { x: b.x + nb.x * reach, y: b.y + nb.y * reach }

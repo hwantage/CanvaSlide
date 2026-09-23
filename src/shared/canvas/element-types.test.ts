@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { documentSettingsSchema, frameTransitionSchema } from './element-types'
+import {
+  canvasElementSchema,
+  defaultShapeStyle,
+  defaultTextStyle,
+  documentSettingsSchema,
+  frameTransitionSchema
+} from './element-types'
 
 describe('camera validation boundaries', () => {
   it.each([
@@ -34,5 +40,39 @@ describe('camera validation boundaries', () => {
     expect(frameTransitionSchema.parse({})).toEqual({})
     expect(frameTransitionSchema.safeParse({ ms: 1.5 }).success).toBe(false)
     expect(documentSettingsSchema.safeParse({ transitionMs: 1.5 }).success).toBe(false)
+  })
+})
+
+describe('element rotation', () => {
+  const shape = {
+    id: 's',
+    type: 'shape',
+    shape: 'rectangle',
+    x: 0,
+    y: 0,
+    width: 10,
+    height: 10,
+    style: defaultShapeStyle,
+    text: '',
+    textStyle: defaultTextStyle
+  }
+
+  it('may be omitted, which means upright', () => {
+    expect(canvasElementSchema.parse(shape)).not.toHaveProperty('rotation')
+    expect(canvasElementSchema.parse({ ...shape, rotation: -180 })).toMatchObject({
+      rotation: -180
+    })
+    expect(canvasElementSchema.parse({ ...shape, rotation: 180 })).toMatchObject({ rotation: 180 })
+  })
+
+  it('rejects angles outside a half turn either way and non-numbers', () => {
+    for (const rotation of [-181, 181, Number.NaN, Infinity, '45']) {
+      expect(canvasElementSchema.safeParse({ ...shape, rotation }).success).toBe(false)
+    }
+  })
+
+  it('stays off frames, which are views rather than content', () => {
+    const frame = { id: 'f', type: 'frame', name: '', order: 0, x: 0, y: 0, width: 9, height: 9 }
+    expect(canvasElementSchema.parse({ ...frame, rotation: 30 })).not.toHaveProperty('rotation')
   })
 })

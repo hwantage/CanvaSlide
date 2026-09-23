@@ -3,7 +3,7 @@ import {
   patchElements,
   translateElement
 } from '@shared/canvas/document-mutations'
-import { elementRect, unionRects } from '@shared/canvas/element-bounds'
+import { elementBounds, unionRects } from '@shared/canvas/element-bounds'
 import { withFrameContents } from '@shared/canvas/frame-contents'
 import { constrainToAxis } from '@shared/canvas/drag-constraints'
 import type { CanvasElement, ElementId, Point, Rect } from '@shared/canvas/element-types'
@@ -50,7 +50,7 @@ export function beginMoveSession(
     const element = document.elements[id]
     if (element) {
       originals[id] = element
-      rects.push(elementRect(element))
+      rects.push(elementBounds(element))
     }
   }
   const moving = new Set(ids)
@@ -59,7 +59,7 @@ export function beginMoveSession(
     .filter((id) => !moving.has(id))
     .flatMap((id) => {
       const element = document.elements[id]
-      return element && element.type !== 'connector' ? [elementRect(element)] : []
+      return element && element.type !== 'connector' ? [elementBounds(element)] : []
     })
   return {
     kind: 'move',

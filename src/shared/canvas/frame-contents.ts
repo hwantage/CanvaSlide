@@ -1,10 +1,9 @@
 import { isFrameElement } from './element-runtime'
-import { rectContainsRect } from './element-bounds'
+import { rectContainsRect, visibleBounds } from './element-bounds'
 import type { CanvasDocument, CanvasElement, ElementId, FrameElement } from './element-types'
-import { visibleTextRect } from './text-clip'
 
 function contains(frame: FrameElement, element: CanvasElement): boolean {
-  return rectContainsRect(frame, element.type === 'text' ? visibleTextRect(element) : element)
+  return rectContainsRect(frame, visibleBounds(element))
 }
 
 /** Spatial containment still applies; copy membership only resolves competing frames. */

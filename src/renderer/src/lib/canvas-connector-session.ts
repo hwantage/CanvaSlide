@@ -53,8 +53,8 @@ function hostAt(document: CanvasDocument, point: Point, excludeId: ElementId) {
     const local = toLocalPoint(box, point)
     // A triangle's empty upper corners belong to whatever lies beneath it.
     const hit =
-      anchorOutline(element) === 'triangle'
-        ? triangleContainsPoint(box, local, halo)
+      element.type === 'shape' && element.shape === 'triangle'
+        ? triangleContainsPoint(element, local, halo)
         : rectContainsPoint(padded, local)
     if (hit) {
       return element

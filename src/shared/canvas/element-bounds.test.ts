@@ -102,23 +102,35 @@ describe('element-bounds', () => {
   })
 
   it("lets a triangle's empty upper corners fall through to what lies beneath", () => {
-    const rect = { x: 0, y: 0, width: 100, height: 100 }
-    expect(triangleContainsPoint(rect, { x: 50, y: 60 })).toBe(true)
-    expect(triangleContainsPoint(rect, { x: 5, y: 5 })).toBe(false)
-    expect(triangleContainsPoint(rect, { x: 95, y: 20 })).toBe(false)
+    const triangle = { ...shape('t', 0, 0), shape: 'triangle' } as ShapeElement
+    expect(triangleContainsPoint(triangle, { x: 50, y: 60 })).toBe(true)
+    expect(triangleContainsPoint(triangle, { x: 5, y: 5 })).toBe(false)
+    expect(triangleContainsPoint(triangle, { x: 95, y: 20 })).toBe(false)
     // The halo reaches just past each edge, including the base, but not into the corners.
-    expect(triangleContainsPoint(rect, { x: 22, y: 50 }, 6)).toBe(true)
-    expect(triangleContainsPoint(rect, { x: 50, y: 104 }, 6)).toBe(true)
-    expect(triangleContainsPoint(rect, { x: 5, y: 5 }, 6)).toBe(false)
+    expect(triangleContainsPoint(triangle, { x: 22, y: 50 }, 6)).toBe(true)
+    expect(triangleContainsPoint(triangle, { x: 50, y: 104 }, 6)).toBe(true)
+    expect(triangleContainsPoint(triangle, { x: 5, y: 5 }, 6)).toBe(false)
     const chrome = { titleHeight: 24, borderWidth: 8 }
-    const triangle = { ...shape('t', 10, 10), shape: 'triangle' } as ShapeElement
-    const doc = docWith(shape('under', 0, 0, 40, 40), triangle)
+    const moved = { ...triangle, x: 10, y: 10 }
+    const doc = docWith(shape('under', 0, 0, 40, 40), moved)
     expect(hitTestTopmost(doc, { x: 15, y: 15 }, chrome)?.id).toBe('under')
     expect(hitTestTopmost(doc, { x: 60, y: 80 }, chrome)?.id).toBe('t')
     // Upside down, the empty corners are at the bottom and the apex points down.
-    const flipped = docWith({ ...triangle, rotation: 180 })
+    const flipped = docWith({ ...moved, rotation: 180 })
     expect(hitTestTopmost(flipped, { x: 60, y: 30 }, chrome)?.id).toBe('t')
     expect(hitTestTopmost(flipped, { x: 15, y: 105 }, chrome)).toBeNull()
+    // A lone selected triangle grabs inside what it draws, like a turned element.
+    expect(selectionContainsPoint(doc, ['t'], { x: 15, y: 15 })).toBe(false)
+    expect(selectionContainsPoint(doc, ['t'], { x: 60, y: 80 })).toBe(true)
+  })
+
+  it('hit-tests a thick-stroked triangle by the outline it draws', () => {
+    const style = { ...defaultShapeStyle, strokeWidth: 20 }
+    const thick = { ...shape('t', 0, 0, 100, 60), shape: 'triangle', style } as ShapeElement
+    // The polygon is inset to (50,10) (90,50) (10,50) and the round stroke reaches 10px past it.
+    expect(triangleContainsPoint(thick, { x: 1, y: 59 })).toBe(false)
+    expect(triangleContainsPoint(thick, { x: 50, y: 1 })).toBe(true)
+    expect(triangleContainsPoint(thick, { x: 5, y: 55 })).toBe(true)
   })
 
   it('box-selects intersecting content but only fully enclosed frames', () => {

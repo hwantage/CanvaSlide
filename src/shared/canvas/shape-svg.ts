@@ -1,4 +1,4 @@
-import type { ConnectorElement, Rect, ShapeElement, ShapeKind } from './element-types'
+import type { ConnectorElement, Point, Rect, ShapeElement, ShapeKind } from './element-types'
 
 /** The one SVG primitive a shape kind is drawn with, inset so the stroke stays inside the box. */
 export type ShapeGeometry =
@@ -6,13 +6,28 @@ export type ShapeGeometry =
   | { tag: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
   | { tag: 'polygon'; points: string }
 
+/** Half the stroke, so the outline stays inside the box, clamped so shapes never invert. */
+function strokeInset(element: ShapeElement): Point {
+  const inset = element.style.strokeWidth / 2
+  // Why: a valid stroke may exceed either edge, but SVG radii and polygon edges must not invert.
+  return { x: Math.min(inset, element.width / 2), y: Math.min(inset, element.height / 2) }
+}
+
+/** A triangle's stroke centreline in its own coordinates: apex, right base corner, left base corner. */
+export function triangleOutline(element: ShapeElement): [Point, Point, Point] {
+  const { width: w, height: h } = element
+  const inset = strokeInset(element)
+  return [
+    { x: w / 2, y: inset.y },
+    { x: w - inset.x, y: h - inset.y },
+    { x: inset.x, y: h - inset.y }
+  ]
+}
+
 /** Geometry for `element` in its own coordinate space (0,0 at the top-left corner). */
 export function shapeGeometry(element: ShapeElement): ShapeGeometry {
   const { width: w, height: h, style } = element
-  const inset = style.strokeWidth / 2
-  // Why: a valid stroke may exceed either edge, but SVG radii and polygon edges must not invert.
-  const insetX = Math.min(inset, w / 2)
-  const insetY = Math.min(inset, h / 2)
+  const { x: insetX, y: insetY } = strokeInset(element)
   switch (element.shape) {
     case 'rectangle':
       return {
@@ -33,7 +48,9 @@ export function shapeGeometry(element: ShapeElement): ShapeGeometry {
     case 'triangle':
       return {
         tag: 'polygon',
-        points: `${w / 2},${insetY} ${w - insetX},${h - insetY} ${insetX},${h - insetY}`
+        points: triangleOutline(element)
+          .map((p) => `${p.x},${p.y}`)
+          .join(' ')
       }
   }
 }
@@ -45,11 +62,14 @@ export function shapeUsesCornerRadius(kind: ShapeKind): boolean {
 
 /** Box the label is laid out in, in the shape's own coordinates. */
 export function shapeLabelRect(element: ShapeElement): Rect {
-  const { width: w, height: h } = element
+  if (element.shape !== 'triangle') {
+    return { x: 0, y: 0, width: element.width, height: element.height }
+  }
   // Why: the largest box inside a triangle is its lower middle; text there never crosses a slant.
-  return element.shape === 'triangle'
-    ? { x: w / 4, y: h / 2, width: w / 2, height: h / 2 }
-    : { x: 0, y: 0, width: w, height: h }
+  const [apex, , left] = triangleOutline(element)
+  const base = element.width - left.x * 2
+  const height = left.y - apex.y
+  return { x: left.x + base / 4, y: apex.y + height / 2, width: base / 2, height: height / 2 }
 }
 
 /** Padding around a connector's bounding box so arrowheads and thick strokes are never clipped. */

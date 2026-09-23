@@ -9,7 +9,15 @@ import {
   rotatedCorners,
   toLocalPoint
 } from './element-rotation'
-import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
+import type {
+  CanvasDocument,
+  CanvasElement,
+  ElementId,
+  Point,
+  Rect,
+  ShapeElement
+} from './element-types'
+import { triangleOutline } from './shape-svg'
 import { visibleTextRect } from './text-clip'
 
 /** The element's own upright box; a rotated element turns this about its centre. */
@@ -31,7 +39,7 @@ function visibleRect(element: CanvasElement): Rect {
 function elementContainsPoint(element: CanvasElement, point: Point): boolean {
   const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
   return element.type === 'shape' && element.shape === 'triangle'
-    ? triangleContainsPoint(elementRect(element), local)
+    ? triangleContainsPoint(element, local)
     : rectContainsPoint(visibleRect(element), local)
 }
 
@@ -40,31 +48,25 @@ function cross(o: Point, a: Point, b: Point): number {
 }
 
 /**
- * Whether an upright-frame `point` lands on the triangle drawn in `rect`, or within `halo` of it.
- * The box's empty upper corners pass through to whatever lies beneath.
+ * Whether an upright-frame `point` lands on what a triangle draws (its fill and round-joined
+ * stroke), or within `halo` of it. The box's empty upper corners pass through to what lies beneath.
  */
-export function triangleContainsPoint(rect: Rect, point: Point, halo = 0): boolean {
-  const { x, y, width: w, height: h } = rect
-  if (
-    !rectContainsPoint(
-      { x: x - halo, y: y - halo, width: w + halo * 2, height: h + halo * 2 },
-      point
-    )
-  ) {
+export function triangleContainsPoint(element: ShapeElement, point: Point, halo = 0): boolean {
+  const { x, y, width, height } = element
+  const box = { x: x - halo, y: y - halo, width: width + halo * 2, height: height + halo * 2 }
+  if (!rectContainsPoint(box, point)) {
     return false
   }
-  const apex = { x: x + w / 2, y }
-  const right = { x: x + w, y: y + h }
-  const left = { x, y: y + h }
+  const p = { x: point.x - x, y: point.y - y }
+  const [apex, right, left] = triangleOutline(element)
+  const reach = halo + element.style.strokeWidth / 2
   const inside =
-    cross(apex, right, point) >= 0 &&
-    cross(right, left, point) >= 0 &&
-    cross(left, apex, point) >= 0
+    cross(apex, right, p) >= 0 && cross(right, left, p) >= 0 && cross(left, apex, p) >= 0
   return (
     inside ||
-    distanceToSegment(point, apex, right) <= halo ||
-    distanceToSegment(point, right, left) <= halo ||
-    distanceToSegment(point, left, apex) <= halo
+    distanceToSegment(p, apex, right) <= reach ||
+    distanceToSegment(p, right, left) <= reach ||
+    distanceToSegment(p, left, apex) <= reach
   )
 }
 
@@ -162,7 +164,11 @@ export function selectionContainsPoint(
   point: Point
 ): boolean {
   const only = ids.length === 1 ? document.elements[ids[0] as ElementId] : undefined
-  if (only && elementRotation(only) !== 0) {
+  // Why: a turned element or a triangle leaves parts of its bounding box empty.
+  if (
+    only &&
+    (elementRotation(only) !== 0 || (only.type === 'shape' && only.shape === 'triangle'))
+  ) {
     return elementContainsPoint(only, point)
   }
   const bounds = selectionBounds(document, ids)

@@ -24,11 +24,11 @@ test('draws a triangle whose label, ports, panel fields and HTML export follow i
   await page.keyboard.type('Tri')
   await page.keyboard.press('Escape')
   await expect(triangle).toContainText('Tri')
-  // The label sits in the triangle's lower middle, clear of the slanted edges.
+  // The label sits in the lower middle of the stroke's centreline, clear of the slanted edges.
   const label = triangle.locator('> div')
-  await expect(label).toHaveCSS('left', '40px')
+  await expect(label).toHaveCSS('left', '40.5px')
   await expect(label).toHaveCSS('top', '50px')
-  await expect(label).toHaveCSS('width', '80px')
+  await expect(label).toHaveCSS('width', '79px')
 
   // Only a rectangle draws a corner radius, so the field shows for it alone.
   const radius = page.locator('aside').getByText('Radius', { exact: true })
@@ -80,7 +80,7 @@ test('draws a triangle whose label, ports, panel fields and HTML export follow i
   await expect(exported.locator('polygon')).toHaveAttribute('points', outline)
   const exportedLabel = exported.locator('.uc-shape-label')
   await expect(exportedLabel).toContainText('Tri')
-  await expect(exportedLabel).toHaveCSS('left', '40px')
+  await expect(exportedLabel).toHaveCSS('left', '40.5px')
   await expect(exportedLabel).toHaveCSS('top', '50px')
-  await expect(exportedLabel).toHaveCSS('width', '80px')
+  await expect(exportedLabel).toHaveCSS('width', '79px')
 })

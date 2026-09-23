@@ -111,7 +111,10 @@ describe('shape-svg', () => {
   })
 
   it("lays a triangle's label inside its lower middle and every other label across the box", () => {
-    expect(shapeLabelRect(shape('triangle'))).toEqual({ x: 25, y: 30, width: 50, height: 30 })
+    // The 4px stroke's centreline runs 2px inside the box, so the label box sits inside that.
+    expect(shapeLabelRect(shape('triangle'))).toEqual({ x: 26, y: 30, width: 48, height: 28 })
+    // A stroke thicker than the box is clamped the same way the outline is.
+    expect(shapeLabelRect(shape('triangle', 64))).toEqual({ x: 41, y: 30, width: 18, height: 0 })
     for (const kind of ['rectangle', 'ellipse', 'diamond'] as const) {
       expect(shapeLabelRect(shape(kind))).toEqual({ x: 0, y: 0, width: 100, height: 60 })
     }

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ArrowHead, ConnectorRoute, ElementId } from '@shared/canvas/element-types'
+import type { ConnectorRoute, ElementId } from '@shared/canvas/element-types'
 
 export const toolIds = [
   'select',
@@ -13,7 +13,8 @@ export const toolIds = [
 ] as const
 export type ToolId = (typeof toolIds)[number]
 
-export type ConnectorPreset = { route: ConnectorRoute; startHead: ArrowHead; endHead: ArrowHead }
+// Why no ends here: they live in style memory, which panel edits update too.
+export type ConnectorPreset = { route: ConnectorRoute }
 
 export type ToolState = {
   tool: ToolId
@@ -35,7 +36,7 @@ export type ToolStore = ToolState & ToolActions
 
 export const useToolStore = create<ToolStore>()((set) => ({
   tool: 'select',
-  connectorPreset: { route: 'straight', startHead: 'none', endHead: 'arrow' },
+  connectorPreset: { route: 'straight' },
   spaceHeld: false,
   editingTextId: null,
   setTool: (tool) => set({ tool, editingTextId: null }),

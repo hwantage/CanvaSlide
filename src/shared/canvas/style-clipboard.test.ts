@@ -41,6 +41,34 @@ describe('style-clipboard', () => {
     })
   })
 
+  it('carries connector ends between connectors and leaves them off other elements', () => {
+    const line = (id: string, startHead: 'none' | 'bar', endHead: 'arrow' | 'diamond') =>
+      ({
+        id,
+        type: 'connector',
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 1,
+        start: { x: 0, y: 0 },
+        end: { x: 10, y: 0 },
+        route: 'straight',
+        startHead,
+        endHead,
+        style: { stroke: '#111111', strokeWidth: 2, dashed: true },
+        label: '',
+        textStyle: text.textStyle
+      }) satisfies CanvasElement
+    const clip = extractStyleClip(line('a', 'bar', 'diamond'))!
+    expect(clip.connectorHeads).toEqual({ startHead: 'bar', endHead: 'diamond' })
+    expect(styleClipPatch(line('b', 'none', 'arrow'), clip)).toMatchObject({
+      startHead: 'bar',
+      endHead: 'diamond',
+      style: { dashed: true }
+    })
+    expect(styleClipPatch(shape, clip)).not.toHaveProperty('startHead')
+  })
+
   it('has nothing for images and frames', () => {
     const image: CanvasElement = {
       id: 'i',

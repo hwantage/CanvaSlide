@@ -1,9 +1,11 @@
+import type { ConnectorHeads } from './connector-markers'
 import type { CanvasElement, ConnectorStyle, ShapeStyle, TextStyle } from './element-types'
 
 /** Formatting lifted off one element; every part is optional so any element can donate. */
 export type StyleClip = {
   shape?: ShapeStyle
   connector?: ConnectorStyle
+  connectorHeads?: ConnectorHeads
   text?: TextStyle
 }
 
@@ -14,7 +16,11 @@ export function extractStyleClip(element: CanvasElement): StyleClip | null {
     case 'text':
       return { text: { ...element.textStyle } }
     case 'connector':
-      return { connector: { ...element.style }, text: { ...element.textStyle } }
+      return {
+        connector: { ...element.style },
+        connectorHeads: { startHead: element.startHead, endHead: element.endHead },
+        text: { ...element.textStyle }
+      }
     default:
       return null
   }
@@ -33,6 +39,7 @@ export function styleClipPatch(element: CanvasElement, clip: StyleClip): Partial
     case 'connector':
       return {
         ...(clip.connector ? { style: { ...clip.connector } } : {}),
+        ...clip.connectorHeads,
         ...(clip.text ? { textStyle: { ...clip.text } } : {})
       }
     default:

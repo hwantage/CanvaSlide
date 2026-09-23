@@ -1,8 +1,11 @@
+import { ArrowLeftRight } from 'lucide-react'
+import type { ConnectorHeads } from '@shared/canvas/connector-markers'
 import type { ConnectorElement, ConnectorStyle } from '@shared/canvas/element-types'
 import { ColorField } from '@/components/ui/color-field'
-import { connectorHeadOptions, connectorRouteOptions } from '@/components/ui/connector-options'
+import { ConnectorHeadPicker, connectorRouteOptions } from '@/components/ui/connector-options'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { IconButton } from '@/components/ui/icon-button'
+import { TextButton } from '@/components/ui/text-button'
 import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
 import { rememberSelectionStyle } from '@/store/style-memory-store'
@@ -20,6 +23,12 @@ export function ConnectorFields({ ids, sample }: { ids: string[]; sample: Connec
       )
     rememberSelectionStyle(ids)
   }
+  const patchHeads = (heads: (element: ConnectorElement) => Partial<ConnectorHeads>) => {
+    useDocumentStore
+      .getState()
+      .patchElements(ids, (element) => (element.type === 'connector' ? heads(element) : {}))
+    rememberSelectionStyle(ids)
+  }
   return (
     <>
       <FieldRow label={t('connector.route')}>
@@ -35,19 +44,33 @@ export function ConnectorFields({ ids, sample }: { ids: string[]; sample: Connec
           </IconButton>
         ))}
       </FieldRow>
-      <FieldRow label={t('connector.ends')}>
-        {connectorHeadOptions.map(({ value, label, icon: Icon }) => (
-          <IconButton
-            key={label}
-            label={t(label)}
-            className="h-7 w-7"
-            active={sample.startHead === value[0] && sample.endHead === value[1]}
-            onClick={() => patch({ startHead: value[0], endHead: value[1] })}
-          >
-            <Icon size={14} />
-          </IconButton>
-        ))}
+      <FieldRow label={t('connector.start')}>
+        <ConnectorHeadPicker
+          end="start"
+          value={sample.startHead}
+          buttonClassName="h-6 w-6"
+          onChange={(startHead) => patchHeads(() => ({ startHead }))}
+        />
       </FieldRow>
+      <FieldRow label={t('connector.end')}>
+        <ConnectorHeadPicker
+          end="end"
+          value={sample.endHead}
+          buttonClassName="h-6 w-6"
+          onChange={(endHead) => patchHeads(() => ({ endHead }))}
+        />
+      </FieldRow>
+      <div className="flex justify-end pb-1">
+        <TextButton
+          variant="ghost"
+          onClick={() =>
+            patchHeads(({ startHead, endHead }) => ({ startHead: endHead, endHead: startHead }))
+          }
+        >
+          <ArrowLeftRight size={14} />
+          {t('connector.swapHeads')}
+        </TextButton>
+      </div>
       <FieldRow label={t('connector.line')}>
         <ColorField
           label={t('connector.color')}

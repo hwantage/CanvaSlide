@@ -25,7 +25,7 @@ export const anchorSides = ['top', 'right', 'bottom', 'left'] as const
 
 export const connectorRoutes = ['straight', 'orthogonal', 'curved'] as const
 
-export const arrowHeads = ['none', 'arrow'] as const
+export const arrowHeads = ['none', 'arrow', 'openArrow', 'circle', 'diamond', 'bar'] as const
 
 export const canvasBackgrounds = ['dots', 'grid', 'plain'] as const
 

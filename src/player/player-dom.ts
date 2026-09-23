@@ -6,19 +6,10 @@ import type {
   ShapeElement,
   TextStyle
 } from '@shared/canvas/element-types'
-import {
-  connectorMidpoint,
-  connectorObstacles,
-  connectorPath
-} from '@shared/canvas/connector-geometry'
+import { connectorMidpoint, connectorObstacles } from '@shared/canvas/connector-geometry'
+import { connectorDrawing } from '@shared/canvas/connector-markers'
 import { overviewStackRanks, overviewZIndex } from '@shared/canvas/overview-stacking'
-import {
-  ARROW_MARKER,
-  arrowMarkerSize,
-  connectorCanvasRect,
-  connectorDashArray,
-  shapeGeometry
-} from '@shared/canvas/shape-svg'
+import { connectorCanvasRect, connectorDashArray, shapeGeometry } from '@shared/canvas/shape-svg'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { fontStackFor } from '@shared/canvas/font-family'
 import { textClipPath } from '@shared/canvas/text-clip'
@@ -148,33 +139,30 @@ function connectorNode(
     viewBox: `${box.x} ${box.y} ${box.width} ${box.height}`
   })
   svg.style.overflow = 'visible'
-  const markerId = `uc-p-arrow-${element.id}`
-  const head = arrowMarkerSize(element)
-  const marker = svgEl('marker', {
-    id: markerId,
-    viewBox: ARROW_MARKER.viewBox,
-    refX: ARROW_MARKER.refX,
-    refY: ARROW_MARKER.refY,
-    markerUnits: 'userSpaceOnUse',
-    markerWidth: head,
-    markerHeight: head,
-    orient: ARROW_MARKER.orient
-  })
-  marker.append(svgEl('path', { d: ARROW_MARKER.path, fill: element.style.stroke }))
-  const defs = svgEl('defs', {})
-  defs.append(marker)
+  const { stroke, strokeWidth } = element.style
+  const drawing = connectorDrawing(element, obstacles)
   const path = svgEl('path', {
-    d: connectorPath(element, obstacles).d,
+    d: drawing.d,
     fill: 'none',
-    stroke: element.style.stroke,
-    'stroke-width': element.style.strokeWidth,
+    stroke,
+    'stroke-width': strokeWidth,
     'stroke-linecap': 'round',
     'stroke-linejoin': 'round',
-    'stroke-dasharray': connectorDashArray(element),
-    'marker-start': element.startHead === 'arrow' ? `url(#${markerId})` : undefined,
-    'marker-end': element.endHead === 'arrow' ? `url(#${markerId})` : undefined
+    'stroke-dasharray': connectorDashArray(element)
   })
-  svg.append(defs, path)
+  svg.append(path)
+  for (const marker of drawing.markers) {
+    svg.append(
+      svgEl('path', {
+        d: marker.d,
+        fill: marker.filled ? stroke : 'none',
+        stroke: marker.filled ? undefined : stroke,
+        'stroke-width': marker.filled ? undefined : strokeWidth,
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    )
+  }
   node.append(svg)
   if (element.label !== '') {
     const mid = connectorMidpoint(element, obstacles)

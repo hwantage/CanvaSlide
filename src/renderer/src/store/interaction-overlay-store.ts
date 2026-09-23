@@ -1,11 +1,13 @@
 import { create } from 'zustand'
 import type { RotatedRect } from '@shared/canvas/element-rotation'
-import type { AnchorSide, Rect } from '@shared/canvas/element-types'
+import type { AnchorSide, Rect, ShapeKind } from '@shared/canvas/element-types'
 import type { SnapGuide } from '@shared/canvas/snap-guides'
 import type { ToolId } from './tool-store'
 
 /** The selection's box while a rotation drag turns it, with the angle to show beside the handle. */
 export type RotationGuide = { box: RotatedRect; degrees: number }
+
+type AnchorPreview = { rect: RotatedRect; side: AnchorSide; outline: ShapeKind | undefined }
 
 /** Transient world-space overlays driven by pointer sessions (drag box, creation preview). */
 export type InteractionOverlayState = {
@@ -14,8 +16,8 @@ export type InteractionOverlayState = {
   snapGuides: SnapGuide[]
   setSnapGuides: (guides: SnapGuide[]) => void
   /** Host under a dragged connector end: its four anchors, with the chosen side highlighted. */
-  anchorPreview: { rect: RotatedRect; side: AnchorSide } | null
-  setAnchorPreview: (preview: { rect: RotatedRect; side: AnchorSide } | null) => void
+  anchorPreview: AnchorPreview | null
+  setAnchorPreview: (preview: AnchorPreview | null) => void
   rotationGuide: RotationGuide | null
   setRotationGuide: (guide: RotationGuide | null) => void
   setDragBox: (rect: Rect | null) => void

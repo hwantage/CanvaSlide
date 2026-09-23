@@ -9,7 +9,7 @@ import {
   createTextElement
 } from './element-factory'
 
-export const createTools = ['text', 'rectangle', 'ellipse', 'diamond', 'frame'] as const
+export const createTools = ['text', 'rectangle', 'ellipse', 'diamond', 'triangle', 'frame'] as const
 export type CreateTool = (typeof createTools)[number]
 
 export function isCreateTool(tool: ToolId): tool is CreateTool {
@@ -37,6 +37,7 @@ export function createElementForTool(
     case 'rectangle':
     case 'ellipse':
     case 'diamond':
+    case 'triangle':
       return createShapeElement(tool, dragged ?? centeredRect(origin, DEFAULT_SHAPE_SIZE))
   }
 }

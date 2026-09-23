@@ -174,7 +174,8 @@ All coordinates are absolute canvas coordinates; a frame does not create a local
   before turning. Omit it for upright elements. Frames, connectors and videos do not rotate.
 - **Connectors.** Both `start` and `end` always need world `x`/`y`. For an attached endpoint,
   `elementId` must reference an existing non-connector element. `side` is `top`, `right`, `bottom`
-  or `left`; set `pinned: true` with `side` to keep a specific port. Free endpoints omit `elementId`.
+  or `left`; a triangle also offers its base corners `bottomLeft` and `bottomRight`. Set
+  `pinned: true` with `side` to keep a specific port. Free endpoints omit `elementId`.
   Connectors also need a positive bounding box, `route`, `startHead`, `endHead`, `style`, `label`
   (possibly empty) and `textStyle`; use the exact fields in the schema. The editor recalculates
   attached endpoints and bounds, so do not use a connector's rectangle to position its path.
@@ -224,8 +225,10 @@ that frame also counts toward the total. The player's **O** overview is a separa
 - **Settings.** `transitionMs` is required (`0..10000`, integer). Optional document defaults are
   `transitionEasing`, `transitionArc`, `spotlight`, `background` (`dots`, `grid`, `plain`) and
   `frameBorder` (`solid`, `dashed`, `none`). Use the file schema for their defaults.
-- **Shapes.** `shape` is `rectangle`, `ellipse` or `diamond`. Style fields: `fill`, `stroke`,
-  `strokeWidth` (`0..64`), `cornerRadius` (`0..512`). Use CSS color strings.
+- **Shapes.** `shape` is `rectangle`, `ellipse`, `diamond` or `triangle` (apex at the top centre,
+  base along the bottom edge). Every shape needs all four style fields: `fill`, `stroke`,
+  `strokeWidth` (`0..64`) and `cornerRadius` (`0..512`); only rectangles draw the radius, so give
+  other kinds `0`. Use CSS color strings.
 - **Connectors.** `route` is `straight`, `orthogonal` or `curved`; `startHead` and `endHead` are each
   `none`, `arrow`, `openArrow`, `circle`, `diamond` or `bar`.
   Style fields: `stroke`, `strokeWidth` (`1..32`) and `dashed` (boolean). A positive bounding box is

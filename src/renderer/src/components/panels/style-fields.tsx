@@ -1,7 +1,8 @@
 import { AlignCenter, AlignLeft, AlignRight, Bold } from 'lucide-react'
 import { useState } from 'react'
-import type { ShapeStyle, TextAlign, TextStyle } from '@shared/canvas/element-types'
+import type { ShapeKind, ShapeStyle, TextAlign, TextStyle } from '@shared/canvas/element-types'
 import { parseBoundedNumber } from '@shared/canvas/numeric-input'
+import { shapeUsesCornerRadius } from '@shared/canvas/shape-svg'
 import { ColorField } from '@/components/ui/color-field'
 import { FontPicker } from '@/components/ui/font-picker'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
@@ -48,12 +49,26 @@ export function NumberInput({
   )
 }
 
-export function ShapeStyleFields({ ids, style }: { ids: string[]; style: ShapeStyle }) {
-  const patch = (partial: Partial<ShapeStyle>) => {
+export function ShapeStyleFields({
+  ids,
+  style,
+  cornerRadius
+}: {
+  ids: string[]
+  style: ShapeStyle
+  /** A selected rectangle's radius; null hides the field when nothing selected draws one. */
+  cornerRadius: number | null
+}) {
+  const patch = (
+    partial: Partial<ShapeStyle>,
+    applies: (kind: ShapeKind) => boolean = () => true
+  ) => {
     useDocumentStore
       .getState()
       .patchElements(ids, (element) =>
-        element.type === 'shape' ? { style: { ...element.style, ...partial } } : {}
+        element.type === 'shape' && applies(element.shape)
+          ? { style: { ...element.style, ...partial } }
+          : {}
       )
     rememberSelectionStyle(ids)
   }
@@ -81,14 +96,16 @@ export function ShapeStyleFields({ ids, style }: { ids: string[]; style: ShapeSt
           onChange={(strokeWidth) => patch({ strokeWidth })}
         />
       </FieldRow>
-      <FieldRow label={t('props.radius')}>
-        <NumberInput
-          value={style.cornerRadius}
-          min={0}
-          max={512}
-          onChange={(cornerRadius) => patch({ cornerRadius })}
-        />
-      </FieldRow>
+      {cornerRadius !== null && (
+        <FieldRow label={t('props.radius')}>
+          <NumberInput
+            value={cornerRadius}
+            min={0}
+            max={512}
+            onChange={(radius) => patch({ cornerRadius: radius }, shapeUsesCornerRadius)}
+          />
+        </FieldRow>
+      )}
     </>
   )
 }

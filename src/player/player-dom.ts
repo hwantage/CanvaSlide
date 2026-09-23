@@ -10,7 +10,12 @@ import { connectorHosts, connectorMidpoint } from '@shared/canvas/connector-geom
 import { connectorDrawing } from '@shared/canvas/connector-markers'
 import { rotationTransform } from '@shared/canvas/element-rotation'
 import { overviewStackRanks, overviewZIndex } from '@shared/canvas/overview-stacking'
-import { connectorCanvasRect, connectorDashArray, shapeGeometry } from '@shared/canvas/shape-svg'
+import {
+  connectorCanvasRect,
+  connectorDashArray,
+  shapeGeometry,
+  shapeLabelRect
+} from '@shared/canvas/shape-svg'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { fontStackFor } from '@shared/canvas/font-family'
 import { textClipPath } from '@shared/canvas/text-clip'
@@ -110,6 +115,7 @@ function elementNode(element: CanvasElement, doc: CanvasDocument): HTMLElement |
       node.append(shapeSvg(element))
       if (element.text !== '') {
         const wrap = el('div', 'uc-shape-label')
+        place(wrap, shapeLabelRect(element))
         const label = el('div', 'uc-text')
         applyTextStyle(label, element.textStyle)
         label.textContent = element.text

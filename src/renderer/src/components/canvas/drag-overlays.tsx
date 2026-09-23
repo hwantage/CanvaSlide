@@ -4,8 +4,7 @@ import {
   worldToScreen
 } from '@shared/canvas/camera-transform'
 import type { Camera } from '@shared/canvas/element-types'
-import { anchorPoint } from '@shared/canvas/connector-geometry'
-import { anchorSides } from '@shared/canvas/element-types'
+import { anchorPoint, anchorPorts } from '@shared/canvas/connector-geometry'
 import type { SnapGuide } from '@shared/canvas/snap-guides'
 import { selectCamera, useCameraStore } from '@/store/camera-store'
 import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
@@ -108,8 +107,11 @@ export function DragOverlays() {
         />
       )}
       {anchorPreview &&
-        anchorSides.map((side) => {
-          const p = worldToScreen(camera, anchorPoint(anchorPreview.rect, side))
+        anchorPorts(anchorPreview.outline).map((side) => {
+          const p = worldToScreen(
+            camera,
+            anchorPoint(anchorPreview.rect, side, anchorPreview.outline)
+          )
           const active = side === anchorPreview.side
           return (
             <div

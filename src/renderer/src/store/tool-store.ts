@@ -8,6 +8,7 @@ export const toolIds = [
   'rectangle',
   'ellipse',
   'diamond',
+  'triangle',
   'frame',
   'connector'
 ] as const

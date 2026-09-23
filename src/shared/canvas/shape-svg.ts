@@ -1,4 +1,4 @@
-import type { ConnectorElement, ShapeElement } from './element-types'
+import type { ConnectorElement, Rect, ShapeElement, ShapeKind } from './element-types'
 
 /** The one SVG primitive a shape kind is drawn with, inset so the stroke stays inside the box. */
 export type ShapeGeometry =
@@ -30,7 +30,26 @@ export function shapeGeometry(element: ShapeElement): ShapeGeometry {
         tag: 'polygon',
         points: `${w / 2},${insetY} ${w - insetX},${h / 2} ${w / 2},${h - insetY} ${insetX},${h / 2}`
       }
+    case 'triangle':
+      return {
+        tag: 'polygon',
+        points: `${w / 2},${insetY} ${w - insetX},${h - insetY} ${insetX},${h - insetY}`
+      }
   }
+}
+
+/** Only rectangles draw `cornerRadius`; the other outlines have no radius to apply it to. */
+export function shapeUsesCornerRadius(kind: ShapeKind): boolean {
+  return kind === 'rectangle'
+}
+
+/** Box the label is laid out in, in the shape's own coordinates. */
+export function shapeLabelRect(element: ShapeElement): Rect {
+  const { width: w, height: h } = element
+  // Why: the largest box inside a triangle is its lower middle; text there never crosses a slant.
+  return element.shape === 'triangle'
+    ? { x: w / 4, y: h / 2, width: w / 2, height: h / 2 }
+    : { x: 0, y: 0, width: w, height: h }
 }
 
 /** Padding around a connector's bounding box so arrowheads and thick strokes are never clipped. */

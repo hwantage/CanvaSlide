@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { ConnectorElement, ShapeElement } from './element-types'
-import { CONNECTOR_PAD, connectorCanvasRect, connectorDashArray, shapeGeometry } from './shape-svg'
+import {
+  CONNECTOR_PAD,
+  connectorCanvasRect,
+  connectorDashArray,
+  shapeGeometry,
+  shapeLabelRect,
+  shapeUsesCornerRadius
+} from './shape-svg'
 
 const shape = (kind: ShapeElement['shape'], strokeWidth = 4): ShapeElement => ({
   id: 's',
@@ -53,6 +60,10 @@ describe('shape-svg', () => {
       tag: 'polygon',
       points: '50,2 98,30 50,58 2,30'
     })
+    expect(shapeGeometry(shape('triangle'))).toEqual({
+      tag: 'polygon',
+      points: '50,2 98,58 2,58'
+    })
   })
 
   it('keeps ellipse radii nonnegative when a valid stroke exceeds one edge', () => {
@@ -86,6 +97,24 @@ describe('shape-svg', () => {
       tag: 'polygon',
       points: '10,5 10,5 10,5 10,5'
     })
+    expect(shapeGeometry(small('triangle'))).toEqual({
+      tag: 'polygon',
+      points: '10,5 10,5 10,5'
+    })
+  })
+
+  it('offers a corner radius only where the outline draws one', () => {
+    expect(shapeUsesCornerRadius('rectangle')).toBe(true)
+    for (const kind of ['ellipse', 'diamond', 'triangle'] as const) {
+      expect(shapeUsesCornerRadius(kind)).toBe(false)
+    }
+  })
+
+  it("lays a triangle's label inside its lower middle and every other label across the box", () => {
+    expect(shapeLabelRect(shape('triangle'))).toEqual({ x: 25, y: 30, width: 50, height: 30 })
+    for (const kind of ['rectangle', 'ellipse', 'diamond'] as const) {
+      expect(shapeLabelRect(shape(kind))).toEqual({ x: 0, y: 0, width: 100, height: 60 })
+    }
   })
 
   it('dashes in proportion to the stroke and pads the drawing box for arrowheads', () => {

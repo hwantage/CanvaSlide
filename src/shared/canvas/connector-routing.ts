@@ -2,7 +2,10 @@ import type { AnchorSide, Point, Rect } from './element-types'
 
 /** Path shapes for connectors: elbow routing with stubs and scoring, and bezier controls. */
 
-/** Outward unit normal for a side; `null` for free ends (direction inferred from the other end). */
+/**
+ * Outward unit normal for a port; `null` for free ends (direction inferred from the other end).
+ * A triangle's base corner points diagonally out, halfway between its two edges.
+ */
 export function sideNormal(side: AnchorSide | undefined): Point | null {
   switch (side) {
     case 'top':
@@ -13,6 +16,10 @@ export function sideNormal(side: AnchorSide | undefined): Point | null {
       return { x: 0, y: 1 }
     case 'left':
       return { x: -1, y: 0 }
+    case 'bottomLeft':
+      return { x: -Math.SQRT1_2, y: Math.SQRT1_2 }
+    case 'bottomRight':
+      return { x: Math.SQRT1_2, y: Math.SQRT1_2 }
     case undefined:
       return null
   }

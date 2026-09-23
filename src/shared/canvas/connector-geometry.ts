@@ -5,7 +5,8 @@ import type {
   ConnectorElement,
   ConnectorEnd,
   Point,
-  Rect
+  Rect,
+  ShapeKind
 } from './element-types'
 import { anchorSides } from './element-runtime'
 import {
@@ -24,30 +25,55 @@ import {
   type RotatedRect
 } from './element-rotation'
 
-/** Midpoint of one side: the four connection points every element offers, turning with it. */
-export function anchorPoint(rect: RotatedRect, side: AnchorSide): Point {
-  const point = uprightAnchorPoint(rect, side)
+/** The outline an element's ports sit on; only shapes whose sides leave the box differ. */
+export function anchorOutline(element: CanvasElement): ShapeKind | undefined {
+  return element.type === 'shape' ? element.shape : undefined
+}
+
+const boxPorts: readonly AnchorSide[] = ['top', 'right', 'bottom', 'left']
+
+/** The ports an element offers: side midpoints, plus a triangle's two base corners. */
+export function anchorPorts(outline?: ShapeKind): readonly AnchorSide[] {
+  return outline === 'triangle' ? anchorSides : boxPorts
+}
+
+/** Where a port sits on the outline, turning with the element. */
+export function anchorPoint(rect: RotatedRect, side: AnchorSide, outline?: ShapeKind): Point {
+  const point = uprightAnchorPoint(rect, side, outline)
   return rect.rotation ? rotatePoint(point, rectCenter(rect), rect.rotation) : point
 }
 
-function uprightAnchorPoint(rect: Rect, side: AnchorSide): Point {
+/**
+ * Side midpoints of the box, except a triangle's left and right ports, which sit halfway up its
+ * slanted edges so lines meet the outline. Base corners are the box's lower corners.
+ */
+function uprightAnchorPoint(rect: Rect, side: AnchorSide, outline?: ShapeKind): Point {
+  const slant = outline === 'triangle' ? rect.width / 4 : 0
   switch (side) {
     case 'top':
       return { x: rect.x + rect.width / 2, y: rect.y }
     case 'right':
-      return { x: rect.x + rect.width, y: rect.y + rect.height / 2 }
+      return { x: rect.x + rect.width - slant, y: rect.y + rect.height / 2 }
     case 'bottom':
       return { x: rect.x + rect.width / 2, y: rect.y + rect.height }
     case 'left':
-      return { x: rect.x, y: rect.y + rect.height / 2 }
+      return { x: rect.x + slant, y: rect.y + rect.height / 2 }
+    case 'bottomLeft':
+      return { x: rect.x, y: rect.y + rect.height }
+    case 'bottomRight':
+      return { x: rect.x + rect.width, y: rect.y + rect.height }
   }
 }
 
-export function nearestAnchorSide(rect: RotatedRect, point: Point): AnchorSide {
+export function nearestAnchorSide(
+  rect: RotatedRect,
+  point: Point,
+  outline?: ShapeKind
+): AnchorSide {
   let best: AnchorSide = 'top'
   let bestDistance = Number.POSITIVE_INFINITY
-  for (const side of anchorSides) {
-    const p = anchorPoint(rect, side)
+  for (const side of anchorPorts(outline)) {
+    const p = anchorPoint(rect, side, outline)
     const d = Math.hypot(p.x - point.x, p.y - point.y)
     if (d < bestDistance) {
       bestDistance = d
@@ -86,7 +112,7 @@ export function isConnectable(element: CanvasElement): boolean {
   return element.type !== 'connector'
 }
 
-/** A rotated host: its turn tilts the port, and its canvas bounds are what a stub must clear. */
+/** A host whose ports can sit inside its bounds: a rotated one, whose turn tilts them, or a triangle. */
 export type TurnedHost = { rotation: number; bounds: Rect }
 
 /** What a path needs from its hosts: boxes to route around, and turns that tilt their ports. */
@@ -122,12 +148,16 @@ function portStub(anchor: Point, side: AnchorSide | undefined, host: TurnedHost 
   return ELBOW_STUB + Math.max(0, inside)
 }
 
-/** Elbows run along the axes, so a tilted port leaves along the axis closest to its normal. */
-function axisSide(normal: Point | null): AnchorSide | undefined {
+/**
+ * Elbows run along the axes, so a tilted port leaves along the axis closest to its normal. A base
+ * corner's diagonal ties, so it leaves along whichever axis points more toward the other end.
+ */
+function axisSide(normal: Point | null, toward: Point): AnchorSide | undefined {
   if (!normal) {
     return undefined
   }
-  if (Math.abs(normal.x) >= Math.abs(normal.y)) {
+  const tie = Math.abs(normal.x) === Math.abs(normal.y)
+  if (tie ? Math.abs(toward.x) >= Math.abs(toward.y) : Math.abs(normal.x) >= Math.abs(normal.y)) {
     return normal.x < 0 ? 'left' : 'right'
   }
   return normal.y < 0 ? 'top' : 'bottom'
@@ -157,8 +187,8 @@ export function connectorRouteShape(
     case 'straight':
       return { kind: 'polyline', points: [a, b] }
     case 'orthogonal': {
-      const aSide = axisSide(na)
-      const bSide = axisSide(nb)
+      const aSide = axisSide(na, { x: b.x - a.x, y: b.y - a.y })
+      const bSide = axisSide(nb, { x: a.x - b.x, y: a.y - b.y })
       const stubs = [portStub(a, aSide, hosts.start), portStub(b, bSide, hosts.end)] as const
       return {
         kind: 'polyline',
@@ -224,7 +254,7 @@ export function connectorMidpoint(
   return polyline[0] ?? { x: connector.start.x, y: connector.start.y }
 }
 
-function distanceToSegment(p: Point, a: Point, b: Point): number {
+export function distanceToSegment(p: Point, a: Point, b: Point): number {
   const dx = b.x - a.x
   const dy = b.y - a.y
   const lengthSq = dx * dx + dy * dy
@@ -287,7 +317,7 @@ function resolveEnd(
   const target = otherHost ? rectCenter(otherHost) : { x: other.x, y: other.y }
   const box = elementBox(host)
   const side = end.pinned && end.side ? end.side : facingSide(box, target)
-  const point = anchorPoint(box, side)
+  const point = anchorPoint(box, side, anchorOutline(host))
   return {
     x: point.x,
     y: point.y,
@@ -311,8 +341,8 @@ export function hostsOf(
       const box = elementBox(host)
       const bounds = rotatedBounds(box)
       hosts.obstacles.push(bounds)
-      if (box.rotation) {
-        hosts[which] = { rotation: box.rotation, bounds }
+      if (box.rotation || anchorOutline(host) === 'triangle') {
+        hosts[which] = { rotation: box.rotation ?? 0, bounds }
       }
     }
   }

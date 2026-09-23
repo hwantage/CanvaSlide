@@ -1,4 +1,4 @@
-import { connectorDistance, connectorHosts } from './connector-geometry'
+import { connectorDistance, connectorHosts, distanceToSegment } from './connector-geometry'
 import {
   elementBox,
   elementRotation,
@@ -30,7 +30,42 @@ function visibleRect(element: CanvasElement): Rect {
 /** Point-in-outline test; the pivot is the whole box's centre even when text is clipped. */
 function elementContainsPoint(element: CanvasElement, point: Point): boolean {
   const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
-  return rectContainsPoint(visibleRect(element), local)
+  return element.type === 'shape' && element.shape === 'triangle'
+    ? triangleContainsPoint(elementRect(element), local)
+    : rectContainsPoint(visibleRect(element), local)
+}
+
+function cross(o: Point, a: Point, b: Point): number {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+}
+
+/**
+ * Whether an upright-frame `point` lands on the triangle drawn in `rect`, or within `halo` of it.
+ * The box's empty upper corners pass through to whatever lies beneath.
+ */
+export function triangleContainsPoint(rect: Rect, point: Point, halo = 0): boolean {
+  const { x, y, width: w, height: h } = rect
+  if (
+    !rectContainsPoint(
+      { x: x - halo, y: y - halo, width: w + halo * 2, height: h + halo * 2 },
+      point
+    )
+  ) {
+    return false
+  }
+  const apex = { x: x + w / 2, y }
+  const right = { x: x + w, y: y + h }
+  const left = { x, y: y + h }
+  const inside =
+    cross(apex, right, point) >= 0 &&
+    cross(right, left, point) >= 0 &&
+    cross(left, apex, point) >= 0
+  return (
+    inside ||
+    distanceToSegment(point, apex, right) <= halo ||
+    distanceToSegment(point, right, left) <= halo ||
+    distanceToSegment(point, left, apex) <= halo
+  )
 }
 
 /** Corners of the drawn outline on the canvas (nw, ne, se, sw). */

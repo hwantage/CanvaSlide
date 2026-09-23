@@ -21,6 +21,7 @@ import {
   resizeKeepingOrigin
 } from '@shared/canvas/element-rotation'
 import { MIN_ELEMENT_SIZE } from '@shared/canvas/resize-handles'
+import { shapeUsesCornerRadius } from '@shared/canvas/shape-svg'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { TextButton } from '@/components/ui/text-button'
 import { t, tn } from '@/i18n/ui-strings'
@@ -50,6 +51,10 @@ export function PropertiesPanel() {
   }
   const store = useDocumentStore.getState()
   const shape = firstOfType(elements, 'shape')
+  const rounded = elements.find(
+    (e): e is Extract<CanvasElement, { type: 'shape' }> =>
+      e.type === 'shape' && shapeUsesCornerRadius(e.shape)
+  )
   const frame = firstOfType(elements, 'frame')
   const connector = firstOfType(elements, 'connector')
   const textStyle = (firstOfType(elements, 'text') ?? shape ?? connector)?.textStyle ?? null
@@ -144,7 +149,13 @@ export function PropertiesPanel() {
       {onlyFrames && <FrameTransitionFields frameIds={selectedIds} />}
       {!onlyFrames && <AlignmentToolbar count={elements.length} />}
       {connector && <ConnectorFields ids={selectedIds} sample={connector} />}
-      {shape && <ShapeStyleFields ids={selectedIds} style={shape.style} />}
+      {shape && (
+        <ShapeStyleFields
+          ids={selectedIds}
+          style={shape.style}
+          cornerRadius={rounded?.style.cornerRadius ?? null}
+        />
+      )}
       {textStyle && <TextStyleFields ids={selectedIds} style={textStyle} />}
       {!onlyFrames && (
         <div className="mt-2 flex flex-wrap gap-1">

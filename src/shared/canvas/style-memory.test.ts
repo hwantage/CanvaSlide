@@ -24,6 +24,29 @@ describe('style-memory', () => {
     expect(defaultStyleMemory.shape.fill).not.toBe('#ff0000')
   })
 
+  it('remembers connector ends so the next connector starts with them', () => {
+    expect(defaultStyleMemory.connectorHeads).toEqual({ startHead: 'none', endHead: 'arrow' })
+    const connector: CanvasElement = {
+      id: 'c',
+      type: 'connector',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 1,
+      start: { x: 0, y: 0 },
+      end: { x: 10, y: 0 },
+      route: 'straight',
+      startHead: 'circle',
+      endHead: 'openArrow',
+      style: { ...defaultStyleMemory.connector, strokeWidth: 3 },
+      label: 'kept out',
+      textStyle: defaultStyleMemory.connectorText
+    }
+    const memory = rememberStyleFrom(defaultStyleMemory, connector)
+    expect(memory.connectorHeads).toEqual({ startHead: 'circle', endHead: 'openArrow' })
+    expect(memory.connector.strokeWidth).toBe(3)
+  })
+
   it('ignores elements without styles', () => {
     const frame: CanvasElement = {
       id: 'f',

@@ -1,5 +1,4 @@
 import type { ConnectorElement, ShapeElement } from './element-types'
-import { arrowHeadSize } from './connector-geometry'
 
 /** The one SVG primitive a shape kind is drawn with, inset so the stroke stays inside the box. */
 export type ShapeGeometry =
@@ -36,19 +35,6 @@ export function shapeGeometry(element: ShapeElement): ShapeGeometry {
 
 /** Padding around a connector's bounding box so arrowheads and thick strokes are never clipped. */
 export const CONNECTOR_PAD = 24
-
-/** The arrowhead marker every connector shares: a triangle whose tip sits on the line's end. */
-export const ARROW_MARKER = {
-  viewBox: '0 0 10 10',
-  refX: 9,
-  refY: 5,
-  path: 'M 0 0 L 10 5 L 0 10 z',
-  orient: 'auto-start-reverse'
-} as const
-
-export function arrowMarkerSize(connector: ConnectorElement): number {
-  return arrowHeadSize(connector.style.strokeWidth)
-}
 
 /** `stroke-dasharray` for a dashed connector, scaled with the stroke; undefined for a solid line. */
 export function connectorDashArray(connector: ConnectorElement): string | undefined {

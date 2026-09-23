@@ -117,8 +117,7 @@ export function beginConnectorCreate(world: Point): ConnectorCreateSession {
     start,
     end: { x: world.x, y: world.y },
     route: preset.route,
-    startHead: preset.startHead,
-    endHead: preset.endHead,
+    ...memory.connectorHeads,
     style: { ...memory.connector },
     label: '',
     textStyle: { ...memory.connectorText }

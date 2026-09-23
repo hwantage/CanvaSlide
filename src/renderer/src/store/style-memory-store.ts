@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ConnectorHeads } from '@shared/canvas/connector-markers'
 import type { CanvasElement, ElementId } from '@shared/canvas/element-types'
 import { useDocumentStore } from './document-store'
 import {
@@ -11,6 +12,8 @@ export type StyleMemoryStore = {
   memory: StyleMemory
   /** Called after the user changes a style in the panel so the next new element inherits it. */
   rememberFrom: (element: CanvasElement) => void
+  /** The connector tool's flyout: ends for the next connector drawn. */
+  setConnectorHeads: (patch: Partial<ConnectorHeads>) => void
 }
 
 /** Session-scoped: a fresh launch starts from the defaults again. */
@@ -21,7 +24,11 @@ export const useStyleMemoryStore = create<StyleMemoryStore>()((set, get) => ({
     if (memory !== get().memory) {
       set({ memory })
     }
-  }
+  },
+  setConnectorHeads: (patch) =>
+    set((s) => ({
+      memory: { ...s.memory, connectorHeads: { ...s.memory.connectorHeads, ...patch } }
+    }))
 }))
 
 export function currentStyleMemory(): StyleMemory {

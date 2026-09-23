@@ -12,11 +12,12 @@ import {
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { VideoUrlDialog } from '@/components/panels/video-url-dialog'
-import { connectorHeadOptions, connectorRouteOptions } from '@/components/ui/connector-options'
+import { ConnectorHeadPicker, connectorRouteOptions } from '@/components/ui/connector-options'
 import { IconButton } from '@/components/ui/icon-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { importPickedFiles } from '@/lib/external-content'
 import { shortcutLabel } from '@/lib/platform-keys'
+import { useStyleMemoryStore } from '@/store/style-memory-store'
 import { selectTool, useToolStore, type ToolId } from '@/store/tool-store'
 
 const tools: { id: ToolId; label: UiStringKey; key: string; icon: ReactNode }[] = [
@@ -30,10 +31,12 @@ const tools: { id: ToolId; label: UiStringKey; key: string; icon: ReactNode }[] 
   { id: 'connector', label: 'tool.connector', key: 'L', icon: <ArrowRight size={16} /> }
 ]
 
-/** Sub-options for the connector tool: route shape and arrowheads for the next line drawn. */
+/** Sub-options for the connector tool: route shape and end markers for the next line drawn. */
 function ConnectorFlyout() {
   const preset = useToolStore((s) => s.connectorPreset)
   const setPreset = useToolStore((s) => s.setConnectorPreset)
+  const heads = useStyleMemoryStore((s) => s.memory.connectorHeads)
+  const setHeads = useStyleMemoryStore((s) => s.setConnectorHeads)
   return (
     <div
       data-testid="connector-flyout"
@@ -52,18 +55,16 @@ function ConnectorFlyout() {
         ))}
       </div>
       <div className="h-px bg-border" />
-      <div className="flex gap-0.5">
-        {connectorHeadOptions.map(({ value, label, icon: Icon }) => (
-          <IconButton
-            key={label}
-            label={t(label)}
-            active={preset.startHead === value[0] && preset.endHead === value[1]}
-            onClick={() => setPreset({ startHead: value[0], endHead: value[1] })}
-          >
-            <Icon size={14} />
-          </IconButton>
-        ))}
-      </div>
+      <ConnectorHeadPicker
+        end="start"
+        value={heads.startHead}
+        onChange={(startHead) => setHeads({ startHead })}
+      />
+      <ConnectorHeadPicker
+        end="end"
+        value={heads.endHead}
+        onChange={(endHead) => setHeads({ endHead })}
+      />
     </div>
   )
 }

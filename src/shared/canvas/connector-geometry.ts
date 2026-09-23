@@ -56,7 +56,7 @@ export function facingSide(rect: Rect, target: Point): AnchorSide {
   return dy < 0 ? 'top' : 'bottom'
 }
 
-/** Arrowhead edge length in world px: readable on 1px lines, grows gently with thicker strokes. */
+/** End marker length in world px: readable on 1px lines, grows gently with thicker strokes. */
 export function arrowHeadSize(strokeWidth: number): number {
   return 8 + strokeWidth * 3
 }
@@ -72,29 +72,53 @@ export type ConnectorPath = {
   d: string
 }
 
-export function connectorPath(connector: ConnectorElement, obstacles: Rect[] = []): ConnectorPath {
+/** The route's exact shape: corner points, or the four points of one cubic Bézier. */
+export type ConnectorRouteShape =
+  | { kind: 'polyline'; points: Point[] }
+  | { kind: 'cubic'; points: [Point, Point, Point, Point] }
+
+export function connectorRouteShape(
+  connector: ConnectorElement,
+  obstacles: Rect[] = []
+): ConnectorRouteShape {
   const a = { x: connector.start.x, y: connector.start.y }
   const b = { x: connector.end.x, y: connector.end.y }
   switch (connector.route) {
     case 'straight':
-      return { polyline: [a, b], d: `M ${a.x} ${a.y} L ${b.x} ${b.y}` }
-    case 'orthogonal': {
-      const points = orthogonalPoints(a, connector.start.side, b, connector.end.side, obstacles)
+      return { kind: 'polyline', points: [a, b] }
+    case 'orthogonal':
       return {
-        polyline: points,
-        d: points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+        kind: 'polyline',
+        points: orthogonalPoints(a, connector.start.side, b, connector.end.side, obstacles)
       }
-    }
     case 'curved': {
       const { c1, c2 } = curveControls(a, connector.start.side, b, connector.end.side)
-      const samples = 24
-      const polyline: Point[] = []
-      for (let i = 0; i <= samples; i += 1) {
-        polyline.push(cubicAt(a, c1, c2, b, i / samples))
-      }
-      return { polyline, d: `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}` }
+      return { kind: 'cubic', points: [a, c1, c2, b] }
     }
   }
+}
+
+/** SVG path data for a route shape, in world coordinates. */
+export function routePathData(shape: ConnectorRouteShape): string {
+  if (shape.kind === 'polyline') {
+    return shape.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+  }
+  const [a, c1, c2, b] = shape.points
+  return `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
+}
+
+export function connectorPath(connector: ConnectorElement, obstacles: Rect[] = []): ConnectorPath {
+  const shape = connectorRouteShape(connector, obstacles)
+  const d = routePathData(shape)
+  if (shape.kind === 'polyline') {
+    return { polyline: shape.points, d }
+  }
+  const samples = 24
+  const polyline: Point[] = []
+  for (let i = 0; i <= samples; i += 1) {
+    polyline.push(cubicAt(...shape.points, i / samples))
+  }
+  return { polyline, d }
 }
 
 /** Point along the path at half its length (label placement). */

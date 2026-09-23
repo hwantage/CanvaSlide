@@ -1,16 +1,12 @@
 import { useMemo } from 'react'
-import { connectorMidpoint, connectorPath } from '@shared/canvas/connector-geometry'
+import { connectorMidpoint } from '@shared/canvas/connector-geometry'
+import { connectorDrawing } from '@shared/canvas/connector-markers'
 import { elementRect } from '@shared/canvas/element-bounds'
 import {
   defaultTextStyle,
   type ConnectorElement as ConnectorElementModel
 } from '@shared/canvas/element-types'
-import {
-  ARROW_MARKER,
-  arrowMarkerSize,
-  connectorCanvasRect,
-  connectorDashArray
-} from '@shared/canvas/shape-svg'
+import { connectorCanvasRect, connectorDashArray } from '@shared/canvas/shape-svg'
 import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
 import { EditableText } from './editable-text'
@@ -33,11 +29,9 @@ export function ConnectorElement({
     () => [startHost, endHost].flatMap((host) => (host ? [elementRect(host)] : [])),
     [startHost, endHost]
   )
-  const { d } = connectorPath(element, obstacles)
+  const drawing = connectorDrawing(element, obstacles)
   const mid = connectorMidpoint(element, obstacles)
   const { stroke, strokeWidth } = element.style
-  const head = arrowMarkerSize(element)
-  const markerId = `uc-arrow-end-${element.id}`
   const box = connectorCanvasRect(element)
   const hasLabel = editing || element.label !== ''
   // Labels sit on a themed surface; resolve the default ink without changing saved colours.
@@ -61,32 +55,29 @@ export function ConnectorElement({
         height={box.height}
         viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
       >
-        <defs>
-          <marker
-            id={markerId}
-            viewBox={ARROW_MARKER.viewBox}
-            refX={ARROW_MARKER.refX}
-            refY={ARROW_MARKER.refY}
-            markerUnits="userSpaceOnUse"
-            markerWidth={head}
-            markerHeight={head}
-            orient={ARROW_MARKER.orient}
-          >
-            <path d={ARROW_MARKER.path} fill={stroke} />
-          </marker>
-        </defs>
         <path
           data-testid="connector-path"
-          d={d}
+          data-route={drawing.route}
+          d={drawing.d}
           fill="none"
           stroke={stroke}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeDasharray={connectorDashArray(element)}
-          markerStart={element.startHead === 'arrow' ? `url(#${markerId})` : undefined}
-          markerEnd={element.endHead === 'arrow' ? `url(#${markerId})` : undefined}
         />
+        {drawing.markers.map((marker, index) => (
+          <path
+            key={index}
+            data-testid="connector-marker"
+            d={marker.d}
+            fill={marker.filled ? stroke : 'none'}
+            stroke={marker.filled ? undefined : stroke}
+            strokeWidth={marker.filled ? undefined : strokeWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ))}
       </svg>
       {hasLabel && (
         <div

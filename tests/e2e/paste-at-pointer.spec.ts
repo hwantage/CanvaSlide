@@ -17,7 +17,9 @@ async function expectTop(element: Locator, top: number) {
 async function expectPath(element: Locator, expected: number[]) {
   await expect
     .poll(async () => {
-      const actual = (await element.getAttribute('d'))!.match(/-?\d+(?:\.\d+)?/g)!.map(Number)
+      const actual = (await element.getAttribute('data-route'))!
+        .match(/-?\d+(?:\.\d+)?/g)!
+        .map(Number)
       return (
         actual.length === expected.length && actual.every((n, i) => Math.abs(n - expected[i]!) < 1)
       )

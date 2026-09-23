@@ -223,7 +223,8 @@ that frame also counts toward the total. The player's **O** overview is a separa
   `frameBorder` (`solid`, `dashed`, `none`). Use the file schema for their defaults.
 - **Shapes.** `shape` is `rectangle`, `ellipse` or `diamond`. Style fields: `fill`, `stroke`,
   `strokeWidth` (`0..64`), `cornerRadius` (`0..512`). Use CSS color strings.
-- **Connectors.** `route` is `straight`, `orthogonal` or `curved`; each head is `none` or `arrow`.
+- **Connectors.** `route` is `straight`, `orthogonal` or `curved`; `startHead` and `endHead` are each
+  `none`, `arrow`, `openArrow`, `circle`, `diamond` or `bar`.
   Style fields: `stroke`, `strokeWidth` (`1..32`) and `dashed` (boolean). A positive bounding box is
   required even for horizontal or vertical lines (use at least 1 for the zero dimension).
 - **Text.** `align` is `left`, `center` or `right`. Optional `italic`, `lineHeight` (`0.1..10`) and

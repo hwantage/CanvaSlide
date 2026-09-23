@@ -114,7 +114,9 @@ export function orthogonalPoints(
       best = inner
     }
   }
-  return simplifyPolyline([a, ...best, b])
+  const route = simplifyPolyline([a, ...best, b])
+  // Why: a connector just clicked into being has a = b, and each end's marker needs a neighbour.
+  return route.length >= 2 ? route : [a, b]
 }
 
 export function curveControls(

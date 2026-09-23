@@ -105,14 +105,23 @@ test('route and end markers can be changed from the panel; label edits inline', 
   await expect(connector).toContainText('yes')
 })
 
-test('an aborted click with the connector tool leaves nothing behind', async ({ page }) => {
-  await page.keyboard.press('l')
-  await page.getByTestId('canvas-viewport').click({ position: { x: 400, y: 500 } })
-  await expect(page.locator('[data-element-type="connector"]')).toHaveCount(0)
-  await page.keyboard.press('Meta+z')
-  await page.keyboard.press('Control+z')
-  await expect(page.locator('[data-element-type="shape"]')).toHaveCount(1)
-})
+for (const route of ['Straight', 'Elbow', 'Curved']) {
+  test(`an aborted ${route.toLowerCase()} click with the connector tool leaves nothing behind`, async ({
+    page
+  }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.keyboard.press('l')
+    await page.getByTestId('connector-flyout').getByRole('button', { name: route }).click()
+    // The connector exists for a moment with both ends on one point before it is discarded.
+    await page.getByTestId('canvas-viewport').click({ position: { x: 400, y: 500 } })
+    await expect(page.locator('[data-element-type="connector"]')).toHaveCount(0)
+    await page.keyboard.press('Meta+z')
+    await page.keyboard.press('Control+z')
+    await expect(page.locator('[data-element-type="shape"]')).toHaveCount(1)
+    expect(errors).toEqual([])
+  })
+}
 
 test('dropping on a port pins it; dropping on the body picks the facing port', async ({ page }) => {
   await page.keyboard.press('l')

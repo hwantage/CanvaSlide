@@ -143,11 +143,17 @@ describe('connector end markers', () => {
     expect(drawing.markers).toHaveLength(2)
   })
 
-  it('still draws a marker on a zero-length connector', () => {
-    const drawing = connectorDrawing(connector({ end: { x: 0, y: 0 }, endHead: 'diamond' }))
-    expect(drawing.markers).toHaveLength(1)
-    expect(drawing.markers[0]!.d).not.toContain('NaN')
-  })
+  it.each(['straight', 'orthogonal', 'curved'] as const)(
+    'still draws both markers on a zero-length %s connector',
+    (route) => {
+      const drawing = connectorDrawing(
+        connector({ route, end: { x: 0, y: 0 }, startHead: 'circle', endHead: 'diamond' })
+      )
+      expect(drawing.markers).toHaveLength(2)
+      expect(drawing.markers.map((marker) => marker.d).join(' ')).not.toContain('NaN')
+      expect(drawing.d).not.toContain('NaN')
+    }
+  )
 
   it('accepts every marker kind in documents and rejects unknown ones', () => {
     for (const head of arrowHeads) {

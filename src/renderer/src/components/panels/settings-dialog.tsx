@@ -153,7 +153,7 @@ function RecoverySettings() {
           {t('recovery.scanError')}
         </p>
       )}
-      <TextButton disabled={scanning} onClick={() => void retry()}>
+      <TextButton className="self-start" disabled={scanning} onClick={() => void retry()}>
         {t('recovery.retryScan')}
       </TextButton>
       {waiting.length > 0 && (

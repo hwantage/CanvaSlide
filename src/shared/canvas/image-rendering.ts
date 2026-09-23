@@ -1,5 +1,6 @@
 import { MAX_ZOOM, worldRectToScreen } from './camera-transform'
 import type { Camera, Rect, Size } from './element-types'
+import { rotatedBounds, type RotatedRect } from './element-rotation'
 import { createCameraTween } from './zoom-pan-interpolation'
 
 export const IMAGE_RENDER_MARGIN = 256
@@ -23,8 +24,12 @@ export function svgImageLayoutScale(size: Size): number {
   return Math.min(MAX_ZOOM, Math.max(1, SVG_IMAGE_LAYOUT_EDGE / edge))
 }
 
-export function imageIntersectsViewport(rect: Rect, camera: Camera, viewport: Size): boolean {
-  const screen = worldRectToScreen(camera, rect)
+export function imageIntersectsViewport(
+  rect: RotatedRect,
+  camera: Camera,
+  viewport: Size
+): boolean {
+  const screen = worldRectToScreen(camera, rotatedBounds(rect))
   return (
     Math.max(screen.width, screen.height) >= 1 &&
     screen.x + screen.width >= -IMAGE_RENDER_MARGIN &&

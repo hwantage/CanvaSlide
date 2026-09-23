@@ -1,5 +1,7 @@
+import { rectContainsRect } from './element-bounds'
+import { rotatedBounds } from './element-rotation'
 import type { Rect, TextElement } from './element-types'
-import { figBounds, intersectFigClip } from './fig-scene'
+import { figBounds, figTurnedBox, intersectFigClip } from './fig-scene'
 import { figColor } from './fig-svg'
 import type { FigMatrix, FigNode, FigWarnings } from './fig-types'
 
@@ -23,6 +25,8 @@ export function figText(
   const fontSize = Math.max(4, Math.min(1024, scaledSize))
   const fontStyle = source.fontName?.style ?? ''
   const lineHeight = source.lineHeight
+  // Rotation carries over; skews and mirrors fall back to the upright bounds.
+  const turned = figTurnedBox(node, matrix)
   const ratio = !lineHeight
     ? 1.4
     : lineHeight.units === 'PIXELS'
@@ -35,11 +39,7 @@ export function figText(
     node.strokePaints?.some((paint) => paint.visible !== false) ||
     fills.some((paint) => paint.type !== 'SOLID') ||
     fills.length > 1 ||
-    Math.abs(matrix.m01) > 1e-6 ||
-    Math.abs(matrix.m10) > 1e-6 ||
-    matrix.m00 <= 0 ||
-    matrix.m11 <= 0 ||
-    Math.abs(matrix.m00 - matrix.m11) > 1e-6 ||
+    !turned ||
     fontSize !== scaledSize ||
     source.textAlignHorizontal === 'JUSTIFIED'
   ) {
@@ -54,7 +54,7 @@ export function figText(
   return {
     id,
     type: 'text',
-    ...figBounds(node, matrix),
+    ...(turned ?? figBounds(node, matrix)),
     text: node.textData?.characters ?? '',
     textStyle: {
       color: fill?.color
@@ -77,10 +77,27 @@ export function figText(
   }
 }
 
-export function clipFigText(element: TextElement, clip?: Rect): TextElement | null {
+/** Insets can't cut a turned box square, so turned text its frame cuts stands upright instead. */
+export function clipFigText(
+  source: TextElement,
+  clip?: Rect,
+  warnings?: FigWarnings
+): TextElement | null {
+  let element = source
+  if (source.rotation && clip) {
+    const bounds = rotatedBounds(source)
+    if (rectContainsRect(clip, bounds)) {
+      return source
+    }
+    const { rotation: _rotation, ...upright } = source
+    element = { ...upright, ...bounds }
+  }
   const visible = intersectFigClip(element, clip)
   if (!visible) {
     return null
+  }
+  if (element !== source && warnings) {
+    warnings.text += 1
   }
   if (visible.width === element.width && visible.height === element.height) {
     return element

@@ -381,6 +381,7 @@ export const ko: UiStrings = {
 
   'props.name': '이름',
   'props.size': '크기',
+  'props.rotation': '회전',
   'preview.previous': '이전 선택 프레임',
   'preview.next': '다음 선택 프레임',
   'motion.mixed': '혼합',
@@ -575,6 +576,7 @@ export const ko: UiStrings = {
 
   'selection.frame': '선택 영역을 프레임으로',
   'selection.zoom': '선택 영역에 맞추기',
+  'selection.rotateHint': '회전 · {shift}드래그하면 {step} 단위로 회전',
 
   'present.fromSelection': '현재 프레임부터 슬라이드 쇼',
   'present.fromFrame': '이 프레임부터 슬라이드 쇼',
@@ -705,7 +707,7 @@ export const ko: UiStrings = {
     '텍스트는 {text}, 사각형은 {rectangle}, 타원은 {ellipse}, 마름모는 {diamond}로 만듭니다. 텍스트를 두 번 클릭하면 편집할 수 있습니다. 복사한 이미지는 {paste}로 붙여넣으세요. 속성 패널에서 채우기, 테두리, 텍스트 스타일을 조정합니다.',
   'site.docs.edit.arrangeHeading': '선택과 배치',
   'site.docs.edit.arrangeBody':
-    '{select}로 선택 도구를 사용하세요. 빈 공간을 드래그하면 여러 요소를 선택하고, {shift}를 누르면 선택에 추가합니다. 요소를 옮기거나 핸들로 크기를 조절하세요. 정렬 도구로 줄을 맞추고 간격을 고르게 배치할 수 있습니다.',
+    '{select}로 선택 도구를 사용하세요. 빈 공간을 드래그하면 여러 요소를 선택하고, {shift}를 누르면 선택에 추가합니다. 요소를 옮기거나 핸들로 크기를 조절하고, 선택 영역 위의 둥근 핸들을 드래그해 회전하세요. {shift}를 누르면 {step} 단위로 회전합니다. 정렬 도구로 줄을 맞추고 간격을 고르게 배치할 수 있습니다.',
   'site.docs.edit.connectHeading': '연결선 만들기',
   'site.docs.edit.connectBody':
     '{key}로 연결선 도구를 선택하고 도형 사이를 드래그하세요. 끝점을 도형 옆 연결 지점이나 도형 자체에 붙이면 도형이 이동할 때 연결선도 따라옵니다. 속성 패널에서 직선, 꺾은선, 곡선을 고르고, 시작과 끝 모양을 화살표, 원형, 없음 등으로 따로 정할 수 있습니다.',

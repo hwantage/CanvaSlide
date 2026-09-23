@@ -5,6 +5,7 @@ import {
   defaultTextStyle,
   type CanvasDocument
 } from './element-types'
+import { rotatedOrigin } from './element-rotation'
 import { syncTextHeight } from './text-height'
 
 function documentWithText(): CanvasDocument {
@@ -69,5 +70,22 @@ describe('syncTextHeight', () => {
     }
     expect(syncTextHeight(document, 'missing', 50)).toBe(document)
     expect(syncTextHeight(document, 'link', 50)).toBe(document)
+  })
+})
+
+describe('syncTextHeight on rotated text', () => {
+  it('keeps the visible top-left corner where it was as the measured height grows', () => {
+    const upright = documentWithText()
+    const turned = {
+      ...upright,
+      elements: { ...upright.elements, text: { ...upright.elements.text!, rotation: 90 } }
+    } as CanvasDocument
+    const before = rotatedOrigin(turned.elements.text!)
+    const grown = syncTextHeight(turned, 'text', 260).elements.text!
+    expect(grown.height).toBe(260)
+    const after = rotatedOrigin(grown)
+    expect(after.x).toBeCloseTo(before.x, 9)
+    expect(after.y).toBeCloseTo(before.y, 9)
+    expect(syncTextHeight(upright, 'text', 260).elements.text).toMatchObject({ x: 10, y: 20 })
   })
 })

@@ -149,6 +149,14 @@ describe('frame contents across overlapping copies', () => {
     expect(buildClipboardPayload(withNewContent, [result.newIds[0]!])!.elements).toHaveLength(4)
   })
 
+  it('counts a rotated element as inside only when its turned outline fits', () => {
+    const square = { ...shape('a', 10), y: 10, width: 380, height: 380 } as CanvasElement
+    const doc = insertElements(createEmptyDocument(), [frame('f'), square])
+    expect(withFrameContents(doc, ['f'])).toContain('a')
+    const turned = patchElements(doc, ['a'], { rotation: 45 })
+    expect(withFrameContents(turned, ['f'])).not.toContain('a')
+  })
+
   it('keeps ordinary containment, visible text clipping and empty frames unchanged', () => {
     const document = insertElements(scene(), [
       frame('empty', 800),

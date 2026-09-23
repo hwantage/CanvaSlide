@@ -1,8 +1,9 @@
-import type { ArrowHead, ConnectorElement, Point, Rect } from './element-types'
+import type { ArrowHead, ConnectorElement, Point } from './element-types'
 import {
   arrowHeadSize,
   connectorRouteShape,
   routePathData,
+  type ConnectorHosts,
   type ConnectorRouteShape
 } from './connector-geometry'
 
@@ -139,10 +140,10 @@ function markerAt(
 /** The line and markers every renderer (editor, HTML player, PDF) draws for `connector`. */
 export function connectorDrawing(
   connector: ConnectorElement,
-  obstacles: Rect[] = []
+  hosts?: ConnectorHosts
 ): ConnectorDrawing {
   const { strokeWidth } = connector.style
-  const shape = connectorRouteShape(connector, obstacles)
+  const shape = connectorRouteShape(connector, hosts)
   const { points } = shape
   const markers = [
     markerAt(connector.startHead, points[0] as Point, points[1] as Point, strokeWidth),

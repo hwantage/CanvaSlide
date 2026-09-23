@@ -4,6 +4,7 @@ import {
   pasteClipboardPayload,
   type ClipboardPayload
 } from '@shared/canvas/clipboard-payload'
+import { elementBounds } from '@shared/canvas/element-bounds'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 import type { Point } from '@shared/canvas/element-types'
 import { objectPastePlacement, type ObjectPastePlacement } from '@shared/canvas/paste-placement'
@@ -92,7 +93,8 @@ export function objectPasteTarget(): Point | null {
 export function pasteObjects(payload: ClipboardPayload, target = objectPasteTarget()): void {
   const payloadKey = clipboardPayloadKey(payload)
   const previous = placement?.payloadKey === payloadKey ? placement : null
-  placement = { ...objectPastePlacement(payload.elements, target, previous), payloadKey }
+  const extents = payload.elements.map(elementBounds)
+  placement = { ...objectPastePlacement(extents, target, previous), payloadKey }
   const { offset } = placement
   let newIds: string[] = []
   useDocumentStore.getState().applyEdit((d) => {

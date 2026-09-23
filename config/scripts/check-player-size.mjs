@@ -6,8 +6,9 @@ const playerFile = fileURLToPath(
   new URL('../../src/renderer/src/generated/player.iife.js', import.meta.url)
 )
 
-// Includes shared presentation controls and annotations; validation/framework runtimes stay excluded.
-export const MAX_PLAYER_BYTES = 55_000
+// Includes shared presentation controls, annotations and rotation geometry; validation/framework
+// runtimes stay excluded.
+export const MAX_PLAYER_BYTES = 60_000
 
 export function checkPlayerSize(file = playerFile) {
   const source = readFileSync(file)

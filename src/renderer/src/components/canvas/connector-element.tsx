@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
-import { connectorMidpoint } from '@shared/canvas/connector-geometry'
+import { connectorMidpoint, hostsOf } from '@shared/canvas/connector-geometry'
 import { connectorDrawing } from '@shared/canvas/connector-markers'
-import { elementRect } from '@shared/canvas/element-bounds'
 import {
   defaultTextStyle,
   type ConnectorElement as ConnectorElementModel
@@ -25,12 +24,9 @@ export function ConnectorElement({
   const endHost = useDocumentStore((s) =>
     element.end.elementId ? s.document.elements[element.end.elementId] : undefined
   )
-  const obstacles = useMemo(
-    () => [startHost, endHost].flatMap((host) => (host ? [elementRect(host)] : [])),
-    [startHost, endHost]
-  )
-  const drawing = connectorDrawing(element, obstacles)
-  const mid = connectorMidpoint(element, obstacles)
+  const hosts = useMemo(() => hostsOf(startHost, endHost), [startHost, endHost])
+  const drawing = connectorDrawing(element, hosts)
+  const mid = connectorMidpoint(element, hosts)
   const { stroke, strokeWidth } = element.style
   const box = connectorCanvasRect(element)
   const hasLabel = editing || element.label !== ''

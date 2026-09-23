@@ -1,6 +1,7 @@
 import type { ImageElement as ImageElementModel } from '@shared/canvas/element-types'
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { mergeDetailTiles } from '@shared/canvas/image-detail'
+import { rotationTransform } from '@shared/canvas/element-rotation'
 import { svgImageLayoutScale } from '@shared/canvas/image-rendering'
 import { imageSurfaceStyle } from '@shared/canvas/image-surface'
 import { useImageSource } from '@/hooks/use-image-source'
@@ -64,7 +65,12 @@ export function ImageElement({
   return (
     <div
       className="absolute left-0 top-0"
-      style={{ transform: `translate(${element.x}px, ${element.y}px)`, transformOrigin: '0 0' }}
+      style={{
+        transform:
+          `translate(${element.x}px, ${element.y}px) ${rotationTransform(element.rotation) ?? ''}`.trim(),
+        // Why: the wrapper has no size of its own; turn about the image's centre, not its corner.
+        transformOrigin: element.rotation ? `${element.width / 2}px ${element.height / 2}px` : '0 0'
+      }}
     >
       <img
         src={preview?.src}

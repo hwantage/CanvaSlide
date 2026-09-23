@@ -52,6 +52,18 @@ describe('visible image detail resolution', () => {
     expect(regions[0]!.crop.x + regions[0]!.crop.width).toBeCloseTo(regions[1]!.crop.x, 12)
   })
 
+  it('crops a rotated image to the part the viewport shows in its own frame', () => {
+    const turned = { x: 0, y: 0, width: 4000, height: 2000, rotation: 90 }
+    const merged = mergeDetailTiles(
+      imageDetailRegions(turned, { x: 0, y: 0, zoom: 1 }, viewport, 1, preview)
+    )!
+    // The viewport's corner of the canvas sits over the image's lower middle once turned back.
+    expect(merged.crop.x).toBeCloseTo(0.25, 3)
+    expect(merged.crop.width).toBeCloseTo(0.18, 3)
+    expect(merged.crop.y).toBeCloseTo(0.86, 3)
+    expect(merged.crop.y + merged.crop.height).toBeCloseTo(1, 9)
+  })
+
   it('bounds memory by visible physical pixels at extreme zoom without reducing their density', () => {
     const camera = { x: -33000 * 64, y: -16500 * 64, zoom: 64 }
     const regions = imageDetailRegions(element, camera, viewport, 3, preview)

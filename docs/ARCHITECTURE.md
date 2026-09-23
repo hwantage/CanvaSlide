@@ -36,6 +36,11 @@ This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`).
   pre-edit state. The saved document baseline lets undo return to an unmodified state; camera and
   selection changes do not represent content edits. `savedDocument` is `null` for work restored from
   a crash, where nothing on disk matches it — see [crash recovery](./CRASH-RECOVERY.md).
+- Shapes, text and images may carry `rotation`: degrees clockwise about the centre of their unrotated
+  `x`/`y`/`width`/`height` box. Every renderer applies it as a CSS `rotate()` about that centre.
+  Code that measures position on the canvas (selection, snapping, alignment, frame contents, fitting)
+  uses the rotated bounds from [`element-bounds.ts`](../src/shared/canvas/element-bounds.ts); handle,
+  resize and connector-port math lives in [`element-rotation.ts`](../src/shared/canvas/element-rotation.ts).
 - Frames are views onto a shared canvas, not independent slide containers. Moving a frame carries
   elements fully inside it. Frame `order` determines presentation sequence independently of canvas
   position and document drawing order. See [frame contents](../src/shared/canvas/frame-contents.ts)

@@ -1,9 +1,48 @@
-import { connectorDistance, connectorObstacles } from './connector-geometry'
+import { connectorDistance, connectorHosts } from './connector-geometry'
+import {
+  elementBox,
+  elementRotation,
+  pointsBounds,
+  quadIntersectsRect,
+  rectCenter,
+  rotatedBounds,
+  rotatedCorners,
+  toLocalPoint
+} from './element-rotation'
 import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
 import { visibleTextRect } from './text-clip'
 
+/** The element's own upright box; a rotated element turns this about its centre. */
 export function elementRect(element: CanvasElement): Rect {
   return { x: element.x, y: element.y, width: element.width, height: element.height }
+}
+
+/** Axis-aligned extent on the canvas, rotation included. */
+export function elementBounds(element: CanvasElement): Rect {
+  return rotatedBounds(elementBox(element))
+}
+
+/** The part of the upright box that is drawn: imported text can be clipped to its old frame. */
+function visibleRect(element: CanvasElement): Rect {
+  return element.type === 'text' ? visibleTextRect(element) : elementRect(element)
+}
+
+/** Point-in-outline test; the pivot is the whole box's centre even when text is clipped. */
+function elementContainsPoint(element: CanvasElement, point: Point): boolean {
+  const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
+  return rectContainsPoint(visibleRect(element), local)
+}
+
+/** Corners of the drawn outline on the canvas (nw, ne, se, sw). */
+function elementOutline(element: CanvasElement): Point[] {
+  return rotatedCorners(visibleRect(element), elementRotation(element), rectCenter(element))
+}
+
+/** Axis-aligned extent of what is drawn: clipped text and rotation both count. */
+export function visibleBounds(element: CanvasElement): Rect {
+  return elementRotation(element) === 0
+    ? visibleRect(element)
+    : pointsBounds(elementOutline(element))
 }
 
 /**
@@ -75,14 +114,28 @@ export function selectionBounds(document: CanvasDocument, ids: readonly ElementI
   for (const id of ids) {
     const element = document.elements[id]
     if (element) {
-      rects.push(elementRect(element))
+      rects.push(elementBounds(element))
     }
   }
   return unionRects(rects)
 }
 
+/** A lone element grabs only inside its outline; a group grabs across its whole bounding box. */
+export function selectionContainsPoint(
+  document: CanvasDocument,
+  ids: readonly ElementId[],
+  point: Point
+): boolean {
+  const only = ids.length === 1 ? document.elements[ids[0] as ElementId] : undefined
+  if (only && elementRotation(only) !== 0) {
+    return elementContainsPoint(only, point)
+  }
+  const bounds = selectionBounds(document, ids)
+  return bounds !== null && rectContainsPoint(bounds, point)
+}
+
 export function contentBounds(document: CanvasDocument): Rect | null {
-  return unionRects(Object.values(document.elements).map(elementRect))
+  return unionRects(Object.values(document.elements).map(elementBounds))
 }
 
 /** World-unit sizes of the frame's grabbable chrome (screen px ÷ zoom). */
@@ -174,25 +227,20 @@ export function hitTestTopmost(
     }
     if (element.type === 'connector') {
       // Why: elbow routes bend around their hosts; testing the unrouted path misses visible segments.
-      const obstacles = connectorObstacles(document, element)
-      if (connectorDistance(element, point, obstacles) <= (frameChrome.lineWidth ?? 6)) {
+      const hosts = connectorHosts(document, element)
+      if (connectorDistance(element, point, hosts) <= (frameChrome.lineWidth ?? 6)) {
         return element
       }
       continue
     }
-    if (
-      rectContainsPoint(
-        element.type === 'text' ? visibleTextRect(element) : elementRect(element),
-        point
-      )
-    ) {
+    if (elementContainsPoint(element, point)) {
       return element
     }
   }
   return topmostFrame(document, point, (rect) => frameChromeContainsPoint(rect, point, frameChrome))
 }
 
-/** Elements whose rect intersects the drag box. Frames must be fully enclosed to be picked. */
+/** Elements whose outline intersects the drag box. Frames must be fully enclosed to be picked. */
 export function elementsInBox(document: CanvasDocument, box: Rect): ElementId[] {
   const picked: ElementId[] = []
   for (const id of document.order) {
@@ -200,8 +248,12 @@ export function elementsInBox(document: CanvasDocument, box: Rect): ElementId[] 
     if (!element) {
       continue
     }
-    const rect = element.type === 'text' ? visibleTextRect(element) : elementRect(element)
-    const hit = element.type === 'frame' ? rectContainsRect(box, rect) : rectsIntersect(box, rect)
+    const hit =
+      element.type === 'frame'
+        ? rectContainsRect(box, elementRect(element))
+        : elementRotation(element) === 0
+          ? rectsIntersect(box, visibleRect(element))
+          : quadIntersectsRect(elementOutline(element), box)
     if (hit) {
       picked.push(id)
     }

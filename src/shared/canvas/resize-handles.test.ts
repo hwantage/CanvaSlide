@@ -3,6 +3,7 @@ import {
   MIN_ELEMENT_SIZE,
   clampRectSize,
   handleAnchorPoints,
+  handleCursor,
   resizeRect,
   scaleRectWithin
 } from './resize-handles'
@@ -41,6 +42,14 @@ describe('resize-handles', () => {
     const anchors = handleAnchorPoints(rect)
     expect(anchors.se).toEqual({ x: 300, y: 200 })
     expect(anchors.n).toEqual({ x: 200, y: 100 })
+  })
+
+  it('turns resize cursors with the box, to the nearest 45°', () => {
+    expect(handleCursor('n')).toBe('ns-resize')
+    expect(handleCursor('se')).toBe('nwse-resize')
+    expect(handleCursor('n', 90)).toBe('ew-resize')
+    expect(handleCursor('ne', 45)).toBe('ew-resize')
+    expect(handleCursor('w', -45)).toBe('nesw-resize')
   })
 
   it('scales a member rect proportionally within group bounds', () => {

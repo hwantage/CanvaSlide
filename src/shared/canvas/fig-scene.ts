@@ -1,5 +1,6 @@
 import type { Point, Rect } from './element-types'
 import { unionRects } from './element-bounds'
+import { normalizeRotation, type RotatedRect } from './element-rotation'
 import { figId, type FigFile, type FigMatrix, type FigNode, type FigPage } from './fig-types'
 
 export const FIG_IDENTITY: FigMatrix = { m00: 1, m01: 0, m02: 0, m10: 0, m11: 1, m12: 0 }
@@ -39,6 +40,33 @@ export function figBounds(node: FigNode, matrix: FigMatrix): Rect {
     y,
     width: Math.max(0.01, ...corners.map((p) => p.x - x)),
     height: Math.max(0.01, ...corners.map((p) => p.y - y))
+  }
+}
+
+/** Box and clockwise turn when the matrix only rotates and scales evenly; null otherwise. */
+export function figTurnedBox(node: FigNode, matrix: FigMatrix): RotatedRect | null {
+  const scale = Math.hypot(matrix.m00, matrix.m10)
+  if (
+    scale <= 0 ||
+    Math.abs(matrix.m00 - matrix.m11) > 1e-6 ||
+    Math.abs(matrix.m01 + matrix.m10) > 1e-6
+  ) {
+    return null
+  }
+  if (Math.abs(matrix.m10) <= 1e-6 && matrix.m00 > 0) {
+    return figBounds(node, matrix)
+  }
+  const localWidth = Number.isFinite(node.size?.x) ? node.size!.x : 0
+  const localHeight = Number.isFinite(node.size?.y) ? node.size!.y : 0
+  const width = localWidth * scale
+  const height = localHeight * scale
+  const center = figPoint(matrix, localWidth / 2, localHeight / 2)
+  return {
+    x: center.x - width / 2,
+    y: center.y - height / 2,
+    width: Math.max(0.01, width),
+    height: Math.max(0.01, height),
+    rotation: normalizeRotation((Math.atan2(matrix.m10, matrix.m00) * 180) / Math.PI)
   }
 }
 

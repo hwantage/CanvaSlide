@@ -29,7 +29,7 @@ the editor also runs in a browser.
 
 ## Features
 
-- **Editing:** text, shapes, images and connectors; pan/zoom, multi-select, grouping, alignment,
+- **Editing:** text, shapes, images and connectors; pan/zoom, multi-select, grouping, rotation, alignment,
   distribution, snapping, clipboard operations and undo/redo. Choose light/dark/system theme and English/Korean.
 - **Presenting:** order and preview frames, move them with their contents, and edit transitions together.
   Set duration, easing, arc, roll and spotlight; navigate through the overview and play linked videos.

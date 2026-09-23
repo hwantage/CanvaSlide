@@ -1,4 +1,4 @@
-import { elementRect, rectsIntersect } from './element-bounds'
+import { elementBounds, elementRect, rectsIntersect } from './element-bounds'
 import type { CanvasDocument, CanvasElement, FrameElement, Size } from './element-types'
 import { orderedFrames } from './presentation-sequence'
 import { connectorCanvasRect } from './shape-svg'
@@ -106,7 +106,7 @@ export function pdfPageElements(document: CanvasDocument, frame: FrameElement): 
     }
     // Connectors paint arrowheads and thick strokes outside their own bounds.
     const bounds =
-      element.type === 'connector' ? connectorCanvasRect(element) : elementRect(element)
+      element.type === 'connector' ? connectorCanvasRect(element) : elementBounds(element)
     return rectsIntersect(box, bounds) ? [element] : []
   })
 }

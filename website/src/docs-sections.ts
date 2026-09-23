@@ -1,3 +1,4 @@
+import { ROTATION_SNAP_DEGREES } from '@shared/canvas/element-rotation'
 import type { UiStringKey } from '@app/i18n/ui-strings'
 import { shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
 import type { TopicId } from './docs-topics'
@@ -179,7 +180,7 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'arrange',
         heading: 'site.docs.edit.arrangeHeading',
         body: 'site.docs.edit.arrangeBody',
-        params: { select: 'V', shift: 'Shift' }
+        params: { select: 'V', shift: 'Shift', step: `${ROTATION_SNAP_DEGREES}°` }
       },
       {
         id: 'connectors',

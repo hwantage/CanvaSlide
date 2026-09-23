@@ -4,6 +4,7 @@ import {
   figChildren,
   figPath,
   figTreeBounds,
+  figTurnedBox,
   multiplyFigMatrix
 } from './fig-scene'
 import type { FigFile, FigNode } from './fig-types'
@@ -94,4 +95,25 @@ test('NaN sizes on auto-sized groups use their children, excluding the group ori
     width: 10,
     height: 20
   })
+})
+
+test('reads a turn from rotation and even scale, and refuses mirrors and uneven scale', () => {
+  const node: FigNode = {
+    guid: { sessionID: 0, localID: 1 },
+    type: 'RECTANGLE',
+    size: { x: 40, y: 20 }
+  }
+  expect(figTurnedBox(node, { ...FIG_IDENTITY, m02: 5, m12: 6 })).toEqual({
+    x: 5,
+    y: 6,
+    width: 40,
+    height: 20
+  })
+  const half = figTurnedBox(node, { ...FIG_IDENTITY, m00: -2, m11: -2, m02: 100, m12: 50 })!
+  expect(half).toMatchObject({ width: 80, height: 40, rotation: 180 })
+  expect(half.x).toBeCloseTo(20, 9)
+  expect(half.y).toBeCloseTo(10, 9)
+  expect(figTurnedBox(node, { ...FIG_IDENTITY, m00: -1 })).toBeNull()
+  expect(figTurnedBox(node, { ...FIG_IDENTITY, m00: 2 })).toBeNull()
+  expect(figTurnedBox(node, { ...FIG_IDENTITY, m01: 0.5 })).toBeNull()
 })

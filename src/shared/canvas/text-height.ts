@@ -1,5 +1,6 @@
 import { syncConnectorGeometry } from './connector-geometry'
 import { patchElements } from './document-mutations'
+import { elementBox, resizeKeepingOrigin } from './element-rotation'
 import type { CanvasDocument, ElementId } from './element-types'
 
 /** Height of one line at `fontSize`: the editor's line-height, and the floor a text box keeps. */
@@ -22,5 +23,6 @@ export function syncTextHeight(
   if (Math.abs(height - element.height) <= 1) {
     return document
   }
-  return syncConnectorGeometry(patchElements(document, [id], { height }))
+  const next = resizeKeepingOrigin(elementBox(element), element.width, height)
+  return syncConnectorGeometry(patchElements(document, [id], next))
 }

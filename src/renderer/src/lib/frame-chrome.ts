@@ -6,6 +6,9 @@ export const FRAME_TITLE_HEIGHT_PX = 24
 export const FRAME_BORDER_HIT_PX = 8
 export const FRAME_TITLE_FONT_PX = 12
 export const SELECTION_HANDLE_PX = 8
+/** Screen px from the selection's top edge to the rotation handle's centre, and its diameter. */
+export const ROTATION_HANDLE_OFFSET_PX = 24
+export const ROTATION_HANDLE_PX = 16
 export const DRAG_THRESHOLD_PX = 3
 /** Smart-guide snapping distance in screen px (divided by zoom for world units). */
 export const SNAP_THRESHOLD_PX = 6

@@ -8,10 +8,29 @@ import type {
   Rect
 } from './element-types'
 import { anchorSides } from './element-runtime'
-import { cubicAt, curveControls, orthogonalPoints } from './connector-routing'
+import {
+  cubicAt,
+  curveControls,
+  ELBOW_STUB,
+  orthogonalPoints,
+  sideNormal
+} from './connector-routing'
+import {
+  elementBox,
+  rectCenter,
+  rotatedBounds,
+  rotatePoint,
+  toLocalPoint,
+  type RotatedRect
+} from './element-rotation'
 
-/** Midpoint of one side of a rect: the four connection points every element offers. */
-export function anchorPoint(rect: Rect, side: AnchorSide): Point {
+/** Midpoint of one side: the four connection points every element offers, turning with it. */
+export function anchorPoint(rect: RotatedRect, side: AnchorSide): Point {
+  const point = uprightAnchorPoint(rect, side)
+  return rect.rotation ? rotatePoint(point, rectCenter(rect), rect.rotation) : point
+}
+
+function uprightAnchorPoint(rect: Rect, side: AnchorSide): Point {
   switch (side) {
     case 'top':
       return { x: rect.x + rect.width / 2, y: rect.y }
@@ -24,7 +43,7 @@ export function anchorPoint(rect: Rect, side: AnchorSide): Point {
   }
 }
 
-export function nearestAnchorSide(rect: Rect, point: Point): AnchorSide {
+export function nearestAnchorSide(rect: RotatedRect, point: Point): AnchorSide {
   let best: AnchorSide = 'top'
   let bestDistance = Number.POSITIVE_INFINITY
   for (const side of anchorSides) {
@@ -38,8 +57,10 @@ export function nearestAnchorSide(rect: Rect, point: Point): AnchorSide {
   return best
 }
 
-/** The side of `rect` that faces `target`: the natural port when the other end sits there. */
-export function facingSide(rect: Rect, target: Point): AnchorSide {
+/** The side of `box` that faces `world`, judged in the box's own frame: the natural port there. */
+export function facingSide(box: RotatedRect, world: Point): AnchorSide {
+  const rect = { x: box.x, y: box.y, width: box.width, height: box.height }
+  const target = toLocalPoint(box, world)
   const outsideX = target.x < rect.x ? -1 : target.x > rect.x + rect.width ? 1 : 0
   const outsideY = target.y < rect.y ? -1 : target.y > rect.y + rect.height ? 1 : 0
   if (outsideX !== 0 && outsideY === 0) {
@@ -65,6 +86,53 @@ export function isConnectable(element: CanvasElement): boolean {
   return element.type !== 'connector'
 }
 
+/** A rotated host: its turn tilts the port, and its canvas bounds are what a stub must clear. */
+export type TurnedHost = { rotation: number; bounds: Rect }
+
+/** What a path needs from its hosts: boxes to route around, and turns that tilt their ports. */
+export type ConnectorHosts = {
+  /** Axis-aligned host bounds the elbow router avoids crossing. */
+  obstacles: Rect[]
+  start?: TurnedHost
+  end?: TurnedHost
+}
+
+const NO_HOSTS: ConnectorHosts = { obstacles: [] }
+
+/** Outward direction of an attached end's port on the canvas; null for a free end. */
+function portNormal(side: AnchorSide | undefined, rotation = 0): Point | null {
+  const normal = sideNormal(side)
+  return normal && rotation !== 0 ? rotatePoint(normal, { x: 0, y: 0 }, rotation) : normal
+}
+
+/** A tilted port lies inside its host's bounds; its stub runs past them so the route starts clear. */
+function portStub(anchor: Point, side: AnchorSide | undefined, host: TurnedHost | undefined) {
+  if (!host || !side) {
+    return ELBOW_STUB
+  }
+  const { x, y, width, height } = host.bounds
+  const inside =
+    side === 'left'
+      ? anchor.x - x
+      : side === 'right'
+        ? x + width - anchor.x
+        : side === 'top'
+          ? anchor.y - y
+          : y + height - anchor.y
+  return ELBOW_STUB + Math.max(0, inside)
+}
+
+/** Elbows run along the axes, so a tilted port leaves along the axis closest to its normal. */
+function axisSide(normal: Point | null): AnchorSide | undefined {
+  if (!normal) {
+    return undefined
+  }
+  if (Math.abs(normal.x) >= Math.abs(normal.y)) {
+    return normal.x < 0 ? 'left' : 'right'
+  }
+  return normal.y < 0 ? 'top' : 'bottom'
+}
+
 export type ConnectorPath = {
   /** Straight segments approximating the path (curves are sampled); used for hit tests & bounds. */
   polyline: Point[]
@@ -79,20 +147,26 @@ export type ConnectorRouteShape =
 
 export function connectorRouteShape(
   connector: ConnectorElement,
-  obstacles: Rect[] = []
+  hosts: ConnectorHosts = NO_HOSTS
 ): ConnectorRouteShape {
   const a = { x: connector.start.x, y: connector.start.y }
   const b = { x: connector.end.x, y: connector.end.y }
+  const na = portNormal(connector.start.side, hosts.start?.rotation)
+  const nb = portNormal(connector.end.side, hosts.end?.rotation)
   switch (connector.route) {
     case 'straight':
       return { kind: 'polyline', points: [a, b] }
-    case 'orthogonal':
+    case 'orthogonal': {
+      const aSide = axisSide(na)
+      const bSide = axisSide(nb)
+      const stubs = [portStub(a, aSide, hosts.start), portStub(b, bSide, hosts.end)] as const
       return {
         kind: 'polyline',
-        points: orthogonalPoints(a, connector.start.side, b, connector.end.side, obstacles)
+        points: orthogonalPoints(a, aSide, b, bSide, hosts.obstacles, stubs)
       }
+    }
     case 'curved': {
-      const { c1, c2 } = curveControls(a, connector.start.side, b, connector.end.side)
+      const { c1, c2 } = curveControls(a, na, b, nb)
       return { kind: 'cubic', points: [a, c1, c2, b] }
     }
   }
@@ -107,8 +181,11 @@ export function routePathData(shape: ConnectorRouteShape): string {
   return `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
 }
 
-export function connectorPath(connector: ConnectorElement, obstacles: Rect[] = []): ConnectorPath {
-  const shape = connectorRouteShape(connector, obstacles)
+export function connectorPath(
+  connector: ConnectorElement,
+  hosts: ConnectorHosts = NO_HOSTS
+): ConnectorPath {
+  const shape = connectorRouteShape(connector, hosts)
   const d = routePathData(shape)
   if (shape.kind === 'polyline') {
     return { polyline: shape.points, d }
@@ -122,8 +199,11 @@ export function connectorPath(connector: ConnectorElement, obstacles: Rect[] = [
 }
 
 /** Point along the path at half its length (label placement). */
-export function connectorMidpoint(connector: ConnectorElement, obstacles: Rect[] = []): Point {
-  const { polyline } = connectorPath(connector, obstacles)
+export function connectorMidpoint(
+  connector: ConnectorElement,
+  hosts: ConnectorHosts = NO_HOSTS
+): Point {
+  const { polyline } = connectorPath(connector, hosts)
   let total = 0
   for (let i = 1; i < polyline.length; i += 1) {
     const p = polyline[i - 1] as Point
@@ -156,9 +236,9 @@ function distanceToSegment(p: Point, a: Point, b: Point): number {
 export function connectorDistance(
   connector: ConnectorElement,
   point: Point,
-  obstacles: Rect[] = []
+  hosts: ConnectorHosts = NO_HOSTS
 ): number {
-  const { polyline } = connectorPath(connector, obstacles)
+  const { polyline } = connectorPath(connector, hosts)
   let best = Number.POSITIVE_INFINITY
   for (let i = 1; i < polyline.length; i += 1) {
     best = Math.min(best, distanceToSegment(point, polyline[i - 1] as Point, polyline[i] as Point))
@@ -166,8 +246,11 @@ export function connectorDistance(
   return best
 }
 
-export function connectorBounds(connector: ConnectorElement, obstacles: Rect[] = []): Rect {
-  const { polyline } = connectorPath(connector, obstacles)
+export function connectorBounds(
+  connector: ConnectorElement,
+  hosts: ConnectorHosts = NO_HOSTS
+): Rect {
+  const { polyline } = connectorPath(connector, hosts)
   let minX = Number.POSITIVE_INFINITY
   let minY = Number.POSITIVE_INFINITY
   let maxX = Number.NEGATIVE_INFINITY
@@ -186,10 +269,6 @@ function hostOf(document: CanvasDocument, end: ConnectorEnd): CanvasElement | nu
   return host && isConnectable(host) ? host : null
 }
 
-function center(rect: Rect): Point {
-  return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
-}
-
 /** Ports are chosen automatically: an attached end always uses the side facing the other end. */
 function resolveEnd(
   document: CanvasDocument,
@@ -205,9 +284,10 @@ function resolveEnd(
     return { x: end.x, y: end.y }
   }
   const otherHost = hostOf(document, other)
-  const target = otherHost ? center(otherHost) : { x: other.x, y: other.y }
-  const side = end.pinned && end.side ? end.side : facingSide(host, target)
-  const point = anchorPoint(host, side)
+  const target = otherHost ? rectCenter(otherHost) : { x: other.x, y: other.y }
+  const box = elementBox(host)
+  const side = end.pinned && end.side ? end.side : facingSide(box, target)
+  const point = anchorPoint(box, side)
   return {
     x: point.x,
     y: point.y,
@@ -217,12 +297,33 @@ function resolveEnd(
   }
 }
 
-/** Host boxes the elbow router should avoid crossing. */
-export function connectorObstacles(document: CanvasDocument, connector: ConnectorElement): Rect[] {
-  return [connector.start, connector.end].flatMap((end) => {
-    const host = hostOf(document, end)
-    return host ? [{ x: host.x, y: host.y, width: host.width, height: host.height }] : []
-  })
+/** Routing inputs from the elements an attached connector's ends sit on. */
+export function hostsOf(
+  start: CanvasElement | null | undefined,
+  end: CanvasElement | null | undefined
+): ConnectorHosts {
+  const hosts: ConnectorHosts = { obstacles: [] }
+  for (const [which, host] of [
+    ['start', start],
+    ['end', end]
+  ] as const) {
+    if (host && isConnectable(host)) {
+      const box = elementBox(host)
+      const bounds = rotatedBounds(box)
+      hosts.obstacles.push(bounds)
+      if (box.rotation) {
+        hosts[which] = { rotation: box.rotation, bounds }
+      }
+    }
+  }
+  return hosts
+}
+
+export function connectorHosts(
+  document: CanvasDocument,
+  connector: ConnectorElement
+): ConnectorHosts {
+  return hostsOf(hostOf(document, connector.start), hostOf(document, connector.end))
 }
 
 function endsEqual(a: ConnectorEnd, b: ConnectorEnd): boolean {
@@ -248,7 +349,7 @@ export function syncConnectorGeometry(document: CanvasDocument): CanvasDocument 
       endsEqual(start, element.start) && endsEqual(end, element.end)
         ? element
         : { ...element, start, end }
-    const bounds = connectorBounds(resolved, connectorObstacles(document, resolved))
+    const bounds = connectorBounds(resolved, connectorHosts(document, resolved))
     const boundsChanged =
       bounds.x !== resolved.x ||
       bounds.y !== resolved.y ||

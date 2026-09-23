@@ -14,7 +14,7 @@ import { isTauriRuntime } from '@/platform/tauri-runtime'
 import { clearShareQuery } from '@/platform/cloud-share'
 import { useExampleStore } from '@/store/example-store'
 import { useCameraStore } from '@/store/camera-store'
-import { useDocumentStore } from '@/store/document-store'
+import { useDocumentStore, watchDocumentChanges } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
 export type DocumentCommands = {
@@ -36,20 +36,31 @@ async function guarded(action: () => Promise<void>): Promise<void> {
 
 // Why: every document replacement must confirm edits and leave presentation before loading.
 async function replaceWith(read: () => Promise<OpenedDocument | null>): Promise<void> {
-  if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
-    return
+  let changed = false
+  const unsubscribe = watchDocumentChanges(() => {
+    changed = true
+  })
+  try {
+    if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
+      return
+    }
+    if (changed) {
+      return
+    }
+    const opened = await read()
+    if (!opened || changed) {
+      return
+    }
+    usePresentationStore.getState().exit()
+    useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
+    clearShareQuery()
+    useExampleStore.getState().hide()
+    // Why: the saved camera may point at empty space; show the whole board instead.
+    const camera = useCameraStore.getState()
+    camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))
+  } finally {
+    unsubscribe()
   }
-  const opened = await read()
-  if (!opened) {
-    return
-  }
-  usePresentationStore.getState().exit()
-  useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
-  clearShareQuery()
-  useExampleStore.getState().hide()
-  // Why: the saved camera may point at empty space; show the whole board instead.
-  const camera = useCameraStore.getState()
-  camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))
 }
 
 // Saves share a queue across hook instances so slow compression cannot overwrite a newer save.

@@ -1,18 +1,29 @@
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import type { ParseDocumentResult } from '@shared/canvas/document-file'
 import type { DocumentEncodingInput } from '@shared/canvas/document-resources'
+import type {
+  RecoveryInspection,
+  RecoverySnapshotInfo,
+  RecoverySnapshotMeta
+} from '@shared/canvas/recovery-snapshot'
 
 export type DocumentCodecRequest =
   | { kind: 'encode' | 'encode-native'; document: DocumentEncodingInput }
+  | { kind: 'encode-recovery'; document: DocumentEncodingInput; snapshot: RecoverySnapshotMeta }
+  | { kind: 'inspect-recovery'; payload: string | Uint8Array<ArrayBuffer> }
+  | { kind: 'decode-recovery'; payload: string | Uint8Array<ArrayBuffer> }
   | { kind: 'decode'; bytes: Uint8Array<ArrayBuffer> }
   | { kind: 'decode-native'; contents: string }
 export type DocumentCodecResponse =
-  | { kind: 'encoded'; bytes: Uint8Array<ArrayBuffer> }
+  | { kind: 'encoded' | 'encoded-recovery'; bytes: Uint8Array<ArrayBuffer> }
+  | { kind: 'inspected-recovery'; result: RecoveryInspection }
   | { kind: 'encoded-native'; contents: string }
   | { kind: 'decoded'; result: ParseDocumentResult }
+  | { kind: 'decoded-recovery'; result: ParseDocumentResult; snapshot: RecoverySnapshotInfo | null }
   | { kind: 'error'; message: string }
 type Request =
   | { kind: 'encode' | 'encode-native'; document: CanvasDocument }
+  | { kind: 'encode-recovery'; document: CanvasDocument; snapshot: RecoverySnapshotMeta }
   | Exclude<DocumentCodecRequest, { document: DocumentEncodingInput }>
 
 let worker: Worker | null = null
@@ -61,7 +72,13 @@ function execute(request: Request): Promise<DocumentCodecResponse> {
       message = { ...request, document: { ...request.document, assets } }
     }
     try {
-      worker.postMessage(message, request.kind === 'decode' ? [request.bytes.buffer] : [])
+      const transfer =
+        request.kind === 'decode'
+          ? [request.bytes.buffer]
+          : 'payload' in request && request.payload instanceof Uint8Array
+            ? [request.payload.buffer]
+            : []
+      worker.postMessage(message, transfer)
     } catch (error) {
       fail(error)
     }
@@ -90,6 +107,38 @@ export async function encodeNativeDocumentFile(document: CanvasDocument): Promis
     throw new Error('Unexpected document worker response')
   }
   return result.contents
+}
+
+/** Transfer bytes so native IPC does not stringify the envelope again. */
+export async function encodeRecoverySnapshot(
+  document: CanvasDocument,
+  snapshot: RecoverySnapshotMeta
+): Promise<Uint8Array<ArrayBuffer>> {
+  const result = await runCodec({ kind: 'encode-recovery', document, snapshot })
+  if (result.kind !== 'encoded-recovery') {
+    throw new Error('Unexpected document worker response')
+  }
+  return result.bytes
+}
+
+export async function inspectRecoveryFile(
+  payload: string | Uint8Array<ArrayBuffer>
+): Promise<RecoveryInspection> {
+  const result = await runCodec({ kind: 'inspect-recovery', payload })
+  if (result.kind !== 'inspected-recovery') {
+    throw new Error('Unexpected recovery inspection response')
+  }
+  return result.result
+}
+
+export async function decodeRecoveryFile(
+  payload: string | Uint8Array<ArrayBuffer>
+): Promise<Extract<DocumentCodecResponse, { kind: 'decoded-recovery' }>> {
+  const result = await runCodec({ kind: 'decode-recovery', payload })
+  if (result.kind !== 'decoded-recovery') {
+    throw new Error('Unexpected recovery decode response')
+  }
+  return result
 }
 
 export async function decodeDocumentFile(

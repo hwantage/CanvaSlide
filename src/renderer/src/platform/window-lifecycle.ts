@@ -3,9 +3,16 @@ import { isTauriRuntime } from './tauri-runtime'
 /** Mirrors `QUIT_REQUESTED_EVENT` in `src-tauri/src/lib.rs`. */
 const QUIT_REQUESTED_EVENT = 'quit-requested'
 
+/** How long the exit waits on `onCleanExit` before leaving anyway. */
+const CLEAN_EXIT_TIMEOUT_MS = 2000
+
 export type CloseGuard = {
   hasUnsavedWork: () => boolean
   confirmDiscard: () => Promise<boolean>
+  /** Runs once the quit is allowed, before the process goes away. Desktop only — see below. */
+  onCleanExit: () => Promise<void>
+  cancelCleanExit: () => void
+  watchForChanges: (onChange: () => void) => () => void
 }
 
 /** Asks before the window closes or the app quits with unsaved work. Returns a disposer. */
@@ -17,6 +24,7 @@ export function installCloseGuard(guard: CloseGuard): () => void {
       event.returnValue = ''
     }
   }
+  // Browser unload cannot acknowledge consent; retain recovery copies.
   window.addEventListener('beforeunload', onBeforeUnload)
   const disposeNative = isTauriRuntime() ? installTauriCloseGuard(guard) : () => {}
   return () => {
@@ -27,30 +35,56 @@ export function installCloseGuard(guard: CloseGuard): () => void {
 
 function installTauriCloseGuard(guard: CloseGuard): () => void {
   let disposed = false
-  let asking = false
+  let quitting = false
   const unlisteners: (() => void)[] = []
-  const mayQuit = async (): Promise<boolean> => {
-    if (!guard.hasUnsavedWork()) {
-      return true
-    }
-    if (asking) {
-      return false
-    }
-    asking = true
-    try {
-      return await guard.confirmDiscard()
-    } finally {
-      asking = false
-    }
-  }
+  const mayQuit = async (): Promise<boolean> => !guard.hasUnsavedWork() || guard.confirmDiscard()
   void Promise.all([
     import('@tauri-apps/api/window'),
     import('@tauri-apps/api/event'),
     import('@tauri-apps/api/core')
   ]).then(async ([{ getCurrentWindow }, { listen }, { invoke }]) => {
     const quit = async () => {
-      if (await mayQuit()) {
+      if (quitting || disposed) {
+        return
+      }
+      quitting = true
+      let changed = false
+      let notifyChange!: () => void
+      const change = new Promise<void>((resolve) => {
+        notifyChange = resolve
+      })
+      const unwatch = guard.watchForChanges(() => {
+        changed = true
+        notifyChange()
+      })
+      let preparing = false
+      let timeout: ReturnType<typeof setTimeout> | undefined
+      try {
+        if (!(await mayQuit()) || changed || disposed) {
+          return
+        }
+        preparing = true
+        // Cleanup may stall; edits cancel this quit instead of inheriting an earlier discard decision.
+        await Promise.race([
+          guard.onCleanExit().catch(() => {}),
+          new Promise((resolve) => {
+            timeout = setTimeout(resolve, CLEAN_EXIT_TIMEOUT_MS)
+          }),
+          change
+        ])
+        if (changed || disposed) {
+          guard.cancelCleanExit()
+          return
+        }
         await invoke('quit_app')
+      } catch {
+        if (preparing) {
+          guard.cancelCleanExit()
+        }
+      } finally {
+        clearTimeout(timeout)
+        unwatch()
+        quitting = false
       }
     }
     // Why: single-window app — closing the window is quitting. Always take over the close so the

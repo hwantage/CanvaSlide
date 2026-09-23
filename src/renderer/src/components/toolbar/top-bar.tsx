@@ -37,6 +37,7 @@ import {
   useSettingsDialogStore,
   useShortcutHelpStore
 } from '@/store/modal-dialogs'
+import { selectRecoveryFailed, useRecoveryStore } from '@/store/recovery-store'
 import { selectUpdateAvailable, useUpdateStore } from '@/store/update-store'
 import { usePresentationStore } from '@/store/presentation-store'
 import { useCloudShareStore } from '@/store/cloud-share-store'
@@ -84,6 +85,8 @@ export function TopBar({
   const showAbout = useAboutDialogStore((s) => s.show)
   const showAiGuide = useAiGuideStore((s) => s.show)
   const updateAvailable = useUpdateStore(selectUpdateAvailable)
+  const recoveryFailed = useRecoveryStore(selectRecoveryFailed)
+  const recoveryError = useRecoveryStore((s) => s.error)
   const frameCount = orderedFrames(document).length
 
   return (
@@ -168,6 +171,17 @@ export function TopBar({
         {dirty && !compact && (
           <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
             {t('file.unsaved')}
+          </span>
+        )}
+        {/* Why here: a recovery copy that cannot be written has to be visible where unsaved work is,
+            not only behind the settings dialog nobody opens until it is too late. */}
+        {recoveryFailed && dirty && (
+          <span
+            data-testid="recovery-warning"
+            title={recoveryError ?? undefined}
+            className="shrink-0 whitespace-nowrap text-xs text-destructive"
+          >
+            {t('file.recoveryFailed')}
           </span>
         )}
       </div>

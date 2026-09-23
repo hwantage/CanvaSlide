@@ -32,6 +32,7 @@ tauri-plugin-clipboard-manager = "2"
 font-kit = "0.14.3"
 allsorts = "0.17"
 base64 = "0.23.1"
+fs2 = "0.4.3"
 
 # Why: only these two launch a second process for a document double-clicked while the app runs;
 # macOS delivers it to the running app as `RunEvent::Opened` instead.

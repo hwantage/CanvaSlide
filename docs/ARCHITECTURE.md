@@ -34,7 +34,8 @@ This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`).
   Recorded edits use `applyEdit`/`patchElements`; continuous edits use `beginEdit` → live patches →
   `endEdit` so a drag, typing session or slider gesture is one undo step. `cancelEdit` restores the
   pre-edit state. The saved document baseline lets undo return to an unmodified state; camera and
-  selection changes do not represent content edits.
+  selection changes do not represent content edits. `savedDocument` is `null` for work restored from
+  a crash, where nothing on disk matches it — see [crash recovery](./CRASH-RECOVERY.md).
 - Frames are views onto a shared canvas, not independent slide containers. Moving a frame carries
   elements fully inside it. Frame `order` determines presentation sequence independently of canvas
   position and document drawing order. See [frame contents](../src/shared/canvas/frame-contents.ts)

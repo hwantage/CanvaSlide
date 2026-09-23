@@ -293,7 +293,7 @@ export const ko: UiStrings = {
   'recovery.unnamedDocument': '이전 세션이 문서를 저장하지 않은 채 종료되었습니다.',
   'recovery.copyTime': '복구본 시점: {time}.',
   'recovery.oneAtATime':
-    '문서는 한 번에 하나만 열 수 있어 복구하면 이 창이 닫힙니다. 남은 복구본은 설정에서 이어서 확인할 수 있습니다.',
+    '문서는 한 번에 하나만 열 수 있어 복구하면 이 안내가 닫힙니다. 남은 복구본은 설정에서 이어서 확인할 수 있습니다.',
   'recovery.remaining': '({n}개 남음)',
   'recovery.unsupportedError':
     '이 브라우저는 열려 있는 탭을 구분할 수 없어 저장하지 않은 작업이 복사되지 않습니다. 파일로 저장해 주세요.',

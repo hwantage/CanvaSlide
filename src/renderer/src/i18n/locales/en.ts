@@ -297,7 +297,7 @@ Use the skill at {skill} to create the file.`,
   'recovery.unnamedDocument': 'The last session closed before its document was saved.',
   'recovery.copyTime': 'The copy is from {time}.',
   'recovery.oneAtATime':
-    'Only one document can be open at a time, so restoring closes this. Whatever is left waits in Settings.',
+    'Only one document can be open at a time, so restoring closes this prompt. Whatever is left waits in Settings.',
   'recovery.remaining': '({n} left)',
   'recovery.unsupportedError':
     'This browser cannot tell one open tab from another, so unsaved work is not being copied. Save it to a file.',

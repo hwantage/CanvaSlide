@@ -100,3 +100,21 @@ jobs:
             src-tauri/target/**/bundle/nsis/*.exe
             src-tauri/target/**/bundle/msi/*.msi
           if-no-files-found: ignore
+
+  # Why: the main ruleset requires this one check, so adding or renaming a job needs no settings change.
+  passed:
+    name: CI passed
+    if: always()
+    needs: [verify, rust, bundle]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            if [ "$result" != success ]; then
+              echo "A required CI job finished with $result" >&2
+              exit 1
+            fi
+          done

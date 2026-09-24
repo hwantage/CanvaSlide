@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
@@ -7,6 +8,7 @@ const workflows = readdirSync(workflowDirectory)
   .filter((name) => /\.ya?ml$/.test(name))
   .map((name) => ({ name, text: readFileSync(new URL(name, workflowDirectory), 'utf8') }))
 const release = workflows.find(({ name }) => name === 'release.yml').text
+const ci = workflows.find(({ name }) => name === 'ci.yml').text
 
 // Each job's lines, keyed by job id, from a workflow whose jobs sit at two-space indent.
 function jobsOf(workflow) {
@@ -82,5 +84,46 @@ test('the release build runs without secrets or write access, and only publish c
   assert.ok(tokenSteps.some((step) => /gh release create/.test(step)))
   for (const step of tokenSteps) {
     assert.doesNotMatch(step, /\b(pnpm|npm|npx|node) /, step)
+  }
+})
+
+// A step's `run: |` script, run by bash with `-e` as Actions does, with `env` added.
+function runScript(step, env) {
+  const script = step
+    .slice(step.indexOf('run: |\n') + 'run: |\n'.length)
+    .split('\n')
+    .map((line) => line.slice(10))
+    .join('\n')
+  return spawnSync('bash', ['-e', '-c', script], {
+    encoding: 'utf8',
+    env: { ...process.env, ...env }
+  })
+}
+
+// Why: the scripts run with bash on Linux runners.
+const shellSkip = process.platform === 'win32' && 'runs workflow scripts with bash'
+
+test('the required CI passed check depends on every other CI job, even failed ones', () => {
+  const jobs = jobsOf(ci)
+  const passed = `\n${jobs.passed}\n`
+  assert.match(passed, /\n {4}name: CI passed\n/)
+  // Why: a skipped required check counts as passing, so this job must run even when a need failed.
+  assert.match(passed, /\n {4}if: always\(\)\n/)
+  const needs = /\n {4}needs: \[([^\]]*)\]\n/.exec(passed)[1].split(/,\s*/)
+  assert.deepEqual(
+    needs.toSorted(),
+    Object.keys(jobs)
+      .filter((id) => id !== 'passed')
+      .toSorted()
+  )
+})
+
+test('the required CI passed check fails unless every job succeeded', { skip: shellSkip }, () => {
+  const [step] = stepsOf(jobsOf(ci).passed)
+  assert.match(step, /\n\s+RESULTS: \$\{\{ join\(needs\.\*\.result, ' '\) \}\}\n/)
+  const outcome = (results) => runScript(step, { RESULTS: results }).status
+  assert.equal(outcome('success success success'), 0)
+  for (const results of ['success failure success', 'success success skipped', 'cancelled']) {
+    assert.notEqual(outcome(results), 0, results)
   }
 })

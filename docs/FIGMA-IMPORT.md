@@ -82,7 +82,7 @@
 스키마 검증, 가져오기·취소·실행 취소, 중첩·부분 서식·잘린 텍스트의 실제 더블클릭 편집·저장·다시 열기,
 CSP, 잘못된 파일 처리 등을 포함한다.
 
-가져오기 기능만 확인하려면 다음 검사를 실행한다. 전체 검증은 [기여 가이드](../CONTRIBUTING.md#before-opening-a-pr)를 따른다.
+가져오기 기능만 확인하려면 다음 검사를 실행한다. 전체 검증은 [AGENTS.md의 Verify](../AGENTS.md#verify)를 따른다.
 
 ```bash
 pnpm exec vitest run --config config/vitest.config.ts src/shared/canvas/fig-convert.test.ts

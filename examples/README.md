@@ -46,10 +46,10 @@ fireworks. It is served directly as a current-format document; no extraction is 
 embedded image formats, verify camera-motion previews as well as file size and visual fidelity.
 
 `anatomy/inside.canvaslide` contains 13 frames and embedded anatomical artwork. Its current-format
-JSON retains all nine PNG photographs with lossless recompression. At about 24.46 MiB it fits the
-hosting limit without reducing image dimensions or changing the canvas layout, and keeps the masked
-photo preview path available in existing editors. Initial high-resolution detail rendering can still
-take time.
+JSON retains all nine PNG photographs with lossless recompression. It stays within the
+[hosting file-size limit](../website/README.md#editable-showcase-catalog) without reducing image
+dimensions or changing the canvas layout, and keeps the masked photo preview path available. Initial
+high-resolution detail rendering can still take time.
 
 ## Editing a sample
 

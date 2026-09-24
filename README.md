@@ -34,12 +34,12 @@ the editor also runs in a browser.
 - **Presenting:** order and preview frames, move them with their contents, and edit transitions together.
   Set duration, easing, arc, roll and spotlight; navigate through the overview and play linked videos.
   The app, cloud slideshow and newly exported HTML share auto-hiding controls, a laser pointer and
-  temporary ink: press P, drag to draw, and E to erase. Narrow screens keep these in the Tools menu.
-  Ink survives turning the pointer off and an overview round-trip, but clears on another frame or exit;
-  it never changes the saved document. HTML stays light and English; existing exports need regeneration.
+  temporary ink that is never saved: press P, drag to draw, and E to erase.
 - **Import & export:** import images, PDF pages and [local Figma files](./docs/FIGMA-IMPORT.md);
   open/save editable JSON `.canvaslide` files. Export HTML with image quality controls and a size estimate,
   or PDF with one page per frame at a chosen page resolution; desktop HTML export can embed installed fonts.
+- **Recovery:** unsaved work is copied locally in the background and offered back after a crash or an
+  interrupted session; [crash recovery](./docs/CRASH-RECOVERY.md) explains what it keeps.
 - **Sharing:** use a configured cloud service for editable copies or slideshow-only snapshots,
   or send an exported HTML file.
 
@@ -72,15 +72,15 @@ See [cloud sharing](./docs/CLOUD-SHARE.md) for access options, limits and hostin
 ## Develop and verify
 
 Install Node.js 22.20+ and the pinned pnpm 11 version; Rust and the OS-specific Tauri prerequisites
-are needed for desktop development. Full setup and checks are in [CONTRIBUTING](./CONTRIBUTING.md).
+are needed for desktop development. Full setup is in [CONTRIBUTING](./CONTRIBUTING.md).
 
 ```bash
 pnpm install
 pnpm dev:web        # browser editor, http://127.0.0.1:1420
 pnpm dev            # Tauri desktop window
-pnpm check          # lint + max-lines + control chars + format + typecheck + unit tests
-pnpm test:e2e       # Chromium suite + core interactions in Firefox/WebKit
 ```
+
+The checks to run before a pull request are listed under [Verify in AGENTS.md](./AGENTS.md#verify).
 
 For website development, use the [website guide](./website/README.md). For native bundle checks,
 installer builds, signing and publishing, use the [release guide](./docs/RELEASE.md).
@@ -88,8 +88,8 @@ installer builds, signing and publishing, use the [release guide](./docs/RELEASE
 ## Contributing
 
 Bug reports, feature ideas and pull requests are welcome. See [CONTRIBUTING](./CONTRIBUTING.md)
-for branch names, code rules and the PR checklist. Report security vulnerabilities privately as
-described in the [security policy](./SECURITY.md).
+for issues, branch names and pull requests, and [AGENTS.md](./AGENTS.md) for code rules and checks.
+Report security vulnerabilities privately as described in the [security policy](./SECURITY.md).
 
 ## License
 

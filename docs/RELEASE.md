@@ -3,12 +3,12 @@
 워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) · [문서 목록](./README.md)
 
 git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
-릴리즈는 메인테이너가 수행하며, 코드 기여 규칙은 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
+릴리즈는 메인테이너가 수행하며, 코드 규칙과 검증은 [`AGENTS.md`](../AGENTS.md), 기여 절차는 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
 
 ## 1. 한눈에 보기
 
 ```bash
-npm version minor        # ① package.json 버전 올리고 커밋 + v0.x.0 태그 생성
+pnpm version minor       # ① package.json 버전 올리고 커밋 + v0.x.0 태그 생성
 git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된다
 # ③ GitHub → Releases 에서 초안(draft)을 열어 노트를 다듬고 Publish
 ```
@@ -17,10 +17,10 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 
 - 버전은 **`package.json` 한 곳**에만 있다. `src-tauri/tauri.conf.json`은 `"version": "../package.json"`으로 그 값을 읽는다. `src-tauri/Cargo.toml`의 버전은 번들에 쓰이지 않으므로 손대지 않는다.
 - [SemVer](https://semver.org)를 따른다. 1.0 전에는 `minor`가 기능 추가, `patch`가 버그 수정이다.
-  - `npm version patch` → 0.1.0 → 0.1.1
-  - `npm version minor` → 0.1.0 → 0.2.0
-  - `npm version major` → 0.1.0 → 1.0.0
-- `npm version`은 `package.json`을 고치고 `v0.2.0` 같은 커밋과 주석 태그를 함께 만든다. 작업 트리가 깨끗해야(`git status` 비어 있어야) 실행된다.
+  - `pnpm version patch` → 0.1.0 → 0.1.1
+  - `pnpm version minor` → 0.1.0 → 0.2.0
+  - `pnpm version major` → 0.1.0 → 1.0.0
+- `pnpm version`은 `package.json`을 고치고 `v0.2.0` 같은 커밋과 주석 태그를 함께 만든다. 작업 트리가 깨끗해야(`git status` 비어 있어야) 실행된다.
 - 태그 이름과 `package.json` 버전이 다르면 워크플로가 빌드 전에 실패한다. 손으로 태그를 만들 때는 `v` 접두사를 붙이고 버전을 맞춘다.
 
 ## 3. 릴리즈 절차
@@ -36,7 +36,7 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
    ```
 3. 버전을 올린다.
    ```bash
-   npm version minor
+   pnpm version minor
    ```
 4. 커밋과 태그를 푸시한다.
    ```bash
@@ -74,7 +74,7 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 - **한쪽 플랫폼만 실패**: Actions에서 실패한 잡만 **Re-run failed jobs** 하면 같은 초안에 파일이 추가된다.
 - **초안을 버리고 다시**: 먼저 실패한 잡 재실행을 사용한다. 초안·태그를 재작성할 필요가 있으면
   공개 여부와 두 플랫폼의 산출물을 확인한 뒤 메인테이너가 처리한다.
-- **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 `npm version patch`로 다음 버전을 낸다.
+- **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 `pnpm version patch`로 다음 버전을 낸다.
 - **로컬에서 재현**: 서명 단계까지 릴리즈와 같게 확인하려면 §7의 서명 키를 환경 변수로 주고 `pnpm tauri build`(현재 OS용)
   또는 `pnpm tauri build --target universal-apple-darwin`을 실행한다. 서명 외의 단계만 볼 때는 키 없이 `pnpm bundle:local`을 쓴다.
 

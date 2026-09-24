@@ -16,6 +16,7 @@ body:
     id: os
     attributes:
       label: Operating system
+      description: Include the OS version, and the browser for web modes, in Details.
       options:
         - macOS
         - Windows
@@ -29,6 +30,8 @@ body:
       label: How were you running CanvaSlide?
       options:
         - Desktop app (Tauri build)
+        - Hosted web editor (canvaslide.pages.dev)
+        - Cloud share link
         - Browser dev mode (pnpm dev:web)
         - Exported HTML player
     validations:
@@ -38,7 +41,7 @@ body:
     id: version
     attributes:
       label: CanvaSlide version or commit
-      placeholder: v0.1.0 or a commit SHA
+      placeholder: A release tag such as v0.7.0, or a commit SHA
     validations:
       required: false
 

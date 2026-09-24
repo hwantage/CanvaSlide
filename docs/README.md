@@ -10,7 +10,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | Understand features, get started, use shortcuts        | [English README](../README.md), [한국어 README](../README.ko.md)                                  |
 | Follow a step-by-step user guide                       | [Website documentation](https://hwantage.github.io/CanvaSlide/docs/)                              |
-| Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [agent rules](../AGENTS.md)                                   |
+| Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [code rules and checks](../AGENTS.md)                         |
 | Change rendering, history, presentation or document IO | [Architecture and constraints](./ARCHITECTURE.md)                                                 |
 | Import a local Figma file                              | [Figma import](./FIGMA-IMPORT.md)                                                                 |
 | Use or host cloud snapshot sharing                     | [Cloud share](./CLOUD-SHARE.md)                                                                   |
@@ -32,17 +32,15 @@ to determine what has shipped, since a checkout can contain changes since that r
 
 ## Maintaining documentation
 
-Track proposed work in [issues](https://github.com/hwantage/CanvaSlide/issues) and change-specific
-decisions/results in PRs. Keep affected guides up to date when behaviour changes, including both README
-languages. Do not copy a run's test counts, sample measurements or a future-work list into current guidance.
-Temporary drafts, logs and review evidence belong in ignored `discuss/`.
+Track proposed work in [issues](https://github.com/hwantage/CanvaSlide/issues). The rules for keeping
+guides current are in [AGENTS.md](../AGENTS.md#documentation).
 
 ## Historical records
 
 - [PRD in Git history](https://github.com/hwantage/CanvaSlide/blob/683a03ba8c6a009a08822de14573a9c5df632141/docs/PRD.md): original product plan with subsequent edits; its milestones and exclusions are historical.
 - [Implementation report in Git history](https://github.com/hwantage/CanvaSlide/blob/683a03ba8c6a009a08822de14573a9c5df632141/docs/REPORT.md): accumulated implementation notes, bug fixes and old validation results.
 
-The PRD and implementation report were retired in this documentation refresh; their complete content
-remains available at the fixed commit above. These records contain superseded claims and are not
-prerequisites for routine work. Current design constraints extracted from them live in the architecture
+The PRD and implementation report are no longer maintained; their complete content remains available
+at the fixed commit above. These records contain superseded claims and are not prerequisites for
+routine work. Current design constraints extracted from them live in the architecture
 guide; completed features are not a roadmap for future implementation.

@@ -12,7 +12,7 @@
 
 ## Linked Issue
 
-<!-- Link the issue this PR addresses. Open one first for anything larger than a small fix. -->
+<!-- Link the issue this PR addresses. Open one first unless this is a small bug fix (see CONTRIBUTING.md). -->
 
 Fixes #
 
@@ -24,7 +24,8 @@ Fixes #
 
 ## Testing
 
-<!-- How did you verify this? Steps a reviewer can follow. -->
+<!-- How did you verify this? List the commands you ran with their results, the checks you skipped and
+     why, and steps a reviewer can follow. -->
 
 - [ ] Ran in the Tauri window (`pnpm dev`)
 - [ ] Ran in browser mode (`pnpm dev:web`)
@@ -39,12 +40,12 @@ Fixes #
 ## Checklist
 
 - [ ] This PR is small and focused on one topic
-- [ ] `pnpm check` passes (oxlint + max-lines + control chars + oxfmt + tsc + vitest)
-- [ ] `pnpm test:e2e` passes, or the change cannot affect browser E2E
-- [ ] `pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test` pass, or `src-tauri/` is untouched
-- [ ] `pnpm test:site` passes, or website content, code and build inputs are untouched
+- [ ] The applicable [Verify commands](https://github.com/hwantage/CanvaSlide/blob/main/AGENTS.md#verify) pass (tick each one you ran):
+  - [ ] `pnpm check`
+  - [ ] `pnpm test:e2e`
+  - [ ] `pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test`
+  - [ ] `pnpm bundle:local`
+  - [ ] `pnpm test:site`
+- [ ] The change follows the [code rules](https://github.com/hwantage/CanvaSlide/blob/main/AGENTS.md#rules)
 - [ ] Affected documentation and links are updated; new permanent docs have a stated purpose
-- [ ] New user-visible strings go through `t()` / `tn()` and are added to `i18n/locales/en.ts` first
-- [ ] Shortcuts use `hasPrimaryModifier()` / `shortcutLabel()`, never hardcoded `metaKey`
-- [ ] Math and document transforms live in `src/shared/canvas` with unit tests
 - [ ] Self-reviewed for correctness, undo/redo behaviour, and performance on large documents

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { resolve, sep } from 'node:path'
 import { runnerImport, type Plugin } from 'vite'
 import type * as ConnectorGeometry from '../src/shared/canvas/connector-geometry.ts'
 import type * as DocumentFile from '../src/shared/canvas/document-file.ts'
@@ -8,6 +8,7 @@ import { findExample, type ExampleId } from '../src/shared/example-catalog.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const playerPath = resolve(root, 'src/renderer/src/generated/player.iife.js')
+const sharedDir = resolve(root, 'src/shared')
 
 type ExportModules = [typeof DocumentFile, typeof ConnectorGeometry, typeof HtmlExport]
 let exportModules: Promise<ExportModules> | undefined
@@ -22,7 +23,10 @@ function loadExportModules(): Promise<ExportModules> {
     load<typeof DocumentFile>('src/shared/canvas/document-file.ts'),
     load<typeof ConnectorGeometry>('src/shared/canvas/connector-geometry.ts'),
     load<typeof HtmlExport>('src/shared/canvas/html-export.ts')
-  ])
+  ]).catch((error: unknown) => {
+    exportModules = undefined
+    throw error
+  })
   return exportModules
 }
 
@@ -59,6 +63,13 @@ export function exampleExports(ids: readonly ExampleId[]): Plugin {
       base = config.base
     },
     configureServer(server) {
+      // Why: the runner that imported the shared modules is gone, so it never sees their edits.
+      server.watcher.add(sharedDir)
+      server.watcher.on('all', (_event, file) => {
+        if (resolve(file).startsWith(sharedDir + sep)) {
+          exportModules = undefined
+        }
+      })
       server.middlewares.use(async (request, response, next) => {
         const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
         const id = paths.get(pathname.startsWith(base) ? pathname.slice(base.length) : '')

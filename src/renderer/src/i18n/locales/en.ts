@@ -966,5 +966,23 @@ Use the skill at {skill} to create the file.`,
   'error.canvasContext': 'Canvas 2D context unavailable',
   'error.decodePdf': 'Could not read the PDF file',
   'error.pdfPassword': 'Password-protected PDF files are not supported',
-  'error.renderPdfPage': 'Could not render a page of the PDF export'
+  'error.renderPdfPage': 'Could not render a page of the PDF export',
+
+  'nativeError.invalidPath': 'The file location could not be read.',
+  'nativeError.notGranted':
+    'This file was not chosen in this session. Choose it again in the Open or Save dialog.',
+  'nativeError.notADocument': 'This file is not a document the app can open.',
+  'nativeError.invalidDocument': 'The file is damaged or is not a valid document.',
+  'nativeError.invalidExport': 'The export could not be prepared for saving.',
+  'nativeError.tooLarge': 'The document exceeds the file size limit.',
+  'nativeError.notFound': 'The file or folder no longer exists.',
+  'nativeError.permissionDenied': 'You do not have permission to use this file or folder.',
+  'nativeError.storageFull': 'There is not enough disk space.',
+  'nativeError.io': 'The file could not be read or written.',
+  'nativeError.taskFailed': 'The operation stopped unexpectedly. Try again.',
+  'nativeError.recoverySession': 'This recovery copy is not available to this window.',
+  'nativeError.recoveryTooLarge': 'The recovery storage limit has been reached.',
+  'nativeError.recoveryUnavailable': 'Recovery storage is unavailable.',
+  'nativeError.recoveryInvalid': 'The recovery copy is damaged.',
+  'nativeError.videoHostUnavailable': 'The video player could not be started.'
 } as const

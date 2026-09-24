@@ -1,3 +1,4 @@
+import { invokeCommand } from './native-command'
 import { isTauriRuntime } from './tauri-runtime'
 
 /**
@@ -70,8 +71,7 @@ export async function claimRecoverySession(id: string): Promise<boolean> {
     if (nativeClaims.has(id)) {
       return true
     }
-    const { invoke } = await import('@tauri-apps/api/core')
-    const claimed = await invoke<boolean>('claim_recovery_session', { sessionId: id })
+    const claimed = await invokeCommand<boolean>('claim_recovery_session', { sessionId: id })
     if (claimed) {
       nativeClaims.add(id)
     }
@@ -81,8 +81,7 @@ export async function claimRecoverySession(id: string): Promise<boolean> {
 }
 export async function claimSession(): Promise<boolean> {
   if (isTauriRuntime() && !nativeClaims.has(sessionId)) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    await invoke('start_recovery_session')
+    await invokeCommand('start_recovery_session')
     nativeClaims.clear()
   }
   return claimRecoverySession(sessionId)
@@ -95,8 +94,7 @@ export async function releaseRecoverySession(id: string): Promise<void> {
     return
   }
   if (isTauriRuntime()) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    await invoke('release_recovery_session', { sessionId: id })
+    await invokeCommand('release_recovery_session', { sessionId: id })
     nativeClaims.delete(id)
   } else {
     claims?.release(id)

@@ -103,13 +103,20 @@ fn embed_one(source: &SystemSource, request: &FontRequest) -> Option<EmbeddedFon
 }
 
 /// Fonts that cannot be found, read or subset are skipped; the export then falls back for them.
-#[tauri::command]
-pub fn subset_fonts(requests: Vec<FontRequest>) -> Vec<EmbeddedFont> {
+fn subset_installed_fonts(requests: &[FontRequest]) -> Vec<EmbeddedFont> {
     let source = SystemSource::new();
     requests
         .iter()
         .filter_map(|request| embed_one(&source, request))
         .collect()
+}
+
+/// Runs on the blocking pool: subsetting reads and parses whole font files.
+#[tauri::command]
+pub async fn subset_fonts(requests: Vec<FontRequest>) -> Vec<EmbeddedFont> {
+    tauri::async_runtime::spawn_blocking(move || subset_installed_fonts(&requests))
+        .await
+        .unwrap_or_default()
 }
 
 #[cfg(test)]

@@ -3,11 +3,13 @@ use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
 
+use crate::atomic_file::{atomic_write, durable_rename, sync_directory, sync_file};
+use crate::command_error::CommandError;
 use crate::file_path::FilePath;
 use crate::granted_files::GrantedFiles;
 
@@ -33,9 +35,23 @@ pub enum RecoveryError {
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
 }
+impl From<&RecoveryError> for CommandError {
+    fn from(error: &RecoveryError) -> Self {
+        match error {
+            RecoveryError::InvalidSession | RecoveryError::NotOwned => {
+                CommandError::new("recovery_session", error)
+            }
+            RecoveryError::TooLarge => CommandError::new("recovery_too_large", ""),
+            RecoveryError::Unavailable(detail) => CommandError::new("recovery_unavailable", detail),
+            RecoveryError::InvalidSnapshot(detail) => CommandError::new("recovery_invalid", detail),
+            RecoveryError::NotGranted => CommandError::new("not_granted", ""),
+            RecoveryError::Io(error) => CommandError::io(error),
+        }
+    }
+}
 impl Serialize for RecoveryError {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+        CommandError::from(self).serialize(serializer)
     }
 }
 fn snapshot_path(dir: &Path, id: &str, extension: &str) -> Result<PathBuf, RecoveryError> {
@@ -134,7 +150,7 @@ impl RecoveryFiles {
         if bytes.len() > MAX_SNAPSHOT_BYTES || size > MAX_STORE_BYTES || count > MAX_RECORDS {
             return Err(RecoveryError::TooLarge);
         }
-        durable_write(&temp, &target, bytes)
+        Ok(atomic_write(&temp, &target, bytes)?)
     }
 }
 fn remove_if_present(path: &Path) -> Result<(), std::io::Error> {
@@ -142,51 +158,6 @@ fn remove_if_present(path: &Path) -> Result<(), std::io::Error> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
         result => result,
     }
-}
-fn durable_write(temp: &Path, target: &Path, bytes: &[u8]) -> Result<(), RecoveryError> {
-    write_with_sync(temp, target, bytes, File::sync_all)
-}
-fn write_with_sync(
-    temp: &Path,
-    target: &Path,
-    bytes: &[u8],
-    synchronize: impl FnOnce(&File) -> Result<(), std::io::Error>,
-) -> Result<(), RecoveryError> {
-    let mut file = File::create(temp)?;
-    file.write_all(bytes)?;
-    synchronize(&file)?;
-    drop(file);
-    durable_rename(temp, target)?;
-    Ok(())
-}
-#[cfg(not(windows))]
-fn durable_rename(from: &Path, to: &Path) -> Result<(), std::io::Error> {
-    std::fs::rename(from, to)?;
-    sync_directory(to.parent().expect("recovery file has a directory"))
-}
-#[cfg(windows)]
-fn durable_rename(from: &Path, to: &Path) -> Result<(), std::io::Error> {
-    use std::os::windows::ffi::OsStrExt;
-    #[link(name = "kernel32")]
-    extern "system" {
-        fn MoveFileExW(from: *const u16, to: *const u16, flags: u32) -> i32;
-    }
-    let from: Vec<u16> = from.as_os_str().encode_wide().chain(Some(0)).collect();
-    let to: Vec<u16> = to.as_os_str().encode_wide().chain(Some(0)).collect();
-    // Both buffers are terminated and live through the synchronous write-through rename.
-    if unsafe { MoveFileExW(from.as_ptr(), to.as_ptr(), 0x1 | 0x8) } == 0 {
-        Err(std::io::Error::last_os_error())
-    } else {
-        Ok(())
-    }
-}
-#[cfg(not(windows))]
-fn sync_directory(dir: &Path) -> Result<(), std::io::Error> {
-    File::open(dir)?.sync_all()
-}
-#[cfg(windows)]
-fn sync_directory(_dir: &Path) -> Result<(), std::io::Error> {
-    Ok(())
 }
 fn read_bytes(path: &Path) -> Result<Vec<u8>, RecoveryError> {
     let mut bytes = Vec::new();
@@ -208,7 +179,7 @@ fn settle_temp(dir: &Path, id: &str) -> Result<(), RecoveryError> {
     match serde_json::from_slice::<serde_json::Value>(&bytes) {
         Ok(_) => {
             let file = OpenOptions::new().write(true).open(&temp)?;
-            file.sync_all()?;
+            sync_file(&file)?;
             drop(file);
             durable_rename(&temp, &target)?;
         }

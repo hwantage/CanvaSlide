@@ -31,6 +31,7 @@ import {
   writeStoredSnapshot
 } from './recovery-database'
 import { displayFilePath, type FilePath } from './file-path'
+import { invokeCommand, NativeCommandError } from './native-command'
 import { isTauriRuntime } from './tauri-runtime'
 
 export type RecoveryLocation = { kind: 'directory'; path: string } | { kind: 'browser' }
@@ -43,16 +44,17 @@ export class RecoveryWriteError extends Error {
     super(message)
   }
 }
+const QUOTA_CODES = new Set(['storage_full', 'recovery_too_large'])
 function writeFailure(error: unknown): RecoveryWriteError {
   const message = error instanceof Error ? error.message : String(error)
   const quota =
     error instanceof DOMException
       ? error.name === 'QuotaExceededError'
-      : /quota|no space left|disk (is )?full|size limit/i.test(message)
-  return new RecoveryWriteError(
-    quota ? 'quota' : error instanceof RecoveryStorageUnavailableError ? 'unavailable' : 'failed',
-    message
-  )
+      : error instanceof NativeCommandError && QUOTA_CODES.has(error.code)
+  const unavailable =
+    error instanceof RecoveryStorageUnavailableError ||
+    (error instanceof NativeCommandError && error.code === 'recovery_unavailable')
+  return new RecoveryWriteError(quota ? 'quota' : unavailable ? 'unavailable' : 'failed', message)
 }
 export function canOwnSessions(): boolean {
   return isTauriRuntime() || supportsSessionOwnership()
@@ -72,17 +74,14 @@ export async function writeRecoverySnapshot(
   try {
     const bytes = await encodeRecoverySnapshot(document, meta)
     if (bytes.byteLength > MAX_SNAPSHOT_BYTES) {
-      throw new Error('Recovery snapshot exceeds size limit')
+      throw new DOMException('Recovery snapshot exceeds size limit', 'QuotaExceededError')
     }
     requireOwnership(sessionId)
-    if (isTauriRuntime()) {
-      const { invoke } = await import('@tauri-apps/api/core')
-      await invoke('write_recovery_snapshot', bytes, {
-        headers: { 'x-recovery-session': sessionId }
-      })
-    } else {
-      await writeStoredSnapshot(sessionId, bytes, { version: RECOVERY_SNAPSHOT_VERSION, ...meta })
-    }
+    await (isTauriRuntime()
+      ? invokeCommand('write_recovery_snapshot', bytes, {
+          headers: { 'x-recovery-session': sessionId }
+        })
+      : writeStoredSnapshot(sessionId, bytes, { version: RECOVERY_SNAPSHOT_VERSION, ...meta }))
   } catch (error) {
     throw writeFailure(error)
   }
@@ -104,8 +103,7 @@ async function readInfo(id: string): Promise<{
   warning?: string
 }> {
   if (isTauriRuntime()) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    const raw = await invoke<unknown>('read_recovery_info', { sessionId: id })
+    const raw = await invokeCommand<unknown>('read_recovery_info', { sessionId: id })
     const warning =
       raw &&
       typeof raw === 'object' &&
@@ -125,7 +123,7 @@ export async function readRecoverySnapshots(
   excluded: readonly string[] = []
 ): Promise<StoredRecovery> {
   const ids = isTauriRuntime()
-    ? await (await import('@tauri-apps/api/core')).invoke<string[]>('list_recovery_sessions')
+    ? await invokeCommand<string[]>('list_recovery_sessions')
     : await listStoredSessions()
   const result: StoredRecovery = { sessions: [], quarantined: [], failures: [] }
   for (const sessionId of ids) {
@@ -162,8 +160,9 @@ export async function readRecoveryDocument(sessionId: string) {
   requireOwnership(sessionId)
   let payload: Uint8Array<ArrayBuffer>
   if (isTauriRuntime()) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    payload = new Uint8Array(await invoke<ArrayBuffer>('read_recovery_snapshot', { sessionId }))
+    payload = new Uint8Array(
+      await invokeCommand<ArrayBuffer>('read_recovery_snapshot', { sessionId })
+    )
   } else {
     const record = await readStoredSnapshot(sessionId)
     if (record === null) {
@@ -178,12 +177,9 @@ export async function clearRecoverySnapshots(sessionIds: readonly string[]): Pro
     return
   }
   sessionIds.forEach(requireOwnership)
-  if (isTauriRuntime()) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    await invoke('clear_recovery_snapshots', { sessionIds })
-  } else {
-    await clearStoredSnapshots(sessionIds)
-  }
+  await (isTauriRuntime()
+    ? invokeCommand('clear_recovery_snapshots', { sessionIds })
+    : clearStoredSnapshots(sessionIds))
 }
 export function clearOwnRecoverySnapshot(): Promise<void> {
   return clearRecoverySnapshots([currentSessionId()])
@@ -221,6 +217,5 @@ export async function recoveryLocation(): Promise<RecoveryLocation> {
   if (!isTauriRuntime()) {
     return { kind: 'browser' }
   }
-  const { invoke } = await import('@tauri-apps/api/core')
-  return { kind: 'directory', path: await invoke<string>('recovery_directory') }
+  return { kind: 'directory', path: await invokeCommand<string>('recovery_directory') }
 }

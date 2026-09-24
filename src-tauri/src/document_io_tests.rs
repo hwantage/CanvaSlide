@@ -189,8 +189,13 @@ fn the_ipc_commands_act_only_on_granted_files() {
     let read = serde_json::json!({ "path": handle });
     let write = serde_json::json!({ "path": handle, "contents": r#"{"edited":true}"# });
 
-    assert!(invoke("read_document", read.clone()).is_err());
-    assert!(invoke("write_document", write.clone()).is_err());
+    for (cmd, args) in [("read_document", &read), ("write_document", &write)] {
+        assert_eq!(
+            invoke(cmd, args.clone()).unwrap_err()["code"],
+            "not_granted",
+            "{cmd}"
+        );
+    }
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "{}");
 
     files.grant(&path);
@@ -359,4 +364,47 @@ fn bounds_streamed_input_before_parsing() {
         read_document_bytes(&json[..], json.len() - 1),
         Err(DocumentIoError::TooLarge)
     ));
+}
+
+/// The webview localizes and branches on the code, so each failure must keep its own.
+#[test]
+fn document_errors_reach_the_webview_as_codes() {
+    let not_found = std::io::Error::from(std::io::ErrorKind::NotFound);
+    for (error, code, detail) in [
+        (
+            GrantError::InvalidPath("x".into()).into(),
+            "invalid_path",
+            "x",
+        ),
+        (
+            GrantError::NotGranted("/tmp/x".into()).into(),
+            "not_granted",
+            "/tmp/x",
+        ),
+        (
+            DocumentIoError::InvalidExtension("/tmp/x.txt".into()),
+            "not_a_document",
+            "/tmp/x.txt",
+        ),
+        (
+            DocumentIoError::InvalidJson("x".into()),
+            "invalid_document",
+            "x",
+        ),
+        (
+            DocumentIoError::InvalidBase64("x".into()),
+            "invalid_export",
+            "x",
+        ),
+        (DocumentIoError::TooLarge, "too_large", ""),
+        (
+            DocumentIoError::Io(not_found),
+            "not_found",
+            "entity not found",
+        ),
+    ] {
+        assert_eq!(CommandError::from(error), CommandError::new(code, detail));
+    }
+    let missing = read_document_file(Path::new("/nonexistent-canvaslide-dir/deck.canvaslide"));
+    assert_eq!(CommandError::from(missing.unwrap_err()).code, "not_found");
 }

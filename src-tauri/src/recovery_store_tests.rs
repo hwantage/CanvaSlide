@@ -191,22 +191,6 @@ fn native_claim_child_probe() {
     assert!(files.write(&dir, "live", b"overwrite").is_err());
 }
 #[test]
-fn failed_file_sync_cannot_publish_or_acknowledge_a_replacement() {
-    let dir = temp_dir("sync-failure");
-    let temp = dir.join("a.json.tmp");
-    let target = dir.join("a.json");
-    std::fs::write(&target, b"old copy").unwrap();
-    let result = write_with_sync(&temp, &target, b"replacement", |file| {
-        assert_eq!(file.metadata()?.len(), b"replacement".len() as u64);
-        assert_eq!(read_bytes(&target).unwrap(), b"old copy");
-        Err(std::io::Error::other("injected synchronization failure"))
-    });
-    assert!(result.is_err());
-    assert_eq!(read_bytes(&target).unwrap(), b"old copy");
-    assert_eq!(read_bytes(&temp).unwrap(), b"replacement");
-    std::fs::remove_dir_all(dir).unwrap();
-}
-#[test]
 fn metadata_scan_returns_only_known_metadata_fields() {
     let dir = temp_dir("metadata");
     let mut files = RecoveryFiles::default();
@@ -459,4 +443,29 @@ fn restoring_a_stored_copy_grants_its_file_to_the_next_session() {
     );
     assert!(next.is_granted(Path::new("/tmp/deck.canvaslide")));
     std::fs::remove_dir_all(dir).unwrap();
+}
+/// The webview branches on the code: a full store reads as a quota problem in any language.
+#[test]
+fn recovery_errors_reach_the_webview_as_codes() {
+    #[cfg(unix)]
+    let full = std::io::Error::from_raw_os_error(28);
+    #[cfg(windows)]
+    let full = std::io::Error::from_raw_os_error(112);
+    for (error, code) in [
+        (RecoveryError::InvalidSession, "recovery_session"),
+        (RecoveryError::NotOwned, "recovery_session"),
+        (RecoveryError::TooLarge, "recovery_too_large"),
+        (
+            RecoveryError::Unavailable("x".into()),
+            "recovery_unavailable",
+        ),
+        (
+            RecoveryError::InvalidSnapshot("x".into()),
+            "recovery_invalid",
+        ),
+        (RecoveryError::NotGranted, "not_granted"),
+        (RecoveryError::Io(full), "storage_full"),
+    ] {
+        assert_eq!(serde_json::to_value(&error).unwrap()["code"], code);
+    }
 }

@@ -3,6 +3,8 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::time::Duration;
 
+use crate::command_error::CommandError;
+
 const HTML: &str = include_str!("video-embed.html");
 const SCRIPT: &str = include_str!("video-embed.js");
 const YOUTUBE_CSP: &str = "default-src 'none'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors tauri: http://tauri.localhost https://tauri.localhost http://127.0.0.1:*";
@@ -14,14 +16,19 @@ pub struct VideoEmbedServer(Mutex<Option<String>>);
 
 // Provider SDKs run on this isolated page, never in the main window; YouTube also needs an HTTP referrer.
 #[tauri::command]
-pub fn video_embed_origin(state: tauri::State<'_, VideoEmbedServer>) -> Result<String, String> {
-    let mut origin = state.0.lock().map_err(|e| e.to_string())?;
+pub fn video_embed_origin(
+    state: tauri::State<'_, VideoEmbedServer>,
+) -> Result<String, CommandError> {
+    let unavailable = |e: std::io::Error| CommandError::new("video_host_unavailable", e);
+    let mut origin = state
+        .0
+        .lock()
+        .map_err(|e| CommandError::new("video_host_unavailable", e))?;
     if let Some(origin) = origin.as_ref() {
         return Ok(origin.clone());
     }
-    let listener =
-        TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).map_err(|e| e.to_string())?;
-    let address = listener.local_addr().map_err(|e| e.to_string())?;
+    let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).map_err(unavailable)?;
+    let address = listener.local_addr().map_err(unavailable)?;
     let url = format!("http://{address}");
     std::thread::Builder::new()
         .name("video-embed".into())
@@ -30,7 +37,7 @@ pub fn video_embed_origin(state: tauri::State<'_, VideoEmbedServer>) -> Result<S
                 let _ = serve(stream, &address.to_string());
             }
         })
-        .map_err(|e| e.to_string())?;
+        .map_err(unavailable)?;
     *origin = Some(url.clone());
     Ok(url)
 }

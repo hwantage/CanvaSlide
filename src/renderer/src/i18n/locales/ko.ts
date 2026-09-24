@@ -963,5 +963,23 @@ export const ko: UiStrings = {
   'error.canvasContext': 'Canvas 2D 컨텍스트를 사용할 수 없습니다',
   'error.decodePdf': 'PDF 파일을 읽을 수 없습니다',
   'error.pdfPassword': '암호가 걸린 PDF 파일은 지원하지 않습니다',
-  'error.renderPdfPage': 'PDF로 내보낼 페이지를 렌더링할 수 없습니다'
+  'error.renderPdfPage': 'PDF로 내보낼 페이지를 렌더링할 수 없습니다',
+
+  'nativeError.invalidPath': '파일 위치를 읽을 수 없습니다.',
+  'nativeError.notGranted':
+    '이번 세션에서 선택한 파일이 아닙니다. 열기 또는 저장 대화 상자에서 파일을 다시 선택해 주세요.',
+  'nativeError.notADocument': '앱에서 열 수 있는 문서 파일이 아닙니다.',
+  'nativeError.invalidDocument': '파일이 손상되었거나 올바른 문서가 아닙니다.',
+  'nativeError.invalidExport': '내보낼 파일을 저장할 준비를 하지 못했습니다.',
+  'nativeError.tooLarge': '문서가 파일 크기 제한을 초과합니다.',
+  'nativeError.notFound': '파일 또는 폴더가 더 이상 존재하지 않습니다.',
+  'nativeError.permissionDenied': '이 파일 또는 폴더를 사용할 권한이 없습니다.',
+  'nativeError.storageFull': '디스크 공간이 부족합니다.',
+  'nativeError.io': '파일을 읽거나 쓸 수 없습니다.',
+  'nativeError.taskFailed': '작업이 예기치 않게 중단되었습니다. 다시 시도해 주세요.',
+  'nativeError.recoverySession': '이 창에서는 이 복구 사본을 사용할 수 없습니다.',
+  'nativeError.recoveryTooLarge': '복구 저장소 한도에 도달했습니다.',
+  'nativeError.recoveryUnavailable': '복구 저장소를 사용할 수 없습니다.',
+  'nativeError.recoveryInvalid': '복구 사본이 손상되었습니다.',
+  'nativeError.videoHostUnavailable': '동영상 플레이어를 시작할 수 없습니다.'
 }

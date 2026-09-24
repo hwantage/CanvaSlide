@@ -1,13 +1,14 @@
 //! Canvas document IO. The frontend validates the JSON schema and shared resource references.
-//! Native IO preserves bytes and paths and writes atomically.
+//! Native IO preserves bytes and paths and writes atomically, off the main thread.
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use base64::Engine;
-use serde::Serialize;
 use tauri::State;
 
+use crate::atomic_file::atomic_write;
+use crate::command_error::{off_main_thread, CommandError};
 use crate::file_path::FilePath;
 use crate::granted_files::{GrantError, GrantedFiles};
 
@@ -31,10 +32,23 @@ pub enum DocumentIoError {
     Io(#[from] std::io::Error),
 }
 
-// Why: Tauri commands need a serializable error; the frontend shows `message` verbatim.
-impl Serialize for DocumentIoError {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+impl From<DocumentIoError> for CommandError {
+    fn from(error: DocumentIoError) -> Self {
+        match error {
+            DocumentIoError::NotGranted(GrantError::InvalidPath(detail)) => {
+                CommandError::new("invalid_path", detail)
+            }
+            DocumentIoError::NotGranted(GrantError::NotGranted(path)) => {
+                CommandError::new("not_granted", path.display())
+            }
+            DocumentIoError::InvalidExtension(path) => {
+                CommandError::new("not_a_document", path.display())
+            }
+            DocumentIoError::InvalidJson(detail) => CommandError::new("invalid_document", detail),
+            DocumentIoError::InvalidBase64(detail) => CommandError::new("invalid_export", detail),
+            DocumentIoError::TooLarge => CommandError::new("too_large", ""),
+            DocumentIoError::Io(error) => CommandError::io(&error),
+        }
     }
 }
 
@@ -117,17 +131,14 @@ pub fn write_document_file(path: &Path, contents: &str) -> Result<PathBuf, Docum
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
     }
     let target = path.to_path_buf();
-    // Why: write to a sibling temp file then rename so a crash never truncates the user's document.
     let mut tmp = target.clone().into_os_string();
     tmp.push(".tmp");
-    let tmp = PathBuf::from(tmp);
-    std::fs::write(&tmp, bytes)?;
-    std::fs::rename(&tmp, &target)?;
+    atomic_write(Path::new(&tmp), &target, bytes)?;
     Ok(target)
 }
 
 /// An export lands on the extension its format dictates, whatever name the save dialog returned,
-/// and goes through a sibling temp file so a crash never leaves a half-written export behind.
+/// and is replaced atomically so a crash never leaves a half-written export behind.
 fn write_export_file(
     path: &Path,
     extension: &str,
@@ -142,8 +153,7 @@ fn write_export_file(
         path.with_extension(extension)
     };
     let tmp = target.with_extension(format!("{extension}.tmp"));
-    std::fs::write(&tmp, bytes)?;
-    std::fs::rename(&tmp, &target)?;
+    atomic_write(&tmp, &target, bytes)?;
     Ok(target)
 }
 
@@ -179,20 +189,22 @@ pub fn write_granted_document(
 }
 
 #[tauri::command]
-pub fn read_document(
+pub async fn read_document(
     granted: State<'_, GrantedFiles>,
     path: FilePath,
-) -> Result<String, DocumentIoError> {
-    read_granted_document(&granted, path)
+) -> Result<String, CommandError> {
+    let granted = granted.inner().clone();
+    off_main_thread(move || Ok(read_granted_document(&granted, path)?)).await
 }
 
 #[tauri::command]
-pub fn write_document(
+pub async fn write_document(
     granted: State<'_, GrantedFiles>,
     path: FilePath,
     contents: String,
-) -> Result<FilePath, DocumentIoError> {
-    write_granted_document(&granted, path, &contents)
+) -> Result<FilePath, CommandError> {
+    let granted = granted.inner().clone();
+    off_main_thread(move || Ok(write_granted_document(&granted, path, &contents)?)).await
 }
 
 #[cfg(test)]

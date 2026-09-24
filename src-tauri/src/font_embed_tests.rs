@@ -34,7 +34,7 @@ fn subsets_an_installed_font_to_a_smaller_valid_opentype_file() {
 
 #[test]
 fn unknown_family_is_skipped() {
-    let fonts = subset_fonts(vec![FontRequest {
+    let fonts = subset_installed_fonts(&[FontRequest {
         family: "No Such Font Family 12345".into(),
         bold: false,
         text: "x".into(),

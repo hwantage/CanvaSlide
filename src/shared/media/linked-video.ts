@@ -5,7 +5,7 @@ import {
   type PlaybackStatus,
   type ProviderPlayer
 } from './provider-player'
-import { attachYouTubeBridge } from './youtube-bridge'
+import { attachVideoEmbedBridge } from './video-embed-bridge'
 import { labelVideoControl, type VideoControlIcon } from './video-control-icons'
 import { showYouTubeThumbnail } from './video-thumbnail'
 import type { VideoFocusHandle } from '../canvas/video-focus'
@@ -33,8 +33,9 @@ export type VideoOptions = {
   interactive: boolean
   autoplay: boolean
   openOriginal?: (url: string) => void
-  youtubeOrigin?: () => Promise<string>
+  embedOrigin?: () => Promise<string>
   filePlaybackHint?: string
+  httpsOnlyHint?: string
   expand?: (onClose: () => void, resize: (height: number, zoom: number) => void) => VideoFocusHandle
 }
 
@@ -246,14 +247,26 @@ export function mountLinkedVideo(host: HTMLElement, options: VideoOptions): () =
     if (options.expand) {
       actions.append(expansionControl())
     }
-    if (source.provider === 'youtube' && location.protocol === 'file:' && !options.youtubeOrigin) {
-      status('blocked')
-      showYouTubeThumbnail(surface, source.id!, labels.thumbnail)
-      message.textContent = options.filePlaybackHint ?? labels.error
+    const unplayable = (value: PlaybackStatus, hint: string) => {
+      status(value)
+      message.textContent = hint
+      message.title = hint
       actions.replaceChildren(original)
       if (options.expand) {
         actions.append(expansionControl())
       }
+    }
+    if (source.provider === 'youtube' && location.protocol === 'file:' && !options.embedOrigin) {
+      unplayable('blocked', options.filePlaybackHint ?? labels.error)
+      showYouTubeThumbnail(surface, source.id!, labels.thumbnail)
+      return
+    }
+    if (
+      source.provider === 'direct' &&
+      options.httpsOnlyHint &&
+      new URL(source.url).protocol === 'http:'
+    ) {
+      unplayable('error', options.httpsOnlyHint)
       return
     }
     timeout = setTimeout(() => {
@@ -302,12 +315,12 @@ export function mountLinkedVideo(host: HTMLElement, options: VideoOptions): () =
         ? location.origin
         : 'https://com.hwantage.canvaslide'
       surface.append(iframe)
-      if (source.provider === 'youtube' && options.youtubeOrigin) {
+      if (options.embedOrigin) {
         void options
-          .youtubeOrigin()
+          .embedOrigin()
           .then((bridgeOrigin) => {
             if (alive()) {
-              provider = attachYouTubeBridge(iframe, bridgeOrigin, source, muted, update)
+              provider = attachVideoEmbedBridge(iframe, bridgeOrigin, source, muted, update)
               if (!requestedPlaying) {
                 provider.pause()
               }

@@ -2,7 +2,7 @@ import type { VideoSource } from '../canvas/video-source'
 import type { PlaybackStatus, ProviderPlayer } from './provider-player'
 
 /** The desktop bridge is an isolated HTTP page; only this iframe may report playback state. */
-export function attachYouTubeBridge(
+export function attachVideoEmbedBridge(
   iframe: HTMLIFrameElement,
   origin: string,
   source: VideoSource,
@@ -38,11 +38,12 @@ export function attachYouTubeBridge(
   window.addEventListener('message', onMessage)
   const params = new URLSearchParams({
     id: source.id!,
+    ...(source.hash ? { h: source.hash } : {}),
     start: String(source.start),
     muted: muted ? '1' : '0',
     parent: location.origin
   })
-  iframe.src = `${origin}/youtube.html#${params}`
+  iframe.src = `${origin}/${source.provider}.html#${params}`
   return {
     mute: (value) => {
       requestedMuted = value

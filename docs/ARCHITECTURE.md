@@ -181,8 +181,10 @@ hardware; it cannot promise a native frame rate. For profiling, see
   can subset installed fonts; without embedding or a matching font, the receiving device uses a
   fallback. See [`font-embedding.ts`](../src/renderer/src/platform/font-embedding.ts).
 - Linked videos keep URLs, not video bytes. Playback depends on the provider, network and browser;
-  YouTube HTML exports require HTTP(S). The native [video embed host](../src-tauri/src/video_embed.rs)
-  serves only the embed bridge assets on loopback, with no filesystem proxy or Tauri IPC access.
+  YouTube HTML exports require HTTP(S). In the desktop app, YouTube and Vimeo players run on the
+  native [video embed host](../src-tauri/src/video_embed.rs), which serves only the embed bridge
+  assets on loopback, with no filesystem proxy or Tauri IPC access. The main window loads no
+  third-party scripts, frames only that host, and plays direct video files over HTTPS only.
   Players must tear down on navigation/exit and ignore late callbacks.
 - App update installation is platform-specific; the [release guide](./RELEASE.md#7-자동-업데이트)
   distinguishes updater signatures from OS code signing and describes the actual workflow.

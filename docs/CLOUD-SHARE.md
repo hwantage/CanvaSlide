@@ -61,7 +61,8 @@ OS deep-link registration is outside this feature.
   SVG validation rejects malformed XML, DTDs, processing instructions, and excessive nesting.
 - **Video policy:** shared videos accept YouTube, Vimeo, and direct files hosted on the share service's
   exact origin; arbitrary external video URLs must be removed or replaced before sharing. YouTube and
-  Vimeo playback still contacts those providers. Local desktop documents retain their existing video support.
+  Vimeo playback still contacts those providers. Local documents keep any linked video URL; the desktop
+  app plays direct video files only over HTTPS.
 - **Content Security Policy:** Pages' `_headers` restricts scripts, connections, frames, and media to the
   application and the required provider origins, blocks external image loads except YouTube thumbnails,
   and omits referrers.

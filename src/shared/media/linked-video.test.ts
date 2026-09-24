@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { mountLinkedVideo, type VideoLabels } from './linked-video'
 import { attachProviderPlayer, type ProviderPlayer } from './provider-player'
-import { attachYouTubeBridge } from './youtube-bridge'
+import { attachVideoEmbedBridge } from './video-embed-bridge'
 
 vi.mock('./provider-player', () => ({ attachProviderPlayer: vi.fn() }))
 const labels: VideoLabels = {
@@ -95,7 +95,7 @@ it('accepts bridge messages only from the exact iframe and loopback origin, and 
   const frame = document.createElement('iframe')
   document.body.append(frame)
   const status = vi.fn()
-  const bridge = attachYouTubeBridge(
+  const bridge = attachVideoEmbedBridge(
     frame,
     'http://127.0.0.1:1234',
     { provider: 'youtube', url: 'https://youtu.be/M7lc1UVf-VE', id: 'M7lc1UVf-VE', start: 0 },
@@ -121,6 +121,40 @@ it('accepts bridge messages only from the exact iframe and loopback origin, and 
   send('http://127.0.0.1:1234', source)
   expect(status).toHaveBeenCalledOnce()
 })
+
+it.each([
+  ['https://youtu.be/M7lc1UVf-VE?t=4', '/youtube.html', { id: 'M7lc1UVf-VE', start: '4' }],
+  [
+    'https://vimeo.com/76979871/abc123#t=12s',
+    '/vimeo.html',
+    { id: '76979871', h: 'abc123', start: '12' }
+  ]
+])(
+  'plays %s through the isolated embed page without loading a provider SDK',
+  async (url, path, expected) => {
+    const src = vi.spyOn(HTMLIFrameElement.prototype, 'src', 'set')
+    const host = document.createElement('div')
+    document.body.append(host)
+    const cleanup = mountLinkedVideo(host, {
+      url,
+      labels,
+      interactive: true,
+      autoplay: false,
+      embedOrigin: () => Promise.resolve('http://127.0.0.1:1234')
+    })
+    host.querySelector('button')!.click()
+    await vi.waitFor(() => expect(src).toHaveBeenCalledOnce())
+    const page = new URL(src.mock.calls[0]![0])
+    expect(page.origin + page.pathname).toBe(`http://127.0.0.1:1234${path}`)
+    expect(Object.fromEntries(new URLSearchParams(page.hash.slice(1)))).toEqual({
+      ...expected,
+      muted: '0',
+      parent: location.origin
+    })
+    expect(attachProviderPlayer).not.toHaveBeenCalled()
+    cleanup()
+  }
+)
 
 it('keeps the same iframe while pausing before the SDK arrives and resuming afterwards', async () => {
   let resolve!: (player: ProviderPlayer) => void
@@ -155,7 +189,7 @@ it('replays the latest mute and pause intent only after the authenticated native
   const frame = document.createElement('iframe')
   document.body.append(frame)
   const post = vi.spyOn(frame.contentWindow!, 'postMessage').mockImplementation(() => undefined)
-  const bridge = attachYouTubeBridge(
+  const bridge = attachVideoEmbedBridge(
     frame,
     'http://127.0.0.1:1234',
     { provider: 'youtube', url: 'https://youtu.be/M7lc1UVf-VE', id: 'M7lc1UVf-VE', start: 0 },
@@ -179,4 +213,58 @@ it('replays the latest mute and pause intent only after the authenticated native
     'http://127.0.0.1:1234'
   )
   bridge.destroy()
+})
+
+it('keeps a pause pressed while the embed host starts and applies it once the page is ready', async () => {
+  let resolve!: (origin: string) => void
+  const host = document.createElement('div')
+  document.body.append(host)
+  const cleanup = mountLinkedVideo(host, {
+    url: 'https://vimeo.com/76979871',
+    labels,
+    interactive: true,
+    autoplay: false,
+    embedOrigin: () =>
+      new Promise((done) => {
+        resolve = done
+      })
+  })
+  host.querySelector<HTMLButtonElement>('[aria-label="Play"]')!.click()
+  host.querySelector<HTMLButtonElement>('[aria-label="Pause"]')!.click()
+  const frame = host.querySelector('iframe')!
+  const post = vi.spyOn(frame.contentWindow!, 'postMessage').mockImplementation(() => undefined)
+  resolve('http://127.0.0.1:1234')
+  await vi.waitFor(() => expect(host.querySelector('iframe')).toBe(frame))
+  await Promise.resolve()
+  window.dispatchEvent(
+    new MessageEvent('message', {
+      origin: 'http://127.0.0.1:1234',
+      source: frame.contentWindow,
+      data: { channel: 'canvaslide-video', status: 'ready' }
+    })
+  )
+  expect(post.mock.calls.map(([message]) => message.command)).toEqual(['unmute', 'pause'])
+  cleanup()
+})
+
+it.each([
+  ['http://media.example/clip.mp4', 'HTTPS only', 'error'],
+  ['HTTP://media.example/clip.mp4', 'HTTPS only', 'error'],
+  ['https://media.example/clip.mp4', 'Loading', 'loading']
+])('shows the HTTPS hint instead of loading plain HTTP media: %s', (url, text, playback) => {
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
+  const host = document.createElement('div')
+  document.body.append(host)
+  const cleanup = mountLinkedVideo(host, {
+    url,
+    labels,
+    interactive: true,
+    autoplay: false,
+    httpsOnlyHint: 'HTTPS only'
+  })
+  host.querySelector<HTMLButtonElement>('[aria-label="Play"]')!.click()
+  expect(host.dataset.playback).toBe(playback)
+  expect(host.querySelector('[role="status"]')!.textContent).toBe(text)
+  expect(host.querySelector('video') === null).toBe(playback === 'error')
+  cleanup()
 })

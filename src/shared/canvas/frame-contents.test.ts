@@ -111,7 +111,7 @@ describe('frame contents across overlapping copies', () => {
     expect(withFrameContents(result.document, [result.newIds[4]!])).toEqual(result.newIds.slice(4))
   })
 
-  it('keeps the same membership after save/reopen and accepts old documents without keys', () => {
+  it('keeps the same membership after save/reopen and falls back to bounds without keys', () => {
     const result = paste(scene(), ['f'])
     const reopened = parseDocument(serializeDocument(result.document))
     expect(reopened.ok).toBe(true)
@@ -119,12 +119,12 @@ describe('frame contents across overlapping copies', () => {
       throw new Error(reopened.error)
     }
     expect(withFrameContents(reopened.document, [result.newIds[0]!])).toEqual(result.newIds)
-    const legacy = parseDocument(serializeDocument(scene()))
-    expect(legacy.ok).toBe(true)
-    if (!legacy.ok) {
-      throw new Error(legacy.error)
+    const unkeyed = parseDocument(serializeDocument(scene()))
+    expect(unkeyed.ok).toBe(true)
+    if (!unkeyed.ok) {
+      throw new Error(unkeyed.error)
     }
-    expect(withFrameContents(legacy.document, ['f'])).toEqual(['f', 'a', 'b'])
+    expect(withFrameContents(unkeyed.document, ['f'])).toEqual(['f', 'a', 'b'])
   })
 
   it('restores spatial containment when contents leave their frame or their frame is deleted', () => {

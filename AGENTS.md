@@ -117,7 +117,9 @@ pnpm test:site    # if website content, code or build inputs changed
 - `bundle:local` builds unsigned installers for the current OS without the updater key. On Windows run
   it without `--bundles`; on macOS drop `--bundles app` to also build the DMG.
 - CI runs the Rust checks and the macOS/Windows bundle jobs on every change; see
-  [`.github/workflows/`](./.github/workflows/).
+  [`.github/workflows/`](./.github/workflows/). Pin every action to a full commit SHA with its version
+  in a comment, and keep signing secrets out of jobs that run build or package scripts
+  ([`docs/RELEASE.md`](./docs/RELEASE.md) §4); `pnpm test` checks both.
 - Fixers: `pnpm format`, `pnpm lint:fix`, `pnpm rust:fmt`.
 - Add tests that would catch the regression: math or document logic → `*.test.ts` beside the module;
   interaction (tools, shortcuts, selection, presenting) → Playwright in `tests/e2e/`; Rust commands →

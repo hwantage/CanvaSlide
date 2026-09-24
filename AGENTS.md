@@ -125,7 +125,8 @@ pnpm test:site    # if website content, code or build inputs changed
 - Fixers: `pnpm format`, `pnpm lint:fix`, `pnpm rust:fmt`.
 - Add tests that would catch the regression: math or document logic → `*.test.ts` beside the module;
   interaction (tools, shortcuts, selection, presenting) → Playwright in `tests/e2e/`; Rust commands →
-  `pnpm rust:test`.
+  `pnpm rust:test`, with the tests for `name.rs` in `name_tests.rs` beside it, included by
+  `#[cfg(test)] #[path = "name_tests.rs"] mod tests;` at the end of the module.
 - UI or interaction changes are tried in the Tauri window and in browser mode, and on Windows when
   shortcuts, menus or file dialogs are involved.
 - Documentation edits: check relative links, anchors, example paths and documented commands against

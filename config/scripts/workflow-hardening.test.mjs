@@ -161,8 +161,9 @@ test('every CI job has a time limit', () => {
 })
 
 // The step whose `run:` is exactly `command`, failing unless exactly one exists and nothing lets it
-// be skipped or fail without failing its job.
+// or its job be skipped or fail without failing the run.
 function checkedStep(job, command) {
+  assert.doesNotMatch(job.slice(0, job.indexOf('\n    steps:')), /\n {4}(if|continue-on-error):/)
   const steps = stepsOf(job).filter(
     (step) => step.startsWith(`      - run: ${command}\n`) || step === `      - run: ${command}`
   )

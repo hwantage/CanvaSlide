@@ -26,23 +26,55 @@ export type ShareContext = {
   params: Record<string, string | string[]>
 }
 
-function reply(body: unknown, status = 200, extraHeaders?: Record<string, string>): Response {
+type Reply = (body: unknown, status?: number, extraHeaders?: Record<string, string>) => Response
+
+// The hosted editor calls its own origin; macOS and Windows WebViews and loopback dev servers do not.
+const desktopOrigins = new Set(['tauri://localhost', 'http://tauri.localhost'])
+const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+function isAllowedShareOrigin(origin: string, serviceOrigin: string): boolean {
+  if (origin === serviceOrigin || desktopOrigins.has(origin)) {
+    return true
+  }
+  try {
+    const url = new URL(origin)
+    return url.origin === origin && url.protocol === 'http:' && loopbackHosts.has(url.hostname)
+  } catch {
+    return false
+  }
+}
+
+function respond(body: unknown, status: number, headers?: Record<string, string>): Response {
   return new Response(body === null ? null : JSON.stringify(body), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
-      // Public snapshots must be readable from desktop WebViews without enabling credentials.
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      ...extraHeaders
+      Vary: 'Origin',
+      ...headers
     }
   })
 }
 
-function storageError(error: unknown): Response {
+// Credential-free CORS for allowed origins only; foreign browser origins are refused before any work.
+function replyFor(request: Request): Reply | null {
+  const origin = request.headers.get('Origin')
+  if (origin === null) {
+    return (body, status = 200, extraHeaders) => respond(body, status, extraHeaders)
+  }
+  if (!isAllowedShareOrigin(origin, new URL(request.url).origin)) {
+    return null
+  }
+  const cors = {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+  }
+  return (body, status = 200, extraHeaders) => respond(body, status, { ...cors, ...extraHeaders })
+}
+
+function storageError(reply: Reply, error: unknown): Response {
   const message = error instanceof Error ? error.message : String(error)
   const quota = /429|quota|rate.?limit|limit exceeded|too many/i.test(message)
   return reply(
@@ -53,6 +85,10 @@ function storageError(error: unknown): Response {
 }
 
 export async function createShare({ request, env }: ShareContext): Promise<Response> {
+  const reply = replyFor(request)
+  if (!reply) {
+    return respond({ error: 'origin' }, 403)
+  }
   if (request.method === 'OPTIONS') {
     return reply(null, 204)
   }
@@ -96,11 +132,15 @@ export async function createShare({ request, env }: ShareContext): Promise<Respo
     url.searchParams.set('share', id)
     return reply({ id, url: url.href }, 201)
   } catch (error) {
-    return storageError(error)
+    return storageError(reply, error)
   }
 }
 
 export async function getShare({ request, env, params }: ShareContext): Promise<Response> {
+  const reply = replyFor(request)
+  if (!reply) {
+    return respond({ error: 'origin' }, 403)
+  }
   if (request.method === 'OPTIONS') {
     return reply(null, 204)
   }
@@ -121,6 +161,6 @@ export async function getShare({ request, env, params }: ShareContext): Promise<
     const response = reply(null)
     return new Response(body, { headers: response.headers })
   } catch (error) {
-    return storageError(error)
+    return storageError(reply, error)
   }
 }

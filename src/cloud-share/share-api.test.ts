@@ -67,7 +67,8 @@ it('stores a validated snapshot and round trips the document through the Pages r
   expect(retrieved.headers.get('content-type')).toContain('application/json')
   expect(retrieved.headers.get('cache-control')).toBe('no-store')
   expect(retrieved.headers.get('x-content-type-options')).toBe('nosniff')
-  expect(retrieved.headers.get('access-control-allow-origin')).toBe('*')
+  expect(retrieved.headers.get('access-control-allow-origin')).toBeNull()
+  expect(retrieved.headers.get('vary')).toBe('Origin')
 })
 
 it('stores slideshow access with the snapshot and ignores attempted query overrides', async () => {
@@ -252,10 +253,20 @@ it.each(['get', 'put'] as const)(
     const response = method === 'get' ? await get() : await post(shared(createEmptyDocument()))
     expect(response.status).toBe(429)
     expect(response.headers.get('retry-after')).toBe('60')
-    expect(response.headers.get('access-control-allow-origin')).toBe('*')
     expect(await response.json()).toEqual({ error: 'quota' })
   }
 )
+
+it('keeps CORS headers on storage errors so desktop clients can read the error', async () => {
+  vi.mocked(env.SHARED_DOCUMENTS!.put).mockRejectedValue(new Error('KV failed: 429'))
+  vi.mocked(env.SHARED_DOCUMENTS!.get).mockRejectedValue(new Error('internal'))
+  const quota = await fromOrigin('tauri://localhost', 'POST', shared(createEmptyDocument()))
+  expect(quota.status).toBe(429)
+  expect(quota.headers.get('access-control-allow-origin')).toBe('tauri://localhost')
+  const unavailable = await fromOrigin('http://tauri.localhost', 'GET')
+  expect(unavailable.status).toBe(503)
+  expect(unavailable.headers.get('access-control-allow-origin')).toBe('http://tauri.localhost')
+})
 
 it('reports missing bindings and service failures', async () => {
   vi.mocked(env.SHARED_DOCUMENTS!.get).mockRejectedValue(new Error('internal secret'))
@@ -278,7 +289,8 @@ it.each([createShare, getShare])(
     })
     expect(preflight.status).toBe(204)
     expect(preflight.headers.get('access-control-allow-headers')).toBe('Content-Type')
-    expect(preflight.headers.get('access-control-allow-origin')).toBe('*')
+    expect(preflight.headers.get('access-control-allow-origin')).toBe('tauri://localhost')
+    expect(preflight.headers.get('access-control-allow-methods')).toContain('POST')
     const response = await handler({
       request: new Request(`${origin}/api/share`, { method: 'DELETE' }),
       env,
@@ -288,3 +300,67 @@ it.each([createShare, getShare])(
     expect(response.headers.get('allow')).toContain('OPTIONS')
   }
 )
+
+function fromOrigin(requestOrigin: string, method: string, body?: string) {
+  const init: RequestInit = { method, headers: { Origin: requestOrigin } }
+  if (body !== undefined) {
+    init.headers = { Origin: requestOrigin, 'Content-Type': 'application/json' }
+    init.body = body
+  }
+  const handler = method === 'GET' ? getShare : createShare
+  return handler({
+    request: new Request(`${origin}/api/share${method === 'GET' ? `/${id}` : ''}`, init),
+    env,
+    params: { id }
+  })
+}
+
+it.each([
+  origin,
+  'tauri://localhost',
+  'http://tauri.localhost',
+  'http://127.0.0.1:1420',
+  'http://localhost:5173',
+  'http://[::1]:8788'
+])(
+  'allows credential-free CORS from the editor, desktop WebViews and loopback: %s',
+  async (from) => {
+    const preflight = await fromOrigin(from, 'OPTIONS')
+    expect(preflight.status).toBe(204)
+    expect(preflight.headers.get('access-control-allow-origin')).toBe(from)
+    expect(preflight.headers.get('access-control-allow-credentials')).toBeNull()
+    expect(preflight.headers.get('vary')).toBe('Origin')
+    const created = await fromOrigin(from, 'POST', shared(createEmptyDocument()))
+    expect(created.status).toBe(201)
+    expect(created.headers.get('access-control-allow-origin')).toBe(from)
+    expect((await fromOrigin(from, 'GET')).headers.get('access-control-allow-origin')).toBe(from)
+  }
+)
+
+it.each([
+  'https://attacker.example',
+  'null',
+  'http://canvas.example',
+  'https://canvas.example:8443',
+  'https://canvas.example.attacker.example',
+  'https://tauri.localhost',
+  'tauri://localhost.attacker.example',
+  'https://localhost:1420',
+  'http://localhost.attacker.example',
+  'http://127.0.0.1.attacker.example:1420',
+  'http://127.0.0.1:1420/',
+  'http://user@localhost:1420'
+])('refuses browser requests from other origins before reading or writing KV: %s', async (from) => {
+  for (const [method, body] of [
+    ['OPTIONS'],
+    ['POST', shared(createEmptyDocument())],
+    ['GET']
+  ] as const) {
+    const response = await fromOrigin(from, method, body)
+    expect(response.status).toBe(403)
+    expect(response.headers.get('access-control-allow-origin')).toBeNull()
+    expect(await response.json()).toEqual({ error: 'origin' })
+  }
+  expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
+  expect(env.SHARED_DOCUMENTS!.get).not.toHaveBeenCalled()
+})

@@ -13,6 +13,7 @@ import type { CanvasDocument } from '@shared/canvas/element-types'
 import { t } from '@/i18n/ui-strings'
 import { downloadFile } from './browser-download'
 import { displayFilePath, type FilePath } from './file-path'
+import { invokeCommand } from './native-command'
 import { isTauriRuntime } from './tauri-runtime'
 
 export type OpenedDocument = { document: CanvasDocument; filePath: FilePath | null }
@@ -69,8 +70,7 @@ export async function showErrorMessage(message: string): Promise<void> {
 
 /** Opens a path the app was given rather than one the user picked; Tauri only. */
 export async function openDocumentAtPath(path: FilePath): Promise<OpenedDocument> {
-  const { invoke } = await import('@tauri-apps/api/core')
-  const contents = await invoke<string>('read_document', { path })
+  const contents = await invokeCommand<string>('read_document', { path })
   const parsed = await decodeNativeDocumentFile(contents)
   if (!parsed.ok) {
     throw new Error(parsed.error)
@@ -79,8 +79,7 @@ export async function openDocumentAtPath(path: FilePath): Promise<OpenedDocument
 }
 
 async function openWithTauri(): Promise<OpenedDocument | null> {
-  const { invoke } = await import('@tauri-apps/api/core')
-  const selected = await invoke<FilePath | null>('pick_document_path')
+  const selected = await invokeCommand<FilePath | null>('pick_document_path')
   if (selected === null) {
     return null
   }
@@ -91,16 +90,15 @@ async function saveWithTauri(
   document: CanvasDocument,
   filePath: FilePath | null
 ): Promise<SavedDocument | null> {
-  const { invoke } = await import('@tauri-apps/api/core')
   const chosen =
     filePath ??
-    (await invoke<FilePath | null>('pick_document_save_path', {
+    (await invokeCommand<FilePath | null>('pick_document_save_path', {
       defaultName: documentFileName(document)
     }))
   if (!chosen) {
     return null
   }
-  const written = await invoke<FilePath>('write_document', {
+  const written = await invokeCommand<FilePath>('write_document', {
     path: chosen,
     contents: await encodeNativeDocumentFile(document)
   })

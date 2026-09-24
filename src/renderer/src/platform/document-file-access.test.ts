@@ -5,6 +5,7 @@ import { encodeNativeDocumentFile } from '@/lib/document-file-codec'
 import { parseDocument, serializeDocument } from '@shared/canvas/document-file'
 import { useDocumentCommands, useWindowTitle } from '@/hooks/use-document-commands'
 import { useDocumentStore } from '@/store/document-store'
+import { setLocale } from '@/i18n/ui-strings'
 import { openDocumentAtPath, openDocumentFile, saveDocumentFile } from './document-file-access'
 import { onLaunchDocument } from './launch-document'
 import type { FilePath } from './file-path'
@@ -189,6 +190,28 @@ describe('native path transport', () => {
     const last = parseDocument(writes[1].contents)
     expect(last.ok && last.document.name).toBe('Second snapshot')
     expect(useDocumentStore.getState().dirty).toBe(false)
+    unmount()
+  })
+
+  it('reports a native failure in the UI language, with the detail the shell gave', async () => {
+    const { message } = await import('@tauri-apps/plugin-dialog')
+    const { result, unmount } = renderHook(() => useDocumentCommands())
+    await act(() => result.current.openDocumentPath(native))
+    invoke.mockImplementation((command: string) =>
+      command === 'write_document'
+        ? Promise.reject({ code: 'permission_denied', detail: 'Permission denied (os error 13)' })
+        : Promise.resolve(null)
+    )
+    setLocale('ko')
+    try {
+      await act(() => result.current.saveDocument())
+    } finally {
+      setLocale('en')
+    }
+    expect(message).toHaveBeenCalledWith(
+      '이 파일 또는 폴더를 사용할 권한이 없습니다.\n\nPermission denied (os error 13)',
+      expect.objectContaining({ kind: 'error' })
+    )
     unmount()
   })
 

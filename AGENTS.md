@@ -20,7 +20,8 @@ contributors and coding agents alike. How to propose, name and submit a change i
   and `dev:site`/`build:site`).
 - `src-tauri/src/` — Rust shell on the system WebView (WKWebView on macOS, WebView2 on Windows):
   `document_io.rs`, `document_dialog.rs` and `file_path.rs` (file IO commands, dialogs and native
-  paths), `granted_files.rs` (the files the user chose this session), `recovery_store.rs`
+  paths), `granted_files.rs` (the files the user chose this session), `atomic_file.rs` (durable
+  file replacement), `command_error.rs` (the coded error commands return), `recovery_store.rs`
   (crash-recovery copies), `launch_document.rs` (the file the OS opens the app with),
   `system_fonts.rs` (installed font list), `font_embed.rs` (fonts embedded in HTML export),
   `video_embed.rs` (loopback video embed host), `app_menu.rs` (macOS menu).
@@ -39,6 +40,11 @@ contributors and coding agents alike. How to propose, name and submit a change i
 - Keep math and document transforms in `src/shared/canvas` and unit-test them; UI files should be thin.
 - Anything that touches the OS (file dialogs, menus, file IO) goes through `src/renderer/src/platform/`
   with a browser fallback; the app must work in the Tauri window and in `pnpm dev:web`.
+- Tauri commands that read or write files, show dialogs or scan fonts are `async` and run that work
+  on Tauri's blocking pool (`spawn_blocking`, as `off_main_thread` does), never on the main thread.
+  Files are replaced only through `atomic_file.rs`. A fallible command fails with a `CommandError`
+  code; the webview calls it through `invokeCommand`, which maps each code to a `t()` key in
+  `platform/native-command.ts`.
 - File-size hard limits: `.ts`/`.tsx` ≤ 800 lines; `.test.ts(x)`/`.spec.ts(x)` ≤ 1000.
   Count all lines, including blanks and comments; a final newline adds no extra line. Both checks
   cover the repository's non-ignored TypeScript, including tests, examples, config and website.
@@ -127,7 +133,8 @@ pnpm test:site    # if website content, code or build inputs changed
 - Fixers: `pnpm format`, `pnpm lint:fix`, `pnpm rust:fmt`.
 - Add tests that would catch the regression: math or document logic → `*.test.ts` beside the module;
   interaction (tools, shortcuts, selection, presenting) → Playwright in `tests/e2e/`; Rust commands →
-  `pnpm rust:test`.
+  `pnpm rust:test`, with the tests for `name.rs` in `name_tests.rs` beside it, included by
+  `#[cfg(test)] #[path = "name_tests.rs"] mod tests;` at the end of the module.
 - UI or interaction changes are tried in the Tauri window and in browser mode, and on Windows when
   shortcuts, menus or file dialogs are involved.
 - Documentation edits: check relative links, anchors, example paths and documented commands against

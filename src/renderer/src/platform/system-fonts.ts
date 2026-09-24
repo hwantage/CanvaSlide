@@ -1,3 +1,4 @@
+import { invokeCommand } from './native-command'
 import { isTauriRuntime } from './tauri-runtime'
 
 type LocalFontData = { family: string }
@@ -9,8 +10,7 @@ type LocalFontData = { family: string }
  */
 export async function listSystemFonts(): Promise<string[]> {
   if (isTauriRuntime()) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    return invoke<string[]>('list_system_fonts')
+    return invokeCommand<string[]>('list_system_fonts')
   }
   const query = (window as { queryLocalFonts?: () => Promise<LocalFontData[]> }).queryLocalFonts
   if (!query) {

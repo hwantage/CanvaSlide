@@ -170,8 +170,17 @@ hardware; it cannot promise a native frame rate. For profiling, see
 
 ## Platform and media constraints
 
-- Native [file IO](../src-tauri/src/document_io.rs) writes atomically. Browser mode uses upload/download
-  fallbacks. Keep failures from replacing the current document or a previously saved file.
+- Native [file IO](../src-tauri/src/document_io.rs) runs off the main thread and replaces files
+  [atomically and durably](../src-tauri/src/atomic_file.rs): a sibling temp file is flushed to the
+  disk and renamed over the target, then Unix syncs the folder where the volume supports it and
+  Windows renames with write-through, falling back to the standard rename when that is refused (a
+  long path or a target another program holds open). Documents, exports and recovery copies share
+  this path.
+  Browser mode uses upload/download fallbacks. Keep failures from replacing the current document or a
+  previously saved file.
+- Commands fail with a [code and a detail](../src-tauri/src/command_error.rs); the webview shows the
+  [localized message](../src/renderer/src/platform/native-command.ts) for the code, followed by the
+  detail, and branches on the code (a full disk reads as a recovery quota problem, for example).
 - Native file commands act only on [files the user chose](../src-tauri/src/granted_files.rs) this
   session: a native Open/Save dialog pick, a document the OS opened the app with, or the file a
   recovery copy names. Export commands show their own save dialog and write the chosen name under the

@@ -1,4 +1,4 @@
-import { RECOVERY_SNAPSHOT_VERSION } from '@shared/canvas/recovery-snapshot'
+import { MAX_SNAPSHOT_BYTES, RECOVERY_SNAPSHOT_VERSION } from '@shared/canvas/recovery-snapshot'
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import { decodeRecoveryFile, encodeRecoverySnapshot } from '@/lib/document-file-codec'
 import {
@@ -70,7 +70,6 @@ describe('recovery backend boundaries', () => {
   })
   it.each([
     ['quota', new DOMException('quota exceeded', 'QuotaExceededError')],
-    ['quota', new Error('io error: No space left on device')],
     ['unavailable', new RecoveryStorageUnavailableError('IndexedDB blocked')],
     ['failed', new Error('other failure')]
   ] as const)('reports %s writes rather than swallowing errors', async (reason, thrown) => {
@@ -80,6 +79,14 @@ describe('recovery backend boundaries', () => {
       message: thrown.message
     })
     expect(new RecoveryWriteError(reason, thrown.message)).toBeInstanceOf(Error)
+  })
+  it('reports an oversized snapshot as a quota failure without storing it', async () => {
+    const oversized = { byteLength: MAX_SNAPSHOT_BYTES + 1 } as Uint8Array<ArrayBuffer>
+    vi.mocked(encodeRecoverySnapshot).mockResolvedValue(oversized)
+    await expect(writeRecoverySnapshot(createEmptyDocument(), meta)).rejects.toMatchObject({
+      reason: 'quota'
+    })
+    expect(writeStoredSnapshot).not.toHaveBeenCalled()
   })
   it('refuses writes, reads and deletes without an acknowledged claim', async () => {
     vi.mocked(ownsRecoverySession).mockReturnValue(false)

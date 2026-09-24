@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use tauri::State;
 use tauri_plugin_dialog::{DialogExt, FilePath as DialogPath};
 
+use crate::command_error::{off_main_thread, CommandError};
 use crate::document_io::{
     decode_pdf_export, normalize_document_path, write_html_export_file, write_pdf_export_file,
     DOCUMENT_EXTENSION,
@@ -13,9 +14,12 @@ use crate::document_io::{
 use crate::file_path::FilePath;
 use crate::granted_files::GrantedFiles;
 
-fn native_selection(selected: Option<DialogPath>) -> Result<Option<PathBuf>, String> {
+fn native_selection(selected: Option<DialogPath>) -> Result<Option<PathBuf>, CommandError> {
     selected
-        .map(|path| path.into_path().map_err(|error| error.to_string()))
+        .map(|path| {
+            path.into_path()
+                .map_err(|error| CommandError::new("invalid_path", error))
+        })
         .transpose()
 }
 
@@ -41,19 +45,11 @@ fn file_dialog(
     dialog
 }
 
-async fn off_main_thread<T: Send + 'static>(
-    task: impl FnOnce() -> Result<T, String> + Send + 'static,
-) -> Result<T, String> {
-    tauri::async_runtime::spawn_blocking(task)
-        .await
-        .map_err(|error| error.to_string())?
-}
-
 #[tauri::command]
 pub async fn pick_document_path(
     window: tauri::WebviewWindow,
     granted: State<'_, GrantedFiles>,
-) -> Result<Option<FilePath>, String> {
+) -> Result<Option<FilePath>, CommandError> {
     let granted = granted.inner().clone();
     off_main_thread(move || {
         let selected = native_selection(
@@ -71,7 +67,7 @@ pub async fn pick_document_save_path(
     window: tauri::WebviewWindow,
     granted: State<'_, GrantedFiles>,
     default_name: String,
-) -> Result<Option<FilePath>, String> {
+) -> Result<Option<FilePath>, CommandError> {
     let granted = granted.inner().clone();
     off_main_thread(move || {
         let selected = native_selection(
@@ -90,7 +86,7 @@ fn pick_export_path(
     default_name: String,
     filter: &str,
     extension: &str,
-) -> Result<Option<PathBuf>, String> {
+) -> Result<Option<PathBuf>, CommandError> {
     native_selection(
         file_dialog(window)
             .set_file_name(default_name)
@@ -105,15 +101,14 @@ pub async fn save_html_export(
     window: tauri::WebviewWindow,
     default_name: String,
     contents: String,
-) -> Result<Option<FilePath>, String> {
+) -> Result<Option<FilePath>, CommandError> {
     off_main_thread(move || {
         let Some(path) = pick_export_path(&window, default_name, "HTML presentation", "html")?
         else {
             return Ok(None);
         };
-        write_html_export_file(&path, &contents)
-            .map(|written| Some(FilePath::from_path(&written)))
-            .map_err(|error| error.to_string())
+        let written = write_html_export_file(&path, &contents)?;
+        Ok(Some(FilePath::from_path(&written)))
     })
     .await
 }
@@ -123,62 +118,19 @@ pub async fn save_pdf_export(
     window: tauri::WebviewWindow,
     default_name: String,
     contents_base64: String,
-) -> Result<Option<FilePath>, String> {
+) -> Result<Option<FilePath>, CommandError> {
     off_main_thread(move || {
         // Why before the dialog: a payload that cannot be written should not ask for a file name.
-        let bytes = decode_pdf_export(&contents_base64).map_err(|error| error.to_string())?;
+        let bytes = decode_pdf_export(&contents_base64)?;
         let Some(path) = pick_export_path(&window, default_name, "PDF document", "pdf")? else {
             return Ok(None);
         };
-        write_pdf_export_file(&path, &bytes)
-            .map(|written| Some(FilePath::from_path(&written)))
-            .map_err(|error| error.to_string())
+        let written = write_pdf_export_file(&path, &bytes)?;
+        Ok(Some(FilePath::from_path(&written)))
     })
     .await
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn cancelled_dialog_has_no_path() {
-        let granted = GrantedFiles::default();
-        assert_eq!(native_selection(None).unwrap(), None);
-        assert_eq!(grant_selection(&granted, None), None);
-    }
-
-    #[test]
-    fn a_picked_path_is_granted_as_handed_out() {
-        let granted = GrantedFiles::default();
-        let picked = PathBuf::from("/tmp/deck.canvaslide");
-        let handed = grant_selection(&granted, Some(picked.clone())).unwrap();
-        assert_eq!(granted.require(handed), Ok(picked));
-    }
-
-    #[test]
-    fn save_as_grants_the_name_it_will_write() {
-        let granted = GrantedFiles::default();
-        let handed = grant_save_selection(&granted, Some("/tmp/deck".into())).unwrap();
-        assert_eq!(
-            granted.require(handed),
-            Ok(PathBuf::from("/tmp/deck.canvaslide"))
-        );
-        assert!(!granted.is_granted(std::path::Path::new("/tmp/deck")));
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn dialog_selection_preserves_native_bytes() {
-        use std::os::unix::ffi::OsStringExt;
-        let path = std::path::PathBuf::from(std::ffi::OsString::from_vec(
-            b"/tmp/deck\xff.canvaslide".to_vec(),
-        ));
-        let granted = GrantedFiles::default();
-        let selected = native_selection(Some(DialogPath::Path(path.clone()))).unwrap();
-        let handed = grant_selection(&granted, selected).unwrap();
-        let received: FilePath =
-            serde_json::from_str(&serde_json::to_string(&handed).unwrap()).unwrap();
-        assert_eq!(granted.require(received), Ok(path));
-    }
-}
+#[path = "document_dialog_tests.rs"]
+mod tests;

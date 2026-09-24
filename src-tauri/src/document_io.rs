@@ -1,13 +1,14 @@
 //! Canvas document IO. The frontend validates the JSON schema and shared resource references.
-//! Native IO preserves bytes and paths and writes atomically.
+//! Native IO preserves bytes and paths and writes atomically, off the main thread.
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use base64::Engine;
-use serde::Serialize;
 use tauri::State;
 
+use crate::atomic_file::atomic_write;
+use crate::command_error::{off_main_thread, CommandError};
 use crate::file_path::FilePath;
 use crate::granted_files::{GrantError, GrantedFiles};
 
@@ -31,10 +32,23 @@ pub enum DocumentIoError {
     Io(#[from] std::io::Error),
 }
 
-// Why: Tauri commands need a serializable error; the frontend shows `message` verbatim.
-impl Serialize for DocumentIoError {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+impl From<DocumentIoError> for CommandError {
+    fn from(error: DocumentIoError) -> Self {
+        match error {
+            DocumentIoError::NotGranted(GrantError::InvalidPath(detail)) => {
+                CommandError::new("invalid_path", detail)
+            }
+            DocumentIoError::NotGranted(GrantError::NotGranted(path)) => {
+                CommandError::new("not_granted", path.display())
+            }
+            DocumentIoError::InvalidExtension(path) => {
+                CommandError::new("not_a_document", path.display())
+            }
+            DocumentIoError::InvalidJson(detail) => CommandError::new("invalid_document", detail),
+            DocumentIoError::InvalidBase64(detail) => CommandError::new("invalid_export", detail),
+            DocumentIoError::TooLarge => CommandError::new("too_large", ""),
+            DocumentIoError::Io(error) => CommandError::io(&error),
+        }
     }
 }
 
@@ -117,17 +131,14 @@ pub fn write_document_file(path: &Path, contents: &str) -> Result<PathBuf, Docum
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
     }
     let target = path.to_path_buf();
-    // Why: write to a sibling temp file then rename so a crash never truncates the user's document.
     let mut tmp = target.clone().into_os_string();
     tmp.push(".tmp");
-    let tmp = PathBuf::from(tmp);
-    std::fs::write(&tmp, bytes)?;
-    std::fs::rename(&tmp, &target)?;
+    atomic_write(Path::new(&tmp), &target, bytes)?;
     Ok(target)
 }
 
 /// An export lands on the extension its format dictates, whatever name the save dialog returned,
-/// and goes through a sibling temp file so a crash never leaves a half-written export behind.
+/// and is replaced atomically so a crash never leaves a half-written export behind.
 fn write_export_file(
     path: &Path,
     extension: &str,
@@ -142,8 +153,7 @@ fn write_export_file(
         path.with_extension(extension)
     };
     let tmp = target.with_extension(format!("{extension}.tmp"));
-    std::fs::write(&tmp, bytes)?;
-    std::fs::rename(&tmp, &target)?;
+    atomic_write(&tmp, &target, bytes)?;
     Ok(target)
 }
 
@@ -179,147 +189,24 @@ pub fn write_granted_document(
 }
 
 #[tauri::command]
-pub fn read_document(
+pub async fn read_document(
     granted: State<'_, GrantedFiles>,
     path: FilePath,
-) -> Result<String, DocumentIoError> {
-    read_granted_document(&granted, path)
+) -> Result<String, CommandError> {
+    let granted = granted.inner().clone();
+    off_main_thread(move || Ok(read_granted_document(&granted, path)?)).await
 }
 
 #[tauri::command]
-pub fn write_document(
+pub async fn write_document(
     granted: State<'_, GrantedFiles>,
     path: FilePath,
     contents: String,
-) -> Result<FilePath, DocumentIoError> {
-    write_granted_document(&granted, path, &contents)
+) -> Result<FilePath, CommandError> {
+    let granted = granted.inner().clone();
+    off_main_thread(move || Ok(write_granted_document(&granted, path, &contents)?)).await
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn normalizes_bare_and_json_names() {
-        assert_eq!(
-            normalize_document_path(Path::new("/tmp/deck")),
-            PathBuf::from("/tmp/deck.canvaslide")
-        );
-        assert_eq!(
-            normalize_document_path(Path::new("/tmp/deck.json")),
-            PathBuf::from("/tmp/deck.canvaslide")
-        );
-        assert_eq!(
-            normalize_document_path(Path::new("/tmp/deck.canvaslide")),
-            PathBuf::from("/tmp/deck.canvaslide")
-        );
-    }
-
-    #[test]
-    fn round_trips_a_document() {
-        let dir = std::env::temp_dir().join(format!("uc-test-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let path = normalize_document_path(&dir.join("doc"));
-        let written = write_document_file(&path, r#"{"version":1,"elements":[]}"#).unwrap();
-        assert!(written.ends_with("doc.canvaslide"));
-        assert_eq!(
-            read_document_file(&written).unwrap(),
-            r#"{"version":1,"elements":[]}"#
-        );
-        std::fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn writes_html_export_with_forced_extension() {
-        let dir = std::env::temp_dir().join(format!("uc-html-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let written = write_html_export_file(&dir.join("deck"), "<!doctype html>").unwrap();
-        assert!(written.ends_with("deck.html"));
-        assert_eq!(
-            std::fs::read_to_string(&written).unwrap(),
-            "<!doctype html>"
-        );
-        std::fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn writes_pdf_export_bytes_with_forced_extension() {
-        let dir = std::env::temp_dir().join(format!("uc-pdf-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let bytes: Vec<u8> = b"%PDF-1.7\n\xe2\xe3\xcf\xd3".to_vec();
-        let written = write_pdf_export_file(&dir.join("deck"), &bytes).unwrap();
-        assert!(written.ends_with("deck.pdf"));
-        assert_eq!(std::fs::read(&written).unwrap(), bytes);
-        // A name the save dialog already gave the right extension keeps it, rather than doubling it.
-        let kept = write_pdf_export_file(&dir.join("deck.pdf"), &bytes).unwrap();
-        assert_eq!(kept, written);
-        std::fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn rejects_a_pdf_export_payload_that_is_not_base64() {
-        assert!(matches!(
-            decode_pdf_export("not base64!!"),
-            Err(DocumentIoError::InvalidBase64(_))
-        ));
-        assert_eq!(decode_pdf_export("JVBERg==").unwrap(), b"%PDF");
-    }
-
-    #[test]
-    fn rejects_invalid_json_and_extension() {
-        assert!(matches!(
-            write_document_file(Path::new("/tmp/x.canvaslide"), "{not json"),
-            Err(DocumentIoError::InvalidJson(_))
-        ));
-        assert!(matches!(
-            read_document_file(Path::new("/tmp/x.txt")),
-            Err(DocumentIoError::InvalidExtension(_))
-        ));
-    }
-
-    /// A document saved under a plain `.json` name opens, so it has to save again where it was.
-    #[test]
-    fn a_silent_save_round_trips_a_bare_json_document() {
-        let dir = std::env::temp_dir().join(format!("uc-bare-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("deck.json");
-        std::fs::write(&path, r#"{"version":1,"elements":[]}"#).unwrap();
-
-        assert_eq!(
-            read_document_file(&path).unwrap(),
-            r#"{"version":1,"elements":[]}"#
-        );
-        let written =
-            write_document_file(&path, r#"{"version":1,"elements":[],"name":"Edited"}"#).unwrap();
-
-        assert_eq!(written, path);
-        assert_eq!(
-            std::fs::read_to_string(&path).unwrap(),
-            r#"{"version":1,"elements":[],"name":"Edited"}"#
-        );
-        std::fs::remove_dir_all(&dir).unwrap();
-    }
-
-    #[test]
-    fn a_silent_save_refuses_a_path_that_is_not_a_document() {
-        assert!(matches!(
-            write_document_file(Path::new("/tmp/notes.txt"), "{}"),
-            Err(DocumentIoError::InvalidExtension(_))
-        ));
-    }
-
-    #[test]
-    fn opens_the_same_extensions_the_dialog_offers() {
-        assert!(is_openable_document(Path::new("/tmp/deck.canvaslide")));
-        assert!(is_openable_document(Path::new("/tmp/package.json")));
-        assert!(!is_openable_document(Path::new("/tmp/notes.txt")));
-    }
-}
-
-#[cfg(test)]
-#[path = "document_path_tests.rs"]
-mod path_tests;
-
-#[cfg(test)]
-#[path = "document_json_tests.rs"]
-mod json_tests;
+#[path = "document_io_tests.rs"]
+mod tests;

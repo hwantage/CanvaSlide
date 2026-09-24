@@ -1,4 +1,6 @@
 mod app_menu;
+mod atomic_file;
+mod command_error;
 mod document_dialog;
 mod document_io;
 mod file_path;

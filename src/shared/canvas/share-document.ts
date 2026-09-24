@@ -1,6 +1,8 @@
 import { SaxesParser } from 'saxes'
 import { MAX_SHARE_BYTES } from '../cloud-share'
+import { base64ToBytes } from './binary-data'
 import type { CanvasDocument } from './element-types'
+import { hasImageSignature, IMAGE_SIGNATURE_BYTES } from './image-signature'
 import { parseVideoSource } from './video-source'
 
 const imageDataPrefix =
@@ -27,7 +29,9 @@ function isEmbeddedImage(
     return false
   }
   if (mime !== 'image/svg+xml') {
-    return Boolean(match[2])
+    // Only the leading bytes are decoded: enough to tell an image from other data labelled as one.
+    const head = payload.slice(0, Math.ceil(IMAGE_SIGNATURE_BYTES / 3) * 4)
+    return Boolean(match[2]) && hasImageSignature(base64ToBytes(head), mime)
   }
   try {
     const svg = match[2]

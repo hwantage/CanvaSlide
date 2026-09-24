@@ -10,6 +10,7 @@ import {
   type FigPaint,
   type FigWarnings
 } from './fig-types'
+import { rasterImageMime } from './image-signature'
 
 export function figXml(value: string): string {
   return value
@@ -36,20 +37,11 @@ export function figDataUrl(bytes: Uint8Array, mime: string): string {
   return `data:${mime};base64,${btoa(chunks.join(''))}`
 }
 
+const figImageTypes = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp'])
+
 export function figImageMime(bytes: Uint8Array): string | null {
-  if (bytes[0] === 137 && bytes[1] === 80) {
-    return 'image/png'
-  }
-  if (bytes[0] === 255 && bytes[1] === 216) {
-    return 'image/jpeg'
-  }
-  if (bytes[0] === 71 && bytes[1] === 73) {
-    return 'image/gif'
-  }
-  if (new TextDecoder().decode(bytes.subarray(8, 12)) === 'WEBP') {
-    return 'image/webp'
-  }
-  return null
+  const mime = rasterImageMime(bytes)
+  return mime && figImageTypes.has(mime) ? mime : null
 }
 
 export function createFigSvgRenderer(

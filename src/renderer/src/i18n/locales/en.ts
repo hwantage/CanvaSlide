@@ -339,7 +339,7 @@ Use the skill at {skill} to create the file.`,
   'share.fallback':
     'You can save the current canvas as a local {format} file and share that file instead.',
   'share.error.invalid':
-    'This share link or document is invalid. Shared images must be embedded in the document.',
+    "This share link or document is invalid. Shared images must be embedded in the document, and each image's data must match its format.",
   'share.error.tooLarge': 'This document is too large for cloud sharing.',
   'share.error.noFrames': 'Add a presentation frame to share a slide show.',
   'share.error.unsupportedVideo':

@@ -1,4 +1,4 @@
-import { createFigSvgRenderer, figXml } from './fig-svg'
+import { createFigSvgRenderer, figImageMime, figXml } from './fig-svg'
 import { FIG_IDENTITY, figChildren } from './fig-scene'
 import { emptyFigWarnings, type FigFile, type FigNode } from './fig-types'
 
@@ -39,7 +39,7 @@ test('applies inverse image crop transforms and contains image references inside
   const file: FigFile = {
     name: '',
     nodes: [node],
-    images: new Map([['0'.repeat(40), new Uint8Array([137, 80, 78, 71])]]),
+    images: new Map([['0'.repeat(40), new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])]]),
     blobs: []
   }
   const warnings = emptyFigWarnings()
@@ -123,4 +123,14 @@ test('preserves glyph colors from both style tables with overrides taking preced
     glyph.closest('[fill]')?.getAttribute('fill')
   )
   expect(colors).toEqual(['rgba(255,0,0,1)', 'rgba(0,0,255,1)', 'rgba(0,0,255,1)', 'rgba(0,0,0,1)'])
+})
+
+test('detects Figma bitmaps from their full signatures and only in formats the importer embeds', () => {
+  const bytes = (binary: string) => Uint8Array.from(binary, (char) => char.charCodeAt(0))
+  expect(figImageMime(bytes('\x89PNG\r\n\x1a\n'))).toBe('image/png')
+  expect(figImageMime(bytes('RIFF\x1a\0\0\0WEBPVP8L'))).toBe('image/webp')
+  expect(figImageMime(bytes('\x89PNG'))).toBeNull()
+  expect(figImageMime(bytes('GIF90a'))).toBeNull()
+  expect(figImageMime(bytes('\0\0\0\0\0\0\0\0WEBP'))).toBeNull()
+  expect(figImageMime(bytes('BM\x3a\0\0\0'))).toBeNull()
 })

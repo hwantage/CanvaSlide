@@ -157,8 +157,27 @@ it('rejects external image URLs before storing any data', async () => {
   }
   expect((await post(shared(document))).status).toBe(400)
   expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
-  document.assets.image.data = 'data:image/png;base64,YWJj'
+  document.assets.image.data = 'data:image/png;base64,iVBORw0KGgo='
   expect((await post(shared(document))).status).toBe(201)
+})
+
+it('rejects raster image data whose bytes do not match the declared type before KV', async () => {
+  const document = {
+    ...createEmptyDocument(),
+    assets: {
+      image: {
+        id: 'image',
+        mime: 'image/png',
+        data: 'data:image/png;base64,YWJj',
+        width: 1,
+        height: 1
+      }
+    }
+  }
+  const response = await post(shared(document))
+  expect(response.status).toBe(400)
+  expect(await response.json()).toEqual({ error: 'invalid' })
+  expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
 })
 
 it('rejects embedded SVG tracking images before writing to KV', async () => {

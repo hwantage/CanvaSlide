@@ -78,7 +78,7 @@ are needed for desktop development. Full setup and checks are in [CONTRIBUTING](
 pnpm install
 pnpm dev:web        # browser editor, http://127.0.0.1:1420
 pnpm dev            # Tauri desktop window
-pnpm check          # lint + max-lines + format + typecheck + unit tests
+pnpm check          # lint + max-lines + control chars + format + typecheck + unit tests
 pnpm test:e2e       # Chromium suite + core interactions in Firefox/WebKit
 ```
 

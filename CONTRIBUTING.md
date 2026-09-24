@@ -156,7 +156,7 @@ After a tool creates a branch or worktree, check the actual Git branch name with
 Run the same checks CI runs:
 
 ```bash
-pnpm check                          # oxlint + max-lines + oxfmt + tsc + vitest
+pnpm check                          # oxlint + max-lines + control chars + oxfmt + tsc + vitest
 pnpm test:e2e                       # Chromium suite + core interactions in Firefox/WebKit
 pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test   # only if src-tauri/ changed
 pnpm tauri build --bundles app      # macOS; if you touched the shell, config, or bundling

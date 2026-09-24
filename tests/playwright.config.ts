@@ -38,7 +38,8 @@ export default defineConfig({
     },
     {
       name: 'webkit',
-      // Keep macOS font/rendering regressions opt-in; core input runs on every CI host.
+      // Why: the `@webkit` scenarios (AGENTS.md, Verify) add minutes, so they are opt-in locally;
+      // CI runs them on macOS.
       grep: process.env.CANVASLIDE_E2E_WEBKIT ? /@core-interaction|@webkit/ : /@core-interaction/,
       use: { ...devices['Desktop Safari'], viewport: { width: 1400, height: 900 } }
     }

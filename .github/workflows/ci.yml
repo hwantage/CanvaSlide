@@ -16,9 +16,14 @@ concurrency:
 
 jobs:
   verify:
-    name: lint · typecheck · unit
-    runs-on: ubuntu-latest
+    name: lint · typecheck · unit (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Why: Windows contributors run the same scripts, and a Windows checkout differs in paths.
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -53,8 +58,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      - run: pnpm test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+      - run: pnpm exec playwright install --with-deps chromium firefox
+      - run: pnpm test:e2e --project=chromium --project=firefox --shard=${{ matrix.shard }}/${{ strategy.job-total }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
@@ -62,10 +67,41 @@ jobs:
           path: test-results/
           retention-days: 14
 
-  rust:
-    name: rust · fmt · clippy · test
-    runs-on: ubuntu-latest
+  # Why: WebKit is the macOS app's engine, and its fonts and rendering follow the host system.
+  e2e-webkit:
+    name: e2e (webkit, macOS)
+    runs-on: macos-latest
     timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install webkit
+      - run: pnpm test:e2e --project=webkit
+        env:
+          CANVASLIDE_E2E_WEBKIT: '1'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: playwright-traces-webkit
+          path: test-results/
+          retention-days: 14
+
+  rust:
+    name: rust · fmt · clippy · test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # Why: code behind `cfg(target_os = "macos")` and `cfg(windows)` compiles only on its own OS.
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -75,6 +111,7 @@ jobs:
           toolchain: stable
           components: rustfmt, clippy
       - name: Install Tauri Linux dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
@@ -82,7 +119,7 @@ jobs:
         with:
           workspaces: src-tauri
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
-      - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml
 
   # Why: bundles wait for the quick checks, not for E2E, so the two long jobs run side by side.
@@ -138,7 +175,7 @@ jobs:
   passed:
     name: CI passed
     if: always()
-    needs: [verify, e2e, rust, bundle]
+    needs: [verify, e2e, e2e-webkit, rust, bundle]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

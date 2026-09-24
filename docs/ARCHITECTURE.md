@@ -163,9 +163,9 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
   This is header inspection, not full compressed-bitstream validation; decoding remains the browser's job.
 
 Relevant regressions live beside the shared modules and in
-[`tests/e2e/`](../tests/e2e/). `CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e` adds rendering scenarios to the
-default core interaction coverage. Headless timing depends on document, viewport, DPR, browser and
-hardware; it cannot promise a native frame rate. For profiling, see
+[`tests/e2e/`](../tests/e2e/). `CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e` adds the `@webkit` scenarios,
+which CI runs on macOS, to WebKit's default core interaction coverage. Headless timing depends on
+document, viewport, DPR, browser and hardware; it cannot promise a native frame rate. For profiling, see
 [`profile-camera-transitions.mjs`](../config/scripts/profile-camera-transitions.mjs) and its usage text.
 
 ## Platform and media constraints

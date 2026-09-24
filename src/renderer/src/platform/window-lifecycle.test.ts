@@ -166,7 +166,7 @@ it.each(['edit', 'restore', 'edit then undo'])(
   async (change) => {
     vi.useFakeTimers()
     vi.mocked(isTauriRuntime).mockReturnValue(true)
-    useDocumentStore.getState().newDocument()
+    useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     let close!: (event: { preventDefault: () => void }) => void
     vi.mocked(getCurrentWindow).mockReturnValue({
       onCloseRequested: async (callback: typeof close) => {
@@ -216,7 +216,7 @@ it.each(['edit', 'restore', 'edit then undo'])(
 it('rejects a stale quit confirmation before starting destructive cleanup', async () => {
   vi.useFakeTimers()
   vi.mocked(isTauriRuntime).mockReturnValue(true)
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   useDocumentStore.getState().renameDocument('Unsaved')
   let close!: (event: { preventDefault: () => void }) => void
   vi.mocked(getCurrentWindow).mockReturnValue({

@@ -1,7 +1,7 @@
 import { importFigFile, useFigImportStore } from './fig-import-store'
 import { useDocumentStore } from './document-store'
 import { MAX_FIG_BYTES, emptyFigWarnings } from '@shared/canvas/fig-types'
-import { defaultTextStyle } from '@shared/canvas/element-types'
+import { createEmptyDocument, defaultTextStyle } from '@shared/canvas/element-types'
 import type { FigImportResult } from '@shared/canvas/fig-convert'
 import type { FigImportRequest, FigImportResponse } from '@/lib/fig-import.worker'
 
@@ -49,7 +49,7 @@ const currentWorker = () => ImportWorker.instances.at(-1)!
 beforeEach(() => {
   ImportWorker.instances = []
   vi.stubGlobal('Worker', ImportWorker)
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   useFigImportStore.getState().setMode('editable')
 })
 
@@ -127,7 +127,7 @@ test('rejects a result when the target document has changed and ignores a cancel
   const worker = currentWorker()
   worker.emit(ready)
   useFigImportStore.getState().convert()
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   worker.emit({ type: 'result', result })
   expect(useFigImportStore.getState()).toMatchObject({
     phase: 'error',

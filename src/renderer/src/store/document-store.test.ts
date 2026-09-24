@@ -164,7 +164,7 @@ describe('document-store', () => {
     const store = useDocumentStore.getState()
     store.insertElement(text('a'))
     const snapshot = store.takeSaveSnapshot()
-    store.newDocument()
+    store.loadDocument(createEmptyDocument(), null)
     store.insertElement(text('c'))
     store.completeSave(snapshot, '/tmp/old.canvaslide')
     const state = useDocumentStore.getState()

@@ -159,7 +159,7 @@ describe('document clean baseline', () => {
   it('replaces the baseline on new/open and ignores saves from a previous session', () => {
     store().renameDocument('Unsaved')
     const snapshot = store().takeSaveSnapshot()
-    store().newDocument()
+    store().loadDocument(createEmptyDocument(), null)
     store().completeSave(snapshot, '/tmp/old.canvaslide')
     expect(dirty()).toBe(false)
     expect(store().filePath).toBeNull()

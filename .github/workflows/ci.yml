@@ -80,11 +80,9 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           VITE_CLOUD_SHARE_URL: ${{ vars.VITE_CLOUD_SHARE_URL }}
-          # Why: createUpdaterArtifacts makes every bundle build sign its updater files.
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          args: ${{ matrix.args }}
+          # Why: only releases sign updater files; fork pull requests get no signing secret.
+          args: ${{ matrix.args }} --no-sign
       - uses: actions/upload-artifact@v4
         with:
           name: bundle-${{ matrix.os }}

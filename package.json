@@ -15,7 +15,7 @@
     "dev:cloud": "pnpm run build:web && wrangler pages dev dist --kv=SHARED_DOCUMENTS --port 8788 --compatibility-date=2026-09-19",
     "dev:web": "pnpm run build:player && pnpm run build:pdfjs && vite --config config/vite.config.ts --host 127.0.0.1",
     "build:web": "pnpm run build:player && pnpm run build:pdfjs && tsc --noEmit -p config/tsconfig.web.json && vite build --config config/vite.config.ts",
-    "build": "tauri build",
+    "bundle:local": "tauri build --no-sign",
     "preview:web": "vite preview --config config/vite.config.ts",
     "tauri": "tauri",
     "tc": "pnpm run typecheck",

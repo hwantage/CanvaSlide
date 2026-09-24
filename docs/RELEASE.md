@@ -75,18 +75,21 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 - **초안을 버리고 다시**: 먼저 실패한 잡 재실행을 사용한다. 초안·태그를 재작성할 필요가 있으면
   공개 여부와 두 플랫폼의 산출물을 확인한 뒤 메인테이너가 처리한다.
 - **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 `npm version patch`로 다음 버전을 낸다.
-- **로컬에서 재현**: `pnpm tauri build`(현재 OS용) 또는 `pnpm tauri build --target universal-apple-darwin`.
+- **로컬에서 재현**: 서명 단계까지 릴리즈와 같게 확인하려면 §7의 서명 키를 환경 변수로 주고 `pnpm tauri build`(현재 OS용)
+  또는 `pnpm tauri build --target universal-apple-darwin`을 실행한다. 서명 외의 단계만 볼 때는 키 없이 `pnpm bundle:local`을 쓴다.
 
-업데이터 개인키 없이 macOS 앱 번들만 검증할 때는 다음 명령을 사용한다. 저장소 설정을 바꾸지 않는
-로컬 오버라이드이며, 서명된 업데이트 패키지나 Windows 설치 파일까지 검증하는 것은 아니다.
+`pnpm bundle:local`은 `tauri build --no-sign`이라 업데이터 개인키도, 셸별 따옴표 처리도 필요 없다.
+업데이터 서명(`.sig`)과 OS 코드 서명을 건너뛰므로 배포할 산출물을 검증하는 것은 아니다. CI의 번들 잡도
+같은 이유로 `--no-sign`을 쓰고, 서명 키는 릴리즈 워크플로에만 전달한다. macOS 앱 번들만 확인할 때는
+다음 명령을 사용한다.
 
 ```bash
-pnpm tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
+pnpm bundle:local --bundles app
 ```
 
 ## 6. OS 코드 서명
 
-현재 저장소 워크플로는 업데이터 서명 키를 전달하지만 Apple/Windows 코드 서명 자격 증명은
+현재 릴리즈 워크플로는 업데이터 서명 키를 전달하지만 Apple/Windows 코드 서명 자격 증명은
 설정하지 않는다. 업데이터 서명과 OS 코드 서명은 별개다. 서명 없는 배포에서 나타날 수 있는
 다음 경고와 설치 방법을 릴리즈 노트에 안내한다.
 
@@ -122,5 +125,6 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
   `TAURI_SIGNING_PRIVATE_KEY`로 전달한다. 암호가 있으면 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`도 설정한다.
   개인키 보관 위치와 백업은 메인테이너가 관리한다. **키를 잃으면 같은 키로 후속 업데이트를 서명할 수 없다.**
   키를 교체하려면 기존 설치본의 신뢰 키 전환 또는 수동 재설치 계획이 필요하다.
-- 로컬에서 업데이터 산출물까지 만들려면 같은 서명 키를 빌드 환경에 제공한다. 개인키 없는 앱 번들 검증은 §5를 따른다.
+- 로컬에서 서명된 업데이터 산출물까지 만들려면 같은 서명 키를 환경 변수로 주고 `pnpm tauri build`를 실행한다.
+  개인키 없는 번들 검증은 §5의 `pnpm bundle:local`을 따른다.
 - 릴리즈 노트: `latest.json`의 `notes`는 Release 본문에서 온다. 초안에 노트를 쓴 뒤 Publish 하면 앱의 업데이트 안내에 그대로 보인다.

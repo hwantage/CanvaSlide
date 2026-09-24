@@ -59,9 +59,9 @@ Infinite-canvas presentation app for macOS and Windows (Tauri 2 + React 19), als
 pnpm check        # lint + max-lines + format + typecheck + unit
 pnpm test:e2e     # Chromium suite + core interactions in Firefox/WebKit; checkout-specific port
 pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test  # if src-tauri/ changed
-pnpm tauri build --bundles app  # macOS; if shell, config or bundling changed
+pnpm bundle:local --bundles app  # macOS; if shell, config or bundling changed
 pnpm test:site    # if website content, code or build inputs changed
 ```
 
-For local bundle verification without updater signing, see the [release guide](./docs/RELEASE.md#5-실패했을-때).
+`bundle:local` skips updater signing, so it needs no private key; on Windows run it without `--bundles`.
 Record actual results and platforms in the PR; do not copy historical test counts into maintained docs.

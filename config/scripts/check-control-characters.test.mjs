@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { devNull, tmpdir } from 'node:os'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, test } from 'node:test'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -31,7 +31,8 @@ afterEach(() => rmSync(root, { recursive: true, force: true }))
 function git(args, input) {
   const env = {
     ...process.env,
-    GIT_CONFIG_GLOBAL: devNull,
+    // Why: Git reads a missing file as empty config; Git for Windows cannot open `os.devNull`.
+    GIT_CONFIG_GLOBAL: join(root, '.config', 'gitconfig'),
     GIT_CONFIG_NOSYSTEM: '1',
     XDG_CONFIG_HOME: join(root, '.config')
   }

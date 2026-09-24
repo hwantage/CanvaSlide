@@ -139,6 +139,50 @@ test('the required CI passed check fails unless every job succeeded', { skip: sh
   }
 })
 
+test('every CI job has a time limit', () => {
+  for (const [id, job] of Object.entries(jobsOf(ci))) {
+    assert.match(`\n${job}\n`, /\n {4}timeout-minutes: \d+\n/, id)
+  }
+})
+
+test('E2E runs once, split into shards that together cover the suite', () => {
+  const { e2e } = jobsOf(ci)
+  assert.equal(ci.match(/test:e2e/g).length, 1)
+  assert.match(
+    e2e,
+    /\n {6}- run: pnpm test:e2e --shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ strategy\.job-total \}\}\n/
+  )
+  // Why: `job-total` is the shard count only while the matrix has no other dimension.
+  const matrix = /\n {6}matrix:\n((?: {8}.*\n)+)/.exec(`${e2e}\n`)[1]
+  const keys = matrix.split('\n').filter((line) => /^ {8}[\w-]+:/.test(line))
+  assert.equal(keys.length, 1, matrix)
+  const shards = /^ {8}shard: \[([^\]]*)\]$/.exec(keys[0])[1].split(/,\s*/).map(Number)
+  assert.ok(shards.length > 1)
+  assert.deepEqual(
+    shards,
+    shards.map((_, i) => i + 1)
+  )
+  // Why: a failing shard must not cancel the others, or their failures go unreported.
+  assert.match(e2e, /\n {6}fail-fast: false\n/)
+  assert.match(e2e, /\n\s+name: playwright-traces-\$\{\{ matrix\.shard \}\}\n/)
+})
+
+test('CI artifacts expire instead of keeping the 90-day default', () => {
+  const uploads = stepsOf(ci).filter((step) => step.includes('actions/upload-artifact@'))
+  assert.ok(uploads.length > 0)
+  for (const step of uploads) {
+    // Why: 0 means "use the repository default" to upload-artifact.
+    assert.match(step, /\n\s+retention-days: [1-9]\d*\n/, step)
+  }
+})
+
+test('a new push cancels superseded pull request checks but never a run on main', () => {
+  const block = /\nconcurrency:\n((?: {2}.*\n)+)/.exec(ci)[1]
+  const group = /^ {2}group: ci-\$\{\{ (.+) \}\}$/m.exec(block)[1]
+  assert.equal(group, "github.event_name == 'pull_request' && github.ref || github.run_id")
+  assert.match(block, /^ {2}cancel-in-progress: true$/m)
+})
+
 test('the release builds only after the gate job, which reads CI runs and runs no code', () => {
   const jobs = jobsOf(release)
   assert.match(jobs.build, /\n {4}needs: gate\n/)

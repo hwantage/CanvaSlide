@@ -8,8 +8,15 @@ export default defineConfig({
   testDir: './e2e',
   globalSetup: './global-setup.ts',
   timeout: 30_000,
+  // Why: a committed `test.only` would otherwise pass CI while running a single test.
+  forbidOnly: !!process.env.CI,
+  // Why: when the dev server breaks, every remaining test would otherwise wait out its timeout.
+  maxFailures: process.env.CI ? 10 : 0,
   fullyParallel: false,
-  workers: 1,
+  // Why: CI parallelizes by shard, one runner each, keeping the single browser per runner that the
+  // timing-sensitive checks have always passed with. Files share no state (each worker launches its
+  // own browser, clipboard included), so local runs use Playwright's default of half the cores.
+  workers: process.env.CI ? 1 : '50%',
   reporter: [['list']],
   use: {
     baseURL,

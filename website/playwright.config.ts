@@ -5,6 +5,10 @@ export default defineConfig({
   outputDir: '../test-results/website',
   timeout: 30_000,
   expect: { timeout: 7000 },
+  // Why: a committed `test.only` would otherwise pass CI while running a single test.
+  forbidOnly: !!process.env.CI,
+  // Why: when the preview server breaks, every remaining test would otherwise wait out its timeout.
+  maxFailures: process.env.CI ? 10 : 0,
   fullyParallel: true,
   // Why: CI runners render WebGL in software; three parallel browsers starve the mascot animation.
   workers: process.env.CI ? 1 : 3,

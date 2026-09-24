@@ -113,14 +113,17 @@ export function PropertiesPanel() {
             min={-360}
             max={360}
             label={t('props.rotation')}
-            onChange={(degrees) =>
-              // Each element turns about its own centre, as a typed angle does in Figma.
-              store.applyEdit((d) =>
-                patchElements(pinEndsOn(d, selectedIds), selectedIds, (element) =>
-                  isRotatable(element) ? { rotation: normalizeRotation(degrees) } : {}
-                )
-              )
-            }
+            onChange={(degrees) => {
+              const rotation = normalizeRotation(degrees)
+              // Only what actually turns changes, and its lines keep their ports.
+              const turning = elements
+                .filter((element) => isRotatable(element) && elementRotation(element) !== rotation)
+                .map((element) => element.id)
+              if (turning.length > 0) {
+                // Each element turns about its own centre, as a typed angle does in Figma.
+                store.applyEdit((d) => patchElements(pinEndsOn(d, turning), turning, { rotation }))
+              }
+            }}
           />
           <span className="text-xs text-muted-foreground">°</span>
         </FieldRow>

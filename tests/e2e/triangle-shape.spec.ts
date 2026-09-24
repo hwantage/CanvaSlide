@@ -108,20 +108,32 @@ test('a line on a turning triangle keeps its port instead of jumping to another 
   if (!viewport || !handle) {
     throw new Error('no rotation handle')
   }
+  const handlePoint: [number, number] = [
+    handle.x + handle.width / 2 - viewport.x,
+    handle.y + handle.height / 2 - viewport.y
+  ]
+  const modifier = await primaryModifier(page)
+  // Pressing the handle without turning, or typing the angle it already has, changes nothing:
+  // the next undo removes the line itself.
+  await page.mouse.move(viewport.x + handlePoint[0], viewport.y + handlePoint[1])
+  await page.mouse.down()
+  await page.mouse.up()
+  const rotation = page.getByRole('spinbutton', { name: 'Rotation' })
+  await rotation.fill('0')
+  await rotation.press('Enter')
+  await rotation.blur()
+  await page.keyboard.press(`${modifier}+z`)
+  await expect(path).toHaveCount(0)
+  await page.keyboard.press(`${modifier}+Shift+z`)
+  await expect(path).toHaveAttribute('data-route', 'M 180 300 L 550 350')
   await page.keyboard.down('Shift')
-  await dragOnCanvas(
-    page,
-    [handle.x + handle.width / 2 - viewport.x, handle.y + handle.height / 2 - viewport.y],
-    [760, 350]
-  )
+  await dragOnCanvas(page, handlePoint, [760, 350])
   await page.keyboard.up('Shift')
   await expect(path).toHaveAttribute('data-route', 'M 180 300 L 600 300')
-  const modifier = await primaryModifier(page)
   await page.keyboard.press(`${modifier}+z`)
   await expect(path).toHaveAttribute('data-route', 'M 180 300 L 550 350')
 
   // So does a typed angle; left to face the rectangle, the end would jump to the base at 60°.
-  const rotation = page.getByRole('spinbutton', { name: 'Rotation' })
   await rotation.fill('60')
   await rotation.press('Enter')
   await expect(path).toHaveAttribute('data-route', /^M 180 300 L 575 306\.69/)

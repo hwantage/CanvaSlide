@@ -87,7 +87,8 @@ pnpm test:e2e       # Chromium 전체 + Firefox/WebKit 핵심 상호작용
 ## 기여하기
 
 버그 신고, 기능 제안, PR을 환영합니다. 브랜치 이름, 코드 규칙, PR 점검 항목은
-[기여 가이드](./CONTRIBUTING.md)에 있습니다.
+[기여 가이드](./CONTRIBUTING.md)에 있습니다. 보안 취약점은 [보안 정책](./SECURITY.md)에 따라 비공개로
+신고해 주세요.
 
 ## 라이선스
 

@@ -88,7 +88,8 @@ installer builds, signing and publishing, use the [release guide](./docs/RELEASE
 ## Contributing
 
 Bug reports, feature ideas and pull requests are welcome. See [CONTRIBUTING](./CONTRIBUTING.md)
-for branch names, code rules and the PR checklist.
+for branch names, code rules and the PR checklist. Report security vulnerabilities privately as
+described in the [security policy](./SECURITY.md).
 
 ## License
 

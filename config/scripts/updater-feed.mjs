@@ -22,7 +22,7 @@ export const requiredPlatforms = [
   'windows-x86_64-msi'
 ]
 
-export function platformsFor(fileName) {
+function platformsFor(fileName) {
   const rule = platformRules.find(({ pattern }) => pattern.test(fileName))
   if (!rule) {
     throw new Error(`no updater platform for ${fileName}`)
@@ -30,18 +30,29 @@ export function platformsFor(fileName) {
   return rule.platforms
 }
 
-// Tauri keys and signatures are base64-wrapped minisign files: a comment line, then data lines.
+// The app decodes strictly; Node's lenient decoder would pass signatures the app rejects.
+function strictBase64(text, what) {
+  const bytes = Buffer.from(text, 'base64')
+  if (bytes.toString('base64') !== text) {
+    throw new Error(`${what} is not canonical base64`)
+  }
+  return bytes
+}
+
+// Tauri keys and signatures are base64-wrapped minisign files, split the way Rust's `lines()` does.
 function minisignLines(base64, what) {
-  const lines = Buffer.from(base64.trim(), 'base64').toString('utf8').split('\n')
-  if (lines.length < 2 || !lines[0].startsWith('untrusted comment:')) {
-    throw new Error(`${what} is not a minisign file`)
+  const text = new TextDecoder('utf-8', { fatal: true }).decode(strictBase64(base64, what))
+  const lines = text.split('\n').map((line) => line.replace(/\r$/, ''))
+  if (lines.at(-1) === '') {
+    lines.pop()
   }
   return lines
 }
 
 function publicKeyParts(publicKeyBase64) {
-  const bytes = Buffer.from(minisignLines(publicKeyBase64, 'public key')[1], 'base64')
-  if (bytes.length !== 42 || bytes.subarray(0, 2).toString('latin1') !== 'Ed') {
+  const line = minisignLines(publicKeyBase64, 'public key')[1]
+  const bytes = line === undefined ? Buffer.alloc(0) : strictBase64(line, 'public key')
+  if (bytes.length !== 42 || !['Ed', 'ED'].includes(bytes.subarray(0, 2).toString('latin1'))) {
     throw new Error('public key is not an Ed25519 minisign key')
   }
   const key = createPublicKey({
@@ -51,26 +62,30 @@ function publicKeyParts(publicKeyBase64) {
   return { keyId: bytes.subarray(2, 10), key }
 }
 
-/** Throws unless the signature is one the in-app updater accepts for these bytes. */
-export function verifyUpdaterSignature(data, signatureBase64, publicKeyBase64) {
+/** Throws unless the signature is one the in-app updater accepts with one of the public keys. */
+export function verifyUpdaterSignature(data, signatureBase64, publicKeysBase64) {
   const lines = minisignLines(signatureBase64, 'signature')
-  const signature = Buffer.from(lines[1], 'base64')
   const trustedPrefix = 'trusted comment: '
-  if (signature.length !== 74 || !lines[2]?.startsWith(trustedPrefix)) {
+  if (lines.length < 4 || !lines[2].startsWith(trustedPrefix)) {
     throw new Error('signature is not a minisign signature')
   }
-  const { keyId, key } = publicKeyParts(publicKeyBase64)
-  if (!signature.subarray(2, 10).equals(keyId)) {
-    throw new Error('signed with a key other than the one installed apps trust')
+  const signature = strictBase64(lines[1], 'signature')
+  const globalSignature = strictBase64(lines[3], 'signature')
+  if (signature.length !== 74 || globalSignature.length !== 64) {
+    throw new Error('signature is not a minisign signature')
   }
   const algorithm = signature.subarray(0, 2).toString('latin1')
   if (algorithm !== 'ED' && algorithm !== 'Ed') {
     throw new Error(`unknown signature algorithm ${algorithm}`)
   }
+  const trusted = publicKeysBase64.map(publicKeyParts)
+  const key = trusted.find(({ keyId }) => signature.subarray(2, 10).equals(keyId))?.key
+  if (!key) {
+    throw new Error('signed with a key other than the one installed apps trust')
+  }
   const message = algorithm === 'ED' ? createHash('blake2b512').update(data).digest() : data
   const signed = signature.subarray(10)
   const trustedComment = Buffer.from(lines[2].slice(trustedPrefix.length), 'utf8')
-  const globalSignature = Buffer.from(lines[3] ?? '', 'base64')
   if (
     !verify(null, message, key, signed) ||
     !verify(null, Buffer.concat([signed, trustedComment]), key, globalSignature)
@@ -80,7 +95,7 @@ export function verifyUpdaterSignature(data, signatureBase64, publicKeyBase64) {
 }
 
 /** The in-app updater's latest.json for the signed files in `directory`. */
-export function buildUpdaterFeed({ directory, tag, repository, notes, publicKey, now }) {
+export function buildUpdaterFeed({ directory, tag, repository, notes, publicKeys, now }) {
   const platforms = {}
   for (const name of readdirSync(directory).sort()) {
     if (!name.endsWith('.sig')) {
@@ -89,7 +104,7 @@ export function buildUpdaterFeed({ directory, tag, repository, notes, publicKey,
     const fileName = name.slice(0, -'.sig'.length)
     const signature = readFileSync(join(directory, name), 'utf8')
     try {
-      verifyUpdaterSignature(readFileSync(join(directory, fileName)), signature, publicKey)
+      verifyUpdaterSignature(readFileSync(join(directory, fileName)), signature, publicKeys)
     } catch (error) {
       throw new Error(`${fileName}: ${error.message}`, { cause: error })
     }
@@ -116,7 +131,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
         tag: { type: 'string' },
         repository: { type: 'string' },
         notes: { type: 'string' },
-        'trusted-config': { type: 'string' }
+        'trusted-config': { type: 'string', multiple: true }
       }
     })
     const required = ['tag', 'repository', 'notes', 'trusted-config']
@@ -125,14 +140,13 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
         'usage: updater-feed.mjs <directory> --tag --repository --notes --trusted-config'
       )
     }
-    // The key of the release installed apps run, which a key rotation's bridge release replaces.
-    const config = JSON.parse(readFileSync(values['trusted-config'], 'utf8'))
+    const configs = values['trusted-config'].map((path) => JSON.parse(readFileSync(path, 'utf8')))
     const feed = buildUpdaterFeed({
       directory: positionals[0],
       tag: values.tag,
       repository: values.repository,
       notes: values.notes,
-      publicKey: config.plugins.updater.pubkey,
+      publicKeys: configs.map((config) => config.plugins.updater.pubkey),
       now: new Date()
     })
     process.stdout.write(`${JSON.stringify(feed, null, 2)}\n`)

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
+import { createHash, generateKeyPairSync, randomBytes, sign } from 'node:crypto'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -57,7 +58,7 @@ function feed(publicKey) {
     tag: 'v1.2.3',
     repository: 'owner/CanvaSlide',
     notes: 'Release notes',
-    publicKey,
+    publicKeys: [publicKey],
     now: new Date('2026-01-02T03:04:05.678Z')
   })
 }
@@ -103,11 +104,16 @@ test('a signature from a key other than the configured one is rejected', () => {
   )
 })
 
-test('a file changed after signing is rejected', () => {
+test('every updater file changed after signing is rejected', () => {
   const publicKey = generateKey('release.key')
   signedRelease('release.key')
-  writeFileSync(join(root, releaseFiles[2]), 'replaced after signing')
-  assert.throws(() => feed(publicKey), /x64-setup\.exe: signature does not match the file/)
+  for (const name of releaseFiles.filter((name) => !name.endsWith('.dmg'))) {
+    const original = readFileSync(join(root, name))
+    writeFileSync(join(root, name), 'replaced after signing')
+    assert.throws(() => feed(publicKey), new RegExp(`${name}: signature does not match the file`))
+    writeFileSync(join(root, name), original)
+  }
+  assert.doesNotThrow(() => feed(publicKey))
 })
 
 test('a tampered trusted comment is rejected', () => {
@@ -117,8 +123,89 @@ test('a tampered trusted comment is rejected', () => {
   const lines = Buffer.from(signatureOf(releaseFiles[1]), 'base64').toString('utf8').split('\n')
   lines[2] = lines[2].replace('file:', 'file:x')
   const tampered = Buffer.from(lines.join('\n')).toString('base64')
-  assert.doesNotThrow(() => verifyUpdaterSignature(data, signatureOf(releaseFiles[1]), publicKey))
-  assert.throws(() => verifyUpdaterSignature(data, tampered, publicKey), /does not match/)
+  assert.doesNotThrow(() => verifyUpdaterSignature(data, signatureOf(releaseFiles[1]), [publicKey]))
+  assert.throws(() => verifyUpdaterSignature(data, tampered, [publicKey]), /does not match/)
+})
+
+// Hand-built minisign files for layouts the Tauri signer does not produce.
+function minisignFixture(
+  data,
+  { algorithm = 'ED', keyAlgorithm = 'Ed', comment = 'trusted comment: t' } = {}
+) {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519')
+  const keyId = randomBytes(8)
+  const raw = Buffer.from(publicKey.export({ format: 'jwk' }).x, 'base64url')
+  const base64 = (bytes) => Buffer.from(bytes).toString('base64')
+  const key = Buffer.from(
+    `untrusted comment: key\n${base64(Buffer.concat([Buffer.from(keyAlgorithm), keyId, raw]))}\n`
+  )
+  const message = algorithm === 'ED' ? createHash('blake2b512').update(data).digest() : data
+  const signed = sign(null, message, privateKey)
+  const trusted = Buffer.from(comment.replace(/^trusted comment: /, ''))
+  const lines = [
+    'untrusted comment: signature',
+    base64(Buffer.concat([Buffer.from(algorithm), keyId, signed])),
+    comment,
+    base64(sign(null, Buffer.concat([signed, trusted]), privateKey))
+  ]
+  return { publicKey: base64(key), lines, encode: (text) => base64(Buffer.from(text)) }
+}
+
+test('signatures are read as strictly as the in-app updater reads them', () => {
+  const data = Buffer.from('update payload')
+  const check = (fixture, text, keys = [fixture.publicKey]) =>
+    verifyUpdaterSignature(data, fixture.encode(text), keys)
+  const prehashed = minisignFixture(data)
+  assert.doesNotThrow(() => check(prehashed, `${prehashed.lines.join('\n')}\n`))
+  assert.doesNotThrow(() => check(prehashed, `${prehashed.lines.join('\r\n')}\r\n`))
+  const legacy = minisignFixture(data, { algorithm: 'Ed', keyAlgorithm: 'ED' })
+  assert.doesNotThrow(() => check(legacy, legacy.lines.join('\n')))
+  const signature = prehashed.encode(prehashed.lines.join('\n'))
+  const rejected = [
+    [`${signature}\n`, /not canonical base64/],
+    [signature.slice(0, -1), /not canonical base64/],
+    [
+      prehashed.encode(
+        prehashed.lines.map((line, index) => (index === 1 ? `${line} ` : line)).join('\n')
+      ),
+      /not canonical base64/
+    ],
+    [
+      prehashed.encode(
+        prehashed.lines
+          .map((line, index) => (index === 3 ? line.replace(/=+$/, '') : line))
+          .join('\n')
+      ),
+      /not canonical base64/
+    ],
+    [
+      prehashed.encode(
+        prehashed.lines.map((line, index) => (index === 2 ? 'comment: t' : line)).join('\n')
+      ),
+      /not a minisign signature/
+    ],
+    [prehashed.encode(prehashed.lines.slice(0, 3).join('\n')), /not a minisign signature/],
+    [
+      Buffer.concat([
+        Buffer.from([0xff, 0x0a]),
+        Buffer.from(prehashed.lines.slice(1).join('\n'))
+      ]).toString('base64'),
+      /not valid/
+    ]
+  ]
+  for (const [text, error] of rejected) {
+    assert.throws(() => verifyUpdaterSignature(data, text, [prehashed.publicKey]), error, text)
+  }
+  const unknown = minisignFixture(data, { algorithm: 'EX' })
+  assert.throws(() => check(unknown, unknown.lines.join('\n')), /unknown signature algorithm EX/)
+  const other = minisignFixture(data)
+  assert.throws(
+    () => check(prehashed, prehashed.lines.join('\n'), [other.publicKey]),
+    /other than the one/
+  )
+  assert.doesNotThrow(() =>
+    check(prehashed, prehashed.lines.join('\n'), [other.publicKey, prehashed.publicKey])
+  )
 })
 
 test('each required platform must have a signed update', () => {
@@ -148,29 +235,34 @@ test('a signed file with no known platform, or two files for one platform, is re
   assert.throws(() => feed(publicKey), /windows-x86_64 is provided by more than one file/)
 })
 
-test('the command checks signatures against the key in the trusted tauri.conf.json', () => {
+test('the command checks signatures against the keys in the trusted tauri.conf.json files', () => {
   const trustedKey = generateKey('trusted.key')
-  generateKey('other.key')
+  const otherKey = generateKey('other.key')
   signedRelease('trusted.key')
-  const config = (pubkey) => {
-    const path = join(root, `${pubkey === trustedKey ? 'trusted' : 'other'}.conf.json`)
-    writeFileSync(path, JSON.stringify({ plugins: { updater: { pubkey } } }))
-    return path
+  const config = (name, pubkey) => {
+    writeFileSync(join(root, name), JSON.stringify({ plugins: { updater: { pubkey } } }))
+    return join(root, name)
   }
+  const trusted = ['--trusted-config', config('trusted.json', trustedKey)]
+  const other = ['--trusted-config', config('other.json', otherKey)]
   const run = (args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' })
-  const options = ['--tag', 'v1.2.3', '--repository', 'owner/CanvaSlide', '--notes', 'n']
-  const usage = run([root, ...options])
-  assert.equal(usage.status, 1)
-  assert.match(usage.stderr, /usage: updater-feed\.mjs/)
-  const accepted = run([root, ...options, '--trusted-config', config(trustedKey)])
+  const options = { tag: 'v1.2.3', repository: 'owner/CanvaSlide', notes: 'n' }
+  const flags = (skip) =>
+    Object.entries(options).flatMap(([name, value]) => (name === skip ? [] : [`--${name}`, value]))
+  for (const args of [
+    [root, ...flags()],
+    ...Object.keys(options).map((name) => [root, ...flags(name), ...trusted]),
+    [...flags(), ...trusted],
+    [root, root, ...flags(), ...trusted]
+  ]) {
+    const usage = run(args)
+    assert.equal(usage.status, 1, args.join(' '))
+    assert.match(usage.stderr, /usage: updater-feed\.mjs/)
+  }
+  const accepted = run([root, ...flags(), ...other, ...trusted])
   assert.equal(accepted.status, 0, accepted.stderr)
   assert.equal(JSON.parse(accepted.stdout).version, '1.2.3')
-  const rejected = run([
-    root,
-    ...options,
-    '--trusted-config',
-    config(readFileSync(join(root, 'other.key.pub'), 'utf8'))
-  ])
+  const rejected = run([root, ...flags(), ...other])
   assert.equal(rejected.status, 1)
   assert.equal(rejected.stdout, '')
   assert.match(rejected.stderr, /signed with a key other than the one installed apps trust/)

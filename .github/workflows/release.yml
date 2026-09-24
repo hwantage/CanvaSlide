@@ -139,27 +139,26 @@ jobs:
         with:
           path: release-assets
           merge-multiple: true
-      # Why: installed apps verify updates with the public key of the release they run; the first
-      # release has none before it, so its own configuration stands in.
-      - name: Find the public key installed apps trust
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          if previous="$(git describe --tags --abbrev=0 --match 'v*' "$TAG^")"; then
-            git show "$previous:src-tauri/tauri.conf.json" > "$RUNNER_TEMP/trusted-tauri.conf.json"
-          else
-            cp src-tauri/tauri.conf.json "$RUNNER_TEMP/trusted-tauri.conf.json"
-          fi
-      # Why: latest.json is the in-app updater's feed (see docs/RELEASE.md §7); writing it fails
-      # when a signature would not pass the installed apps' check.
+      # Why: latest.json is the in-app updater's feed (see docs/RELEASE.md §7). It is written only
+      # when every signature passes with a key installed apps trust: the previous release's, or this
+      # release's own when there is none before it or UPDATER_KEY_CHANGE_TAG names this tag.
       - name: Write the updater feed
         env:
           TAG: ${{ github.ref_name }}
           REPOSITORY: ${{ github.repository }}
-        run: >-
-          node config/scripts/updater-feed.mjs release-assets --tag "$TAG"
-          --repository "$REPOSITORY" --notes "$RELEASE_NOTES"
-          --trusted-config "$RUNNER_TEMP/trusted-tauri.conf.json" > release-assets/latest.json
+          KEY_CHANGE_TAG: ${{ vars.UPDATER_KEY_CHANGE_TAG }}
+        run: |
+          trusted=()
+          if previous="$(git describe --tags --abbrev=0 --match 'v*' "$TAG^")"; then
+            git show "$previous:src-tauri/tauri.conf.json" > "$RUNNER_TEMP/previous-tauri.conf.json"
+            trusted+=(--trusted-config "$RUNNER_TEMP/previous-tauri.conf.json")
+          fi
+          if [ ${#trusted[@]} -eq 0 ] || [ "$KEY_CHANGE_TAG" = "$TAG" ]; then
+            trusted+=(--trusted-config src-tauri/tauri.conf.json)
+          fi
+          node config/scripts/updater-feed.mjs release-assets --tag "$TAG" \
+            --repository "$REPOSITORY" --notes "$RELEASE_NOTES" "${trusted[@]}" \
+            > release-assets/latest.json
       - name: Upload to the draft release
         env:
           GH_TOKEN: ${{ github.token }}

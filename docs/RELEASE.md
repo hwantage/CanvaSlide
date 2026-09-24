@@ -65,15 +65,17 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
    `pnpm install --frozen-lockfile`, 태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
    릴리즈할 파일을 워크플로 아티팩트로 올린다.
-2. **sign**: 패키지 스크립트를 실행하지 않고(`pnpm install --ignore-scripts`) Tauri CLI만 준비한 뒤
-   `tauri signer sign`으로 `.app.tar.gz`, `-setup.exe`, `.msi`를 서명한다. 서명 키는 이 단계에만 전달된다.
-3. **publish**: [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 직전 `v*` 태그의
-   `tauri.conf.json` 공개키(설치된 앱이 신뢰하는 키, 첫 릴리즈는 자기 설정)로 검증하고 `latest.json`을 만든다.
+2. **sign**: 패키지 스크립트를 실행하지 않고 의존성을 설치한 뒤(`pnpm install --ignore-scripts`)
+   `tauri signer sign`만으로 `.app.tar.gz`, `-setup.exe`, `.msi`를 서명한다. 서명 키는 이 단계에만 전달된다.
+3. **publish**: [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 설치된 앱이 신뢰하는
+   공개키, 즉 직전 `v*` 태그의 `tauri.conf.json` 공개키로 앱과 같은 규칙에 따라 검증하고 `latest.json`을 만든다.
+   직전 태그가 없거나 저장소 변수 `UPDATER_KEY_CHANGE_TAG`가 이 태그 이름이면 이 태그의 공개키도 신뢰한다(§7 키 교체).
    서명이 맞지 않거나 플랫폼이 빠지면 업로드 전에 실패한다. 그다음 같은 태그의 Release 초안을 만들고 파일을
    올린다. 초안이 이미 있으면 파일을 교체하고, 이미 공개된 Release면 실패한다.
 
 모든 잡의 체크아웃은 토큰을 작업 폴더에 남기지 않는다(`persist-credentials: false`). 모든 워크플로의 액션은 커밋
 SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
+버전 태그 없이 브랜치로 배포하는 `dtolnay/rust-toolchain`은 `stable` 브랜치의 커밋으로 고정하고 주석에 `stable`을 적는다.
 
 번들 종류는 `src-tauri/tauri.conf.json`의 `bundle.targets: "all"`이 결정한다. Linux 러너를 추가하면 `.AppImage`/`.deb`도 같은 방식으로 붙는다.
 
@@ -136,9 +138,9 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
 
 동작 원리:
 
-- 빌드가 `bundle.createUpdaterArtifacts`로 업데이터 파일을 만들고, 서명 잡이 그 서명 파일(`.sig`)을, 게시 잡이 **`latest.json`**을 만들어 Release에 첨부한다(§4). 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
+- 빌드가 `bundle.createUpdaterArtifacts`로 업데이터 파일을 만들고, 서명 잡이 그 서명 파일(`.sig`)을, 게시 잡이 `latest.json`을 만들어 Release에 첨부한다(§4). 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
 - 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`에 있다. 개인키와 암호는
-  저장소 **Settings → Environments → `release`**의 환경 secret `TAURI_SIGNING_PRIVATE_KEY`,
+  저장소 Settings → Environments → `release`의 환경 secret `TAURI_SIGNING_PRIVATE_KEY`,
   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`에 두고, 이 환경은 `v*` 태그에서만 쓸 수 있게 제한한다. 저장소 수준
   secret에는 두지 않는다.
 - 키는 암호로 보호하고, 개인키와 암호를 저장소 밖에 오프라인으로 따로 백업한다. 보관 위치와 백업은 메인테이너가
@@ -151,8 +153,12 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
      2단계 이후의 릴리즈는 모두 새 키로 서명해야 하며, 게시 잡이 직전 태그의 공개키로 이를 검사한다.
   4. 2단계 버전을 받지 않은 설치본은 새 키로 서명된 업데이트를 받을 수 없으니 릴리즈 노트로 수동 재설치를 안내한다.
 
-  기존 키를 잃었거나 노출됐다면 2단계를 할 수 없다. 새 키로 바로 전환하고 모든 사용자에게 수동 재설치를 안내한다.
+  기존 키를 잃었거나 노출됐다면 2단계를 할 수 없다. 새 공개키를 넣은 버전을 새 키로 서명해 릴리즈하고, 모든
+  사용자에게 수동 재설치를 안내한다. 게시 잡은 기본적으로 직전 릴리즈의 공개키만 신뢰하므로, 태그를 올리기 전에
+  `gh variable set UPDATER_KEY_CHANGE_TAG --body <태그>`로 이 태그에 한해 새 공개키를 허용하고 게시가 끝나면
+  `gh variable delete UPDATER_KEY_CHANGE_TAG`로 지운다.
 
-- 로컬에서 서명된 업데이터 산출물까지 만들려면 같은 서명 키를 환경 변수로 주고 `pnpm tauri build`를 실행한다.
-  개인키 없는 번들 검증은 §5의 `pnpm bundle:local`을 따른다.
-- 릴리즈 노트: `latest.json`의 `notes`는 Release 본문에서 온다. 초안에 노트를 쓴 뒤 Publish 하면 앱의 업데이트 안내에 그대로 보인다.
+- 로컬에서 서명까지 확인하려면 §5처럼 `pnpm bundle:local`로 빌드한 뒤, 같은 서명 키를 환경 변수로 주고
+  업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.
+- 릴리즈 노트: `latest.json`의 `notes`는 `release.yml`의 `RELEASE_NOTES` 고정 문구다. 초안 본문을 고쳐도 앱의
+  업데이트 안내에는 반영되지 않는다.

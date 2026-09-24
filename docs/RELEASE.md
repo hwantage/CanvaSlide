@@ -177,9 +177,30 @@ pnpm bundle:local --bundles app
 현재 릴리즈 워크플로는 업데이터 파일만 서명하고 Apple/Windows 코드 서명은 하지 않는다. 업데이터 서명과
 OS 코드 서명은 별개다. 서명 없는 배포에서 나타날 수 있는 다음 경고와 설치 방법을 릴리즈 노트에 안내한다.
 
-- **macOS**: "손상되었기 때문에 열 수 없습니다" 또는 Gatekeeper 차단. 우클릭 → 열기, 또는
-  `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`.
+해결 방법은 macOS 버전보다 경고 문구에 따라 다르다. 현재 빌드의 Apple Silicon 코드는 링커가 붙인 임시 서명만 있고
+번들 리소스가 봉인되지 않아 서명 검증에 실패하므로, Apple Silicon Mac에서는 "손상" 경고가 나올 수 있다.
+
+- **macOS, "손상되었기 때문에 열 수 없습니다"**: 이 경고는 **그래도 열기**나 우클릭 → 열기로 넘길 수 없다. 앱을
+  응용 프로그램 폴더에 옮긴 뒤 `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`을 실행해 격리 속성을 지운다.
+- **macOS, 그 밖의 차단 경고**(확인되지 않은 개발자, Apple이 악성 코드 여부를 확인할 수 없음 등):
+  - macOS 15(Sequoia) 이상: 경고를 닫고 **시스템 설정 → 개인정보 보호 및 보안** 아래쪽의 CanvaSlide 항목에서
+    **그래도 열기**를 누른 뒤 암호로 확인한다. macOS 15부터 Finder의 우클릭 → 열기로는 이 차단을 넘길 수 없다.
+  - macOS 13–14: Finder에서 앱을 Control-클릭(우클릭) → **열기**. **시스템 설정 → 개인정보 보호 및 보안**에서도 열 수 있다.
+  - macOS 12: Finder에서 앱을 Control-클릭(우클릭) → **열기**. **시스템 환경설정 → 보안 및 개인 정보 보호 → 일반**에서도
+    열 수 있다.
 - **Windows**: SmartScreen "PC 보호" 화면. **추가 정보 → 실행**.
+
+릴리즈 노트는 영어로 쓰므로 다음 문구를 그대로 쓸 수 있다.
+
+```markdown
+- **macOS, "CanvaSlide is damaged and can't be opened":** Finder and System Settings offer no way past
+  this alert. Move the app to Applications and run
+  `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`.
+- **macOS 15 and later, any other alert:** Close the alert, open **System Settings → Privacy & Security**,
+  click **Open Anyway** next to CanvaSlide and confirm.
+- **macOS 12–14, any other alert:** Control-click (right-click) `CanvaSlide.app` in Finder and choose **Open**.
+- **Windows:** If SmartScreen appears, click **More info → Run anyway**.
+```
 
 OS 코드 서명은 번들러가 빌드 중에 하므로, 붙일 때는 빌드 잡의 `--no-sign`을 빼고 아래 자격 증명을 그 단계에
 전달해야 한다. `--no-sign`이 없으면 `tauri build`가 업데이터 키도 요구하므로, 서명 키를 빌드 단계에 다시
@@ -200,7 +221,7 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
 
 | 플랫폼   | 동작                                                                                                       |
 | -------- | ---------------------------------------------------------------------------------------------------------- |
-| Windows  | 새 버전을 앱 안에서 내려받아 설치하고 다시 시작한다(NSIS 조용한 설치).                                     |
+| Windows  | 새 버전을 앱 안에서 내려받은 뒤 앱을 닫고 설치 파일을 실행한다. 설치가 끝나면 앱이 다시 열린다.            |
 | macOS    | 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. Apple 서명이 생기면 앱 내 설치로 바꾼다. |
 | 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리즈 노트 링크로 공개 버전을 확인한다.             |
 
@@ -230,3 +251,8 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
   업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.
 - 릴리즈 노트: 앱의 업데이트 안내는 `latest.json`의 `notes`를 보여 준다. 이 값은 공개된 Release 본문을
   **Release notes** 워크플로가 옮긴 것이다(§4). 노트는 Release 본문에서만 고친다.
+- Windows 설치 방식: `tauri.conf.json`에 `plugins.updater.windows.installMode`가 없어 업데이터 플러그인의 기본값
+  `passive`를 쓴다. 설치 창에는 진행 표시줄만 나온다. NSIS 설치 파일로 설치한 앱은 `-setup.exe`를 받고, 현재
+  사용자용 설치(`bundle.windows.nsis.installMode: "currentUser"`)라 사용자 입력이 필요 없다. MSI로 설치한 앱은
+  `.msi`를 받는데, Tauri의 MSI는 기기 전체 설치라 Windows가 관리자 확인(UAC)을 요청한다
+  (`latest.json`의 `windows-x86_64-nsis`, `windows-x86_64-msi`).

@@ -42,7 +42,7 @@ invocations to those API paths. See Cloudflare's
 [Pages KV binding instructions](https://developers.cloudflare.com/pages/functions/bindings/#kv-namespaces).
 
 For desktop builds, set `VITE_CLOUD_SHARE_URL=https://YOUR-PAGES-PROJECT.pages.dev` when running
-`pnpm dev` or `pnpm tauri build`. This must be the origin of the deployed editor, without a path,
+`pnpm dev` or `pnpm bundle:local`. This must be the origin of the deployed editor, without a path,
 query, or credentials. Unconfigured desktop builds retain local saving and show an unavailable
 message for cloud sharing. Export this variable in the build process environment so Vite and Rust
 receive the same value; setting it only in a Vite `.env` file does not configure the native CSP.

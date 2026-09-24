@@ -16,7 +16,7 @@ Round 07에서 확정한 **C형 Wing Smile · 흰색 배경** 아이콘을 사�
 Android hdpi 런처 이미지는 72px, adaptive foreground는 162px입니다.
 
 Tauri가 사용하는 경로는 `../tauri.conf.json`의 `bundle.icon`에 등록되어 있습니다.
-macOS 번들 생성은 프로젝트 루트에서 `pnpm tauri build --bundles app`으로 확인합니다.
+macOS 번들 생성은 프로젝트 루트에서 `pnpm bundle:local --bundles app`으로 확인합니다.
 
 개발 모드도 아이콘을 실행 파일에 포함합니다. `../build.rs`에서 `icons/` 변경을 감지하므로,
 아이콘 교체 후 `pnpm dev`를 실행하면 개발용 실행 파일을 다시 빌드합니다.

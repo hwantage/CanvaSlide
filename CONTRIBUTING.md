@@ -159,14 +159,15 @@ Run the same checks CI runs:
 pnpm check                          # oxlint + max-lines + oxfmt + tsc + vitest
 pnpm test:e2e                       # Chromium suite + core interactions in Firefox/WebKit
 pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test   # only if src-tauri/ changed
-pnpm tauri build --bundles app      # macOS; if you touched the shell, config, or bundling
+pnpm bundle:local --bundles app     # macOS; if you touched the shell, config, or bundling
 pnpm test:site                      # if website content, code, or build inputs changed
 ```
 
 E2E starts Vite on a port derived from this checkout and verifies the server belongs to it.
 Install browsers with `pnpm exec playwright install chromium firefox webkit` if needed.
 Set `CANVASLIDE_E2E_WEBKIT=1` to include the additional WebKit rendering regressions.
-For an unsigned local app bundle, see the [release guide](./docs/RELEASE.md#5-실패했을-때).
+`pnpm bundle:local` builds unsigned installers for the current OS without the updater key; on Windows
+run it without `--bundles`, and on macOS drop `--bundles app` to also build the DMG.
 CI runs Rust checks and macOS/Windows bundle jobs regardless of the local change scope; workflow
 definitions live in [`.github/workflows/`](./.github/workflows/).
 

@@ -211,7 +211,7 @@ export function DocsExtra({ topic, section }: { topic: TopicId; section: string 
         </>
       )
     }
-    return <CommandBlock command="pnpm tauri build" />
+    return <CommandBlock command="pnpm bundle:local" />
   }
   if (topic === 'overview' && section === 'the-canvas') {
     return (

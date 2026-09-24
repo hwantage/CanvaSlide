@@ -102,6 +102,13 @@ node website/scripts/prepare-examples.ts
 
 The preparation script uses Playwright Chromium to capture the same exports, including a full-resolution crop of the results slide for the detail demonstration. It waits for camera motion to settle before capturing and records only whole slides, not detail frames nested inside them, as overview regions.
 
+The editor and slideshow screenshots in `public/images/` (`editor.png`, `present.png`) come from the web editor with the Northwind launch deck open. Refresh them when the editor or presentation UI changes:
+
+```bash
+pnpm build:player
+node website/scripts/prepare-screenshots.ts
+```
+
 ## GitHub Pages
 
 1. On `hwantage/CanvaSlide`, select **Settings → Pages → Build and deployment → Source → GitHub Actions**.

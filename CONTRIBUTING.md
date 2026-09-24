@@ -80,7 +80,7 @@ Report security vulnerabilities privately instead, as described in [`SECURITY.md
 
 ## Releases
 
-Releases are maintainer-managed and driven by git tags: `npm version <bump>` then
+Releases are maintainer-managed and driven by git tags: `pnpm version <bump>` then
 `git push --follow-tags` builds macOS and Windows installers into a draft GitHub Release.
 The full procedure, troubleshooting and the signing roadmap are in [`docs/RELEASE.md`](./docs/RELEASE.md).
 

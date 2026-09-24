@@ -40,7 +40,7 @@ guides current are in [AGENTS.md](../AGENTS.md#documentation).
 - [PRD in Git history](https://github.com/hwantage/CanvaSlide/blob/683a03ba8c6a009a08822de14573a9c5df632141/docs/PRD.md): original product plan with subsequent edits; its milestones and exclusions are historical.
 - [Implementation report in Git history](https://github.com/hwantage/CanvaSlide/blob/683a03ba8c6a009a08822de14573a9c5df632141/docs/REPORT.md): accumulated implementation notes, bug fixes and old validation results.
 
-The PRD and implementation report were retired in this documentation refresh; their complete content
-remains available at the fixed commit above. These records contain superseded claims and are not
-prerequisites for routine work. Current design constraints extracted from them live in the architecture
+The PRD and implementation report are no longer maintained; their complete content remains available
+at the fixed commit above. These records contain superseded claims and are not prerequisites for
+routine work. Current design constraints extracted from them live in the architecture
 guide; completed features are not a roadmap for future implementation.

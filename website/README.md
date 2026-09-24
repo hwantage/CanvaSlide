@@ -83,8 +83,9 @@ and concurrent edits are handled without replacing current work. Verify the host
 current files before publishing new gallery links;
 the website and editor are separate deployments, so the editor's example-loading build and assets
 must be available first. A `share` parameter takes priority
-if both are supplied. No-query startup and Tauri launch handling stay unchanged. The current app has no
-automatic document recovery; session and edit guards also reject a replacement during a pending load.
+if both are supplied. No-query startup and Tauri launch handling stay unchanged. Restoring a
+crash-recovery copy cancels a pending example load and removes the parameter; session and edit guards
+also reject a replacement during a pending load.
 
 ## Standalone example presentations
 

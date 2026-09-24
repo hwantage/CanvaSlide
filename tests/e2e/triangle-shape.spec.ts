@@ -85,6 +85,24 @@ test('draws a triangle whose label, ports, panel fields and HTML export follow i
   await expect(exportedLabel).toHaveCSS('width', '79px')
 })
 
+test('grabs a triangle by the empty corners of its box, like any other shape', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Triangle', exact: true }).click()
+  await dragOnCanvas(page, [500, 300], [660, 400])
+  await page.keyboard.press('Escape')
+  const triangle = page.locator('[data-element-type="shape"]')
+  const start = (await triangle.boundingBox())!
+
+  // Unselected, a press in the empty upper-left corner picks the triangle up and moves it.
+  await dragOnCanvas(page, [506, 306], [556, 336])
+  await expect.poll(async () => (await triangle.boundingBox())?.x).toBeCloseTo(start.x + 50, 0)
+  await expect.poll(async () => (await triangle.boundingBox())?.y).toBeCloseTo(start.y + 30, 0)
+  // Selected, the empty upper-right corner grabs it too.
+  await dragOnCanvas(page, [700, 340], [680, 320])
+  await expect.poll(async () => (await triangle.boundingBox())?.x).toBeCloseTo(start.x + 30, 0)
+  await expect.poll(async () => (await triangle.boundingBox())?.y).toBeCloseTo(start.y + 10, 0)
+})
+
 test('a line on a turning triangle keeps its port instead of jumping to another side', async ({
   page
 }) => {

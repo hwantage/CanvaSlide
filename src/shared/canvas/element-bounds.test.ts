@@ -110,18 +110,14 @@ describe('element-bounds', () => {
     expect(triangleContainsPoint(triangle, { x: 22, y: 50 }, 6)).toBe(true)
     expect(triangleContainsPoint(triangle, { x: 50, y: 104 }, 6)).toBe(true)
     expect(triangleContainsPoint(triangle, { x: 5, y: 5 }, 6)).toBe(false)
+  })
+
+  it('grabs a triangle anywhere inside its box, like every other shape', () => {
     const chrome = { titleHeight: 24, borderWidth: 8 }
-    const moved = { ...triangle, x: 10, y: 10 }
-    const doc = docWith(shape('under', 0, 0, 40, 40), moved)
-    expect(hitTestTopmost(doc, { x: 15, y: 15 }, chrome)?.id).toBe('under')
-    expect(hitTestTopmost(doc, { x: 60, y: 80 }, chrome)?.id).toBe('t')
-    // Upside down, the empty corners are at the bottom and the apex points down.
-    const flipped = docWith({ ...moved, rotation: 180 })
-    expect(hitTestTopmost(flipped, { x: 60, y: 30 }, chrome)?.id).toBe('t')
-    expect(hitTestTopmost(flipped, { x: 15, y: 105 }, chrome)).toBeNull()
-    // A lone selected triangle grabs inside what it draws, like a turned element.
-    expect(selectionContainsPoint(doc, ['t'], { x: 15, y: 15 })).toBe(false)
-    expect(selectionContainsPoint(doc, ['t'], { x: 60, y: 80 })).toBe(true)
+    const triangle = { ...shape('t', 10, 10), shape: 'triangle' } as ShapeElement
+    const doc = docWith(shape('under', 0, 0, 40, 40), triangle)
+    expect(hitTestTopmost(doc, { x: 15, y: 15 }, chrome)?.id).toBe('t')
+    expect(selectionContainsPoint(doc, ['t'], { x: 15, y: 15 })).toBe(true)
   })
 
   it('hit-tests a thick-stroked triangle by the outline it draws', () => {

@@ -38,9 +38,7 @@ function visibleRect(element: CanvasElement): Rect {
 /** Point-in-outline test; the pivot is the whole box's centre even when text is clipped. */
 function elementContainsPoint(element: CanvasElement, point: Point): boolean {
   const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
-  return element.type === 'shape' && element.shape === 'triangle'
-    ? triangleContainsPoint(element, local)
-    : rectContainsPoint(visibleRect(element), local)
+  return rectContainsPoint(visibleRect(element), local)
 }
 
 function cross(o: Point, a: Point, b: Point): number {
@@ -164,11 +162,7 @@ export function selectionContainsPoint(
   point: Point
 ): boolean {
   const only = ids.length === 1 ? document.elements[ids[0] as ElementId] : undefined
-  // Why: a turned element or a triangle leaves parts of its bounding box empty.
-  if (
-    only &&
-    (elementRotation(only) !== 0 || (only.type === 'shape' && only.shape === 'triangle'))
-  ) {
+  if (only && elementRotation(only) !== 0) {
     return elementContainsPoint(only, point)
   }
   const bounds = selectionBounds(document, ids)

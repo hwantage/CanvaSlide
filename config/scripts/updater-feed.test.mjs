@@ -57,7 +57,6 @@ function feed(publicKey) {
     directory: root,
     tag: 'v1.2.3',
     repository: 'owner/CanvaSlide',
-    notes: 'Release notes',
     publicKeys: [publicKey],
     now: new Date('2026-01-02T03:04:05.678Z')
   })
@@ -74,7 +73,6 @@ test('the feed lists every signed file under the platform keys installed apps lo
   const msi = { signature: signatureOf(releaseFiles[3]), url: download(releaseFiles[3]) }
   assert.deepEqual(feed(publicKey), {
     version: '1.2.3',
-    notes: 'Release notes',
     pub_date: '2026-01-02T03:04:05.678Z',
     platforms: {
       'darwin-aarch64': mac,
@@ -246,7 +244,7 @@ test('the command checks signatures against the keys in the trusted tauri.conf.j
   const trusted = ['--trusted-config', config('trusted.json', trustedKey)]
   const other = ['--trusted-config', config('other.json', otherKey)]
   const run = (args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' })
-  const options = { tag: 'v1.2.3', repository: 'owner/CanvaSlide', notes: 'n' }
+  const options = { tag: 'v1.2.3', repository: 'owner/CanvaSlide' }
   const flags = (skip) =>
     Object.entries(options).flatMap(([name, value]) => (name === skip ? [] : [`--${name}`, value]))
   for (const args of [
@@ -262,6 +260,8 @@ test('the command checks signatures against the keys in the trusted tauri.conf.j
   const accepted = run([root, ...flags(), ...other, ...trusted])
   assert.equal(accepted.status, 0, accepted.stderr)
   assert.equal(JSON.parse(accepted.stdout).version, '1.2.3')
+  // Why: the notes are the published Release body, added by release-notes.yml, never a placeholder.
+  assert.equal('notes' in JSON.parse(accepted.stdout), false)
   const rejected = run([root, ...flags(), ...other])
   assert.equal(rejected.status, 1)
   assert.equal(rejected.stdout, '')

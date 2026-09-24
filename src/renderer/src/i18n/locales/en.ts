@@ -32,7 +32,7 @@ export const en = {
     'Import a local {figma} {format} file, choose its pages, then choose Edit text & shapes or Preserve appearance. Editable mode keeps supported text and simple shapes editable; complex artwork becomes images. Preserve appearance makes top-level layers into images. Review the conversion report: effects, layout rules, component overrides, and some masks are not preserved exactly. No account or API token is required, and the source file stays unchanged.',
   'site.docs.media.videoHeading': 'Link a video',
   'site.docs.media.videoBody':
-    'Use the video tool and paste a supported {youtube}, {vimeo}, or direct video URL. The document stores the link, not the video bytes. Select the video to adjust its playback options, then test it in Slide Show. Playback needs the provider and network; browser autoplay rules may require a click. {youtube} in an exported {html} presentation needs HTTP(S) hosting. Cloud snapshots allow the supported providers and direct videos on the share service’s own origin.',
+    'Use the video tool and paste a supported {youtube}, {vimeo}, or direct video URL. The document stores the link, not the video bytes. Select the video to adjust its playback options, then test it in Slide Show. Playback needs the provider and network; browser autoplay rules may require a click. {youtube} in an exported {html} presentation needs HTTP(S) hosting. The desktop app plays direct video files only from HTTPS links. Cloud snapshots allow the supported providers and direct videos on the share service’s own origin.',
   'site.docs.media.details': 'Read the design import limits',
   'site.docs.ai.title': 'Create with AI',
   'site.docs.ai.summary': 'Prepare a prompt for your assistant and open its editable result.',

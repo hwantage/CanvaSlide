@@ -1,7 +1,7 @@
-# Why: a `v*` tag is the release trigger. `pnpm version <bump>` writes package.json (which
-# tauri.conf.json reads its version from), commits and tags; pushing the tag runs this workflow,
-# which builds every platform and attaches the installers to a *draft* GitHub Release so the
-# notes can be reviewed before publishing.
+# Why: a `v*` tag is the release trigger. The version bump in package.json (which tauri.conf.json
+# reads its version from) is merged to main like any change, then its merge commit is tagged;
+# pushing the tag runs this workflow, which waits for that commit's CI, builds every platform and
+# attaches the installers to a *draft* GitHub Release so the notes can be reviewed before publishing.
 name: Release
 
 on:
@@ -15,9 +15,52 @@ env:
   RELEASE_NOTES: 'See the assets below to download this version and install.'
 
 jobs:
+  # Why: only a commit that passed CI on main is released; the tag may be pushed before CI finishes.
+  gate:
+    name: wait for CI on the tagged commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      actions: read
+    steps:
+      - name: Wait for a successful CI run on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          latest_run() {
+            gh api -X GET "repos/$GH_REPO/actions/workflows/ci.yml/runs" \
+              -f head_sha="$SHA" -f event=push -f branch=main -f per_page=1 \
+              --jq '.workflow_runs[0] | select(.) | "\(.status) \(.conclusion) \(.html_url)"'
+          }
+          run="$(latest_run)"
+          for _ in $(seq 20); do
+            [ -z "$run" ] || break
+            sleep 30
+            run="$(latest_run)"
+          done
+          if [ -z "$run" ]; then
+            echo "No CI run from a push to main for $SHA; tag the merge commit of the release PR" >&2
+            exit 1
+          fi
+          read -r status conclusion url <<< "$run"
+          while [ "$status" != completed ]; do
+            echo "CI is $status: $url"
+            sleep 30
+            run="$(latest_run)"
+            read -r status conclusion url <<< "$run"
+          done
+          if [ "$conclusion" != success ]; then
+            echo "CI on main for $SHA finished with $conclusion: $url" >&2
+            exit 1
+          fi
+          echo "CI passed on main for $SHA: $url"
+
   # Why: build scripts and dependencies run here, so this job gets no secrets and no write access.
   build:
     name: build · ${{ matrix.name }}
+    needs: gate
     strategy:
       fail-fast: false
       matrix:

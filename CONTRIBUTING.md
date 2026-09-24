@@ -71,6 +71,7 @@ focused and easy to review; the [PR template](./.github/pull_request_template.md
   checks you skipped and why, and which automated tests you added or why none were needed.
 - **Platform notes:** anything macOS-only, Windows-only, or Tauri-vs-browser specific.
 
+`main` changes only through pull requests, and a PR can merge only when its `CI passed` check succeeds.
 Maintainers may ask for changes; keep the conversation on the PR so the reasoning is preserved.
 
 ## Reporting Bugs and Requesting Features
@@ -80,8 +81,9 @@ Report security vulnerabilities privately instead, as described in [`SECURITY.md
 
 ## Releases
 
-Releases are maintainer-managed and driven by git tags: `pnpm version <bump>` then
-`git push --follow-tags` builds macOS and Windows installers into a draft GitHub Release.
+Releases are maintainer-managed and driven by git tags: a version bump is merged through a pull
+request, and pushing a `v*` tag on its merge commit builds macOS and Windows installers into a draft
+GitHub Release once that commit's CI on `main` has passed.
 The full procedure, troubleshooting and the signing roadmap are in [`docs/RELEASE.md`](./docs/RELEASE.md).
 
 ## License

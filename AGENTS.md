@@ -118,10 +118,11 @@ pnpm bundle:local --bundles app  # macOS; if shell, config or bundling changed
 pnpm test:site    # if website content, code or build inputs changed
 ```
 
-- E2E runs the Chromium suite plus core interactions in Firefox and WebKit. It starts Vite on a port
-  derived from the checkout and verifies the server belongs to it. Install browsers with
-  `pnpm exec playwright install chromium firefox webkit`; `CANVASLIDE_E2E_WEBKIT=1` adds the WebKit
-  rendering regressions.
+- E2E runs the Chromium suite plus core interactions in Firefox and WebKit, spec files in parallel;
+  CI splits it into shards that each run one test at a time, and fails on a committed `test.only`.
+  It starts Vite on a port derived from the checkout and verifies the server belongs to it. Install
+  browsers with `pnpm exec playwright install chromium firefox webkit`; `CANVASLIDE_E2E_WEBKIT=1`
+  adds the WebKit rendering regressions.
 - `bundle:local` builds unsigned installers for the current OS without the updater key. On Windows run
   it without `--bundles`; on macOS drop `--bundles app` to also build the DMG.
 - CI runs the Rust checks and the macOS/Windows bundle jobs on every change; see

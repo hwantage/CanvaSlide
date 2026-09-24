@@ -8,10 +8,17 @@ on:
 permissions:
   contents: read
 
+# Why: a new push supersedes a pull request's running checks, but every push to main keeps its own
+# run, because a release builds only a commit whose CI on main passed.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   verify:
-    name: lint · typecheck · unit · e2e
+    name: lint · typecheck · unit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -26,17 +33,39 @@ jobs:
       - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
+
+  e2e:
+    name: e2e (${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        # Why: the suite runs one test at a time per runner on CI (tests/playwright.config.ts).
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      - run: pnpm test:e2e
+      - run: pnpm test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
-          name: playwright-traces
+          name: playwright-traces-${{ matrix.shard }}
           path: test-results/
+          retention-days: 14
 
   rust:
     name: rust · fmt · clippy · test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -56,9 +85,11 @@ jobs:
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml
 
+  # Why: bundles wait for the quick checks, not for E2E, so the two long jobs run side by side.
   bundle:
     name: tauri build (${{ matrix.os }})
     needs: [verify, rust]
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -100,13 +131,16 @@ jobs:
             src-tauri/target/**/bundle/nsis/*.exe
             src-tauri/target/**/bundle/msi/*.msi
           if-no-files-found: ignore
+          # Why: a check that the installers build, not a download; releases publish their own.
+          retention-days: 7
 
   # Why: the main ruleset requires this one check, so adding or renaming a job needs no settings change.
   passed:
     name: CI passed
     if: always()
-    needs: [verify, rust, bundle]
+    needs: [verify, e2e, rust, bundle]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Fail unless every job succeeded
         env:

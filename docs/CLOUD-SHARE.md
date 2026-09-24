@@ -57,7 +57,7 @@ OS deep-link registration is outside this feature.
 - **Validation:** the API validates the current runtime JSON document schema (`canvasDocumentSchema`),
   checks streamed bytes as well as Content-Length, and returns JSON with `no-store`/`nosniff` headers.
   Shared images must use embedded image data URLs; external URLs, including image references nested
-  inside SVGs, are rejected on upload and again by the viewer, including for older stored documents.
+  inside SVGs, are rejected on upload and again by the viewer.
   SVG validation rejects malformed XML, DTDs, processing instructions, and excessive nesting.
 - **Video policy:** shared videos accept YouTube, Vimeo, and direct files hosted on the share service's
   exact origin; arbitrary external video URLs must be removed or replaced before sharing. YouTube and
@@ -71,13 +71,10 @@ OS deep-link registration is outside this feature.
 - **Propagation:** new snapshots may take up to a minute to become visible in another region because of
   [KV's propagation behavior](https://developers.cloudflare.com/kv/api/write-key-value-pairs/#concurrent-writes-to-the-same-key).
   The missing-link dialog provides a retry action.
-- **Access envelope:** new POST bodies and stored GET responses use `{ access: "edit" | "present", document }`.
-  Document-only uploads and stored snapshots without access metadata are treated as editable only if
-  they pass the current runtime schema; incompatible earlier document formats are rejected.
-  Unrecognized access metadata is rejected instead of falling back to editing.
+- **Access envelope:** POST bodies and stored GET responses use `{ access: "edit" | "present", document }`.
+  A body without the envelope or with unrecognized access metadata is rejected instead of falling
+  back to editing.
 - **TTL:** automatic deletion uses KV's `expirationTtl: 86400`, so no scheduled cleanup is required.
-  Previously stored keys without an expiration are unaffected: delete them or rewrite them with
-  an expiration separately before promising a retention period for those older links.
 
 The API receives resolved runtime assets, not the saved file’s shared `resources` table. Its 5 MiB
 limit covers the entire JSON request, including the access envelope and resolved image data. A local

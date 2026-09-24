@@ -12,37 +12,22 @@ let encode = createDocumentEncoder()
 self.onmessage = (event: MessageEvent<DocumentCodecRequest>) => {
   try {
     const request = event.data
-    if (request.kind === 'inspect-recovery' || request.kind === 'decode-recovery') {
+    if (request.kind === 'decode-recovery') {
       let raw: unknown = null
       try {
-        raw = JSON.parse(
-          typeof request.payload === 'string'
-            ? request.payload
-            : new TextDecoder('utf-8', { fatal: true }).decode(request.payload)
-        )
+        raw = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(request.payload))
       } catch {
         /* Invalid data is retained for an explicit decision. */
       }
       const snapshot = parseRecoverySnapshot(raw)
-      if (request.kind === 'inspect-recovery') {
-        const info = inspectRecoverySnapshot(raw)
-        self.postMessage({
-          kind: 'inspected-recovery',
-          result:
-            info.kind === 'valid' && !snapshot
-              ? { kind: 'quarantined', version: info.snapshot.version }
-              : info
-        } satisfies DocumentCodecResponse)
-      } else {
-        const info = snapshot ? inspectRecoverySnapshot(snapshot) : null
-        self.postMessage({
-          kind: 'decoded-recovery',
-          snapshot: info?.kind === 'valid' ? info.snapshot : null,
-          result: snapshot
-            ? parseDocument(snapshot.contents)
-            : { ok: false, error: 'Invalid recovery snapshot' }
-        } satisfies DocumentCodecResponse)
-      }
+      const info = snapshot ? inspectRecoverySnapshot(snapshot) : null
+      self.postMessage({
+        kind: 'decoded-recovery',
+        snapshot: info?.kind === 'valid' ? info.snapshot : null,
+        result: snapshot
+          ? parseDocument(snapshot.contents)
+          : { ok: false, error: 'Invalid recovery snapshot' }
+      } satisfies DocumentCodecResponse)
     } else if ('document' in request) {
       const contents = encode(request.document)
       if (request.kind === 'encode-recovery') {

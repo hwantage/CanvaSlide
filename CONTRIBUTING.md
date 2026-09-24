@@ -73,6 +73,11 @@ The full list is in [`AGENTS.md`](./AGENTS.md). The ones that most often come up
   `beginEdit` → `patchElements(..., false)` → `endEdit` so they collapse into one undo step.
 - **Styling:** use design tokens from `src/renderer/src/assets/main.css`; no ad-hoc hex in components.
 - **Comments** explain _why_, one line, only when it is not obvious from the code.
+- **No compatibility with earlier formats before stabilization.** Until the document format is
+  declared stable, do not add code, tests or documentation that keep earlier document or storage
+  formats working: saved files, recovery records, cloud share snapshots and stored settings alike.
+  Only the current format is read. At stabilization the document version is bumped and backward
+  compatibility is supported from that version on.
 
 ## Presentation Experience Across App and HTML Export
 

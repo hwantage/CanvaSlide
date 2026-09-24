@@ -18,12 +18,10 @@ afterEach(() => {
   vi.restoreAllMocks()
   vi.clearAllMocks()
   vi.useRealTimers()
-  localStorage.removeItem('canvaslide.updates.checkOnLaunch')
 })
 
-test('desktop always checks after launch even with a legacy opt-out, and cleans up its timer', async () => {
+test('desktop checks after launch and cleans up its timer', async () => {
   vi.mocked(isTauriRuntime).mockReturnValue(true)
-  localStorage.setItem('canvaslide.updates.checkOnLaunch', 'off')
   const check = vi.spyOn(useUpdateStore.getState(), 'check').mockResolvedValue()
   const first = renderHook(useUpdateCheck)
   await act(() => vi.advanceTimersByTimeAsync(2999))

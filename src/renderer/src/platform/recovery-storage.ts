@@ -21,11 +21,7 @@ import {
   releaseRecoverySession,
   supportsSessionOwnership
 } from './recovery-session'
-import {
-  decodeRecoveryFile,
-  encodeRecoverySnapshot,
-  inspectRecoveryFile
-} from '@/lib/document-file-codec'
+import { decodeRecoveryFile, encodeRecoverySnapshot } from '@/lib/document-file-codec'
 import {
   clearStoredSnapshots,
   listStoredSessions,
@@ -123,12 +119,7 @@ async function readInfo(id: string): Promise<{
     }
   }
   const record = await readStoredMetadata(id)
-  if (record === null) {
-    return { inspection: null }
-  }
-  const inspection =
-    typeof record === 'string' ? inspectRecoveryFile(record) : inspectRecoverySnapshot(record.info)
-  return { inspection: await inspection }
+  return { inspection: record === null ? null : inspectRecoverySnapshot(record.info) }
 }
 export async function readRecoverySnapshots(
   excluded: readonly string[] = []
@@ -169,7 +160,7 @@ export async function readRecoverySnapshots(
 /** IO/worker failures reject; malformed data is a separate result and is retained. */
 export async function readRecoveryDocument(sessionId: string) {
   requireOwnership(sessionId)
-  let payload: string | Uint8Array<ArrayBuffer>
+  let payload: Uint8Array<ArrayBuffer>
   if (isTauriRuntime()) {
     const { invoke } = await import('@tauri-apps/api/core')
     payload = new Uint8Array(await invoke<ArrayBuffer>('read_recovery_snapshot', { sessionId }))
@@ -178,12 +169,7 @@ export async function readRecoveryDocument(sessionId: string) {
     if (record === null) {
       throw new Error('Recovery snapshot is missing')
     }
-    payload =
-      typeof record === 'string'
-        ? record
-        : record.payload instanceof Uint8Array
-          ? record.payload
-          : new Uint8Array(await record.payload.arrayBuffer())
+    payload = record.payload
   }
   return decodeRecoveryFile(payload)
 }

@@ -54,7 +54,7 @@ it('skips unchecked videos without consuming the one-YouTube autoplay allowance'
     { ...video('manual'), autoplay: false },
     { ...video('y1', 'https://youtu.be/M7lc1UVf-VE'), autoplay: false },
     { ...video('y2', 'https://youtu.be/aqz-KE-bpKQ'), autoplay: true },
-    video('legacy')
+    video('unset')
   ]
-  expect(autoplayVideoIds(videos)).toEqual(['y2', 'legacy'])
+  expect(autoplayVideoIds(videos)).toEqual(['y2', 'unset'])
 })

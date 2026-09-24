@@ -91,13 +91,15 @@ it('validates both returned IDs and downloaded documents', async () => {
   await expect(createCloudShare(createEmptyDocument(), signal())).rejects.toMatchObject({
     code: 'invalid'
   })
-  vi.mocked(fetch).mockResolvedValue(Response.json({ version: 999 }))
+  vi.mocked(fetch).mockResolvedValue(Response.json({ access: 'edit', document: { version: 999 } }))
+  await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
+  vi.mocked(fetch).mockResolvedValue(Response.json(createEmptyDocument()))
   await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
 })
 
 it('validates and repairs the downloaded snapshot', async () => {
   vi.mocked(fetch).mockResolvedValue(
-    Response.json({ ...createEmptyDocument(), order: ['missing'] })
+    Response.json({ access: 'edit', document: { ...createEmptyDocument(), order: ['missing'] } })
   )
   await expect(fetchCloudShare(id, signal())).resolves.toEqual({
     access: 'edit',
@@ -166,12 +168,12 @@ it.each([
     }
     await expect(createCloudShare(document, signal())).rejects.toMatchObject({ code: 'invalid' })
     expect(fetch).not.toHaveBeenCalled()
-    vi.mocked(fetch).mockResolvedValue(Response.json(document))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ access: 'edit', document }))
     await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'invalid' })
   }
 )
 
-it('rejects unapproved videos before upload or loading previously stored documents', async () => {
+it('rejects unapproved videos before upload and after download', async () => {
   const document = createEmptyDocument()
   document.elements.video = {
     id: 'video',
@@ -188,7 +190,7 @@ it('rejects unapproved videos before upload or loading previously stored documen
     code: 'unsupportedVideo'
   })
   expect(fetch).not.toHaveBeenCalled()
-  vi.mocked(fetch).mockResolvedValue(Response.json(document))
+  vi.mocked(fetch).mockResolvedValue(Response.json({ access: 'edit', document }))
   await expect(fetchCloudShare(id, signal())).rejects.toMatchObject({ code: 'unsupportedVideo' })
 })
 

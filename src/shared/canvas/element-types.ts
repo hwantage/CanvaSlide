@@ -41,7 +41,7 @@ const rectSchema = z.object({
 
 const elementBaseSchema = rectSchema.extend({
   id: z.string().min(1),
-  // Why: groups are flat sets of elements sharing an id (Miro-style); optional so older files load.
+  // Why: groups are flat sets of elements sharing an id (Miro-style); absent means ungrouped.
   groupId: z.string().min(1).optional(),
   // Copied frames and contents share a key to disambiguate overlapping source/copy bounds.
   frameContentKey: z.string().min(1).optional()
@@ -70,8 +70,7 @@ export const textStyleSchema = z.object({
   bold: z.boolean(),
   italic: z.boolean().optional(),
   lineHeight: z.number().finite().min(0.1).max(10).optional(),
-  // Why: optional so documents saved before font selection existed keep loading unchanged;
-  // absent means the app's default sans stack (see font-family.ts).
+  // Why: absent means the app's default sans stack (see font-family.ts).
   fontFamily: z.string().optional()
 })
 export type TextStyle = z.infer<typeof textStyleSchema>

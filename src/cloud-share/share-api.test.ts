@@ -40,6 +40,10 @@ function post(
   })
 }
 
+function shared(document: unknown, access = 'edit') {
+  return JSON.stringify({ access, document })
+}
+
 function get(shareId: string | string[] = id) {
   return getShare({
     request: new Request(`${origin}/api/share/${id}`),
@@ -51,7 +55,7 @@ function get(shareId: string | string[] = id) {
 it('stores a validated snapshot and round trips the document through the Pages routes', async () => {
   const document = createEmptyDocument()
   document.name = '공유 <canvas>'
-  const response = await post(JSON.stringify({ ...document, ignored: 'not stored' }))
+  const response = await post(shared({ ...document, ignored: 'not stored' }))
   expect(response.status).toBe(201)
   const result = await response.json()
   expect(isShareId(result.id)).toBe(true)
@@ -79,7 +83,7 @@ it('stores slideshow access with the snapshot and ignores attempted query overri
     height: 600
   }
   document.order = ['frame']
-  const response = await post(JSON.stringify({ access: 'present', document }))
+  const response = await post(shared(document, 'present'))
   expect(response.status).toBe(201)
   const result = await response.json()
   const stored = { access: 'present', document }
@@ -94,23 +98,24 @@ it('stores slideshow access with the snapshot and ignores attempted query overri
 
 it('rejects unknown access modes and slideshow documents without frames', async () => {
   const document = createEmptyDocument()
-  expect((await post(JSON.stringify({ access: 'owner', document }))).status).toBe(400)
-  const noFrames = await post(JSON.stringify({ access: 'present', document }))
+  expect((await post(shared(document, 'owner'))).status).toBe(400)
+  const noFrames = await post(shared(document, 'present'))
   expect(noFrames.status).toBe(400)
   expect(await noFrames.json()).toEqual({ error: 'noFrames' })
   expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
 })
 
-it('still retrieves previously stored document-only snapshots', async () => {
-  const document = createEmptyDocument()
-  values.set(`share:${id}`, JSON.stringify(document))
-  expect(await (await get()).json()).toEqual(document)
+it('rejects a document without the access envelope before KV', async () => {
+  const response = await post(JSON.stringify(createEmptyDocument()))
+  expect(response.status).toBe(400)
+  expect(await response.json()).toEqual({ error: 'invalid' })
+  expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
 })
 
 it('creates independent links for repeated shares without overwriting earlier snapshots', async () => {
-  const first = await post(JSON.stringify(createEmptyDocument())).then((r) => r.json())
-  const second = await post(JSON.stringify({ ...createEmptyDocument(), name: 'Updated' })).then(
-    (r) => r.json()
+  const first = await post(shared(createEmptyDocument())).then((r) => r.json())
+  const second = await post(shared({ ...createEmptyDocument(), name: 'Updated' })).then((r) =>
+    r.json()
   )
   expect(first.id).not.toBe(second.id)
   expect(values.size).toBe(2)
@@ -119,7 +124,7 @@ it('creates independent links for repeated shares without overwriting earlier sn
 it('expires each snapshot 24 hours after creation without extending it on reads or later shares', async () => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-09-19T00:00:00Z'))
-  const first = await post(JSON.stringify(createEmptyDocument())).then((r) => r.json())
+  const first = await post(shared(createEmptyDocument())).then((r) => r.json())
   expect(env.SHARED_DOCUMENTS!.put).toHaveBeenLastCalledWith(
     `share:${first.id}`,
     expect.any(String),
@@ -127,7 +132,7 @@ it('expires each snapshot 24 hours after creation without extending it on reads 
   )
   vi.setSystemTime(new Date('2026-09-19T12:00:00Z'))
   expect((await get(first.id)).status).toBe(200)
-  const second = await post(JSON.stringify(createEmptyDocument())).then((r) => r.json())
+  const second = await post(shared(createEmptyDocument())).then((r) => r.json())
   vi.setSystemTime(new Date('2026-09-19T23:59:59Z'))
   expect((await get(first.id)).status).toBe(200)
   vi.setSystemTime(new Date('2026-09-20T00:00:00Z'))
@@ -149,10 +154,10 @@ it('rejects external image URLs before storing any data', async () => {
       }
     }
   }
-  expect((await post(JSON.stringify(document))).status).toBe(400)
+  expect((await post(shared(document))).status).toBe(400)
   expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
   document.assets.image.data = 'data:image/png;base64,YWJj'
-  expect((await post(JSON.stringify(document))).status).toBe(201)
+  expect((await post(shared(document))).status).toBe(201)
 })
 
 it('rejects embedded SVG tracking images before writing to KV', async () => {
@@ -164,7 +169,7 @@ it('rejects embedded SVG tracking images before writing to KV', async () => {
     height: 10,
     data: `data:image/svg+xml,${encodeURIComponent('<svg><image href="https://tracker.example/pixel"/></svg>')}`
   }
-  expect((await post(JSON.stringify(document))).status).toBe(400)
+  expect((await post(shared(document))).status).toBe(400)
   expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
 })
 
@@ -181,7 +186,7 @@ it('rejects arbitrary video hosts while accepting provider and same-origin video
     height: 100
   }
   document.order = ['video']
-  const denied = await post(JSON.stringify(document))
+  const denied = await post(shared(document))
   expect(denied.status).toBe(400)
   expect(await denied.json()).toEqual({ error: 'unsupportedVideo' })
   expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
@@ -191,7 +196,7 @@ it('rejects arbitrary video hosts while accepting provider and same-origin video
     `${origin}/video.mp4`
   ]) {
     document.elements.video.url = url
-    expect((await post(JSON.stringify(document))).status).toBe(201)
+    expect((await post(shared(document))).status).toBe(201)
   }
 })
 
@@ -200,8 +205,8 @@ it.each([
   'null',
   '[]',
   '{}',
-  JSON.stringify({ ...createEmptyDocument(), version: 999 }),
-  JSON.stringify({ ...createEmptyDocument(), elements: { bad: { type: 'frame', width: -1 } } })
+  shared({ ...createEmptyDocument(), version: 999 }),
+  shared({ ...createEmptyDocument(), elements: { bad: { type: 'frame', width: -1 } } })
 ])('rejects malformed JSON or invalid documents before KV: %s', async (body) => {
   expect((await post(body)).status).toBe(400)
   expect(env.SHARED_DOCUMENTS!.put).not.toHaveBeenCalled()
@@ -214,7 +219,7 @@ it('rejects non-JSON uploads', async () => {
 it.each([{}, { 'Content-Length': '1' }, { 'Content-Length': String(MAX_SHARE_BYTES + 1) }])(
   'rejects oversized UTF-8 bodies regardless of length headers: %j',
   async (headers) => {
-    const body = JSON.stringify({
+    const body = shared({
       ...createEmptyDocument(),
       name: '한'.repeat(Math.floor(MAX_SHARE_BYTES / 3))
     })
@@ -244,8 +249,7 @@ it.each(['get', 'put'] as const)(
     vi.mocked(env.SHARED_DOCUMENTS![method]).mockRejectedValue(
       new Error('KV failed: 429 secret details')
     )
-    const response =
-      method === 'get' ? await get() : await post(JSON.stringify(createEmptyDocument()))
+    const response = method === 'get' ? await get() : await post(shared(createEmptyDocument()))
     expect(response.status).toBe(429)
     expect(response.headers.get('retry-after')).toBe('60')
     expect(response.headers.get('access-control-allow-origin')).toBe('*')
@@ -258,7 +262,7 @@ it('reports missing bindings and service failures', async () => {
   expect((await get()).status).toBe(503)
   env = {}
   expect((await get()).status).toBe(503)
-  expect((await post(JSON.stringify(createEmptyDocument()))).status).toBe(503)
+  expect((await post(shared(createEmptyDocument()))).status).toBe(503)
 })
 
 it.each([createShare, getShare])(

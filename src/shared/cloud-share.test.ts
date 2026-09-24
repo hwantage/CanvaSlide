@@ -11,22 +11,24 @@ import {
 const id = 'abcdefghijklmnopqr_-1'
 
 describe('stored sharing access', () => {
-  it('preserves explicit access and keeps old document-only links editable', () => {
+  it('preserves explicit access', () => {
     const document = { version: 2 }
     expect(unwrapShareSnapshot({ access: 'present', document })).toEqual({
       access: 'present',
       document
     })
-    expect(unwrapShareSnapshot(document)).toEqual({ access: 'edit', document })
   })
 
   it.each([
+    { version: 2 },
+    null,
+    'document',
     { access: 'owner', document: {} },
     { access: 'present' },
     { document: {} },
     { access: null, document: {} },
     { version: 2, access: 'invalid' }
-  ])('rejects malformed access metadata instead of falling back to editing: %j', (value) => {
+  ])('rejects a snapshot without valid access metadata: %j', (value) => {
     expect(() => unwrapShareSnapshot(value)).toThrow('invalid')
   })
 })

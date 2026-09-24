@@ -195,6 +195,7 @@ Use the skill at {skill} to create the file.`,
   'video.policy':
     'Slide Show starts muted. Linked videos need internet; playback depends on browser codecs and the source’s embedding permissions.',
   'video.invalid': 'Enter a valid http or https video URL.',
+  'video.httpsOnly': 'The desktop app plays direct video files only from HTTPS links.',
   'video.cancel': 'Cancel',
   'video.save': 'Save link',
   'video.play': 'Play video',

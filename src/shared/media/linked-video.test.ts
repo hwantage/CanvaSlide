@@ -246,3 +246,25 @@ it('keeps a pause pressed while the embed host starts and applies it once the pa
   expect(post.mock.calls.map(([message]) => message.command)).toEqual(['unmute', 'pause'])
   cleanup()
 })
+
+it.each([
+  ['http://media.example/clip.mp4', 'HTTPS only', 'error'],
+  ['HTTP://media.example/clip.mp4', 'HTTPS only', 'error'],
+  ['https://media.example/clip.mp4', 'Loading', 'loading']
+])('shows the HTTPS hint instead of loading plain HTTP media: %s', (url, text, playback) => {
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
+  const host = document.createElement('div')
+  document.body.append(host)
+  const cleanup = mountLinkedVideo(host, {
+    url,
+    labels,
+    interactive: true,
+    autoplay: false,
+    httpsOnlyHint: 'HTTPS only'
+  })
+  host.querySelector<HTMLButtonElement>('[aria-label="Play"]')!.click()
+  expect(host.dataset.playback).toBe(playback)
+  expect(host.querySelector('[role="status"]')!.textContent).toBe(text)
+  expect(host.querySelector('video') === null).toBe(playback === 'error')
+  cleanup()
+})

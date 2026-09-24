@@ -189,6 +189,7 @@ export const ko: UiStrings = {
   'video.policy':
     '슬라이드 쇼에서는 음소거로 시작합니다. 연결된 영상에는 인터넷이 필요하며 브라우저 코덱과 원본의 삽입 허용 여부에 따라 재생이 제한될 수 있습니다.',
   'video.invalid': '올바른 http 또는 https 동영상 URL을 입력하세요.',
+  'video.httpsOnly': '데스크톱 앱은 직접 동영상 파일을 HTTPS 링크에서만 재생합니다.',
   'video.cancel': '취소',
   'video.save': '링크 저장',
   'video.play': '동영상 재생',

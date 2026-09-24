@@ -35,6 +35,7 @@ export type VideoOptions = {
   openOriginal?: (url: string) => void
   embedOrigin?: () => Promise<string>
   filePlaybackHint?: string
+  httpsOnlyHint?: string
   expand?: (onClose: () => void, resize: (height: number, zoom: number) => void) => VideoFocusHandle
 }
 
@@ -246,14 +247,26 @@ export function mountLinkedVideo(host: HTMLElement, options: VideoOptions): () =
     if (options.expand) {
       actions.append(expansionControl())
     }
-    if (source.provider === 'youtube' && location.protocol === 'file:' && !options.embedOrigin) {
-      status('blocked')
-      showYouTubeThumbnail(surface, source.id!, labels.thumbnail)
-      message.textContent = options.filePlaybackHint ?? labels.error
+    const unplayable = (value: PlaybackStatus, hint: string) => {
+      status(value)
+      message.textContent = hint
+      message.title = hint
       actions.replaceChildren(original)
       if (options.expand) {
         actions.append(expansionControl())
       }
+    }
+    if (source.provider === 'youtube' && location.protocol === 'file:' && !options.embedOrigin) {
+      unplayable('blocked', options.filePlaybackHint ?? labels.error)
+      showYouTubeThumbnail(surface, source.id!, labels.thumbnail)
+      return
+    }
+    if (
+      source.provider === 'direct' &&
+      options.httpsOnlyHint &&
+      new URL(source.url).protocol === 'http:'
+    ) {
+      unplayable('error', options.httpsOnlyHint)
       return
     }
     timeout = setTimeout(() => {

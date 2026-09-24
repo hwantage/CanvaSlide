@@ -294,3 +294,30 @@ test('the embed pages report player failures and obey only their own parent @web
   expect(sdkFrames).not.toContain('10')
   expect((await statuses()).quiet).toEqual(['ready', 'paused'])
 })
+
+test('the desktop app explains that a plain HTTP video file cannot play @webkit', async ({
+  page
+}) => {
+  await page.route('http://media.example/clip.mp4', (route) =>
+    route.fulfill({
+      contentType: 'video/mp4',
+      body: readFileSync('tests/fixtures/linked-video.mp4')
+    })
+  )
+  await openDesktopEditor(page)
+  await paste(page, 'http://media.example/clip.mp4')
+  const video = page.locator('[data-element-type="video"]')
+  await video.getByRole('button', { name: 'Play video', exact: true }).click()
+  await expect(video).toHaveAttribute('data-playback', 'error')
+  await expect(video.getByRole('status')).toHaveText(
+    'The desktop app plays direct video files only from HTTPS links.'
+  )
+  await expect(video.locator('video')).toHaveCount(0)
+  expect(
+    await video
+      .locator('.linked-video-actions button')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')))
+  ).toEqual(['Open original', 'Expand video'])
+  await expect(video.getByRole('button', { name: 'Open original', exact: true })).toBeVisible()
+  await page.screenshot({ path: 'discuss/desktop-http-video-hint.png' })
+})

@@ -9,15 +9,8 @@ import {
   rotatedCorners,
   toLocalPoint
 } from './element-rotation'
-import type {
-  CanvasDocument,
-  CanvasElement,
-  ElementId,
-  Point,
-  Rect,
-  ShapeElement
-} from './element-types'
-import { triangleOutline } from './shape-svg'
+import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
+import { shapePolygon } from './shape-svg'
 import { visibleTextRect } from './text-clip'
 
 /** The element's own upright box; a rotated element turns this about its centre. */
@@ -35,7 +28,7 @@ function visibleRect(element: CanvasElement): Rect {
   return element.type === 'text' ? visibleTextRect(element) : elementRect(element)
 }
 
-/** Point-in-outline test; the pivot is the whole box's centre even when text is clipped. */
+/** Box hit test, rotation included; the pivot is the box's centre even when text is clipped. */
 function elementContainsPoint(element: CanvasElement, point: Point): boolean {
   const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
   return rectContainsPoint(visibleRect(element), local)
@@ -45,27 +38,43 @@ function cross(o: Point, a: Point, b: Point): number {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
 }
 
+/** Inside a clockwise polygon, or within `reach` of one of its edges (a round-joined stroke). */
+function polygonContainsPoint(corners: readonly Point[], point: Point, reach: number): boolean {
+  let inside = true
+  for (let i = 0; i < corners.length; i += 1) {
+    const a = corners[i] as Point
+    const b = corners[(i + 1) % corners.length] as Point
+    if (distanceToSegment(point, a, b) <= reach) {
+      return true
+    }
+    inside &&= cross(a, b, point) >= 0
+  }
+  return inside
+}
+
 /**
- * Whether an upright-frame `point` lands on what a triangle draws (its fill and round-joined
- * stroke), or within `halo` of it. The box's empty upper corners pass through to what lies beneath.
+ * Whether an upright-frame `point` lands on what the element draws (fill and stroke), or within
+ * `halo` of it. An ellipse's, diamond's or triangle's empty box corners pass through to what lies
+ * beneath; a click still grabs the whole box, but a connector end attaches only here.
  */
-export function triangleContainsPoint(element: ShapeElement, point: Point, halo = 0): boolean {
+export function outlineContainsPoint(element: CanvasElement, point: Point, halo = 0): boolean {
   const { x, y, width, height } = element
   const box = { x: x - halo, y: y - halo, width: width + halo * 2, height: height + halo * 2 }
   if (!rectContainsPoint(box, point)) {
     return false
   }
+  if (element.type !== 'shape') {
+    return true
+  }
   const p = { x: point.x - x, y: point.y - y }
-  const [apex, right, left] = triangleOutline(element)
-  const reach = halo + element.style.strokeWidth / 2
-  const inside =
-    cross(apex, right, p) >= 0 && cross(right, left, p) >= 0 && cross(left, apex, p) >= 0
-  return (
-    inside ||
-    distanceToSegment(p, apex, right) <= reach ||
-    distanceToSegment(p, right, left) <= reach ||
-    distanceToSegment(p, left, apex) <= reach
-  )
+  if (element.shape === 'ellipse') {
+    // Why: the stroke is inset by half its width, so the drawn ellipse is the box's inscribed one.
+    const dx = (p.x - width / 2) / (width / 2 + halo)
+    const dy = (p.y - height / 2) / (height / 2 + halo)
+    return dx * dx + dy * dy <= 1
+  }
+  const polygon = shapePolygon(element)
+  return !polygon || polygonContainsPoint(polygon, p, halo + element.style.strokeWidth / 2)
 }
 
 /** Corners of the drawn outline on the canvas (nw, ne, se, sw). */

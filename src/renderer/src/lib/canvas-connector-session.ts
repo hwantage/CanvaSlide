@@ -6,7 +6,7 @@ import {
   nearestAnchorSide
 } from '@shared/canvas/connector-geometry'
 import { insertElement, patchElements } from '@shared/canvas/document-mutations'
-import { rectContainsPoint, triangleContainsPoint } from '@shared/canvas/element-bounds'
+import { outlineContainsPoint } from '@shared/canvas/element-bounds'
 import { elementBox, toLocalPoint } from '@shared/canvas/element-rotation'
 import type {
   CanvasDocument,
@@ -41,22 +41,10 @@ function hostAt(document: CanvasDocument, point: Point, excludeId: ElementId) {
     ) {
       continue
     }
-    const box = elementBox(element)
-    // Why: ports sit on the outline; accept a small halo around the box so they are easy to hit.
+    // Why: ports sit on the outline; accept a small halo around it so they are easy to hit.
     const halo = PORT_SNAP_PX / useCameraStore.getState().camera.zoom
-    const padded = {
-      x: box.x - halo,
-      y: box.y - halo,
-      width: box.width + halo * 2,
-      height: box.height + halo * 2
-    }
-    const local = toLocalPoint(box, point)
-    // A triangle's empty upper corners belong to whatever lies beneath it.
-    const hit =
-      element.type === 'shape' && element.shape === 'triangle'
-        ? triangleContainsPoint(element, local, halo)
-        : rectContainsPoint(padded, local)
-    if (hit) {
+    // Unlike a click, an end attaches only where the shape is drawn, never in its empty corners.
+    if (outlineContainsPoint(element, toLocalPoint(elementBox(element), point), halo)) {
       return element
     }
   }

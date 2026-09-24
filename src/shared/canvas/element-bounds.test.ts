@@ -8,11 +8,11 @@ import {
   interpolateRect,
   frameContainingPoint,
   hitTestTopmost,
+  outlineContainsPoint,
   rectFromPoints,
   rectsIntersect,
   selectionBounds,
   selectionContainsPoint,
-  triangleContainsPoint,
   unionRects,
   visibleBounds
 } from './element-bounds'
@@ -101,15 +101,29 @@ describe('element-bounds', () => {
     expect(hitTestTopmost(covered, { x: 1000, y: 500 }, chrome)?.id).toBe('c')
   })
 
-  it("lets a triangle's empty upper corners fall through to what lies beneath", () => {
+  it("leaves a triangle's empty upper corners out of what it draws", () => {
     const triangle = { ...shape('t', 0, 0), shape: 'triangle' } as ShapeElement
-    expect(triangleContainsPoint(triangle, { x: 50, y: 60 })).toBe(true)
-    expect(triangleContainsPoint(triangle, { x: 5, y: 5 })).toBe(false)
-    expect(triangleContainsPoint(triangle, { x: 95, y: 20 })).toBe(false)
+    expect(outlineContainsPoint(triangle, { x: 50, y: 60 })).toBe(true)
+    expect(outlineContainsPoint(triangle, { x: 5, y: 5 })).toBe(false)
+    expect(outlineContainsPoint(triangle, { x: 95, y: 20 })).toBe(false)
     // The halo reaches just past each edge, including the base, but not into the corners.
-    expect(triangleContainsPoint(triangle, { x: 22, y: 50 }, 6)).toBe(true)
-    expect(triangleContainsPoint(triangle, { x: 50, y: 104 }, 6)).toBe(true)
-    expect(triangleContainsPoint(triangle, { x: 5, y: 5 }, 6)).toBe(false)
+    expect(outlineContainsPoint(triangle, { x: 22, y: 50 }, 6)).toBe(true)
+    expect(outlineContainsPoint(triangle, { x: 50, y: 104 }, 6)).toBe(true)
+    expect(outlineContainsPoint(triangle, { x: 5, y: 5 }, 6)).toBe(false)
+  })
+
+  it("leaves an ellipse's and a diamond's empty corners out, but not a rectangle's", () => {
+    for (const kind of ['ellipse', 'diamond'] as const) {
+      const outlined = { ...shape('s', 0, 0), shape: kind } as ShapeElement
+      expect(outlineContainsPoint(outlined, { x: 50, y: 50 })).toBe(true)
+      expect(outlineContainsPoint(outlined, { x: 10, y: 10 }, 6)).toBe(false)
+      expect(outlineContainsPoint(outlined, { x: 90, y: 90 }, 6)).toBe(false)
+      // Every port sits on the outline, so the halo still reaches it.
+      expect(outlineContainsPoint(outlined, { x: 50, y: -4 }, 6)).toBe(true)
+      expect(outlineContainsPoint(outlined, { x: 104, y: 50 }, 6)).toBe(true)
+    }
+    expect(outlineContainsPoint(shape('r', 0, 0), { x: 1, y: 1 })).toBe(true)
+    expect(outlineContainsPoint(shape('r', 0, 0), { x: -4, y: -4 }, 6)).toBe(true)
   })
 
   it('grabs a triangle anywhere inside its box, like every other shape', () => {
@@ -120,13 +134,13 @@ describe('element-bounds', () => {
     expect(selectionContainsPoint(doc, ['t'], { x: 15, y: 15 })).toBe(true)
   })
 
-  it('hit-tests a thick-stroked triangle by the outline it draws', () => {
+  it('includes the whole round-joined stroke of a thick-stroked triangle', () => {
     const style = { ...defaultShapeStyle, strokeWidth: 20 }
     const thick = { ...shape('t', 0, 0, 100, 60), shape: 'triangle', style } as ShapeElement
     // The polygon is inset to (50,10) (90,50) (10,50) and the round stroke reaches 10px past it.
-    expect(triangleContainsPoint(thick, { x: 1, y: 59 })).toBe(false)
-    expect(triangleContainsPoint(thick, { x: 50, y: 1 })).toBe(true)
-    expect(triangleContainsPoint(thick, { x: 5, y: 55 })).toBe(true)
+    expect(outlineContainsPoint(thick, { x: 1, y: 59 })).toBe(false)
+    expect(outlineContainsPoint(thick, { x: 50, y: 1 })).toBe(true)
+    expect(outlineContainsPoint(thick, { x: 5, y: 55 })).toBe(true)
   })
 
   it('box-selects intersecting content but only fully enclosed frames', () => {

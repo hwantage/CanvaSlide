@@ -180,13 +180,16 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
-          if draft="$(gh release view "$TAG" --json isDraft --jq .isDraft)"; then
+          if draft="$(gh release view "$TAG" --json isDraft --jq .isDraft 2> "$RUNNER_TEMP/view.err")"; then
             if [ "$draft" != true ]; then
               echo "Release $TAG is already published; release a new version instead" >&2
               exit 1
             fi
             gh release upload "$TAG" release-assets/* --clobber
-          else
+          elif grep -qx 'release not found' "$RUNNER_TEMP/view.err"; then
             gh release create "$TAG" release-assets/* --draft --verify-tag \
               --title "CanvaSlide $TAG" --notes "$RELEASE_NOTES"
+          else
+            cat "$RUNNER_TEMP/view.err" >&2
+            exit 1
           fi

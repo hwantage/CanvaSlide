@@ -23,6 +23,18 @@ function jobsOf(workflow) {
   return Object.fromEntries(Object.entries(jobs).map(([id, lines]) => [id, lines.join('\n')]))
 }
 
+// The `permissions:` map at the given indent, as its entry lines; null when the block is absent.
+function permissionsAt(text, indent) {
+  const block = new RegExp(`\\n${indent}permissions:\\n((?:${indent}  .*\\n)*)`).exec(text)
+  return (
+    block &&
+    block[1]
+      .trimEnd()
+      .split('\n')
+      .map((line) => line.trim())
+  )
+}
+
 // Steps split at their `- ` marker, so each keeps its own `with:`, `env:` and `run:`.
 const stepsOf = (job) => job.split(/\n(?= {6}- )/).slice(1)
 
@@ -61,10 +73,11 @@ test('only the release sign job receives the updater key, from the release envir
 
 test('the release build runs without secrets or write access, and only publish can write', () => {
   const jobs = jobsOf(release)
-  assert.match(release, /\npermissions:\n {2}contents: read\n/)
+  // Build and sign inherit the workflow-level map, so it must hold nothing beyond read access.
+  assert.deepEqual(permissionsAt(release, ''), ['contents: read'])
   assert.doesNotMatch(jobs.build + jobs.sign, /permissions:|github\.token|GITHUB_TOKEN/)
   assert.match(jobs.build, /\n\s+- run: pnpm tauri build [^\n]*--no-sign\n/)
-  assert.match(jobs.publish, /\n {4}permissions:\n {6}contents: write\n/)
+  assert.deepEqual(permissionsAt(`\n${jobs.publish}\n`, '    '), ['contents: write'])
   const tokenSteps = stepsOf(jobs.publish).filter((step) => step.includes('github.token'))
   assert.ok(tokenSteps.some((step) => /gh release create/.test(step)))
   for (const step of tokenSteps) {

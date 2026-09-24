@@ -9,15 +9,8 @@ import {
   rotatedCorners,
   toLocalPoint
 } from './element-rotation'
-import type {
-  CanvasDocument,
-  CanvasElement,
-  ElementId,
-  Point,
-  Rect,
-  ShapeElement
-} from './element-types'
-import { triangleOutline } from './shape-svg'
+import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
+import { ellipseOutline, shapePolygon, type EllipseOutline } from './shape-svg'
 import { visibleTextRect } from './text-clip'
 
 /** The element's own upright box; a rotated element turns this about its centre. */
@@ -35,39 +28,103 @@ function visibleRect(element: CanvasElement): Rect {
   return element.type === 'text' ? visibleTextRect(element) : elementRect(element)
 }
 
-/** Point-in-outline test; the pivot is the whole box's centre even when text is clipped. */
+/** Box hit test, rotation included; the pivot is the box's centre even when text is clipped. */
 function elementContainsPoint(element: CanvasElement, point: Point): boolean {
   const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
-  return element.type === 'shape' && element.shape === 'triangle'
-    ? triangleContainsPoint(element, local)
-    : rectContainsPoint(visibleRect(element), local)
+  return rectContainsPoint(visibleRect(element), local)
 }
 
 function cross(o: Point, a: Point, b: Point): number {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
 }
 
+/** Inside a clockwise polygon, or within `reach` of one of its edges (a round-joined stroke). */
+function polygonContainsPoint(corners: readonly Point[], point: Point, reach: number): boolean {
+  let inside = true
+  for (let i = 0; i < corners.length; i += 1) {
+    const a = corners[i] as Point
+    const b = corners[(i + 1) % corners.length] as Point
+    if (distanceToSegment(point, a, b) <= reach) {
+      return true
+    }
+    inside &&= cross(a, b, point) >= 0
+  }
+  return inside
+}
+
 /**
- * Whether an upright-frame `point` lands on what a triangle draws (its fill and round-joined
- * stroke), or within `halo` of it. The box's empty upper corners pass through to what lies beneath.
+ * Distance from a first-quadrant point outside an ellipse to its outline; `a >= b > 0` are its
+ * semi-axes. Eberly's bisection stays exact at any aspect ratio, where a fixed-step iteration can
+ * jump to the far tip of a nearly flat ellipse.
  */
-export function triangleContainsPoint(element: ShapeElement, point: Point, halo = 0): boolean {
+function distanceToEllipse(x: number, y: number, a: number, b: number): number {
+  if (y === 0) {
+    const along = (a * x) / (a * a - b * b)
+    return along < 1 ? Math.hypot(a * along - x, b * Math.sqrt(1 - along * along)) : x - a
+  }
+  if (x === 0) {
+    return Math.abs(y - b)
+  }
+  const z0 = x / a
+  const z1 = y / b
+  const ratio = (a / b) ** 2
+  let low = z1 - 1
+  let high = z0 * z0 + z1 * z1 < 1 ? 0 : Math.hypot(ratio * z0, z1) - 1
+  let s = low
+  // Why: bisection stops once the bracket no longer shrinks; 128 halvings bound the worst case.
+  for (let i = 0; i < 128; i += 1) {
+    s = (low + high) / 2
+    if (s === low || s === high) {
+      break
+    }
+    const g = ((ratio * z0) / (s + ratio)) ** 2 + (z1 / (s + 1)) ** 2 - 1
+    if (g > 0) {
+      low = s
+    } else if (g < 0) {
+      high = s
+    } else {
+      break
+    }
+  }
+  return Math.hypot((ratio * x) / (s + ratio) - x, y / (s + 1) - y)
+}
+
+/** Inside an ellipse, or within `reach` of its outline (the stroke around the centreline). */
+function ellipseContainsPoint(ellipse: EllipseOutline, point: Point, reach: number): boolean {
+  const { cx, cy, rx, ry } = ellipse
+  const x = Math.abs(point.x - cx)
+  const y = Math.abs(point.y - cy)
+  if (rx === 0 || ry === 0) {
+    return distanceToSegment({ x, y }, { x: 0, y: 0 }, { x: rx, y: ry }) <= reach
+  }
+  if ((x / rx) ** 2 + (y / ry) ** 2 <= 1) {
+    return true
+  }
+  const distance = rx >= ry ? distanceToEllipse(x, y, rx, ry) : distanceToEllipse(y, x, ry, rx)
+  return distance <= reach
+}
+
+/**
+ * Whether an upright-frame `point` lands on what the element draws (fill and stroke), or within
+ * `halo` of it. An ellipse's, diamond's or triangle's empty box corners pass through to what lies
+ * beneath; a click still grabs the whole box, but a connector end attaches only here.
+ */
+export function outlineContainsPoint(element: CanvasElement, point: Point, halo = 0): boolean {
   const { x, y, width, height } = element
   const box = { x: x - halo, y: y - halo, width: width + halo * 2, height: height + halo * 2 }
   if (!rectContainsPoint(box, point)) {
     return false
   }
+  if (element.type !== 'shape') {
+    return true
+  }
   const p = { x: point.x - x, y: point.y - y }
-  const [apex, right, left] = triangleOutline(element)
   const reach = halo + element.style.strokeWidth / 2
-  const inside =
-    cross(apex, right, p) >= 0 && cross(right, left, p) >= 0 && cross(left, apex, p) >= 0
-  return (
-    inside ||
-    distanceToSegment(p, apex, right) <= reach ||
-    distanceToSegment(p, right, left) <= reach ||
-    distanceToSegment(p, left, apex) <= reach
-  )
+  if (element.shape === 'ellipse') {
+    return ellipseContainsPoint(ellipseOutline(element), p, reach)
+  }
+  const polygon = shapePolygon(element)
+  return !polygon || polygonContainsPoint(polygon, p, reach)
 }
 
 /** Corners of the drawn outline on the canvas (nw, ne, se, sw). */
@@ -164,11 +221,7 @@ export function selectionContainsPoint(
   point: Point
 ): boolean {
   const only = ids.length === 1 ? document.elements[ids[0] as ElementId] : undefined
-  // Why: a turned element or a triangle leaves parts of its bounding box empty.
-  if (
-    only &&
-    (elementRotation(only) !== 0 || (only.type === 'shape' && only.shape === 'triangle'))
-  ) {
+  if (only && elementRotation(only) !== 0) {
     return elementContainsPoint(only, point)
   }
   const bounds = selectionBounds(document, ids)

@@ -1,9 +1,11 @@
 import type { ConnectorElement, Point, Rect, ShapeElement, ShapeKind } from './element-types'
 
+export type EllipseOutline = { cx: number; cy: number; rx: number; ry: number }
+
 /** The one SVG primitive a shape kind is drawn with, inset so the stroke stays inside the box. */
 export type ShapeGeometry =
   | { tag: 'rect'; x: number; y: number; width: number; height: number; rx: number }
-  | { tag: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
+  | ({ tag: 'ellipse' } & EllipseOutline)
   | { tag: 'polygon'; points: string }
 
 /** Half the stroke, so the outline stays inside the box, clamped so shapes never invert. */
@@ -14,7 +16,7 @@ function strokeInset(element: ShapeElement): Point {
 }
 
 /** A triangle's stroke centreline in its own coordinates: apex, right base corner, left base corner. */
-export function triangleOutline(element: ShapeElement): [Point, Point, Point] {
+function triangleOutline(element: ShapeElement): [Point, Point, Point] {
   const { width: w, height: h } = element
   const inset = strokeInset(element)
   return [
@@ -22,6 +24,40 @@ export function triangleOutline(element: ShapeElement): [Point, Point, Point] {
     { x: w - inset.x, y: h - inset.y },
     { x: inset.x, y: h - inset.y }
   ]
+}
+
+/** An ellipse's stroke centreline in its own coordinates. */
+export function ellipseOutline(element: ShapeElement): EllipseOutline {
+  const { width: w, height: h } = element
+  const inset = strokeInset(element)
+  return { cx: w / 2, cy: h / 2, rx: w / 2 - inset.x, ry: h / 2 - inset.y }
+}
+
+function diamondOutline(element: ShapeElement): Point[] {
+  const { width: w, height: h } = element
+  const inset = strokeInset(element)
+  return [
+    { x: w / 2, y: inset.y },
+    { x: w - inset.x, y: h / 2 },
+    { x: w / 2, y: h - inset.y },
+    { x: inset.x, y: h / 2 }
+  ]
+}
+
+/** A diamond's or triangle's stroke centreline, clockwise in its own coordinates; else undefined. */
+export function shapePolygon(element: ShapeElement): Point[] | undefined {
+  switch (element.shape) {
+    case 'diamond':
+      return diamondOutline(element)
+    case 'triangle':
+      return triangleOutline(element)
+    default:
+      return undefined
+  }
+}
+
+function polygonGeometry(points: readonly Point[]): ShapeGeometry {
+  return { tag: 'polygon', points: points.map((p) => `${p.x},${p.y}`).join(' ') }
 }
 
 /** Geometry for `element` in its own coordinate space (0,0 at the top-left corner). */
@@ -39,19 +75,11 @@ export function shapeGeometry(element: ShapeElement): ShapeGeometry {
         rx: style.cornerRadius
       }
     case 'ellipse':
-      return { tag: 'ellipse', cx: w / 2, cy: h / 2, rx: w / 2 - insetX, ry: h / 2 - insetY }
+      return { tag: 'ellipse', ...ellipseOutline(element) }
     case 'diamond':
-      return {
-        tag: 'polygon',
-        points: `${w / 2},${insetY} ${w - insetX},${h / 2} ${w / 2},${h - insetY} ${insetX},${h / 2}`
-      }
+      return polygonGeometry(diamondOutline(element))
     case 'triangle':
-      return {
-        tag: 'polygon',
-        points: triangleOutline(element)
-          .map((p) => `${p.x},${p.y}`)
-          .join(' ')
-      }
+      return polygonGeometry(triangleOutline(element))
   }
 }
 

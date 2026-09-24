@@ -133,3 +133,13 @@ test('dropping on a port pins it; dropping on the body picks the facing port', a
   await dragOnCanvas(page, [575, 350], [175, 650])
   await expect(path).toHaveAttribute('data-route', 'M 175 200 L 175 600')
 })
+
+test("leaves an end free in an ellipse's empty corner, where nothing is drawn", async ({
+  page
+}) => {
+  await page.keyboard.press('l')
+  // (503,303) is inside the ellipse's box but outside its outline and port halo.
+  await dragOnCanvas(page, [175, 150], [503, 303])
+  const path = page.locator('[data-testid="connector-path"]')
+  await expect(path).toHaveAttribute('data-route', 'M 250 150 L 503 303')
+})

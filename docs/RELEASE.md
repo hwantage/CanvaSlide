@@ -17,8 +17,9 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
 # ④ GitHub → Releases 에서 초안(draft)을 열어 노트를 다듬고 Publish
 ```
 
-`main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. `v*` 태그는 저장소 관리자만 만들고
-옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다(§4).
+`main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. 저장소 관리자는 긴급할 때 PR 머지에서만
+이 검사를 우회할 수 있고, 그래도 릴리즈는 `main` CI가 통과한 커밋만 빌드한다. `v*` 태그는 저장소 관리자만
+만들고 옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다(§4).
 
 ## 2. 버전 규칙
 
@@ -79,8 +80,10 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
 | publish draft release            | `ubuntu-latest`  | `contents: write`        | `latest.json`, 같은 태그의 Release 초안                  |
 
 0. **wait for CI**: 태그 커밋에서 `main`에 푸시되어 실행된 **CI** 워크플로 실행을 Actions API로 찾아 끝나기를
-   기다린다. 10분 안에 실행이 나타나지 않거나(태그 커밋이 `main`에 푸시된 적이 없음) 결과가 성공이 아니면
-   실패하고, 이후 잡은 실행되지 않는다. 체크아웃도 패키지 스크립트도 실행하지 않는다.
+   기다린다. 10분 안에 실행이 나타나지 않거나(태그 커밋이 `main` 푸시의 끝 커밋, 즉 PR의 머지 커밋이 아님)
+   결과가 성공이 아니거나 API 호출이 실패하면 실패하고, 이후 잡은 실행되지 않는다. 체크아웃도 패키지
+   스크립트도 실행하지 않는다. 이 잡은 태그 커밋에 들어 있는 `release.yml`에서 실행되므로, 이 잡이 없는
+   커밋(예: 옛 태그에서 갈라진 핫픽스)에 태그를 달면 CI 확인 없이 빌드된다. 핫픽스도 §3처럼 `main`을 거친다.
 1. **build**: pnpm·Node 22·Rust stable을 준비하고(맥은 `aarch64-apple-darwin`, `x86_64-apple-darwin` 타깃 추가)
    `pnpm install --frozen-lockfile`, 태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
@@ -107,9 +110,14 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
 
 ## 5. 실패했을 때
 
-- **CI 대기 잡이 실패**: `No CI run on main`이면 태그가 `main`에 푸시되어 CI가 돈 커밋(PR의 머지 커밋)이 아닌
-  곳을 가리킨다. 공개하지 않은 태그이므로 메인테이너가 지우고 릴리즈 PR의 머지 커밋에 다시 만든다. `finished with failure`처럼 CI가 실패했으면
-  CI를 고치거나 재실행해 성공시킨 뒤 Release 워크플로의 **Re-run failed jobs**를 누른다.
+- **CI 대기 잡이 실패**: 재실행은 처음 실행과 같은 커밋을 다시 검사한다.
+  - `No CI run from a push to main`: 태그가 `main`에 푸시되어 CI가 돈 커밋(PR의 머지 커밋)이 아닌 곳을
+    가리킨다. 공개하지 않은 태그이므로 메인테이너가 지우고 릴리즈 PR의 머지 커밋에 다시 만든다.
+  - `finished with failure` 등 CI 실패: 일시적 실패이거나 코드 밖 원인(러너, 외부 서비스, 저장소 변수)을
+    고쳤으면 태그 커밋의 **CI** 실행을 재실행해 성공시킨 뒤 Release 워크플로의 **Re-run failed jobs**를 누른다.
+    코드를 고쳐야 하면 수정 PR을 머지하고, 공개하지 않은 태그를 메인테이너가 지운 뒤 그 머지 커밋에 다시
+    만들어 푸시한다. 새 Release 실행이 시작된다.
+  - `gh:`로 시작하는 API 오류: Release 워크플로의 **Re-run failed jobs**를 누른다.
 - **태그 불일치로 실패**: 태그와 `package.json`의 차이를 확인한다. 아직 공개하지 않은 태그만
   메인테이너가 수정하며, 이미 공개한 버전이면 새 버전·태그를 만든다.
 - **한쪽 플랫폼만 실패**: 초안은 두 빌드가 모두 성공해야 만들어진다. Actions에서 **Re-run failed jobs**를 하면

@@ -41,14 +41,15 @@ jobs:
             run="$(latest_run)"
           done
           if [ -z "$run" ]; then
-            echo "No CI run on main for $SHA; tag a commit that is on main" >&2
+            echo "No CI run from a push to main for $SHA; tag the merge commit of the release PR" >&2
             exit 1
           fi
           read -r status conclusion url <<< "$run"
           while [ "$status" != completed ]; do
             echo "CI is $status: $url"
             sleep 30
-            read -r status conclusion url <<< "$(latest_run)"
+            run="$(latest_run)"
+            read -r status conclusion url <<< "$run"
           done
           if [ "$conclusion" != success ]; then
             echo "CI on main for $SHA finished with $conclusion: $url" >&2

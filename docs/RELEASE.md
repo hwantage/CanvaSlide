@@ -3,7 +3,7 @@
 워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) · [문서 목록](./README.md)
 
 git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
-릴리즈는 메인테이너가 수행하며, 코드 기여 규칙은 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
+릴리즈는 메인테이너가 수행하며, 코드 규칙과 검증은 [`AGENTS.md`](../AGENTS.md), 기여 절차는 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
 
 ## 1. 한눈에 보기
 

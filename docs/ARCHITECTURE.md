@@ -1,6 +1,6 @@
 # Architecture and constraints
 
-[Documentation map](./README.md) · [Contribution rules](../CONTRIBUTING.md)
+[Documentation map](./README.md) · [Code rules and checks](../AGENTS.md)
 
 This guide records boundaries and reasons that are easy to miss when changing the app. Feature usage
 lives in the README and feature guides; implementation details and regression expectations live in
@@ -8,17 +8,20 @@ the linked code and tests. It is not a release report or a performance guarantee
 
 ## Runtime boundaries
 
-| Layer                                                                            | Responsibility                                                                                                                               |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`src/shared/canvas/`](../src/shared/canvas/)                                    | Pure geometry, document transforms/validation, connectors, imports and camera math. No React or Tauri; app and HTML player share this logic. |
-| [`src/renderer/src/`](../src/renderer/src/)                                      | React UI, Zustand stores, browser rendering and import/export workers. OS operations go through `platform/` with browser fallbacks.          |
-| [`src/player/`](../src/player/)                                                  | Vanilla HTML export player. `pnpm build:player` bundles the IIFE inlined by the exporter; no React runtime is required.                      |
-| [`src-tauri/src/`](../src-tauri/src/)                                            | Native file IO, menu, fonts, video embed host and app integration. Tauri uses the system WebView: WKWebView on macOS, WebView2 on Windows.   |
-| [`src/cloud-share/`](../src/cloud-share/), [`functions/api/`](../functions/api/) | Validated, expiring cloud snapshots; see [cloud share](./CLOUD-SHARE.md) for the API and hosting contract.                                   |
-| [`website/`](../website/)                                                        | Separate static product website and user guide, built with `pnpm build:site`; not the hosted editor build.                                   |
+The directory layout is listed once, in [AGENTS.md](../AGENTS.md#layout). The boundaries that are
+easy to break:
+
+- [`src/shared/`](../src/shared/) never imports React, Zustand, Tauri or renderer code: the app and the
+  HTML player run the same canvas, presentation and media modules.
+- In [`src/renderer/src/`](../src/renderer/src/), OS operations belong in `platform/`, with browser
+  fallbacks.
+- [`src/player/`](../src/player/) has no React runtime.
+- [`src/cloud-share/`](../src/cloud-share/) and [`functions/api/`](../functions/api/) keep snapshots
+  validated and expiring; see [cloud share](./CLOUD-SHARE.md) for the API and hosting contract.
+- [`website/`](../website/) is a separate static build (`pnpm build:site`).
 
 Browser E2E can exercise the editor without Rust, but does not establish native menu, clipboard,
-font or window behaviour. See the contribution guide for platform checks.
+font or window behaviour. See [Verify](../AGENTS.md#verify) for platform checks.
 
 The player imports shared constants, defaults and guards from
 [`element-runtime.ts`](../src/shared/canvas/element-runtime.ts). Keep its dependencies free of
@@ -112,7 +115,7 @@ keeps encoding/decoding off the UI thread and reuses unchanged asset recipes bet
 
 Earlier JSON formats and the former ZIP container are not read or migrated, even if the extension or
 version number looks familiar; see the
-[pre-stabilization compatibility policy](../CONTRIBUTING.md#code-rules). Use the complete current
+[pre-stabilization compatibility policy](../AGENTS.md#code). Use the complete current
 file schema. JSON preserves readable SVG markup and shared image resources without ZIP compression;
 disk size, runtime memory, HTML size and the
 [cloud payload limit](./CLOUD-SHARE.md#api-contract-and-limits) measure different representations.

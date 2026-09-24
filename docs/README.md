@@ -10,7 +10,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | Understand features, get started, use shortcuts        | [English README](../README.md), [한국어 README](../README.ko.md)                                  |
 | Follow a step-by-step user guide                       | [Website documentation](https://hwantage.github.io/CanvaSlide/docs/)                              |
-| Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [agent rules](../AGENTS.md)                                   |
+| Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [code rules and checks](../AGENTS.md)                         |
 | Change rendering, history, presentation or document IO | [Architecture and constraints](./ARCHITECTURE.md)                                                 |
 | Import a local Figma file                              | [Figma import](./FIGMA-IMPORT.md)                                                                 |
 | Use or host cloud snapshot sharing                     | [Cloud share](./CLOUD-SHARE.md)                                                                   |
@@ -32,10 +32,8 @@ to determine what has shipped, since a checkout can contain changes since that r
 
 ## Maintaining documentation
 
-Track proposed work in [issues](https://github.com/hwantage/CanvaSlide/issues) and change-specific
-decisions/results in PRs. Keep affected guides up to date when behaviour changes, including both README
-languages. Do not copy a run's test counts, sample measurements or a future-work list into current guidance.
-Temporary drafts, logs and review evidence belong in ignored `discuss/`.
+Track proposed work in [issues](https://github.com/hwantage/CanvaSlide/issues). The rules for keeping
+guides current are in [AGENTS.md](../AGENTS.md#documentation).
 
 ## Historical records
 

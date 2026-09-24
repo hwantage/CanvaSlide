@@ -16,6 +16,7 @@ body:
     id: os
     attributes:
       label: Operating system
+      description: Include the OS version, and the browser for web modes, in Details.
       options:
         - macOS
         - Windows

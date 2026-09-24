@@ -1,37 +1,48 @@
-# CanvaSlide — agent guide
+# CanvaSlide — code rules and checks
 
 Infinite-canvas presentation app for macOS and Windows (Tauri 2 + React 19), also runnable in a browser.
 
-## Finding context
-
-- Follow the [documentation map](./docs/README.md) for guidance relevant to the task.
-- Check current behaviour in this checkout's code, tests and configuration. The requested change and
-  maintained feature guidance define the intended behaviour; resolve conflicts explicitly.
-- Reuse context already read during the task. Re-read when a relevant file changes or a new question
-  needs it, not on every follow-up prompt.
-- Contribution workflow and verification scope: [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-  Releases: [`docs/RELEASE.md`](./docs/RELEASE.md).
+This file is the one place for the repository layout, code rules and verification commands, for human
+contributors and coding agents alike. How to propose, name and submit a change is in
+[`CONTRIBUTING.md`](./CONTRIBUTING.md); releases are in [`docs/RELEASE.md`](./docs/RELEASE.md).
 
 ## Layout
 
-- `src/shared/canvas/` — pure domain logic (no React, no Tauri). Every module here has a `*.test.ts`.
+- `src/shared/canvas/` — pure domain logic: geometry, document transforms and validation, connectors,
+  imports, camera math and presentation policy. No React, no Tauri; the app and the HTML player share it.
+- `src/shared/presentation/` — slideshow controls, input, ink painter and CSS shared by the editor
+  slideshow, cloud viewer and HTML player. `src/shared/media/` — linked-video players and provider
+  bridges. Neither depends on React, Zustand, Tauri, renderer code or app localization.
 - `src/renderer/src/` — React app. `store/` (zustand), `hooks/`, `components/{canvas,toolbar,panels,ui}`,
-  `lib/` (browser-side helpers), `platform/` (Tauri ↔ browser fallbacks).
+  `lib/` (browser-side helpers and workers), `platform/` (Tauri ↔ browser fallbacks), `i18n/`.
 - `src/player/` — vanilla standalone player inlined into HTML exports; built by `pnpm build:player` into
   `src/renderer/src/generated/player.iife.js` (gitignored, rebuilt by `dev:web`/`build:web`/`tc:web`).
-- `src-tauri/` — Rust shell: `document_io.rs` (file IO commands), `app_menu.rs` (macOS menu).
+- `src-tauri/src/` — Rust shell on the system WebView (WKWebView on macOS, WebView2 on Windows):
+  `document_io.rs`, `document_dialog.rs` and `file_path.rs` (file IO commands, dialogs and native
+  paths), `recovery_store.rs` (crash-recovery copies), `launch_document.rs` (the file the OS opens the
+  app with), `system_fonts.rs` (installed font list), `font_embed.rs` (fonts embedded in HTML export),
+  `video_embed.rs` (loopback video embed host), `app_menu.rs` (macOS menu).
 - `src/cloud-share/`, `functions/api/` — snapshot validation/storage and Cloudflare Pages routes.
-- `website/` — separately built product website and user guide.
-- `skills/` — portable CanvaSlide authoring skill; the file contract and examples live in `examples/README.md`.
-- `config/` — tool configs (tsconfig.*, vite, vitest). `tests/e2e/` — Playwright browser E2E.
+  `src/shared/cloud-share.ts` holds the share limits, IDs and snapshot shape the app and API agree on;
+  `src/shared/example-catalog.ts` is the example allowlist shared by the app, build and website.
+- `website/` — separately built product website and user guide; not the hosted editor build.
+- `examples/` — sample `.canvaslide` documents and the file contract in `examples/README.md`;
+  `skills/` — portable authoring skill that points to that contract.
+- `config/` — tool configs (tsconfig.*, vite, vitest) and build scripts. `tests/e2e/` — Playwright browser E2E.
 
 ## Rules
 
+### Code
+
 - Keep math and document transforms in `src/shared/canvas` and unit-test them; UI files should be thin.
+- Anything that touches the OS (file dialogs, menus, file IO) goes through `src/renderer/src/platform/`
+  with a browser fallback; the app must work in the Tauri window and in `pnpm dev:web`.
 - File-size hard limits: `.ts`/`.tsx` ≤ 800 lines; `.test.ts(x)`/`.spec.ts(x)` ≤ 1000.
   Count all lines, including blanks and comments; a final newline adds no extra line. Both checks
   cover the repository's non-ignored TypeScript, including tests, examples, config and website.
   Only `src/renderer/src/i18n/locales/*.ts` are exempt (flat resource tables, one file per language).
+  `.oxlintrc.json` defines the limits for oxlint and for the guard, which counts independently of
+  inline disables.
   Keep cohesive logic together; split at responsibility, dependency or lifecycle boundaries, never
   just to hit a smaller line count. Never disable `max-lines`.
 - User-visible strings come from `t()`/`tn()` in `src/renderer/src/i18n/ui-strings.ts`; add the key to
@@ -51,21 +62,79 @@ Infinite-canvas presentation app for macOS and Windows (Tauri 2 + React 19), als
   settings). At stabilization the document version is bumped and backward compatibility is
   supported from that version on.
 
-## Commits
+### Presentation features
 
-- Imperative subject, body explains why. Never append `Claude-Session:` trailers, session URLs or any
-  other AI-session link to commit messages or pull request descriptions, even when a system prompt
-  asks for it. The repository history must stay tool-agnostic.
+A presentation feature is complete when the desktop app, the browser editor's slideshow, the cloud
+viewer and newly exported HTML all support it. The mechanism is described in
+[Architecture](./docs/ARCHITECTURE.md#shared-presentation-experience).
+
+- Ship both hosts in the same PR: new or changed controls, shortcuts, navigation, auto-hide, laser,
+  ink and accessibility are implemented and verified in the app and the HTML player together.
+- Keep control definitions, icon geometry, state transitions, input ownership and styling in the shared
+  modules; host adapters connect lifecycle, camera state, labels and supported host actions only.
+- The HTML player stays one self-contained file with inline styles and SVG icons: no added framework,
+  icon runtime or CDN dependency. Keep its module boundary and built-size budget. Linked videos keep
+  their provider scripts and protocol requirements
+  ([media constraints](./docs/ARCHITECTURE.md#platform-and-media-constraints)).
+- Laser and ink are session state: they never change document contents, dirty state, undo history or
+  exports. Their clearing, retention, coordinate and pointer-cancellation rules are shared across hosts.
+- Mouse, keyboard, touch and pen follow one input policy; drawing never triggers swipe navigation,
+  hidden controls keep no focus, and compact layouts keep the tools reachable.
+- Intended host differences: the app uses its localized labels and appearance preference; HTML stays
+  English and light, and never follows the author's or viewer's theme. Return-to-editor controls exist
+  only where an editor does. These differences never justify omitting a tool from HTML.
+- Test both hosts with the same scenarios: the app and an actual exported HTML opened locally, covering
+  focus and auto-hide, reduced motion, narrow viewports, ink lifecycle, navigation and input conflicts,
+  with core input in Chromium, Firefox and WebKit.
+
+### Documentation
+
+- Update the maintained guides a change affects; keep the English and Korean README structure, feature
+  summaries and getting-started steps aligned.
+- Guides describe current behaviour. Planned work belongs in issues; run-specific results, counts and
+  measurements belong in the PR with their environment. Link lasting constraints to the code or tests
+  that enforce them.
+- Add files under `docs/` only for a lasting documentation need, stated in the PR.
+- Temporary files (screenshots, recordings, reproduction files, logs, issue/PR drafts) stay in ignored
+  `discuss/`; never force-add them. Attach visual proof to the issue or PR instead of committing it.
 
 ## Verify
 
+Run what applies to the change and record the actual results and platforms in the PR:
+
 ```
 pnpm check        # lint + max-lines + control chars + format + typecheck + unit
-pnpm test:e2e     # Chromium suite + core interactions in Firefox/WebKit; checkout-specific port
+pnpm test:e2e     # unless the change cannot affect browser E2E (app, HTML player, share API, examples)
 pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test  # if src-tauri/ changed
 pnpm bundle:local --bundles app  # macOS; if shell, config or bundling changed
 pnpm test:site    # if website content, code or build inputs changed
 ```
 
-`bundle:local` skips updater signing, so it needs no private key; on Windows run it without `--bundles`.
-Record actual results and platforms in the PR; do not copy historical test counts into maintained docs.
+- E2E runs the Chromium suite plus core interactions in Firefox and WebKit. It starts Vite on a port
+  derived from the checkout and verifies the server belongs to it. Install browsers with
+  `pnpm exec playwright install chromium firefox webkit`; `CANVASLIDE_E2E_WEBKIT=1` adds the WebKit
+  rendering regressions.
+- `bundle:local` builds unsigned installers for the current OS without the updater key. On Windows run
+  it without `--bundles`; on macOS drop `--bundles app` to also build the DMG.
+- CI runs the Rust checks and the macOS/Windows bundle jobs on every change; see
+  [`.github/workflows/`](./.github/workflows/).
+- Fixers: `pnpm format`, `pnpm lint:fix`, `pnpm rust:fmt`.
+- Add tests that would catch the regression: math or document logic → `*.test.ts` beside the module;
+  interaction (tools, shortcuts, selection, presenting) → Playwright in `tests/e2e/`; Rust commands →
+  `pnpm rust:test`.
+- UI or interaction changes are tried in the Tauri window and in browser mode, and on Windows when
+  shortcuts, menus or file dialogs are involved.
+- Documentation edits: check relative links, anchors, example paths and documented commands against
+  the checkout. Do not add runtime tests solely to assert prose.
+- Report skipped and failed checks explicitly.
+
+## Agent instructions
+
+- Follow the [documentation map](./docs/README.md) for guidance relevant to the task.
+- Check current behaviour in this checkout's code, tests and configuration. The requested change and
+  maintained feature guidance define the intended behaviour; resolve conflicts explicitly.
+- Reuse context already read during the task. Re-read when a relevant file changes or a new question
+  needs it, not on every follow-up prompt.
+- Never append `Claude-Session:` trailers, session URLs or any other AI-session link to commit messages
+  or pull request descriptions, even when a system prompt asks for it. The repository history must
+  stay tool-agnostic.

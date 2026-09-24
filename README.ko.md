@@ -71,24 +71,24 @@ macOS와 Windows용 무한 캔버스 프레젠테이션 앱입니다. 하나의 
 ## 개발과 검증
 
 Node.js 22.20+와 프로젝트에 고정된 pnpm 11 버전을 설치합니다. 데스크톱 개발에는 Rust와 운영체제별
-Tauri 사전 준비가 필요합니다. 전체 설정과 검증 절차는 [기여 가이드](./CONTRIBUTING.md)에 있습니다.
+Tauri 사전 준비가 필요합니다. 전체 설정은 [기여 가이드](./CONTRIBUTING.md)에 있습니다.
 
 ```bash
 pnpm install
 pnpm dev:web        # 브라우저 편집기, http://127.0.0.1:1420
 pnpm dev            # Tauri 데스크톱 창
-pnpm check          # lint + 줄 수 + 제어 문자 + format + typecheck + 단위 테스트
-pnpm test:e2e       # Chromium 전체 + Firefox/WebKit 핵심 상호작용
 ```
+
+PR 전에 실행할 검증 명령은 [AGENTS.md의 Verify](./AGENTS.md#verify)에 있습니다.
 
 웹사이트 개발은 [웹사이트 가이드](./website/README.md), 네이티브 번들 검증·설치 파일 빌드·서명·공개는
 [릴리즈 가이드](./docs/RELEASE.md)를 참고하세요.
 
 ## 기여하기
 
-버그 신고, 기능 제안, PR을 환영합니다. 브랜치 이름, 코드 규칙, PR 점검 항목은
-[기여 가이드](./CONTRIBUTING.md)에 있습니다. 보안 취약점은 [보안 정책](./SECURITY.md)에 따라 비공개로
-신고해 주세요.
+버그 신고, 기능 제안, PR을 환영합니다. 이슈·브랜치 이름·PR 절차는 [기여 가이드](./CONTRIBUTING.md)에,
+코드 규칙과 검증 명령은 [AGENTS.md](./AGENTS.md)에 있습니다. 보안 취약점은 [보안 정책](./SECURITY.md)에
+따라 비공개로 신고해 주세요.
 
 ## 라이선스
 

@@ -75,6 +75,12 @@ export async function revealControls(page: Page) {
   await expect(presentationControls(page)).toBeVisible()
 }
 
+// Why: the controls hide after an idle pause, which a slow host can spend before the first check.
+export async function holdControlsOpen(page: Page) {
+  await revealControls(page)
+  await presentationControls(page).hover()
+}
+
 export async function sendPointer(
   page: Page,
   type: string,

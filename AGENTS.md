@@ -16,7 +16,8 @@ contributors and coding agents alike. How to propose, name and submit a change i
 - `src/renderer/src/` — React app. `store/` (zustand), `hooks/`, `components/{canvas,toolbar,panels,ui}`,
   `lib/` (browser-side helpers and workers), `platform/` (Tauri ↔ browser fallbacks), `i18n/`.
 - `src/player/` — vanilla standalone player inlined into HTML exports; built by `pnpm build:player` into
-  `src/renderer/src/generated/player.iife.js` (gitignored, rebuilt by `dev:web`/`build:web`/`tc:web`).
+  `src/renderer/src/generated/player.iife.js` (gitignored, rebuilt by `dev:web`/`build:web`/`tc:web`
+  and `dev:site`/`build:site`).
 - `src-tauri/src/` — Rust shell on the system WebView (WKWebView on macOS, WebView2 on Windows):
   `document_io.rs`, `document_dialog.rs` and `file_path.rs` (file IO commands, dialogs and native
   paths), `recovery_store.rs` (crash-recovery copies), `launch_document.rs` (the file the OS opens the

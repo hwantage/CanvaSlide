@@ -13,8 +13,10 @@ const names = [
   'site.overview.resultsSlide',
   'site.overview.roadmapSlide'
 ] as const
+const top = Math.min(...frames.map((frame) => frame.y))
+const bottom = Math.max(...frames.map((frame) => frame.y + frame.height))
 const views = [
-  { cx: 700, cy: 510, w: 1400, height: 630 },
+  { cx: 700, cy: (top + bottom) / 2, w: 1400, height: 630 },
   ...frames.map((frame) => ({
     cx: frame.x + frame.width / 2,
     cy: frame.y + frame.height / 2,

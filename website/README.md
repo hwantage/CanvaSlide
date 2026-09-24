@@ -89,16 +89,18 @@ also reject a replacement during a pending load.
 
 ## Standalone example presentations
 
-`public/examples/` contains real standalone HTML exports and screenshots of the repository's order flowchart, shop ER diagram, and Northwind launch deck. Each example can be opened in a new tab or downloaded. The files embed their canvas data and player and can be opened from disk without a network connection. Example content and the standalone player are English; surrounding website copy supports English and Korean. “PPT-style” describes slide layouts, not PPT/PPTX import or export.
+The home page offers standalone HTML exports of the repository's order flowchart, shop ER diagram, and Northwind launch deck. Each example can be opened in a new tab or downloaded. The files embed their canvas data and player and can be opened from disk without a network connection. Example content and the standalone player are English; surrounding website copy supports English and Korean. “PPT-style” describes slide layouts, not PPT/PPTX import or export.
 
-To regenerate these static assets with the current player and example documents:
+The HTML is not committed. [`example-exports.ts`](./example-exports.ts) builds `examples/<id>.html` from the `.canvaslide` source in the shared catalog and the current player, the way the browser editor exports it at original image quality: the document is parsed, its attached connector ends are re-resolved with `syncConnectorGeometry`, and no fonts are embedded. It serves the files in development and emits them in the build; `pnpm dev:site` and `pnpm build:site` rebuild the player first. The IDs are listed in [`src/exported-examples.ts`](./src/exported-examples.ts). The website tests compare each served file, from the build and from the dev server, with a fresh export.
+
+The preview images in `public/examples/` (`flowchart.png`, `erd.png`, `slides.png`, `slide-detail.png`) and the overview's clickable regions in `src/slide-preview-frames.json` are committed. Refresh them when the player or those examples change:
 
 ```bash
 pnpm build:player
 node website/scripts/prepare-examples.ts
 ```
 
-The preparation script uses Playwright Chromium to capture the actual exported presentations, including a full-resolution crop of the results slide for the detail demonstration. It waits for camera motion to settle before capturing. Generated HTML is excluded from formatting. The site build uses the committed snapshots and does not require a player or example regeneration.
+The preparation script uses Playwright Chromium to capture the same exports, including a full-resolution crop of the results slide for the detail demonstration. It waits for camera motion to settle before capturing and records only whole slides, not detail frames nested inside them, as overview regions.
 
 ## GitHub Pages
 

@@ -3,10 +3,5 @@
   "semi": false,
   "printWidth": 100,
   "trailingComma": "none",
-  "ignorePatterns": [
-    "src-tauri/target/**",
-    "dist/**",
-    "pnpm-lock.yaml",
-    "website/public/examples/*.html"
-  ]
+  "ignorePatterns": ["src-tauri/target/**", "dist/**", "pnpm-lock.yaml"]
 }

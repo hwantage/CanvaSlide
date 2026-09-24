@@ -6,8 +6,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev:site": "vite --config website/vite.config.ts",
-    "build:site": "pnpm run tc:site && vite build --config website/vite.config.ts",
+    "dev:site": "pnpm run build:player && vite --config website/vite.config.ts",
+    "build:site": "pnpm run build:player && pnpm run tc:site && vite build --config website/vite.config.ts",
     "preview:site": "vite preview --config website/vite.config.ts",
     "tc:site": "tsc --noEmit -p website/tsconfig.json",
     "test:site": "pnpm run build:site && playwright test --config website/playwright.config.ts",

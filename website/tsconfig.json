@@ -1,6 +1,13 @@
 {
   "extends": "../config/tsconfig.base.json",
-  "include": ["src", "scripts", "vite.config.ts", "tests", "playwright.config.ts"],
+  "include": [
+    "src",
+    "scripts",
+    "tests",
+    "vite.config.ts",
+    "example-exports.ts",
+    "playwright.config.ts"
+  ],
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,

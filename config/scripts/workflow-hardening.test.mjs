@@ -66,6 +66,8 @@ test('the release build runs without secrets or write access, and only publish c
   assert.match(jobs.build, /\n\s+- run: pnpm tauri build [^\n]*--no-sign\n/)
   assert.match(jobs.publish, /\n {4}permissions:\n {6}contents: write\n/)
   const tokenSteps = stepsOf(jobs.publish).filter((step) => step.includes('github.token'))
-  assert.equal(tokenSteps.length, 1)
-  assert.match(tokenSteps[0], /gh release (create|upload)/)
+  assert.ok(tokenSteps.some((step) => /gh release create/.test(step)))
+  for (const step of tokenSteps) {
+    assert.doesNotMatch(step, /\b(pnpm|npm|npx|node) /, step)
+  }
 })

@@ -139,9 +139,23 @@ jobs:
         with:
           path: release-assets
           merge-multiple: true
+      # Why: installed apps update from the latest published release, so its key is the one they trust.
+      - name: Find the latest published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if latest="$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name 2> "$RUNNER_TEMP/latest.err")"; then
+            echo "$latest" > "$RUNNER_TEMP/latest-release"
+          elif grep -q 'HTTP 404' "$RUNNER_TEMP/latest.err"; then
+            : > "$RUNNER_TEMP/latest-release"
+          else
+            cat "$RUNNER_TEMP/latest.err" >&2
+            exit 1
+          fi
       # Why: latest.json is the in-app updater's feed (see docs/RELEASE.md §7). It is written only
-      # when every signature passes with a key installed apps trust: the previous release's, or this
-      # release's own when there is none before it or UPDATER_KEY_CHANGE_TAG names this tag.
+      # when every signature passes with a key installed apps trust: the latest release's, or this
+      # release's own when none is published yet or UPDATER_KEY_CHANGE_TAG names this tag.
       - name: Write the updater feed
         env:
           TAG: ${{ github.ref_name }}
@@ -149,11 +163,12 @@ jobs:
           KEY_CHANGE_TAG: ${{ vars.UPDATER_KEY_CHANGE_TAG }}
         run: |
           trusted=()
-          if previous="$(git describe --tags --abbrev=0 --match 'v*' "$TAG^")"; then
-            git show "$previous:src-tauri/tauri.conf.json" > "$RUNNER_TEMP/previous-tauri.conf.json"
-            trusted+=(--trusted-config "$RUNNER_TEMP/previous-tauri.conf.json")
+          latest="$(cat "$RUNNER_TEMP/latest-release")"
+          if [ -n "$latest" ]; then
+            git show "$latest:src-tauri/tauri.conf.json" > "$RUNNER_TEMP/latest-tauri.conf.json"
+            trusted+=(--trusted-config "$RUNNER_TEMP/latest-tauri.conf.json")
           fi
-          if [ ${#trusted[@]} -eq 0 ] || [ "$KEY_CHANGE_TAG" = "$TAG" ]; then
+          if [ -z "$latest" ] || [ "$KEY_CHANGE_TAG" = "$TAG" ]; then
             trusted+=(--trusted-config src-tauri/tauri.conf.json)
           fi
           node config/scripts/updater-feed.mjs release-assets --tag "$TAG" \

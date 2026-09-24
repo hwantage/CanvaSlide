@@ -6,8 +6,10 @@ use std::path::{Path, PathBuf};
 
 use base64::Engine;
 use serde::Serialize;
+use tauri::State;
 
 use crate::file_path::FilePath;
+use crate::granted_files::{GrantError, GrantedFiles};
 
 const MAX_DOCUMENT_BYTES: usize = 256 * 1024 * 1024;
 
@@ -15,8 +17,8 @@ pub const DOCUMENT_EXTENSION: &str = "canvaslide";
 
 #[derive(Debug, thiserror::Error)]
 pub enum DocumentIoError {
-    #[error("invalid native path: {0}")]
-    InvalidPath(String),
+    #[error(transparent)]
+    NotGranted(#[from] GrantError),
     #[error("path is not a canvas document: {0}")]
     InvalidExtension(PathBuf),
     #[error("document is not valid JSON: {0}")]
@@ -52,6 +54,9 @@ pub fn is_openable_document(path: &Path) -> bool {
 }
 
 /// Normalize only a name explicitly picked in Save As; silent saves retain their exact path.
+///
+/// Why this runs when the name is picked rather than when it is written: the save command then
+/// writes exactly the file the dialog handed out, so no command can reach a file nobody picked.
 pub fn normalize_document_path(path: &Path) -> PathBuf {
     if ends_with_extension(path, DOCUMENT_EXTENSION) {
         return path.to_path_buf();
@@ -99,26 +104,19 @@ pub fn read_document_file(path: &Path) -> Result<String, DocumentIoError> {
     String::from_utf8(bytes).map_err(|e| DocumentIoError::InvalidJson(e.to_string()))
 }
 
-/// `normalize_extension` is set only for a name the user just picked in the save dialog. A silent
-/// save (⌘S on an open document) must land on the exact file it was read from: rewriting the target
-/// would leave the original behind holding stale content and would overwrite whatever already sits
-/// at the new name, with none of the confirmation the save dialog would have given.
-pub fn write_document_file(
-    path: &Path,
-    contents: &str,
-    normalize_extension: bool,
-) -> Result<PathBuf, DocumentIoError> {
+/// Writes the exact path it is given. A silent save (⌘S on an open document) must land on the file
+/// it was read from: rewriting the target would leave the original behind holding stale content and
+/// would overwrite whatever already sits at the new name, with none of the confirmation the save
+/// dialog would have given.
+pub fn write_document_file(path: &Path, contents: &str) -> Result<PathBuf, DocumentIoError> {
     let bytes = contents.as_bytes();
     validate_document_bytes(bytes)?;
-    let target = if normalize_extension {
-        normalize_document_path(path)
-    } else if is_openable_document(path) {
-        // Why the same test as the reader: a document opened from a bare `.json` keeps that path,
-        // and refusing it here would make the file readable but impossible to save.
-        path.to_path_buf()
-    } else {
+    // Why the same test as the reader: a document opened from a bare `.json` keeps that path, and
+    // refusing it here would make the file readable but impossible to save.
+    if !is_openable_document(path) {
         return Err(DocumentIoError::InvalidExtension(path.to_path_buf()));
-    };
+    }
+    let target = path.to_path_buf();
     // Why: write to a sibling temp file then rename so a crash never truncates the user's document.
     let mut tmp = target.clone().into_os_string();
     tmp.push(".tmp");
@@ -157,35 +155,44 @@ pub fn write_pdf_export_file(path: &Path, bytes: &[u8]) -> Result<PathBuf, Docum
     write_export_file(path, "pdf", bytes)
 }
 
-#[tauri::command]
-pub fn write_html_export(path: String, contents: String) -> Result<String, DocumentIoError> {
-    write_html_export_file(Path::new(&path), &contents).map(|p| p.to_string_lossy().into_owned())
-}
-
 /// Why base64 rather than the bytes themselves: the IPC bridge serializes command arguments as
 /// JSON, and a byte array would arrive as one JSON number per byte.
-#[tauri::command]
-pub fn write_pdf_export(path: String, contents_base64: String) -> Result<String, DocumentIoError> {
-    let bytes = base64::engine::general_purpose::STANDARD
+pub fn decode_pdf_export(contents_base64: &str) -> Result<Vec<u8>, DocumentIoError> {
+    base64::engine::general_purpose::STANDARD
         .decode(contents_base64.as_bytes())
-        .map_err(|e| DocumentIoError::InvalidBase64(e.to_string()))?;
-    write_pdf_export_file(Path::new(&path), &bytes).map(|p| p.to_string_lossy().into_owned())
+        .map_err(|e| DocumentIoError::InvalidBase64(e.to_string()))
+}
+
+pub fn read_granted_document(
+    granted: &GrantedFiles,
+    path: FilePath,
+) -> Result<String, DocumentIoError> {
+    read_document_file(&granted.require(path)?)
+}
+
+pub fn write_granted_document(
+    granted: &GrantedFiles,
+    path: FilePath,
+    contents: &str,
+) -> Result<FilePath, DocumentIoError> {
+    write_document_file(&granted.require(path)?, contents).map(|path| FilePath::from_path(&path))
 }
 
 #[tauri::command]
-pub fn read_document(path: FilePath) -> Result<String, DocumentIoError> {
-    read_document_file(&path.into_path().map_err(DocumentIoError::InvalidPath)?)
+pub fn read_document(
+    granted: State<'_, GrantedFiles>,
+    path: FilePath,
+) -> Result<String, DocumentIoError> {
+    read_granted_document(&granted, path)
 }
 
 #[tauri::command]
 pub fn write_document(
+    granted: State<'_, GrantedFiles>,
     path: FilePath,
     contents: String,
-    normalize_extension: bool,
 ) -> Result<FilePath, DocumentIoError> {
-    let path = path.into_path().map_err(DocumentIoError::InvalidPath)?;
-    write_document_file(&path, &contents, normalize_extension)
-        .map(|path| FilePath::from_path(&path))
+    write_granted_document(&granted, path, &contents)
 }
 
 #[cfg(test)]
@@ -212,8 +219,8 @@ mod tests {
     fn round_trips_a_document() {
         let dir = std::env::temp_dir().join(format!("uc-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("doc");
-        let written = write_document_file(&path, r#"{"version":1,"elements":[]}"#, true).unwrap();
+        let path = normalize_document_path(&dir.join("doc"));
+        let written = write_document_file(&path, r#"{"version":1,"elements":[]}"#).unwrap();
         assert!(written.ends_with("doc.canvaslide"));
         assert_eq!(
             read_document_file(&written).unwrap(),
@@ -252,15 +259,16 @@ mod tests {
     #[test]
     fn rejects_a_pdf_export_payload_that_is_not_base64() {
         assert!(matches!(
-            write_pdf_export("/tmp/x.pdf".into(), "not base64!!".into()),
+            decode_pdf_export("not base64!!"),
             Err(DocumentIoError::InvalidBase64(_))
         ));
+        assert_eq!(decode_pdf_export("JVBERg==").unwrap(), b"%PDF");
     }
 
     #[test]
     fn rejects_invalid_json_and_extension() {
         assert!(matches!(
-            write_document_file(Path::new("/tmp/x"), "{not json", true),
+            write_document_file(Path::new("/tmp/x.canvaslide"), "{not json"),
             Err(DocumentIoError::InvalidJson(_))
         ));
         assert!(matches!(
@@ -281,12 +289,8 @@ mod tests {
             read_document_file(&path).unwrap(),
             r#"{"version":1,"elements":[]}"#
         );
-        let written = write_document_file(
-            &path,
-            r#"{"version":1,"elements":[],"name":"Edited"}"#,
-            false,
-        )
-        .unwrap();
+        let written =
+            write_document_file(&path, r#"{"version":1,"elements":[],"name":"Edited"}"#).unwrap();
 
         assert_eq!(written, path);
         assert_eq!(
@@ -299,7 +303,7 @@ mod tests {
     #[test]
     fn a_silent_save_refuses_a_path_that_is_not_a_document() {
         assert!(matches!(
-            write_document_file(Path::new("/tmp/notes.txt"), "{}", false),
+            write_document_file(Path::new("/tmp/notes.txt"), "{}"),
             Err(DocumentIoError::InvalidExtension(_))
         ));
     }

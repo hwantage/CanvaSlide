@@ -5,10 +5,11 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, Runtime, State};
 
 use crate::document_io::is_openable_document;
 use crate::file_path::FilePath;
+use crate::granted_files::GrantedFiles;
 
 /// Sent when a document arrives while the app is already running; the frontend answers by taking
 /// the path with `take_launch_document`.
@@ -60,9 +61,19 @@ pub fn document_path_from_args<I: IntoIterator<Item = OsString>>(
         })
 }
 
+/// The OS opening a document is the user's choice of that file, just as a dialog pick is.
+fn receive(pending: &PendingDocument, granted: &GrantedFiles, path: PathBuf) {
+    granted.grant(&path);
+    pending.set(path);
+}
+
 /// Remembers the document and tells the webview, which may or may not be listening yet.
-pub fn offer(app: &AppHandle, path: PathBuf) {
-    app.state::<PendingDocument>().set(path);
+pub fn offer<R: Runtime>(app: &AppHandle<R>, path: PathBuf) {
+    receive(
+        &app.state::<PendingDocument>(),
+        &app.state::<GrantedFiles>(),
+        path,
+    );
     // Why: the launch path is picked up by the frontend's first drain, so a failed emit (no webview
     // yet) is expected and must not abort startup.
     let _ = app.emit(OPEN_FILE_EVENT, ());
@@ -203,6 +214,32 @@ mod tests {
             pending.take(),
             Some(PathBuf::from("/tmp/second.canvaslide"))
         );
+    }
+
+    #[test]
+    fn a_received_document_can_be_read_back_through_its_handle() {
+        let pending = PendingDocument::default();
+        let granted = GrantedFiles::default();
+        receive(&pending, &granted, PathBuf::from("/tmp/deck.canvaslide"));
+        let handed = pending.take_transport().unwrap();
+        assert_eq!(
+            granted.require(handed),
+            Ok(PathBuf::from("/tmp/deck.canvaslide"))
+        );
+    }
+
+    #[test]
+    fn a_document_the_os_offers_is_granted() {
+        use tauri::test::{mock_builder, mock_context, noop_assets};
+        let app = mock_builder()
+            .manage(PendingDocument::default())
+            .manage(GrantedFiles::default())
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let path = PathBuf::from("/tmp/deck.canvaslide");
+        offer(app.handle(), path.clone());
+        let handed = app.state::<PendingDocument>().take_transport().unwrap();
+        assert_eq!(app.state::<GrantedFiles>().require(handed), Ok(path));
     }
 
     #[cfg(unix)]

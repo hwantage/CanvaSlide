@@ -102,11 +102,7 @@ async function saveWithTauri(
   }
   const written = await invoke<FilePath>('write_document', {
     path: chosen,
-    contents: await encodeNativeDocumentFile(document),
-    // Why: only a name the user just picked may gain the canonical extension. Rewriting the target
-    // of a silent save would strand the original file with stale content and clobber whatever
-    // already sits at the new name, without the overwrite prompt the dialog would have shown.
-    normalizeExtension: filePath === null
+    contents: await encodeNativeDocumentFile(document)
   })
   return { filePath: written }
 }

@@ -79,8 +79,7 @@ describe('native path transport', () => {
       await act(() => result.current.saveDocument())
       expect(invoke).toHaveBeenCalledWith('write_document', {
         path,
-        contents: expect.any(String),
-        normalizeExtension: false
+        contents: expect.any(String)
       })
       expect(invoke).not.toHaveBeenCalledWith('pick_document_save_path', expect.anything())
       expect(useDocumentStore.getState().filePath).toEqual(path)
@@ -122,20 +121,15 @@ describe('native path transport', () => {
   it('retains the returned Save As target for the next silent save', async () => {
     const chosen = {
       ...native,
-      bytes: [47, 99, 111, 112, 121, 255, ...new TextEncoder().encode('.json')],
-      display: '/copy�.json'
-    }
-    const written = {
-      ...native,
       bytes: [47, 99, 111, 112, 121, 255, ...new TextEncoder().encode('.canvaslide')],
       display: '/copy�.canvaslide'
     }
-    invoke.mockImplementation((command: string) => {
+    invoke.mockImplementation((command: string, args?: { path?: FilePath }) => {
       if (command === 'pick_document_save_path') {
         return Promise.resolve(chosen)
       }
       if (command === 'write_document') {
-        return Promise.resolve(written)
+        return Promise.resolve(args?.path)
       }
       return Promise.resolve(contents)
     })
@@ -147,16 +141,14 @@ describe('native path transport', () => {
     })
     expect(invoke).toHaveBeenCalledWith('write_document', {
       path: chosen,
-      contents: expect.any(String),
-      normalizeExtension: true
+      contents: expect.any(String)
     })
-    expect(useDocumentStore.getState().filePath).toEqual(written)
+    expect(useDocumentStore.getState().filePath).toEqual(chosen)
     invoke.mockClear()
     await act(() => result.current.saveDocument())
     expect(invoke).toHaveBeenCalledWith('write_document', {
-      path: written,
-      contents: expect.any(String),
-      normalizeExtension: false
+      path: chosen,
+      contents: expect.any(String)
     })
     unmount()
   })
@@ -193,10 +185,7 @@ describe('native path transport', () => {
     const writes = invoke.mock.calls
       .filter(([command]) => command === 'write_document')
       .map(([, args]) => args)
-    expect(writes.map((args) => [args.path, args.normalizeExtension])).toEqual([
-      [windows, true],
-      [windows, false]
-    ])
+    expect(writes.map((args) => args.path)).toEqual([windows, windows])
     const last = parseDocument(writes[1].contents)
     expect(last.ok && last.document.name).toBe('Second snapshot')
     expect(useDocumentStore.getState().dirty).toBe(false)

@@ -70,21 +70,18 @@ test('native Open, Save As and repeated Save retain the exact bridge path', asyn
             __pathTest: {
               original: unknown
               copy: unknown
-              writes: { path: unknown; normalizeExtension: boolean }[]
+              writes: { path: unknown }[]
             }
           }
         ).__pathTest
-        return {
-          targets: writes.map((write) =>
-            JSON.stringify(write.path) === JSON.stringify(original)
-              ? 'original'
-              : JSON.stringify(write.path) === JSON.stringify(copy)
-                ? 'copy'
-                : 'wrong'
-          ),
-          normalize: writes.map((write) => write.normalizeExtension)
-        }
+        return writes.map((write) =>
+          JSON.stringify(write.path) === JSON.stringify(original)
+            ? 'original'
+            : JSON.stringify(write.path) === JSON.stringify(copy)
+              ? 'copy'
+              : 'wrong'
+        )
       })
     )
-    .toEqual({ targets: ['original', 'copy', 'copy'], normalize: [false, true, false] })
+    .toEqual(['original', 'copy', 'copy'])
 })

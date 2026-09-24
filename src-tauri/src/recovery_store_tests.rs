@@ -355,3 +355,108 @@ fn unreadable_temp_does_not_hide_the_completed_copy() {
     assert_eq!(list_snapshot_sessions(&dir).unwrap().len(), 2);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+fn envelope(file: serde_json::Value) -> Vec<u8> {
+    serde_json::to_vec(&serde_json::json!({
+        "version": 1, "file": file, "documentName": "deck", "savedAt": 1, "contents": "{}"
+    }))
+    .unwrap()
+}
+fn names_deck() -> Vec<u8> {
+    envelope(
+        serde_json::json!({"display": "/tmp/deck.canvaslide", "handle": "/tmp/deck.canvaslide"}),
+    )
+}
+#[test]
+fn a_copy_may_name_only_a_file_granted_in_this_session() {
+    let granted = GrantedFiles::default();
+    assert!(matches!(
+        require_granted_source(&names_deck(), &granted),
+        Err(RecoveryError::NotGranted)
+    ));
+    assert!(require_granted_source(&envelope(serde_json::Value::Null), &granted).is_ok());
+    granted.grant(Path::new("/tmp/deck.canvaslide"));
+    assert!(require_granted_source(&names_deck(), &granted).is_ok());
+}
+/// The webview reads the envelope with `JSON.parse`, which keeps the last of repeated keys.
+#[test]
+fn a_copy_whose_file_cannot_be_read_unambiguously_is_refused() {
+    let granted = GrantedFiles::default();
+    granted.grant(Path::new("/tmp/deck.canvaslide"));
+    let repeated = br#"{"version":1,"file":{"display":"a","handle":"/tmp/deck.canvaslide"},
+        "file":{"display":"b","handle":"/tmp/other.canvaslide"},"documentName":"d","savedAt":1,
+        "contents":"{}"}"#;
+    for bytes in [
+        &repeated[..],
+        b"not json",
+        br#"{"file":{"display":"a","handle":5}}"#,
+        br#"{"file":{"display":"a","handle":"/tmp/deck.canvaslide","handle":"/tmp/x.json"}}"#,
+    ] {
+        assert!(matches!(
+            require_granted_source(bytes, &granted),
+            Err(RecoveryError::InvalidSnapshot(_))
+        ));
+    }
+}
+#[test]
+fn reading_a_copy_back_grants_the_file_it_came_from() {
+    let granted = GrantedFiles::default();
+    grant_snapshot_source(b"not json", &granted);
+    grant_snapshot_source(&envelope(serde_json::Value::Null), &granted);
+    assert!(!granted.is_granted(Path::new("/tmp/deck.canvaslide")));
+    grant_snapshot_source(&names_deck(), &granted);
+    assert!(granted.is_granted(Path::new("/tmp/deck.canvaslide")));
+}
+#[cfg(unix)]
+#[test]
+fn a_non_utf8_source_is_granted_by_its_bytes() {
+    use std::os::unix::ffi::OsStringExt;
+    let path = PathBuf::from(std::ffi::OsString::from_vec(b"/tmp/deck\xff.json".to_vec()));
+    let copy = envelope(serde_json::json!({
+        "display": path.to_string_lossy(),
+        "handle": FilePath::from_path(&path)
+    }));
+    let granted = GrantedFiles::default();
+    grant_snapshot_source(&copy, &granted);
+    assert!(granted.is_granted(&path));
+    assert!(require_granted_source(&copy, &granted).is_ok());
+}
+#[test]
+fn a_copy_naming_a_file_nobody_chose_is_not_stored() {
+    let dir = temp_dir("ungranted-source");
+    let mut files = RecoveryFiles::default();
+    files.claim(&dir, "a").unwrap();
+    let granted = GrantedFiles::default();
+    assert!(matches!(
+        write_granted_snapshot(&dir, &files, &granted, "a", &names_deck()),
+        Err(RecoveryError::NotGranted)
+    ));
+    assert!(!dir.join("a.json").exists());
+    std::fs::remove_dir_all(dir).unwrap();
+}
+/// The copy outlives the session that chose its file; the next one learns the file by restoring it.
+#[test]
+fn restoring_a_stored_copy_grants_its_file_to_the_next_session() {
+    let dir = temp_dir("restore-grant");
+    let mut writer = RecoveryFiles::default();
+    writer.claim(&dir, "a").unwrap();
+    let chosen = GrantedFiles::default();
+    chosen.grant(Path::new("/tmp/deck.canvaslide"));
+    write_granted_snapshot(&dir, &writer, &chosen, "a", &names_deck()).unwrap();
+    writer.release(&dir, "a").unwrap();
+
+    let next = GrantedFiles::default();
+    let mut reader = RecoveryFiles::default();
+    assert!(matches!(
+        read_snapshot_for_restore(&dir, &reader, &next, "a"),
+        Err(RecoveryError::NotOwned)
+    ));
+    assert!(!next.is_granted(Path::new("/tmp/deck.canvaslide")));
+    reader.claim(&dir, "a").unwrap();
+    assert_eq!(
+        read_snapshot_for_restore(&dir, &reader, &next, "a").unwrap(),
+        names_deck()
+    );
+    assert!(next.is_granted(Path::new("/tmp/deck.canvaslide")));
+    std::fs::remove_dir_all(dir).unwrap();
+}

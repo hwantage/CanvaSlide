@@ -1,12 +1,15 @@
 //! Owned recovery records; all commands run blocking filesystem work away from the app thread.
 use fs2::FileExt;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
+
+use crate::file_path::FilePath;
+use crate::granted_files::GrantedFiles;
 
 const MAX_SNAPSHOT_BYTES: usize = 256 * 1024 * 1024;
 const MAX_STORE_BYTES: u64 = 512 * 1024 * 1024;
@@ -23,6 +26,10 @@ pub enum RecoveryError {
     TooLarge,
     #[error("recovery storage unavailable: {0}")]
     Unavailable(String),
+    #[error("invalid recovery snapshot: {0}")]
+    InvalidSnapshot(String),
+    #[error("recovery snapshot names a file that was not chosen in this session")]
+    NotGranted,
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -313,6 +320,68 @@ fn read_info(dir: &Path, id: &str) -> Result<serde_json::Value, RecoveryError> {
     }
     Ok(info)
 }
+/// The part of the stored envelope the shell reads: which file the edits came from.
+#[derive(Deserialize)]
+struct SnapshotSource {
+    file: Option<SnapshotFile>,
+}
+#[derive(Deserialize)]
+struct SnapshotFile {
+    handle: FilePath,
+}
+fn snapshot_source(bytes: &[u8]) -> Result<Option<PathBuf>, RecoveryError> {
+    let source: SnapshotSource =
+        serde_json::from_slice(bytes).map_err(|e| RecoveryError::InvalidSnapshot(e.to_string()))?;
+    source
+        .file
+        .map(|file| {
+            file.handle
+                .into_path()
+                .map_err(RecoveryError::InvalidSnapshot)
+        })
+        .transpose()
+}
+/// Why checked on write: reading the copy back grants its file, so it may only name a granted one.
+fn require_granted_source(bytes: &[u8], granted: &GrantedFiles) -> Result<(), RecoveryError> {
+    // Why here too: an oversized copy is refused anyway, so it is not worth parsing first.
+    if bytes.len() > MAX_SNAPSHOT_BYTES {
+        return Err(RecoveryError::TooLarge);
+    }
+    match snapshot_source(bytes)? {
+        Some(path) if !granted.is_granted(&path) => Err(RecoveryError::NotGranted),
+        _ => Ok(()),
+    }
+}
+/// A restored copy saves back to its file, which the session that wrote the copy was granted.
+fn grant_snapshot_source(bytes: &[u8], granted: &GrantedFiles) {
+    if let Ok(Some(path)) = snapshot_source(bytes) {
+        granted.grant(&path);
+    }
+}
+/// Restore reads the copy and grants the file it names, so the restored document saves back to it.
+fn read_snapshot_for_restore(
+    dir: &Path,
+    files: &RecoveryFiles,
+    granted: &GrantedFiles,
+    id: &str,
+) -> Result<Vec<u8>, RecoveryError> {
+    files.require(id)?;
+    let bytes = read_bytes(&snapshot_path(dir, id, "json")?)?;
+    grant_snapshot_source(&bytes, granted);
+    Ok(bytes)
+}
+fn write_granted_snapshot(
+    dir: &Path,
+    files: &RecoveryFiles,
+    granted: &GrantedFiles,
+    id: &str,
+    bytes: &[u8],
+) -> Result<(), RecoveryError> {
+    // Why before the parse: a session this process does not own is refused without reading the copy.
+    files.require(id)?;
+    require_granted_source(bytes, granted)?;
+    files.write(dir, id, bytes)
+}
 async fn blocking<T: Send + 'static>(
     app: AppHandle,
     task: impl FnOnce(&Path, &mut RecoveryFiles) -> Result<T, RecoveryError> + Send + 'static,
@@ -382,9 +451,9 @@ pub async fn read_recovery_snapshot(
     app: AppHandle,
     session_id: String,
 ) -> Result<tauri::ipc::Response, RecoveryError> {
+    let granted = app.state::<GrantedFiles>().inner().clone();
     blocking(app, move |dir, files| {
-        files.require(&session_id)?;
-        read_bytes(&snapshot_path(dir, &session_id, "json")?).map(tauri::ipc::Response::new)
+        read_snapshot_for_restore(dir, files, &granted, &session_id).map(tauri::ipc::Response::new)
     })
     .await
 }
@@ -405,7 +474,11 @@ pub async fn write_recovery_snapshot(
         ));
     };
     let bytes = bytes.clone();
-    blocking(app, move |dir, files| files.write(dir, &id, &bytes)).await
+    let granted = app.state::<GrantedFiles>().inner().clone();
+    blocking(app, move |dir, files| {
+        write_granted_snapshot(dir, files, &granted, &id, &bytes)
+    })
+    .await
 }
 #[tauri::command]
 pub async fn clear_recovery_snapshots(

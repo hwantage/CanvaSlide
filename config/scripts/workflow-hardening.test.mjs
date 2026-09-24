@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { readdirSync, readFileSync } from 'node:fs'
+import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
 
 const workflowDirectory = new URL('../../.github/workflows/', import.meta.url)
@@ -58,7 +60,7 @@ test('no checkout leaves the job token in the working copy', () => {
 
 test('only the release sign job receives the updater key, from the release environment', () => {
   const jobs = jobsOf(release)
-  assert.deepEqual(Object.keys(jobs), ['build', 'sign', 'publish'])
+  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'sign', 'publish'])
   for (const { name, text } of workflows.filter(({ name }) => name !== 'release.yml')) {
     assert.doesNotMatch(text, /TAURI_SIGNING/, name)
   }
@@ -100,8 +102,11 @@ function runScript(step, env) {
   })
 }
 
-// Why: the scripts run with bash on Linux runners.
-const shellSkip = process.platform === 'win32' && 'runs workflow scripts with bash'
+// Why: the scripts run on Linux runners; the fakes below are POSIX executables and `gh --jq` is jq.
+const shellSkip =
+  process.platform === 'win32'
+    ? 'runs workflow scripts with POSIX executables'
+    : spawnSync('jq', ['--version']).error && 'needs jq to stand in for gh --jq'
 
 test('the required CI passed check depends on every other CI job, even failed ones', () => {
   const jobs = jobsOf(ci)
@@ -127,3 +132,102 @@ test('the required CI passed check fails unless every job succeeded', { skip: sh
     assert.notEqual(outcome(results), 0, results)
   }
 })
+
+test('the release builds only after the gate job, which reads CI runs and runs no code', () => {
+  const jobs = jobsOf(release)
+  assert.match(jobs.build, /\n {4}needs: gate\n/)
+  assert.deepEqual(permissionsAt(`\n${jobs.gate}\n`, '    '), ['actions: read'])
+  assert.doesNotMatch(jobs.gate, /actions\/checkout@|secrets\.|\b(pnpm|npm|npx|node) /)
+})
+
+// The gate step, with `gh` answering from `responses` in order (the last one repeats) and `sleep`
+// returning at once.
+function runGate(responses) {
+  const [step] = stepsOf(jobsOf(release).gate)
+  const bin = mkdtempSync(join(tmpdir(), 'release-gate-'))
+  const calls = join(bin, 'calls.json')
+  const sleeps = join(bin, 'sleeps')
+  try {
+    writeFileSync(join(bin, 'responses.json'), JSON.stringify(responses))
+    writeFileSync(calls, '[]')
+    writeFileSync(sleeps, '')
+    writeFileSync(
+      join(bin, 'gh'),
+      `#!${process.execPath}
+const fs = require('node:fs')
+const { execFileSync } = require('node:child_process')
+const calls = JSON.parse(fs.readFileSync(${JSON.stringify(calls)}, 'utf8'))
+calls.push(process.argv.slice(2))
+fs.writeFileSync(${JSON.stringify(calls)}, JSON.stringify(calls))
+const responses = JSON.parse(fs.readFileSync(${JSON.stringify(join(bin, 'responses.json'))}, 'utf8'))
+const body = JSON.stringify(responses[Math.min(calls.length, responses.length) - 1])
+const jq = process.argv[process.argv.indexOf('--jq') + 1]
+process.stdout.write(execFileSync('jq', ['-r', jq], { input: body }))
+`
+    )
+    writeFileSync(join(bin, 'sleep'), `#!/bin/sh\necho "$1" >> ${JSON.stringify(sleeps)}\n`)
+    chmodSync(join(bin, 'gh'), 0o755)
+    chmodSync(join(bin, 'sleep'), 0o755)
+    const result = runScript(step, {
+      PATH: `${bin}:${process.env.PATH}`,
+      GH_REPO: 'owner/repo',
+      SHA: 'abc123'
+    })
+    return {
+      status: result.status,
+      stderr: result.stderr,
+      calls: JSON.parse(readFileSync(calls, 'utf8')),
+      sleeps: readFileSync(sleeps, 'utf8').split('\n').filter(Boolean)
+    }
+  } finally {
+    rmSync(bin, { recursive: true, force: true })
+  }
+}
+
+const noRun = { workflow_runs: [] }
+const runOf = (status, conclusion) => ({
+  workflow_runs: [{ status, conclusion, html_url: 'https://example.test/run' }]
+})
+
+test(
+  'the release gate asks for CI pushed to main on the tagged commit',
+  { skip: shellSkip },
+  () => {
+    const { status, calls, sleeps } = runGate([runOf('completed', 'success')])
+    assert.equal(status, 0)
+    assert.equal(sleeps.length, 0)
+    const [args] = calls
+    assert.equal(args[args.indexOf('-X') + 1], 'GET')
+    assert.ok(args.includes('repos/owner/repo/actions/workflows/ci.yml/runs'))
+    for (const field of ['head_sha=abc123', 'event=push', 'branch=main', 'per_page=1']) {
+      assert.ok(args.includes(field), field)
+    }
+  }
+)
+
+test('the release gate waits for CI to start and finish', { skip: shellSkip }, () => {
+  const running = runOf('in_progress', null)
+  const responses = [noRun, noRun, runOf('queued', null), running, running]
+  const { status, sleeps } = runGate([...responses, runOf('completed', 'success')])
+  assert.equal(status, 0)
+  assert.equal(sleeps.length, 5)
+})
+
+test('the release gate fails when CI on the tagged commit failed', { skip: shellSkip }, () => {
+  for (const conclusion of ['failure', 'cancelled', 'timed_out', 'skipped']) {
+    const { status, stderr } = runGate([runOf('in_progress', null), runOf('completed', conclusion)])
+    assert.notEqual(status, 0, conclusion)
+    assert.match(stderr, new RegExp(`finished with ${conclusion}`))
+  }
+})
+
+test(
+  'the release gate fails when main never ran CI on the tagged commit',
+  { skip: shellSkip },
+  () => {
+    const { status, stderr, sleeps } = runGate([noRun])
+    assert.notEqual(status, 0)
+    assert.equal(sleeps.length, 20)
+    assert.match(stderr, /No CI run on main/)
+  }
+)

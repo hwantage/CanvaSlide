@@ -2,16 +2,23 @@
 
 워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) · [문서 목록](./README.md)
 
-git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
+`main`에서 CI를 통과한 커밋에 붙인 git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
 릴리즈는 메인테이너가 수행하며, 코드 규칙과 검증은 [`AGENTS.md`](../AGENTS.md), 기여 절차는 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
 
 ## 1. 한눈에 보기
 
 ```bash
-pnpm version minor       # ① package.json 버전 올리고 커밋 + v0.x.0 태그 생성
-git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된다
-# ③ GitHub → Releases 에서 초안(draft)을 열어 노트를 다듬고 Publish
+git switch -c chore/release-v0-8-0 origin/main
+pnpm version minor --no-git-tag-version      # ① package.json 버전만 올린다
+git commit -am "Prepare v0.8.0 release"      # ② 릴리즈 PR을 올리고 CI passed가 초록이면 머지
+git switch main && git pull
+git tag -a v0.8.0 -m v0.8.0 <머지 커밋>        # ③ 머지 커밋에 태그를 붙여 푸시하면
+git push origin v0.8.0                       #    release.yml 이 그 커밋의 CI를 확인한 뒤 빌드한다
+# ④ GitHub → Releases 에서 초안(draft)을 열어 노트를 다듬고 Publish
 ```
+
+`main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. `v*` 태그는 저장소 관리자만 만들고
+옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다(§4).
 
 ## 2. 버전 규칙
 
@@ -20,29 +27,38 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
   - `pnpm version patch` → 0.1.0 → 0.1.1
   - `pnpm version minor` → 0.1.0 → 0.2.0
   - `pnpm version major` → 0.1.0 → 1.0.0
-- `pnpm version`은 `package.json`을 고치고 `v0.2.0` 같은 커밋과 주석 태그를 함께 만든다. 작업 트리가 깨끗해야(`git status` 비어 있어야) 실행된다.
-- 태그 이름과 `package.json` 버전이 다르면 워크플로가 빌드 전에 실패한다. 손으로 태그를 만들 때는 `v` 접두사를 붙이고 버전을 맞춘다.
+- 릴리즈 PR에서는 `pnpm version <bump> --no-git-tag-version`으로 `package.json`만 고친다. 옵션이 없으면 커밋과
+  태그를 브랜치 커밋에 바로 만드는데, 그 커밋은 `main`의 CI가 검사한 커밋이 아니어서 릴리즈되지 않는다.
+- 태그는 릴리즈 PR이 머지된 뒤 그 머지 커밋에 `git tag -a v<버전>`으로 만든다. 태그 이름과 `package.json` 버전이
+  다르면 워크플로가 빌드 전에 실패한다.
 
 ## 3. 릴리즈 절차
 
-1. `main`이 CI를 통과했는지 확인한다(Actions 탭의 **CI** 워크플로가 초록색).
-   데스크톱 클라우드 공유를 제공할 때는 저장소 **Settings → Secrets and variables → Actions → Variables**의
+1. 데스크톱 클라우드 공유를 제공할 때는 저장소 **Settings → Secrets and variables → Actions → Variables**의
    `VITE_CLOUD_SHARE_URL`을 배포된 편집기의 HTTPS origin으로 설정한다(예: `https://canvaslide.pages.dev`).
    CI 번들과 릴리즈 빌드는 이 값을 Vite와 Rust에 함께 전달한다. 값이 없으면 데스크톱 공유가 비활성화된다.
-2. 로컬에서 `main`을 최신으로 맞춘다.
+2. 최신 `main`에서 릴리즈 브랜치를 만들고 버전을 올린다.
    ```bash
-   git switch main && git pull
+   git fetch origin
+   git switch -c chore/release-v0-8-0 origin/main
+   pnpm version minor --no-git-tag-version
    pnpm check && pnpm test:e2e     # 선택: 로컬에서 한 번 더
    ```
-3. 버전을 올린다.
+3. 커밋하고 릴리즈 PR을 올린다. PR의 `CI passed` 검사가 초록이 되면 머지한다.
    ```bash
-   pnpm version minor
+   git commit -am "Prepare v0.8.0 release"
+   git push -u origin chore/release-v0-8-0
+   gh pr create --fill
    ```
-4. 커밋과 태그를 푸시한다.
+4. 머지 커밋에 태그를 붙여 푸시한다. 머지한 뒤 `main`의 CI가 끝나기 전에 푸시해도 된다.
    ```bash
-   git push --follow-tags
+   git switch main && git pull
+   commit="$(gh pr view chore/release-v0-8-0 --json mergeCommit --jq .mergeCommit.oid)"
+   git tag -a v0.8.0 -m v0.8.0 "$commit"
+   git push origin v0.8.0
    ```
-5. Actions 탭에서 **Release** 워크플로가 끝나기를 기다린다. macOS와 Windows 빌드가 병렬로 돈 뒤 서명, 게시 잡이 이어진다.
+5. Actions 탭에서 **Release** 워크플로가 끝나기를 기다린다. 먼저 태그 커밋의 `main` CI가 성공으로 끝나기를
+   기다리고, macOS와 Windows 빌드가 병렬로 돈 뒤 서명, 게시 잡이 이어진다.
 6. **Releases** 페이지에 초안이 생겨 있다. 다음을 확인한다.
    - 첨부 파일: `CanvaSlide_<버전>_universal.dmg`, `CanvaSlide_<버전>_x64-setup.exe`, `CanvaSlide_<버전>_x64_en-US.msi`
    - **Generate release notes** 버튼을 눌러 지난 태그 이후 머지된 PR 제목을 불러온 뒤 사용자 관점으로 다듬는다.
@@ -51,16 +67,20 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 
 ## 4. 워크플로가 하는 일
 
-`release.yml`은 `v*` 태그 푸시에서만 실행된다. 빌드 스크립트와 의존성이 실행되는 잡에는 업데이터 서명 키도,
-저장소 쓰기 권한도 주지 않도록 잡을 셋으로 나눈다.
+`release.yml`은 `v*` 태그 푸시에서만 실행된다. 태그 커밋의 CI를 먼저 확인하고, 빌드 스크립트와 의존성이
+실행되는 잡에는 업데이터 서명 키도, 저장소 쓰기 권한도 주지 않도록 잡을 나눈다.
 
-| 잡                        | 러너             | 받는 권한·비밀           | 산출물                                                   |
-| ------------------------- | ---------------- | ------------------------ | -------------------------------------------------------- |
-| build · macOS (universal) | `macos-latest`   | 읽기 전용, 비밀 없음     | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel) |
-| build · Windows (x64)     | `windows-latest` | 읽기 전용, 비밀 없음     | `.exe` (NSIS 설치 파일), `.msi`                          |
-| sign updater files        | `ubuntu-latest`  | `release` 환경의 서명 키 | 업데이터 파일의 서명(`.sig`)                             |
-| publish draft release     | `ubuntu-latest`  | `contents: write`        | `latest.json`, 같은 태그의 Release 초안                  |
+| 잡                               | 러너             | 받는 권한·비밀           | 산출물                                                   |
+| -------------------------------- | ---------------- | ------------------------ | -------------------------------------------------------- |
+| wait for CI on the tagged commit | `ubuntu-latest`  | `actions: read`          | 없음(태그 커밋의 `main` CI 결과 확인)                    |
+| build · macOS (universal)        | `macos-latest`   | 읽기 전용, 비밀 없음     | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel) |
+| build · Windows (x64)            | `windows-latest` | 읽기 전용, 비밀 없음     | `.exe` (NSIS 설치 파일), `.msi`                          |
+| sign updater files               | `ubuntu-latest`  | `release` 환경의 서명 키 | 업데이터 파일의 서명(`.sig`)                             |
+| publish draft release            | `ubuntu-latest`  | `contents: write`        | `latest.json`, 같은 태그의 Release 초안                  |
 
+0. **wait for CI**: 태그 커밋에서 `main`에 푸시되어 실행된 **CI** 워크플로 실행을 Actions API로 찾아 끝나기를
+   기다린다. 10분 안에 실행이 나타나지 않거나(태그 커밋이 `main`에 푸시된 적이 없음) 결과가 성공이 아니면
+   실패하고, 이후 잡은 실행되지 않는다. 체크아웃도 패키지 스크립트도 실행하지 않는다.
 1. **build**: pnpm·Node 22·Rust stable을 준비하고(맥은 `aarch64-apple-darwin`, `x86_64-apple-darwin` 타깃 추가)
    `pnpm install --frozen-lockfile`, 태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
@@ -78,10 +98,18 @@ git push --follow-tags   # ② 태그가 올라가면 release.yml 이 실행된�
 SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
 버전 태그 없이 브랜치로 배포하는 `dtolnay/rust-toolchain`은 `stable` 브랜치의 커밋으로 고정하고 주석에 `stable`을 적는다.
 
+CI의 `CI passed` 잡은 다른 모든 CI 잡이 성공해야 통과한다. `main` ruleset은 PR과 이 검사 하나를 요구하므로,
+CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요가 없다. 새 잡은 `CI passed`의 `needs`에 넣으며,
+[`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs)가 이를 검사한다. `v*` 태그 ruleset은
+저장소 관리자가 아니면 태그를 만들거나 옮기거나 지우지 못하게 한다.
+
 번들 종류는 `src-tauri/tauri.conf.json`의 `bundle.targets: "all"`이 결정한다. Linux 러너를 추가하면 `.AppImage`/`.deb`도 같은 방식으로 붙는다.
 
 ## 5. 실패했을 때
 
+- **CI 대기 잡이 실패**: `No CI run on main`이면 태그가 `main`에 푸시되어 CI가 돈 커밋(PR의 머지 커밋)이 아닌
+  곳을 가리킨다. 공개하지 않은 태그이므로 메인테이너가 지우고 릴리즈 PR의 머지 커밋에 다시 만든다. `finished with failure`처럼 CI가 실패했으면
+  CI를 고치거나 재실행해 성공시킨 뒤 Release 워크플로의 **Re-run failed jobs**를 누른다.
 - **태그 불일치로 실패**: 태그와 `package.json`의 차이를 확인한다. 아직 공개하지 않은 태그만
   메인테이너가 수정하며, 이미 공개한 버전이면 새 버전·태그를 만든다.
 - **한쪽 플랫폼만 실패**: 초안은 두 빌드가 모두 성공해야 만들어진다. Actions에서 **Re-run failed jobs**를 하면
@@ -91,7 +119,7 @@ SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 �
   공개키와 짝이 아니다.
 - **초안을 버리고 다시**: 먼저 실패한 잡 재실행을 사용한다. 초안·태그를 재작성할 필요가 있으면
   공개 여부와 두 플랫폼의 산출물을 확인한 뒤 메인테이너가 처리한다.
-- **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 `pnpm version patch`로 다음 버전을 낸다.
+- **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 §3 절차로 `patch` 버전을 올려 다음 버전을 낸다.
 - **로컬에서 재현**: 릴리즈 빌드는 키 없이 `pnpm bundle:local`(현재 OS용) 또는
   `pnpm bundle:local --target universal-apple-darwin`으로 재현한다. 서명까지 확인하려면 §7의 서명 키를 환경 변수로
   주고 업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.

@@ -1,6 +1,7 @@
 import { readSavedDocument, encodeDocumentFixture } from './saved-document'
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { primaryModifier } from './canvas-gestures'
 import type { Camera } from '../../src/shared/canvas/element-types'
 import type { StoreApi } from 'zustand'
@@ -30,18 +31,13 @@ type FlightWindow = {
 }
 
 async function setCamera(page: Page, camera: Camera) {
-  await page.evaluate(async (value) => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)
-    if (!url) {
-      throw new Error('Camera module was not loaded')
-    }
-    const { useCameraStore } = await import(url)
-    useCameraStore.getState().setCamera(value)
-  }, camera)
+  await page.evaluate(
+    async ({ url, value }) => {
+      const { useCameraStore } = await import(url)
+      useCameraStore.getState().setCamera(value)
+    },
+    { url: appModuleUrl('store/camera-store.ts'), value: camera }
+  )
 }
 
 async function openMaskedImage(page: Page) {
@@ -213,30 +209,30 @@ test('keeps the previous preview visible while preparing a resized image', async
   await openMaskedImage(page)
   const first = page.locator('[data-element-id="first"]')
   const source = await first.getAttribute('src')
-  await page.evaluate(async () => {
-    const url = (suffix: string) =>
-      performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((name) => name.includes(suffix))
-        .at(-1)!
-    const { svgPreviewCache } = await import(url('/src/lib/svg-preview-cache.ts'))
-    const { useDocumentStore } = await import(url('/src/store/document-store.ts'))
-    const acquire = svgPreviewCache.acquire.bind(svgPreviewCache)
-    svgPreviewCache.acquire = (...args: unknown[]) => {
-      const lease = acquire(...args)
-      return {
-        ...lease,
-        ready: lease.ready.then(
-          (result: unknown) =>
-            new Promise((resolve) => {
-              Object.assign(window, { finishPreview: () => resolve(result) })
-            })
-        )
+  await page.evaluate(
+    async ({ cacheUrl, documentUrl }) => {
+      const { svgPreviewCache } = await import(cacheUrl)
+      const { useDocumentStore } = await import(documentUrl)
+      const acquire = svgPreviewCache.acquire.bind(svgPreviewCache)
+      svgPreviewCache.acquire = (...args: unknown[]) => {
+        const lease = acquire(...args)
+        return {
+          ...lease,
+          ready: lease.ready.then(
+            (result: unknown) =>
+              new Promise((resolve) => {
+                Object.assign(window, { finishPreview: () => resolve(result) })
+              })
+          )
+        }
       }
+      useDocumentStore.getState().patchElements(['first'], { width: 33000 })
+    },
+    {
+      cacheUrl: appModuleUrl('lib/svg-preview-cache.ts'),
+      documentUrl: appModuleUrl('store/document-store.ts')
     }
-    useDocumentStore.getState().patchElements(['first'], { width: 33000 })
-  })
+  )
   await page.waitForFunction(() => 'finishPreview' in window)
   await expect(first).toHaveAttribute('src', source!)
   await expect(first).toHaveCSS('visibility', 'visible')
@@ -264,40 +260,40 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
 }) => {
   await openMaskedImage(page)
   await page.waitForTimeout(150)
-  await page.evaluate(async () => {
-    const url = (suffix: string) =>
-      performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((name) => name.includes(suffix))
-        .at(-1)!
-    const { svgPreviewCache } = await import(url('/src/lib/svg-preview-cache.ts'))
-    const { useCameraStore } = await import(url('/src/store/camera-store.ts'))
-    const acquire = svgPreviewCache.acquire.bind(svgPreviewCache)
-    let finish!: () => void
-    const gate = new Promise<void>((resolve) => {
-      finish = resolve
-    })
-    svgPreviewCache.acquire = (...args: unknown[]) => {
-      const lease = acquire(...args)
-      return {
-        ...lease,
-        ready: lease.ready.then(async (result: unknown) => {
-          await gate
-          return result
-        })
+  await page.evaluate(
+    async ({ cacheUrl, cameraUrl }) => {
+      const { svgPreviewCache } = await import(cacheUrl)
+      const { useCameraStore } = await import(cameraUrl)
+      const acquire = svgPreviewCache.acquire.bind(svgPreviewCache)
+      let finish!: () => void
+      const gate = new Promise<void>((resolve) => {
+        finish = resolve
+      })
+      svgPreviewCache.acquire = (...args: unknown[]) => {
+        const lease = acquire(...args)
+        return {
+          ...lease,
+          ready: lease.ready.then(async (result: unknown) => {
+            await gate
+            return result
+          })
+        }
       }
+      const state = {
+        camera: useCameraStore,
+        finish,
+        before: useCameraStore.getState().camera,
+        layoutZooms: [] as string[],
+        flightHints: [] as string[]
+      }
+      Object.assign(window, { flightTest: state })
+      useCameraStore.getState().animateTo({ x: -3999900, y: 120, zoom: 4 }, 500)
+    },
+    {
+      cacheUrl: appModuleUrl('lib/svg-preview-cache.ts'),
+      cameraUrl: appModuleUrl('store/camera-store.ts')
     }
-    const state = {
-      camera: useCameraStore,
-      finish,
-      before: useCameraStore.getState().camera,
-      layoutZooms: [] as string[],
-      flightHints: [] as string[]
-    }
-    Object.assign(window, { flightTest: state })
-    useCameraStore.getState().animateTo({ x: -3999900, y: 120, zoom: 4 }, 500)
-  })
+  )
   await page.waitForTimeout(200)
   await expect(page.getByTestId('world-layer')).toHaveCSS('will-change', 'auto')
   const waiting = await page.evaluate(() => {
@@ -371,13 +367,7 @@ test('holds the arrival layout across a large editor zoom-out and a same-zoom fl
   await setCamera(page, { x: -32000 * 32, y: -16000 * 32, zoom: 32 })
   // Native resolution is needed at rest even when the document has no compositing hint.
   await expect(layer).toHaveCSS('zoom', '32')
-  const url = await page.evaluate(() =>
-    performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)!
-  )
+  const url = appModuleUrl('store/camera-store.ts')
   const layouts = await page.evaluate(async (url) => {
     const { useCameraStore } = await import(url)
     const layer = document.querySelector('[data-testid="world-layer"] > div') as HTMLElement

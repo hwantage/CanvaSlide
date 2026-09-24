@@ -1,19 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 
 const RELEASES_URL = 'https://github.com/hwantage/CanvaSlide/releases'
 
 async function offerUpdate(page: Page) {
   // Inject the native check result; browser deployments deliberately never contact the update feed.
-  await page.evaluate(async () => {
-    const resource = performance
-      .getEntriesByType('resource')
-      .find((r) => r.name.includes('/store/update-store.ts'))!
-    const { useUpdateStore } = await import(resource.name)
+  await page.evaluate(async (url) => {
+    const { useUpdateStore } = await import(url)
     useUpdateStore.setState({
       status: 'available',
       update: { version: '99.0.0', notes: 'Big release', installable: false }
     })
-  })
+  }, appModuleUrl('store/update-store.ts'))
 }
 
 test.beforeEach(async ({ page }) => {

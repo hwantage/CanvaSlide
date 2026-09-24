@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import type { StoreApi } from 'zustand'
 import type { Camera } from '../../src/shared/canvas/element-types'
 
@@ -69,14 +70,9 @@ async function openLightDeck(page: Page) {
   await expect(page.getByTestId('frame-row')).toHaveCount(2)
   await expect(page.locator('[data-element-type="shape"]')).toHaveCount(135)
   await expect(page.locator('[data-element-type="text"]')).toHaveCount(2)
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .filter((path) => path.includes('/src/store/camera-store.ts'))
-      .at(-1)!
+  await page.evaluate(async (url) => {
     ;(window as unknown as ZoomWindow).zoomCamera = (await import(url)).useCameraStore
-  })
+  }, appModuleUrl('store/camera-store.ts'))
 }
 
 async function expectSettledResolution(page: Page) {

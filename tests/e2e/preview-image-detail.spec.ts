@@ -1,20 +1,16 @@
+import { appModuleUrl } from './app-module'
 import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 
 test.use({ deviceScaleFactor: 2 })
 
 async function state(page: Page) {
-  return page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)!
+  return page.evaluate(async (url) => {
     const { useCameraStore } = await import(url)
     const s = useCameraStore.getState()
     const layer = document.querySelector<HTMLElement>('[data-testid="world-layer"] > div')!
     return { camera: s.camera, active: s.animationActive, layoutZoom: Number(layer.style.zoom) }
-  })
+  }, appModuleUrl('store/camera-store.ts'))
 }
 
 async function openPreviewDocument(page: Page) {
@@ -80,12 +76,7 @@ async function openPreviewDocument(page: Page) {
   await page.getByTestId('frame-row').nth(1).locator('button').first().click()
   await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeVisible()
   await expect.poll(async () => (await state(page)).active).toBe(false)
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/lib/svg-preview-cache.ts'))
-      .at(-1)!
+  await page.evaluate(async (url) => {
     const { svgDetailCache } = await import(url)
     const acquire = svgDetailCache.acquire.bind(svgDetailCache)
     const probe = { requests: 0 }
@@ -94,7 +85,7 @@ async function openPreviewDocument(page: Page) {
       probe.requests++
       return acquire(...args)
     }
-  })
+  }, appModuleUrl('lib/svg-preview-cache.ts'))
 }
 
 async function requests(page: Page) {
@@ -165,38 +156,36 @@ test('releases detail canvases and leases after zooming out while the image stay
   page
 }) => {
   await openPreviewDocument(page)
-  await page.evaluate(async () => {
-    const module = async (part: string) =>
-      import(
-        performance
-          .getEntriesByType('resource')
-          .map((r) => r.name)
-          .filter((name) => name.includes(part))
-          .at(-1)!
-      )
-    const { svgDetailCache } = await module('/src/lib/svg-preview-cache.ts')
-    const { useCameraStore } = await module('/src/store/camera-store.ts')
-    const tracker = { leases: 0 }
-    Object.assign(window, { detailRetentionProbe: tracker })
-    const acquire = svgDetailCache.acquire.bind(svgDetailCache)
-    svgDetailCache.acquire = (...args: unknown[]) => {
-      const lease = acquire(...args)
-      tracker.leases++
-      let released = false
-      return {
-        ...lease,
-        release: () => {
-          if (!released) {
-            released = true
-            tracker.leases--
+  await page.evaluate(
+    async ({ cacheUrl, cameraUrl }) => {
+      const { svgDetailCache } = await import(cacheUrl)
+      const { useCameraStore } = await import(cameraUrl)
+      const tracker = { leases: 0 }
+      Object.assign(window, { detailRetentionProbe: tracker })
+      const acquire = svgDetailCache.acquire.bind(svgDetailCache)
+      svgDetailCache.acquire = (...args: unknown[]) => {
+        const lease = acquire(...args)
+        tracker.leases++
+        let released = false
+        return {
+          ...lease,
+          release: () => {
+            if (!released) {
+              released = true
+              tracker.leases--
+            }
+            lease.release()
           }
-          lease.release()
         }
       }
+      const camera = useCameraStore.getState().camera
+      useCameraStore.getState().setCamera({ ...camera, x: camera.x - 5 })
+    },
+    {
+      cacheUrl: appModuleUrl('lib/svg-preview-cache.ts'),
+      cameraUrl: appModuleUrl('store/camera-store.ts')
     }
-    const camera = useCameraStore.getState().camera
-    useCameraStore.getState().setCamera({ ...camera, x: camera.x - 5 })
-  })
+  )
   const leases = () =>
     page.evaluate(
       () =>
@@ -205,15 +194,10 @@ test('releases detail canvases and leases after zooming out while the image stay
     )
   await expect.poll(leases).toBeGreaterThan(0)
   await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeVisible()
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)!
+  await page.evaluate(async (url) => {
     const { useCameraStore } = await import(url)
     useCameraStore.getState().setCamera({ x: 100, y: 100, zoom: 0.1 })
-  })
+  }, appModuleUrl('store/camera-store.ts'))
   await expect(page.locator('[data-element-id="photo"]')).toBeVisible()
   await expect(page.locator('[data-image-detail-id="photo"]')).toHaveCount(0)
   await expect.poll(leases).toBe(0)
@@ -222,34 +206,34 @@ test('releases detail canvases and leases after zooming out while the image stay
 for (const mode of ['editor', 'slideshow'] as const) {
   test(`keeps the original SVG layout size during ${mode} flights`, async ({ page }) => {
     await openPreviewDocument(page)
-    const measured = await page.evaluate(async (mode) => {
-      const url = performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((name) => name.includes('/src/store/camera-store.ts'))
-        .at(-1)!
-      const { useCameraStore } = await import(url)
-      const widths: number[] = []
-      const detailCounts: number[] = []
-      const before = useCameraStore.getState().camera
-      const row = document.querySelector('[data-testid="frame-row"]')!
-      row.querySelectorAll('button')[mode === 'slideshow' ? 1 : 0]!.click()
-      await new Promise<void>((resolve) => {
-        const sample = () => {
-          if (!useCameraStore.getState().isAnimating()) {
-            resolve()
-            return
-          }
-          widths.push(document.querySelector<HTMLImageElement>('[data-element-id="photo"]')!.width)
-          if (useCameraStore.getState().camera !== before) {
-            detailCounts.push(document.querySelectorAll('[data-image-detail-id="photo"]').length)
+    const measured = await page.evaluate(
+      async ({ url, mode }) => {
+        const { useCameraStore } = await import(url)
+        const widths: number[] = []
+        const detailCounts: number[] = []
+        const before = useCameraStore.getState().camera
+        const row = document.querySelector('[data-testid="frame-row"]')!
+        row.querySelectorAll('button')[mode === 'slideshow' ? 1 : 0]!.click()
+        await new Promise<void>((resolve) => {
+          const sample = () => {
+            if (!useCameraStore.getState().isAnimating()) {
+              resolve()
+              return
+            }
+            widths.push(
+              document.querySelector<HTMLImageElement>('[data-element-id="photo"]')!.width
+            )
+            if (useCameraStore.getState().camera !== before) {
+              detailCounts.push(document.querySelectorAll('[data-image-detail-id="photo"]').length)
+            }
+            requestAnimationFrame(sample)
           }
           requestAnimationFrame(sample)
-        }
-        requestAnimationFrame(sample)
-      })
-      return { widths, detailCounts }
-    }, mode)
+        })
+        return { widths, detailCounts }
+      },
+      { url: appModuleUrl('store/camera-store.ts'), mode }
+    )
     expect(measured.widths.length).toBeGreaterThan(0)
     expect(Math.max(...measured.widths)).toBe(64)
     expect(measured.detailCounts.length).toBeGreaterThan(0)

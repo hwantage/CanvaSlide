@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 test.beforeEach(async ({ page }) => {
@@ -77,12 +78,11 @@ test.describe('pointer lifecycle @core-interaction', () => {
       await page.keyboard.press(kind === 'resize' ? 'r' : 'l')
       await dragOnCanvas(page, [100, 100], [250, 200])
       const history = () =>
-        page.evaluate(async () => {
-          const url = '/src/store/document-store.ts'
+        page.evaluate(async (url) => {
           const { useDocumentStore } = await import(url)
           const state = useDocumentStore.getState()
           return { document: state.document, past: state.past.length }
-        })
+        }, appModuleUrl('store/document-store.ts'))
       const before = await history()
       await page.getByTestId('canvas-viewport').click({ position: { x: 250, y: 200 } })
       expect(await history()).toEqual(before)
@@ -288,11 +288,10 @@ test.describe('pointer lifecycle @core-interaction', () => {
       await page.mouse.move(x, y, { steps: 5 })
       await page.mouse.up({ button })
       await move(page, 400, 400)
-      const camera = await page.evaluate(async () => {
-        const url = '/src/store/camera-store.ts'
+      const camera = await page.evaluate(async (url) => {
         const { useCameraStore } = await import(url)
         return useCameraStore.getState().camera
-      })
+      }, appModuleUrl('store/camera-store.ts'))
       expect(camera).toEqual({
         x: x - Math.floor(canvas.x) - 100,
         y: y - Math.floor(canvas.y) - 100,

@@ -1,15 +1,11 @@
 import { expect, test } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 
 test('retains photo colors, source alpha and nested mask pixels in cached detail surfaces', async ({
   page
 }) => {
   await page.goto('/')
-  const result = await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/lib/svg-image-preview.ts'))
-      .at(-1)!
+  const result = await page.evaluate(async (url) => {
     const { createSvgImagePreview } = await import(url)
     const photo = document.createElement('canvas')
     photo.width = 256
@@ -84,7 +80,7 @@ test('retains photo colors, source alpha and nested mask pixels in cached detail
     }
     original.src = ''
     return { differences, released }
-  })
+  }, appModuleUrl('lib/svg-image-preview.ts'))
   for (const difference of result.differences) {
     expect(difference.color).toBeLessThan(1)
     expect(difference.alpha).toBeLessThan(1)

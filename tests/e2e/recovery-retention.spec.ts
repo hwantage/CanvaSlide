@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { createEmptyDocument, defaultTextStyle } from '../../src/shared/canvas/element-types'
 import { serializeDocument } from '../../src/shared/canvas/document-file'
+import { appModuleUrl } from './app-module'
 import { primaryModifier } from './canvas-gestures'
 
 const prompt = (page: Page) => page.getByRole('dialog', { name: 'Recover unsaved work' })
@@ -11,23 +12,25 @@ async function seed(page: Page, count = 1, version = 1) {
     info: { version, file: null, documentName: `Lost ${i}`, savedAt: i + 1000 },
     contents: serializeDocument(createEmptyDocument(`Lost ${i}`))
   }))
-  await page.evaluate(async (records) => {
-    const path = '/src/platform/recovery-database.ts'
-    const database = await import(path)
-    for (const record of records) {
-      await database.writeStoredSnapshot(
-        record.id,
-        new TextEncoder().encode(JSON.stringify({ ...record.info, contents: record.contents })),
-        record.info
-      )
-    }
-  }, records)
+  await page.evaluate(
+    async ({ records, path }) => {
+      const database = await import(path)
+      for (const record of records) {
+        await database.writeStoredSnapshot(
+          record.id,
+          new TextEncoder().encode(JSON.stringify({ ...record.info, contents: record.contents })),
+          record.info
+        )
+      }
+    },
+    { records, path: appModuleUrl('platform/recovery-database.ts') }
+  )
 }
 async function ids(page: Page): Promise<string[]> {
-  return page.evaluate(async () => {
-    const path = '/src/platform/recovery-database.ts'
-    return (await import(path)).listStoredSessions()
-  })
+  return page.evaluate(
+    async (path) => (await import(path)).listStoredSessions(),
+    appModuleUrl('platform/recovery-database.ts')
+  )
 }
 
 type PendingOpenWindow = Window & { finishOpenRead?: () => void; openDecoded?: boolean }
@@ -147,14 +150,13 @@ test('a delayed Open cannot replace restored work or delete its recovery copy @c
       })
   )
   await expect(page).toHaveTitle('• Lost 0 — CanvaSlide')
-  const retained = await page.evaluate(async () => {
-    const path = '/src/platform/recovery-database.ts'
+  const retained = await page.evaluate(async (path) => {
     const database = await import(path)
     const records = await Promise.all(
       (await database.listStoredSessions()).map((id: string) => database.readStoredMetadata(id))
     )
     return records.map((record: { info: { documentName: string } }) => record.info.documentName)
-  })
+  }, appModuleUrl('platform/recovery-database.ts'))
   expect(retained).toContain('Lost 0')
 })
 
@@ -233,8 +235,7 @@ test('metadata scan never reads or parses a payload in the renderer @core-intera
   page
 }) => {
   await seed(page)
-  const result = await page.evaluate(async () => {
-    const path = '/src/platform/recovery-storage.ts'
+  const result = await page.evaluate(async (path) => {
     const storage = await import(path)
     const originalParse = JSON.parse,
       originalGet = IDBObjectStore.prototype.get
@@ -265,7 +266,7 @@ test('metadata scan never reads or parses a payload in the renderer @core-intera
       JSON.parse = originalParse
       IDBObjectStore.prototype.get = originalGet
     }
-  })
+  }, appModuleUrl('platform/recovery-storage.ts'))
   expect(result).toEqual({ reads: 0, envelopeParses: 0, names: ['Lost 0'] })
 })
 
@@ -273,8 +274,7 @@ test('aborted IndexedDB replacement keeps prior payload and metadata atomically 
   page
 }) => {
   await seed(page)
-  const result = await page.evaluate(async () => {
-    const path = '/src/platform/recovery-database.ts'
+  const result = await page.evaluate(async (path) => {
     const db = await import(path)
     const put = IDBObjectStore.prototype.put
     let durability: string | undefined
@@ -304,7 +304,7 @@ test('aborted IndexedDB replacement keeps prior payload and metadata atomically 
       name: old.info.documentName,
       payload: JSON.parse(new TextDecoder().decode(old.payload)).documentName
     }
-  })
+  }, appModuleUrl('platform/recovery-database.ts'))
   expect(result).toEqual({ failed: true, durability: 'strict', name: 'Lost 0', payload: 'Lost 0' })
 })
 
@@ -312,8 +312,7 @@ test('record quota refuses new writes without evicting any unanswered work @core
   page
 }) => {
   await seed(page)
-  const result = await page.evaluate(async () => {
-    const path = '/src/platform/recovery-database.ts'
+  const result = await page.evaluate(async (path) => {
     const db = await import(path)
     await new Promise<void>((resolve, reject) => {
       const open = indexedDB.open('canvaslide-recovery', 2)
@@ -342,7 +341,7 @@ test('record quota refuses new writes without evicting any unanswered work @core
       failed = true
     }
     return { failed, ids: await db.listStoredSessions() }
-  })
+  }, appModuleUrl('platform/recovery-database.ts'))
   expect(result.failed).toBe(true)
   expect(result.ids).toHaveLength(1000)
   expect(result.ids).toContain('lost-0')
@@ -353,27 +352,32 @@ test('worker serializes bytes and rejects corrupt and future envelopes @core-int
   page
 }) => {
   await page.goto('/__checkout')
-  const result = await page.evaluate(async (document) => {
-    const path = '/src/lib/document-file-codec.ts'
-    const codec = await import(path)
-    const meta = { file: null, documentName: document.name, savedAt: 1000 }
-    const bytes = await codec.encodeRecoverySnapshot(document, meta)
-    const transferable = bytes instanceof Uint8Array
-    const decoded = await codec.decodeRecoveryFile(bytes)
-    const detached = bytes.byteLength === 0
-    const encode = (text: string) => new TextEncoder().encode(text)
-    const future = await codec.decodeRecoveryFile(
-      encode(JSON.stringify({ ...meta, version: 99, contents: JSON.stringify(document) }))
-    )
-    const corrupt = await codec.decodeRecoveryFile(encode('not json'))
-    return {
-      transferable,
-      detached,
-      name: decoded.result.document.name,
-      future: { ok: future.result.ok, snapshot: future.snapshot },
-      corrupt: corrupt.result.ok
+  const result = await page.evaluate(
+    async ({ document, path }) => {
+      const codec = await import(path)
+      const meta = { file: null, documentName: document.name, savedAt: 1000 }
+      const bytes = await codec.encodeRecoverySnapshot(document, meta)
+      const transferable = bytes instanceof Uint8Array
+      const decoded = await codec.decodeRecoveryFile(bytes)
+      const detached = bytes.byteLength === 0
+      const encode = (text: string) => new TextEncoder().encode(text)
+      const future = await codec.decodeRecoveryFile(
+        encode(JSON.stringify({ ...meta, version: 99, contents: JSON.stringify(document) }))
+      )
+      const corrupt = await codec.decodeRecoveryFile(encode('not json'))
+      return {
+        transferable,
+        detached,
+        name: decoded.result.document.name,
+        future: { ok: future.result.ok, snapshot: future.snapshot },
+        corrupt: corrupt.result.ok
+      }
+    },
+    {
+      document: createEmptyDocument('Worker deck'),
+      path: appModuleUrl('lib/document-file-codec.ts')
     }
-  }, createEmptyDocument('Worker deck'))
+  )
   expect(result).toEqual({
     transferable: true,
     detached: true,
@@ -388,10 +392,10 @@ test('live malformed and future envelopes are skipped before inspection @core-in
   context
 }) => {
   await seed(page, 1, 99)
-  await page.evaluate(async () => {
-    const path = '/src/platform/recovery-session.ts'
-    await (await import(path)).claimRecoverySession('lost-0')
-  })
+  await page.evaluate(
+    async (path) => (await import(path)).claimRecoverySession('lost-0'),
+    appModuleUrl('platform/recovery-session.ts')
+  )
   const second = await context.newPage()
   await second.goto('/')
   await second.getByRole('button', { name: /^Settings/ }).click()

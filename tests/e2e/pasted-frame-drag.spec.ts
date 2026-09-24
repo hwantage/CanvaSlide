@@ -6,6 +6,7 @@ import {
   type CanvasDocument,
   type CanvasElement
 } from '../../src/shared/canvas/element-types'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 function scene(): CanvasDocument {
@@ -72,25 +73,29 @@ function scene(): CanvasDocument {
 async function state(
   page: Page
 ): Promise<{ document: CanvasDocument; selectedIds: string[]; past: number }> {
-  return page.evaluate(async () => {
-    const url = '/src/store/document-store.ts'
+  return page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     const s = useDocumentStore.getState()
     return { document: s.document, selectedIds: s.selectedIds, past: s.past.length }
-  })
+  }, appModuleUrl('store/document-store.ts'))
 }
 
 async function loadScene(page: Page) {
   await page.goto('/')
   await page.getByTestId('canvas-viewport').waitFor()
-  await page.evaluate(async (doc) => {
-    const docUrl = '/src/store/document-store.ts'
-    const cameraUrl = '/src/store/camera-store.ts'
-    const { useDocumentStore } = await import(docUrl)
-    const { useCameraStore } = await import(cameraUrl)
-    useDocumentStore.getState().loadDocument(doc, null)
-    useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
-  }, scene())
+  await page.evaluate(
+    async ({ doc, docUrl, cameraUrl }) => {
+      const { useDocumentStore } = await import(docUrl)
+      const { useCameraStore } = await import(cameraUrl)
+      useDocumentStore.getState().loadDocument(doc, null)
+      useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
+    },
+    {
+      doc: scene(),
+      docUrl: appModuleUrl('store/document-store.ts'),
+      cameraUrl: appModuleUrl('store/camera-store.ts')
+    }
+  )
   await expect(page.locator('[data-element-id="A"]')).toBeVisible()
 }
 

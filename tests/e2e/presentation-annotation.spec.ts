@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas } from './canvas-gestures'
 
 async function openDeck(page: Page) {
@@ -66,25 +67,25 @@ async function openDeepZoomDeck(page: Page) {
 
 /** The document and its history, which a slide show must never touch. */
 async function documentState(page: Page) {
-  return page.evaluate(async () => {
-    const storeUrl = (name: string) =>
-      performance
-        .getEntriesByType('resource')
-        .map((resource) => resource.name)
-        .filter((url) => url.includes(`/src/store/${name}.ts`))
-        .at(-1)!
-    const { useDocumentStore } = await import(storeUrl('document-store'))
-    const { annotationSession } = await import(storeUrl('presentation-annotation-store'))
-    const doc = useDocumentStore.getState()
-    return {
-      document: doc.document,
-      elements: doc.document.elements,
-      past: doc.past.length,
-      future: doc.future.length,
-      dirty: doc.dirty,
-      pointing: annotationSession.getState().pointing
+  return page.evaluate(
+    async ({ documentUrl, annotationUrl }) => {
+      const { useDocumentStore } = await import(documentUrl)
+      const { annotationSession } = await import(annotationUrl)
+      const doc = useDocumentStore.getState()
+      return {
+        document: doc.document,
+        elements: doc.document.elements,
+        past: doc.past.length,
+        future: doc.future.length,
+        dirty: doc.dirty,
+        pointing: annotationSession.getState().pointing
+      }
+    },
+    {
+      documentUrl: appModuleUrl('store/document-store.ts'),
+      annotationUrl: appModuleUrl('store/presentation-annotation-store.ts')
     }
-  })
+  )
 }
 
 const strokes = (page: Page) => page.getByTestId('presentation-ink').locator('path')
@@ -217,15 +218,10 @@ test('a click leaves no mark, and a stroke keeps its screen width at maximum zoo
   await startShow(page)
   await expect
     .poll(async () =>
-      page.evaluate(async () => {
-        const url = performance
-          .getEntriesByType('resource')
-          .map((resource) => resource.name)
-          .filter((name) => name.includes('/src/store/camera-store.ts'))
-          .at(-1)!
+      page.evaluate(async (url) => {
         const { useCameraStore } = await import(url)
         return useCameraStore.getState().camera.zoom
-      })
+      }, appModuleUrl('store/camera-store.ts'))
     )
     .toBe(64)
 

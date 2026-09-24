@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import type { StoreApi } from 'zustand'
 import type { Camera, CanvasDocument } from '../../src/shared/canvas/element-types'
 
@@ -28,28 +29,28 @@ async function openExample(page: Page, file: string) {
 }
 
 async function observeCamera(page: Page) {
-  await page.evaluate(async () => {
-    const url = (name: string) =>
-      performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((path) => path.includes(`/src/store/${name}.ts`))
-        .at(-1)!
-    const camera: StoreApi<RenderingCamera> = (await import(url('camera-store'))).useCameraStore
-    const document: StoreApi<{ document: CanvasDocument }> = (await import(url('document-store')))
-      .useDocumentStore
-    const w = window as unknown as RenderingWindow
-    w.rendering = { camera, document, original: document.getState().document, samples: [] }
-    const layer = window.document.querySelector<HTMLElement>('[data-testid="world-layer"]')!
-    w.rendering.stop = camera.subscribe((state, previous) => {
-      if (state.animationActive && state.camera !== previous.camera) {
-        w.rendering.samples.push({
-          zoom: state.camera.zoom,
-          layoutZoom: (layer.firstElementChild as HTMLElement).style.zoom
-        })
-      }
-    })
-  })
+  await page.evaluate(
+    async ({ cameraUrl, documentUrl }) => {
+      const camera: StoreApi<RenderingCamera> = (await import(cameraUrl)).useCameraStore
+      const document: StoreApi<{ document: CanvasDocument }> = (await import(documentUrl))
+        .useDocumentStore
+      const w = window as unknown as RenderingWindow
+      w.rendering = { camera, document, original: document.getState().document, samples: [] }
+      const layer = window.document.querySelector<HTMLElement>('[data-testid="world-layer"]')!
+      w.rendering.stop = camera.subscribe((state, previous) => {
+        if (state.animationActive && state.camera !== previous.camera) {
+          w.rendering.samples.push({
+            zoom: state.camera.zoom,
+            layoutZoom: (layer.firstElementChild as HTMLElement).style.zoom
+          })
+        }
+      })
+    },
+    {
+      cameraUrl: appModuleUrl('store/camera-store.ts'),
+      documentUrl: appModuleUrl('store/document-store.ts')
+    }
+  )
 }
 
 async function waitForArrival(page: Page) {

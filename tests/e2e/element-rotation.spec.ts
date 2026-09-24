@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 const shape = (page: Page) => page.locator('[data-element-type="shape"]').first()
@@ -113,8 +114,7 @@ test('exported HTML draws the shape with the same turn', async ({ page }) => {
 test('rotated text keeps the height it measures upright when a document opens', async ({
   page
 }) => {
-  const heights = await page.evaluate(async () => {
-    const url = '/src/store/document-store.ts'
+  const heights = await page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     const store = useDocumentStore.getState()
     const text = (rotation: number) => ({
@@ -139,7 +139,7 @@ test('rotated text keeps the height it measures upright when a document opens', 
     await new Promise((resolve) => setTimeout(resolve, 500))
     const { elements } = useDocumentStore.getState().document
     return [elements.t0.height, elements.t30.height, elements.t90.height]
-  })
+  }, appModuleUrl('store/document-store.ts'))
   // The measurement must read the unrotated layout box, not the turned element's screen extent.
   expect(heights[0]).toBeGreaterThan(10)
   expect(heights).toEqual([heights[0], heights[0], heights[0]])

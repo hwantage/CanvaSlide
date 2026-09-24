@@ -46,6 +46,10 @@ Infinite-canvas presentation app for macOS and Windows (Tauri 2 + React 19), als
 - Recorded edits go through `applyEdit`/`patchElements(ids, patch)`; drags use
   `beginEdit` → `patchElements(..., false)` → `endEdit` so they collapse into one undo step.
 - Use design tokens from `src/renderer/src/assets/main.css`; no ad-hoc hex in components.
+- Until the document format is declared stable, add no compatibility code, tests or documentation
+  for earlier document or storage formats (saved files, recovery records, share snapshots, stored
+  settings). At stabilization the document version is bumped and backward compatibility is
+  supported from that version on.
 
 ## Commits
 

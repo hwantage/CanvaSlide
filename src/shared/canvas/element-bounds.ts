@@ -10,7 +10,7 @@ import {
   toLocalPoint
 } from './element-rotation'
 import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
-import { shapePolygon } from './shape-svg'
+import { ellipseOutline, shapePolygon, type EllipseOutline } from './shape-svg'
 import { visibleTextRect } from './text-clip'
 
 /** The element's own upright box; a rotated element turns this about its centre. */
@@ -53,6 +53,58 @@ function polygonContainsPoint(corners: readonly Point[], point: Point, reach: nu
 }
 
 /**
+ * Distance from a first-quadrant point outside an ellipse to its outline; `a >= b > 0` are its
+ * semi-axes. Eberly's bisection stays exact at any aspect ratio, where a fixed-step iteration can
+ * jump to the far tip of a nearly flat ellipse.
+ */
+function distanceToEllipse(x: number, y: number, a: number, b: number): number {
+  if (y === 0) {
+    const along = (a * x) / (a * a - b * b)
+    return along < 1 ? Math.hypot(a * along - x, b * Math.sqrt(1 - along * along)) : x - a
+  }
+  if (x === 0) {
+    return Math.abs(y - b)
+  }
+  const z0 = x / a
+  const z1 = y / b
+  const ratio = (a / b) ** 2
+  let low = z1 - 1
+  let high = z0 * z0 + z1 * z1 < 1 ? 0 : Math.hypot(ratio * z0, z1) - 1
+  let s = low
+  // Why: bisection stops once the bracket no longer shrinks; 128 halvings bound the worst case.
+  for (let i = 0; i < 128; i += 1) {
+    s = (low + high) / 2
+    if (s === low || s === high) {
+      break
+    }
+    const g = ((ratio * z0) / (s + ratio)) ** 2 + (z1 / (s + 1)) ** 2 - 1
+    if (g > 0) {
+      low = s
+    } else if (g < 0) {
+      high = s
+    } else {
+      break
+    }
+  }
+  return Math.hypot((ratio * x) / (s + ratio) - x, y / (s + 1) - y)
+}
+
+/** Inside an ellipse, or within `reach` of its outline (the stroke around the centreline). */
+function ellipseContainsPoint(ellipse: EllipseOutline, point: Point, reach: number): boolean {
+  const { cx, cy, rx, ry } = ellipse
+  const x = Math.abs(point.x - cx)
+  const y = Math.abs(point.y - cy)
+  if (rx === 0 || ry === 0) {
+    return distanceToSegment({ x, y }, { x: 0, y: 0 }, { x: rx, y: ry }) <= reach
+  }
+  if ((x / rx) ** 2 + (y / ry) ** 2 <= 1) {
+    return true
+  }
+  const distance = rx >= ry ? distanceToEllipse(x, y, rx, ry) : distanceToEllipse(y, x, ry, rx)
+  return distance <= reach
+}
+
+/**
  * Whether an upright-frame `point` lands on what the element draws (fill and stroke), or within
  * `halo` of it. An ellipse's, diamond's or triangle's empty box corners pass through to what lies
  * beneath; a click still grabs the whole box, but a connector end attaches only here.
@@ -67,14 +119,12 @@ export function outlineContainsPoint(element: CanvasElement, point: Point, halo 
     return true
   }
   const p = { x: point.x - x, y: point.y - y }
+  const reach = halo + element.style.strokeWidth / 2
   if (element.shape === 'ellipse') {
-    // Why: the stroke is inset by half its width, so the drawn ellipse is the box's inscribed one.
-    const dx = (p.x - width / 2) / (width / 2 + halo)
-    const dy = (p.y - height / 2) / (height / 2 + halo)
-    return dx * dx + dy * dy <= 1
+    return ellipseContainsPoint(ellipseOutline(element), p, reach)
   }
   const polygon = shapePolygon(element)
-  return !polygon || polygonContainsPoint(polygon, p, halo + element.style.strokeWidth / 2)
+  return !polygon || polygonContainsPoint(polygon, p, reach)
 }
 
 /** Corners of the drawn outline on the canvas (nw, ne, se, sw). */

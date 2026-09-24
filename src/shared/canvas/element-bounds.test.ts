@@ -126,6 +126,53 @@ describe('element-bounds', () => {
     expect(outlineContainsPoint(shape('r', 0, 0), { x: -4, y: -4 }, 6)).toBe(true)
   })
 
+  it("measures the halo from an elongated ellipse's outline, not from widened radii", () => {
+    const ellipse = { ...shape('e', 0, 0, 200, 20), shape: 'ellipse' } as ShapeElement
+    // 15.8px from the stroke's centreline near the curved end: within the halo plus half the stroke.
+    expect(outlineContainsPoint(ellipse, { x: 172.2, y: 32 }, 16)).toBe(true)
+    expect(outlineContainsPoint(ellipse, { x: 172.2, y: 36 }, 16)).toBe(false)
+  })
+
+  it('matches a sampled ground truth for ellipses of every proportion and stroke', () => {
+    const halo = 16
+    for (const [width, height, strokeWidth] of [
+      [200, 20, 2],
+      [20, 200, 2],
+      [100, 100, 2],
+      [400, 6, 4],
+      [60, 30, 20]
+    ] as const) {
+      const style = { ...defaultShapeStyle, strokeWidth }
+      const ellipse = {
+        ...shape('e', 0, 0, width, height),
+        shape: 'ellipse',
+        style
+      } as ShapeElement
+      const rx = width / 2 - Math.min(strokeWidth / 2, width / 2)
+      const ry = height / 2 - Math.min(strokeWidth / 2, height / 2)
+      const reach = halo + strokeWidth / 2
+      for (let px = -halo; px <= width + halo; px += 3.7) {
+        for (let py = -halo; py <= height + halo; py += 3.7) {
+          const dx = px - width / 2
+          const dy = py - height / 2
+          let nearest = Number.POSITIVE_INFINITY
+          for (let i = 0; i < 4000; i += 1) {
+            const t = (i / 4000) * Math.PI * 2
+            nearest = Math.min(nearest, Math.hypot(rx * Math.cos(t) - dx, ry * Math.sin(t) - dy))
+          }
+          if (Math.abs(nearest - reach) < 0.05) {
+            continue
+          }
+          const expected = (dx / rx) ** 2 + (dy / ry) ** 2 <= 1 || nearest <= reach
+          expect(
+            outlineContainsPoint(ellipse, { x: px, y: py }, halo),
+            `${width}×${height} at ${px},${py}`
+          ).toBe(expected)
+        }
+      }
+    }
+  })
+
   it('grabs a triangle anywhere inside its box, like every other shape', () => {
     const chrome = { titleHeight: 24, borderWidth: 8 }
     const triangle = { ...shape('t', 10, 10), shape: 'triangle' } as ShapeElement

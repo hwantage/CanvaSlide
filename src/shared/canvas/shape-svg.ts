@@ -1,9 +1,11 @@
 import type { ConnectorElement, Point, Rect, ShapeElement, ShapeKind } from './element-types'
 
+export type EllipseOutline = { cx: number; cy: number; rx: number; ry: number }
+
 /** The one SVG primitive a shape kind is drawn with, inset so the stroke stays inside the box. */
 export type ShapeGeometry =
   | { tag: 'rect'; x: number; y: number; width: number; height: number; rx: number }
-  | { tag: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
+  | ({ tag: 'ellipse' } & EllipseOutline)
   | { tag: 'polygon'; points: string }
 
 /** Half the stroke, so the outline stays inside the box, clamped so shapes never invert. */
@@ -22,6 +24,13 @@ function triangleOutline(element: ShapeElement): [Point, Point, Point] {
     { x: w - inset.x, y: h - inset.y },
     { x: inset.x, y: h - inset.y }
   ]
+}
+
+/** An ellipse's stroke centreline in its own coordinates. */
+export function ellipseOutline(element: ShapeElement): EllipseOutline {
+  const { width: w, height: h } = element
+  const inset = strokeInset(element)
+  return { cx: w / 2, cy: h / 2, rx: w / 2 - inset.x, ry: h / 2 - inset.y }
 }
 
 function diamondOutline(element: ShapeElement): Point[] {
@@ -66,7 +75,7 @@ export function shapeGeometry(element: ShapeElement): ShapeGeometry {
         rx: style.cornerRadius
       }
     case 'ellipse':
-      return { tag: 'ellipse', cx: w / 2, cy: h / 2, rx: w / 2 - insetX, ry: h / 2 - insetY }
+      return { tag: 'ellipse', ...ellipseOutline(element) }
     case 'diamond':
       return polygonGeometry(diamondOutline(element))
     case 'triangle':

@@ -172,6 +172,10 @@ hardware; it cannot promise a native frame rate. For profiling, see
 
 - Native [file IO](../src-tauri/src/document_io.rs) writes atomically. Browser mode uses upload/download
   fallbacks. Keep failures from replacing the current document or a previously saved file.
+- Native file commands act only on [files the user chose](../src-tauri/src/granted_files.rs) this
+  session: a native Open/Save dialog pick, a document the OS opened the app with, or the file a
+  recovery copy names. Export commands show their own save dialog and write the chosen name under the
+  format's extension, so the webview never supplies a path.
 - The [macOS menu](../src-tauri/src/app_menu.rs) avoids native Undo/Redo accelerators stealing app
   shortcuts. WKWebView may omit a useful DOM paste event without editable focus, so
   [native clipboard fallback](../src/renderer/src/platform/native-clipboard.ts) remains necessary.

@@ -19,8 +19,9 @@ contributors and coding agents alike. How to propose, name and submit a change i
   `src/renderer/src/generated/player.iife.js` (gitignored, rebuilt by `dev:web`/`build:web`/`tc:web`).
 - `src-tauri/src/` — Rust shell on the system WebView (WKWebView on macOS, WebView2 on Windows):
   `document_io.rs`, `document_dialog.rs` and `file_path.rs` (file IO commands, dialogs and native
-  paths), `recovery_store.rs` (crash-recovery copies), `launch_document.rs` (the file the OS opens the
-  app with), `system_fonts.rs` (installed font list), `font_embed.rs` (fonts embedded in HTML export),
+  paths), `granted_files.rs` (the files the user chose this session), `recovery_store.rs`
+  (crash-recovery copies), `launch_document.rs` (the file the OS opens the app with),
+  `system_fonts.rs` (installed font list), `font_embed.rs` (fonts embedded in HTML export),
   `video_embed.rs` (loopback video embed host), `app_menu.rs` (macOS menu).
 - `src/cloud-share/`, `functions/api/` — snapshot validation/storage and Cloudflare Pages routes.
   `src/shared/cloud-share.ts` holds the share limits, IDs and snapshot shape the app and API agree on;

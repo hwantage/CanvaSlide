@@ -42,6 +42,10 @@ platform's encoding. Invalid handles fall back to Save As. Recovery does not com
 mtime: a newer timestamp cannot establish that the file includes the recovered edits. Named-file
 offers warn that the original may differ and should be compared before saving over it.
 
+The native shell accepts a copy only when `file` is null or names a file already
+[chosen this session](../src-tauri/src/granted_files.rs), exactly once. Reading a copy for Restore
+grants that file, so the restored document saves back to it.
+
 | Platform | Storage and commit boundary                                                                                                                                                                                                                                                                                                                         |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Browser  | IndexedDB `canvaslide-recovery`, schema version 2. `snapshots` stores small metadata/byte counts; `payloads` stores binary envelopes. One transaction updates or removes both stores and explicitly requests `durability: 'strict'`. Acknowledgement waits for transaction completion. The browser decides how that durability hint is implemented. |

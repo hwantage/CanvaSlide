@@ -3,6 +3,7 @@ mod document_dialog;
 mod document_io;
 mod file_path;
 mod font_embed;
+mod granted_files;
 mod launch_document;
 mod recovery_store;
 mod system_fonts;
@@ -62,6 +63,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(granted_files::GrantedFiles::default())
         .manage(recovery_store::RecoveryState::default())
         .manage(launch_document::PendingDocument::default())
         .manage(video_embed::VideoEmbedServer::default())
@@ -79,8 +81,8 @@ pub fn run() {
             document_dialog::pick_document_save_path,
             document_io::read_document,
             document_io::write_document,
-            document_io::write_html_export,
-            document_io::write_pdf_export,
+            document_dialog::save_html_export,
+            document_dialog::save_pdf_export,
             recovery_store::recovery_directory,
             recovery_store::start_recovery_session,
             recovery_store::claim_recovery_session,

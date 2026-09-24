@@ -39,7 +39,7 @@ Fixes #
 ## Checklist
 
 - [ ] This PR is small and focused on one topic
-- [ ] `pnpm check` passes (oxlint + max-lines + oxfmt + tsc + vitest)
+- [ ] `pnpm check` passes (oxlint + max-lines + control chars + oxfmt + tsc + vitest)
 - [ ] `pnpm test:e2e` passes, or the change cannot affect browser E2E
 - [ ] `pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test` pass, or `src-tauri/` is untouched
 - [ ] `pnpm test:site` passes, or website content, code and build inputs are untouched

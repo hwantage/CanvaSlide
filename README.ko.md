@@ -77,7 +77,7 @@ Tauri 사전 준비가 필요합니다. 전체 설정과 검증 절차는 [기�
 pnpm install
 pnpm dev:web        # 브라우저 편집기, http://127.0.0.1:1420
 pnpm dev            # Tauri 데스크톱 창
-pnpm check          # lint + 줄 수 + format + typecheck + 단위 테스트
+pnpm check          # lint + 줄 수 + 제어 문자 + format + typecheck + 단위 테스트
 pnpm test:e2e       # Chromium 전체 + Firefox/WebKit 핵심 상호작용
 ```
 

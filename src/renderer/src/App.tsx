@@ -26,6 +26,7 @@ import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
 import { preventPageContextMenu } from '@/lib/native-context-menu'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
+import { isModalDialogOpen } from '@/store/modal-stack'
 import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
 import { useCloudShareStore } from '@/store/cloud-share-store'
 import { cancelExampleRequest, useExampleStore } from '@/store/example-store'
@@ -62,7 +63,8 @@ function Editor() {
         event.defaultPrevented ||
         event.isComposing ||
         event.keyCode === 229 ||
-        document.querySelector('dialog[open], [role="dialog"], [role="menu"], [role="listbox"]')
+        isModalDialogOpen() ||
+        document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')
       ) {
         return
       }

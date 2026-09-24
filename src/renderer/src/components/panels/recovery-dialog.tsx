@@ -8,9 +8,6 @@ import {
   useRecoveryStore
 } from '@/store/recovery-store'
 
-// Later is explicit so a stray backdrop click cannot hide the recovery choice.
-const requireAnAnswer = () => {}
-
 export function RecoveryDialog() {
   const offers = useRecoveryStore(selectRecoveryOffers)
   const prompting = useRecoveryStore(selectRecoveryPrompting)
@@ -31,12 +28,9 @@ export function RecoveryDialog() {
     ? ''
     : new Date(offer.snapshot.savedAt).toLocaleString(currentLocale())
 
+  // No onClose: either choice is irreversible, so neither Escape nor a stray click answers it.
   return (
-    <ModalDialog
-      label={t('recovery.title')}
-      onClose={requireAnAnswer}
-      className="flex w-[24rem] flex-col gap-3"
-    >
+    <ModalDialog label={t('recovery.title')} className="flex w-[24rem] flex-col gap-3">
       <h2 className="text-sm font-semibold">
         {t('recovery.title')}
         {batchRemaining > 1 && (

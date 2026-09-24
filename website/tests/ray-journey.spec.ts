@@ -100,10 +100,16 @@ test('wing motion pauses, resumes, and remembers the preference', async ({ page 
   await page.goto('./')
   await expect(page.locator('.ray-flight')).toHaveAttribute('data-renderer', 'webgl')
   await page.getByRole('button', { name: 'Pause mascot animation', exact: true }).click()
-  const surface = page.locator('.ray-flight canvas')
-  const first = await surface.screenshot()
-  expect(await surface.screenshot()).toEqual(first)
+  await expect(page.locator('.ray-flight')).toHaveAttribute('data-motion', 'still')
+  // Why: page content above the transparent canvas adds compositing noise unrelated to the wings.
+  const wings = () =>
+    page
+      .locator('.ray-flight canvas')
+      .screenshot({ style: '.home-page > :not(.ray-layer) { visibility: hidden }' })
+  const first = await wings()
+  expect(await wings()).toEqual(first)
   await page.getByRole('button', { name: 'Resume mascot animation', exact: true }).click()
+  await expect(page.locator('.ray-flight')).toHaveAttribute('data-motion', 'running')
   await page.evaluate(
     () =>
       new Promise<void>((done) => {
@@ -119,11 +125,13 @@ test('wing motion pauses, resumes, and remembers the preference', async ({ page 
       })
   )
   await page.getByRole('button', { name: 'Pause mascot animation', exact: true }).click()
-  expect(await surface.screenshot()).not.toEqual(first)
+  await expect(page.locator('.ray-flight')).toHaveAttribute('data-motion', 'still')
+  expect(await wings()).not.toEqual(first)
   await page.reload()
   await expect(
     page.getByRole('button', { name: 'Resume mascot animation', exact: true })
   ).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.ray-flight')).toHaveAttribute('data-motion', 'still')
 })
 
 test('reduced motion keeps static illustrations and can change while the page is open', async ({

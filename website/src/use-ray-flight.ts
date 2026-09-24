@@ -74,7 +74,10 @@ export function useRayFlight(
         lastDraw = now
       }
       home.dataset.rayReady = 'true'
-      if (!pause.current || motion.moving) {
+      const running = !pause.current || motion.moving
+      // Why: pausing draws one last frame on the next tick; tests wait for 'still' to compare it.
+      flight.dataset.motion = running ? 'running' : 'still'
+      if (running) {
         animation = requestAnimationFrame(tick)
       }
     }
@@ -92,6 +95,9 @@ export function useRayFlight(
       cancelAnimationFrame(animation)
       animation = 0
       previous = performance.now()
+      if (document.hidden) {
+        delete flight.dataset.motion
+      }
       schedule()
     }
     const loadSurface = async () => {
@@ -145,6 +151,7 @@ export function useRayFlight(
       canvas.removeEventListener('webglcontextlost', lost)
       canvas.removeEventListener('webglcontextrestored', restored)
       delete home.dataset.rayReady
+      delete flight.dataset.motion
       wake.current = () => {}
     }
   }, [enabled, flightRef, canvasRef])

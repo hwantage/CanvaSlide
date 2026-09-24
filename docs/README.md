@@ -19,6 +19,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | Create a presentation with an AI assistant             | [Authoring guide](../examples/README.md#authoring-with-ai), [portable skill](../skills/README.md) |
 | Maintain the website and its user guide                | [Website contributor guide](../website/README.md)                                                 |
 | Build and publish a release                            | [Release procedure](./RELEASE.md)                                                                 |
+| Report a security vulnerability                        | [Security policy](../SECURITY.md)                                                                 |
 
 ## Using this map
 

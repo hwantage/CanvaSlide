@@ -203,7 +203,8 @@ Maintainers may ask for changes; keep the conversation on the PR so the reasonin
 
 ## Reporting Bugs and Requesting Features
 
-Open a GitHub issue. For bugs, include:
+Open a GitHub issue. Report security vulnerabilities privately instead, as described in
+[`SECURITY.md`](./SECURITY.md). For bugs, include:
 
 - CanvaSlide version (or commit), OS and version, and whether you ran the Tauri app or browser mode
 - Steps to reproduce, expected vs. actual behaviour

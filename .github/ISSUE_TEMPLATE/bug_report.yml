@@ -8,6 +8,7 @@ body:
     attributes:
       value: |
         Use this form for CanvaSlide bugs. Include enough detail for someone else to reproduce the issue.
+        Report security vulnerabilities privately instead, as described in [SECURITY.md](https://github.com/hwantage/CanvaSlide/blob/main/SECURITY.md).
 
         Please write your issue in English.
 

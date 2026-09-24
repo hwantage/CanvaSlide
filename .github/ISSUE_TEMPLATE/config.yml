@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/hwantage/CanvaSlide/security/advisories/new
+    about: Report security problems privately, not in a public issue. See SECURITY.md.
+  - name: User guide
+    url: https://hwantage.github.io/CanvaSlide/docs/
+    about: Step-by-step guides for using CanvaSlide.

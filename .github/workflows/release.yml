@@ -1,7 +1,8 @@
 # Why: a `v*` tag is the release trigger. The version bump in package.json (which tauri.conf.json
 # reads its version from) is merged to main like any change, then its merge commit is tagged;
 # pushing the tag runs this workflow, which waits for that commit's CI, builds every platform and
-# attaches the installers to a *draft* GitHub Release so the notes can be reviewed before publishing.
+# attaches the installers to a *draft* GitHub Release, whose notes the maintainer writes before
+# publishing.
 name: Release
 
 on:
@@ -10,9 +11,6 @@ on:
 
 permissions:
   contents: read
-
-env:
-  RELEASE_NOTES: 'See the assets below to download this version and install.'
 
 jobs:
   # Why: only a commit that passed CI on main is released; the tag may be pushed before CI finishes.
@@ -198,7 +196,8 @@ jobs:
           fi
       # Why: latest.json is the in-app updater's feed (see docs/RELEASE.md §7). It is written only
       # when every signature passes with a key installed apps trust: the latest release's, or this
-      # release's own when none is published yet or UPDATER_KEY_CHANGE_TAG names this tag.
+      # release's own when none is published yet or UPDATER_KEY_CHANGE_TAG names this tag. Its notes
+      # are added from the Release body when the release is published (release-notes.yml).
       - name: Write the updater feed
         env:
           TAG: ${{ github.ref_name }}
@@ -215,8 +214,9 @@ jobs:
             trusted+=(--trusted-config src-tauri/tauri.conf.json)
           fi
           node config/scripts/updater-feed.mjs release-assets --tag "$TAG" \
-            --repository "$REPOSITORY" --notes "$RELEASE_NOTES" "${trusted[@]}" \
+            --repository "$REPOSITORY" "${trusted[@]}" \
             > release-assets/latest.json
+      # Why: the draft starts empty so no placeholder can reach the update notice if it is published.
       - name: Upload to the draft release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -231,7 +231,7 @@ jobs:
             gh release upload "$TAG" release-assets/* --clobber
           elif grep -qx 'release not found' "$RUNNER_TEMP/view.err"; then
             gh release create "$TAG" release-assets/* --draft --verify-tag \
-              --title "CanvaSlide $TAG" --notes "$RELEASE_NOTES"
+              --title "CanvaSlide $TAG" --notes ''
           else
             cat "$RUNNER_TEMP/view.err" >&2
             exit 1

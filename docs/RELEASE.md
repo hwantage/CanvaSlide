@@ -1,6 +1,7 @@
 # CanvaSlide — 릴리즈 가이드
 
-워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) · [문서 목록](./README.md)
+워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) ·
+[`.github/workflows/release-notes.yml`](../.github/workflows/release-notes.yml) · [문서 목록](./README.md)
 
 `main`에서 CI를 통과한 커밋에 붙인 git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
 릴리즈는 메인테이너가 수행하며, 코드 규칙과 검증은 [`AGENTS.md`](../AGENTS.md), 기여 절차는 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
@@ -14,7 +15,7 @@ git commit -am "Prepare v0.8.0 release"      # ② 릴리즈 PR을 올리고 CI 
 git switch main && git pull
 git tag -a v0.8.0 -m v0.8.0 <머지 커밋>        # ③ 머지 커밋에 태그를 붙여 푸시하면
 git push origin v0.8.0                       #    release.yml 이 그 커밋의 CI를 확인한 뒤 빌드한다
-# ④ GitHub → Releases 에서 초안(draft)을 열어 노트를 다듬고 Publish
+# ④ GitHub → Releases 에서 초안(draft)에 노트를 쓰고 Publish — 앱의 업데이트 안내에도 이 노트가 나간다
 ```
 
 `main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. 저장소 관리자는 긴급할 때 PR 머지에서만
@@ -60,11 +61,14 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    ```
 5. Actions 탭에서 **Release** 워크플로가 끝나기를 기다린다. 먼저 태그 커밋의 `main` CI가 성공으로 끝나기를
    기다리고, macOS와 Windows 빌드가 병렬로 돈 뒤 서명, 게시 잡이 이어진다.
-6. **Releases** 페이지에 초안이 생겨 있다. 다음을 확인한다.
+6. **Releases** 페이지에 본문이 빈 초안이 생겨 있다. 다음을 확인하고 노트를 쓴다.
    - 첨부 파일: `CanvaSlide_<버전>_universal.dmg`, `CanvaSlide_<버전>_x64-setup.exe`, `CanvaSlide_<버전>_x64_en-US.msi`
    - **Generate release notes** 버튼을 눌러 지난 태그 이후 머지된 PR 제목을 불러온 뒤 사용자 관점으로 다듬는다.
    - 서명이 없는 동안은 §6의 안내 문구를 노트에 넣는다.
+   - Release 본문이 릴리즈 노트의 유일한 원본이다. 공개하면 이 본문이 그대로 데스크톱 앱의 업데이트 안내에 나간다(§7).
 7. **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
+8. Actions 탭에서 **Release notes** 워크플로가 성공했는지 확인한다. 이 워크플로는 공개 직후 본문을
+   `latest.json`의 `notes`로 옮기고, 공개한 뒤 본문을 고치면 다시 실행되어 앱의 안내도 바꾼다.
 
 ## 4. 워크플로가 하는 일
 
@@ -77,7 +81,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
 | build · macOS (universal)        | `macos-latest`   | 읽기 전용, 비밀 없음     | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel) |
 | build · Windows (x64)            | `windows-latest` | 읽기 전용, 비밀 없음     | `.exe` (NSIS 설치 파일), `.msi`                          |
 | sign updater files               | `ubuntu-latest`  | `release` 환경의 서명 키 | 업데이터 파일의 서명(`.sig`)                             |
-| publish draft release            | `ubuntu-latest`  | `contents: write`        | `latest.json`, 같은 태그의 Release 초안                  |
+| publish draft release            | `ubuntu-latest`  | `contents: write`        | 노트 없는 `latest.json`, 본문이 빈 Release 초안          |
 
 0. **wait for CI**: 태그 커밋에서 `main`에 푸시되어 실행된 **CI** 워크플로 실행을 Actions API로 찾아 끝나기를
    기다린다. 10분 안에 실행이 나타나지 않거나(태그 커밋이 `main` 푸시의 끝 커밋, 즉 PR의 머지 커밋이 아님)
@@ -94,8 +98,31 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    공개키, 즉 공개된 최신 릴리즈(앱이 업데이트를 받는 `releases/latest`) 태그의 `tauri.conf.json` 공개키로
    앱과 같은 규칙에 따라 검증하고 `latest.json`을 만든다. 공개된 릴리즈가 없거나 저장소 변수
    `UPDATER_KEY_CHANGE_TAG`가 이 태그 이름이면 이 태그의 공개키도 신뢰한다(§7 키 교체).
-   서명이 맞지 않거나 플랫폼이 빠지면 업로드 전에 실패한다. 그다음 같은 태그의 Release 초안을 만들고 파일을
-   올린다. 초안이 이미 있으면 파일을 교체하고, 이미 공개된 Release면 실패한다.
+   서명이 맞지 않거나 플랫폼이 빠지면 업로드 전에 실패한다. 그다음 같은 태그의 Release 초안을 본문 없이 만들고
+   파일을 올린다. 초안이 이미 있으면 파일을 교체하고, 이미 공개된 Release면 실패한다. 이때의 `latest.json`에는
+   `notes`가 없다. 대체 문구를 넣지 않으므로 노트 없이 공개하면 앱의 안내에는 새 버전과 버튼만 보인다. 공개한 뒤
+   **Release notes** 워크플로가 끝날 때까지도 그 사이에 확인한 앱에는 노트가 없다.
+
+**Release notes** 워크플로(`release-notes.yml`)는 Release가 공개되거나(`published`) 공개된 Release가 수정될 때
+(`edited`) 실행된다. 초안은 건너뛴다. 한 잡이 `contents: write` 권한으로 세 단계를 거친다.
+
+1. 토큰을 쓰는 단계가 Release가 공개 상태인지 확인하고 본문과 `latest.json`을 내려받는다.
+2. 토큰이 없는 단계가 [`updater-feed-notes.mjs`](../config/scripts/updater-feed-notes.mjs)로 본문을 `notes`에
+   넣는다. 줄바꿈은 LF로 맞추고 앞뒤 공백을 지운다. 본문이 비면 `notes`를 뺀다. `latest.json`의 버전이 태그와
+   다르면 실패한다. 다른 필드는 바꾸지 않는다.
+3. 토큰을 쓰는 단계가 새 파일을 `latest.next.json`으로 먼저 올리고, 기존 `latest.json`을 지운 뒤 새 파일의 이름을
+   `latest.json`으로 바꾼다. `gh release upload --clobber latest.json`은 기존 파일을 먼저 지우므로 업로드가 실패하면
+   피드가 사라진다. 이 순서에서는 이름 변경 API 호출 한 번 동안만 `latest.json`이 없다. 그 사이에 멈춘 실행은
+   `latest.next.json`만 남기고, 다음 실행이 이 파일을 읽어 이어서 교체한다.
+
+저장소의 불변 릴리즈(immutable releases)를 켜면 공개된 Release의 파일을 바꿀 수 없으므로 이 워크플로도 동작하지 않는다.
+
+Release 이벤트는 태그 커밋에 있는 워크플로 파일로 실행되므로, 이 파일이 없는 태그(v0.7.0 이하)에서는 자동으로
+돌지 않는다. 그런 Release와 실패한 실행은 `main`의 워크플로를 수동으로 실행해 처리한다.
+
+```bash
+gh workflow run release-notes.yml -f tag=v0.8.0
+```
 
 모든 잡의 체크아웃은 토큰을 작업 폴더에 남기지 않는다(`persist-credentials: false`). 모든 워크플로의 액션은 커밋
 SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
@@ -125,9 +152,13 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
 - **서명 또는 게시 잡이 실패**: `release` 환경의 서명 키와 암호를 확인한다. 게시 잡이
   `signed with a key other than the one installed apps trust`로 실패하면 환경의 개인키가 공개된 최신 릴리즈의
   공개키와 짝이 아니다.
+- **Release notes 워크플로가 실패**: 대개 앱의 업데이트 안내에 노트가 없거나 이전 노트가 남는다. 마지막 이름 변경에서
+  실패했다면 `latest.json`이 없어 업데이트 확인도 실패하므로 바로 다시 실행한다. **Re-run failed jobs**를 누르거나
+  §4의 `gh workflow run release-notes.yml -f tag=<태그>`를 실행하면 남은 `latest.next.json`에서 이어서 교체한다.
+  `is a draft`로 실패했다면 공개 전에 실행된 것이므로 공개한 뒤 다시 실행한다.
 - **초안을 버리고 다시**: 먼저 실패한 잡 재실행을 사용한다. 초안·태그를 재작성할 필요가 있으면
   공개 여부와 두 플랫폼의 산출물을 확인한 뒤 메인테이너가 처리한다.
-- **이미 공개한 버전에 문제**: 공개된 Release는 수정하지 말고 §3 절차로 `patch` 버전을 올려 다음 버전을 낸다.
+- **이미 공개한 버전에 문제**: 공개된 Release의 파일과 태그는 바꾸지 말고(노트 본문은 §3 8단계처럼 고칠 수 있다) §3 절차로 `patch` 버전을 올려 다음 버전을 낸다.
 - **로컬에서 재현**: 릴리즈 빌드는 키 없이 `pnpm bundle:local`(현재 OS용) 또는
   `pnpm bundle:local --target universal-apple-darwin`으로 재현한다. 서명까지 확인하려면 §7의 서명 키를 환경 변수로
   주고 업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.
@@ -146,9 +177,30 @@ pnpm bundle:local --bundles app
 현재 릴리즈 워크플로는 업데이터 파일만 서명하고 Apple/Windows 코드 서명은 하지 않는다. 업데이터 서명과
 OS 코드 서명은 별개다. 서명 없는 배포에서 나타날 수 있는 다음 경고와 설치 방법을 릴리즈 노트에 안내한다.
 
-- **macOS**: "손상되었기 때문에 열 수 없습니다" 또는 Gatekeeper 차단. 우클릭 → 열기, 또는
-  `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`.
+해결 방법은 macOS 버전보다 경고 문구에 따라 다르다. 현재 빌드의 Apple Silicon 코드는 링커가 붙인 임시 서명만 있고
+번들 리소스가 봉인되지 않아 서명 검증에 실패하므로, Apple Silicon Mac에서는 "손상" 경고가 나올 수 있다.
+
+- **macOS, "손상되었기 때문에 열 수 없습니다"**: 이 경고는 **그래도 열기**나 우클릭 → 열기로 넘길 수 없다. 앱을
+  응용 프로그램 폴더에 옮긴 뒤 `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`을 실행해 격리 속성을 지운다.
+- **macOS, 그 밖의 차단 경고**(확인되지 않은 개발자, Apple이 악성 코드 여부를 확인할 수 없음 등):
+  - macOS 15(Sequoia) 이상: 경고를 닫고 **시스템 설정 → 개인정보 보호 및 보안** 아래쪽의 CanvaSlide 항목에서
+    **그래도 열기**를 누른 뒤 암호로 확인한다. macOS 15부터 Finder의 우클릭 → 열기로는 이 차단을 넘길 수 없다.
+  - macOS 13–14: Finder에서 앱을 Control-클릭(우클릭) → **열기**. **시스템 설정 → 개인정보 보호 및 보안**에서도 열 수 있다.
+  - macOS 12: Finder에서 앱을 Control-클릭(우클릭) → **열기**. **시스템 환경설정 → 보안 및 개인 정보 보호 → 일반**에서도
+    열 수 있다.
 - **Windows**: SmartScreen "PC 보호" 화면. **추가 정보 → 실행**.
+
+릴리즈 노트는 영어로 쓰므로 다음 문구를 그대로 쓸 수 있다.
+
+```markdown
+- **macOS, "CanvaSlide is damaged and can't be opened":** Finder and System Settings offer no way past
+  this alert. Move the app to Applications and run
+  `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`.
+- **macOS 15 and later, any other alert:** Close the alert, open **System Settings → Privacy & Security**,
+  click **Open Anyway** next to CanvaSlide and confirm.
+- **macOS 12–14, any other alert:** Control-click (right-click) `CanvaSlide.app` in Finder and choose **Open**.
+- **Windows:** If SmartScreen appears, click **More info → Run anyway**.
+```
 
 OS 코드 서명은 번들러가 빌드 중에 하므로, 붙일 때는 빌드 잡의 `--no-sign`을 빼고 아래 자격 증명을 그 단계에
 전달해야 한다. `--no-sign`이 없으면 `tauri build`가 업데이터 키도 요구하므로, 서명 키를 빌드 단계에 다시
@@ -169,7 +221,7 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
 
 | 플랫폼   | 동작                                                                                                       |
 | -------- | ---------------------------------------------------------------------------------------------------------- |
-| Windows  | 새 버전을 앱 안에서 내려받아 설치하고 다시 시작한다(NSIS 조용한 설치).                                     |
+| Windows  | 새 버전을 앱 안에서 내려받은 뒤 앱을 닫고 설치 파일을 실행한다. 설치가 끝나면 앱이 다시 열린다.            |
 | macOS    | 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. Apple 서명이 생기면 앱 내 설치로 바꾼다. |
 | 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리즈 노트 링크로 공개 버전을 확인한다.             |
 
@@ -197,5 +249,10 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
 
 - 로컬에서 서명까지 확인하려면 §5처럼 `pnpm bundle:local`로 빌드한 뒤, 같은 서명 키를 환경 변수로 주고
   업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.
-- 릴리즈 노트: `latest.json`의 `notes`는 `release.yml`의 `RELEASE_NOTES` 고정 문구다. 초안 본문을 고쳐도 앱의
-  업데이트 안내에는 반영되지 않는다.
+- 릴리즈 노트: 앱의 업데이트 안내는 `latest.json`의 `notes`를 보여 준다. 이 값은 공개된 Release 본문을
+  **Release notes** 워크플로가 옮긴 것이다(§4). 노트는 Release 본문에서만 고친다.
+- Windows 설치 방식: `tauri.conf.json`에 `plugins.updater.windows.installMode`가 없어 업데이터 플러그인의 기본값
+  `passive`를 쓴다. 설치 창에는 진행 표시줄만 나온다. NSIS 설치 파일로 설치한 앱은 `-setup.exe`를 받고, 현재
+  사용자용 설치(`bundle.windows.nsis.installMode: "currentUser"`)라 사용자 입력이 필요 없다. MSI로 설치한 앱은
+  `.msi`를 받는데, Tauri의 MSI는 기기 전체 설치라 Windows가 관리자 확인(UAC)을 요청한다
+  (`latest.json`의 `windows-x86_64-nsis`, `windows-x86_64-msi`).

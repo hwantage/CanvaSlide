@@ -1,0 +1,81 @@
+# Why: the in-app update notice shows latest.json's notes, so the published Release body is their
+# one source. Release events run this file from the tagged commit; older releases use the manual run.
+name: Release notes
+
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release whose latest.json gets the Release body as its notes
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Why: each run reads the current body, so a queued run after an edit writes the final notes.
+concurrency:
+  group: release-notes-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  # Why: a draft's notes are copied when it is published; installed apps never see a draft.
+  notes:
+    name: copy the release notes into latest.json
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Download the published release's body and latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          draft="$(gh release view "$TAG" --json isDraft --jq .isDraft)"
+          if [ "$draft" != false ]; then
+            echo "Release $TAG is a draft; its notes are copied when it is published" >&2
+            exit 1
+          fi
+          gh release view "$TAG" --json body --jq '.body // ""' > "$RUNNER_TEMP/body.md"
+          # Why: a run stopped between the delete and the rename below leaves only latest.next.json.
+          feed="$(gh release view "$TAG" --json assets \
+            --jq '[.assets[].name | select(. == "latest.json" or . == "latest.next.json")] | sort | first // empty')"
+          if [ -z "$feed" ]; then
+            echo "Release $TAG has no latest.json" >&2
+            exit 1
+          fi
+          gh release download "$TAG" --pattern "$feed" --output "$RUNNER_TEMP/published.json"
+      - name: Write the notes into latest.json
+        run: |
+          mkdir "$RUNNER_TEMP/upload"
+          node config/scripts/updater-feed-notes.mjs "$RUNNER_TEMP/published.json" \
+            --tag "$TAG" --body "$RUNNER_TEMP/body.md" > "$RUNNER_TEMP/upload/latest.next.json"
+      # Why: upload under another name first; `--clobber` on latest.json would delete the live feed
+      # before uploading, and a failed upload would leave installed apps without one.
+      - name: Replace latest.json on the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload "$TAG" "$RUNNER_TEMP/upload/latest.next.json" --clobber
+          asset_id() {
+            gh release view "$TAG" --json assets \
+              --jq ".assets[] | select(.name == \"$1\") | .apiUrl | split(\"/\") | last"
+          }
+          staged="$(asset_id latest.next.json)"
+          current="$(asset_id latest.json)"
+          if [ -n "$current" ]; then
+            gh api -X DELETE "repos/$GH_REPO/releases/assets/$current"
+          fi
+          gh api -X PATCH "repos/$GH_REPO/releases/assets/$staged" -f name=latest.json --silent

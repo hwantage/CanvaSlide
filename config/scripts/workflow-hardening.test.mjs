@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 const workflowDirectory = new URL('../../.github/workflows/', import.meta.url)
 const workflows = readdirSync(workflowDirectory)
@@ -11,6 +20,7 @@ const workflows = readdirSync(workflowDirectory)
   .map((name) => ({ name, text: readFileSync(new URL(name, workflowDirectory), 'utf8') }))
 const release = workflows.find(({ name }) => name === 'release.yml').text
 const ci = workflows.find(({ name }) => name === 'ci.yml').text
+const releaseNotes = workflows.find(({ name }) => name === 'release-notes.yml').text
 
 // Each job's lines, keyed by job id, from a workflow whose jobs sit at two-space indent.
 function jobsOf(workflow) {
@@ -90,7 +100,7 @@ test('the release build runs without secrets or write access, and only publish c
 })
 
 // A step's `run: |` script, run by bash with `-e` as Actions does, with `env` added.
-function runScript(step, env) {
+function runScript(step, env, cwd) {
   const body = step.slice(step.indexOf('run: |\n') + 'run: |\n'.length).split('\n')
   const end = body.findIndex((line) => line.trim() && !line.startsWith(' '.repeat(10)))
   const script = body
@@ -98,6 +108,7 @@ function runScript(step, env) {
     .map((line) => line.slice(10))
     .join('\n')
   return spawnSync('bash', ['-e', '-c', script], {
+    cwd,
     encoding: 'utf8',
     env: { ...process.env, ...env },
     timeout: 10_000
@@ -315,5 +326,255 @@ test(
     assert.notEqual(status, 0)
     assert.equal(sleeps.length, 20)
     assert.match(stderr, /No CI run from a push to main for abc123/)
+  }
+)
+
+test('the release draft starts without notes and passes the feed script only flags it accepts', () => {
+  const upload = stepsOf(jobsOf(release).publish).find((step) => /gh release create/.test(step))
+  // Why: the published body becomes the update notice's notes, so no placeholder may start it.
+  assert.match(upload, /\n\s+--title "CanvaSlide \$TAG" --notes ''\n/)
+  const feedStep = stepsOf(jobsOf(release).publish).find((step) =>
+    step.includes('updater-feed.mjs')
+  )
+  // The step's only other command is `git show`, so every flag in it is one for the feed script.
+  const flags = [...new Set(feedStep.match(/(?<=[\s(])--[\w-]+/g))]
+  assert.deepEqual(flags.toSorted(), ['--repository', '--tag', '--trusted-config'])
+  const script = fileURLToPath(new URL('./updater-feed.mjs', import.meta.url))
+  const args = ['missing-directory', ...flags.flatMap((flag) => [flag, 'x'])]
+  const result = spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' })
+  assert.equal(result.status, 1)
+  assert.doesNotMatch(result.stderr, /usage|Unknown option/)
+})
+
+test('release notes are copied only from a published release, and only steps without code get the token', () => {
+  assert.match(
+    releaseNotes,
+    /\non:\n {2}release:\n {4}types: \[published, edited\]\n {2}workflow_dispatch:\n/
+  )
+  assert.match(releaseNotes, /\n {6}tag:\n {8}description: [^\n]+\n {8}required: true\n/)
+  assert.match(
+    releaseNotes,
+    /\nconcurrency:\n {2}group: release-notes-\$\{\{ github\.event\.release\.tag_name \|\| inputs\.tag \}\}\n {2}cancel-in-progress: false\n/
+  )
+  assert.deepEqual(permissionsAt(releaseNotes, ''), ['contents: read'])
+  const jobs = jobsOf(releaseNotes)
+  assert.deepEqual(Object.keys(jobs), ['notes'])
+  assert.match(
+    jobs.notes,
+    /\n {4}if: github\.event_name == 'workflow_dispatch' \|\| !github\.event\.release\.draft\n/
+  )
+  assert.match(
+    jobs.notes,
+    /\n {4}env:\n {6}TAG: \$\{\{ github\.event\.release\.tag_name \|\| inputs\.tag \}\}\n {4}steps:\n/
+  )
+  assert.deepEqual(permissionsAt(`\n${jobs.notes}\n`, '    '), ['contents: write'])
+  assert.doesNotMatch(releaseNotes, /secrets\./)
+  const steps = stepsOf(jobs.notes).filter((step) => step.includes('run: |'))
+  // Why: counting the whole file also catches a token moved up to the job or workflow env.
+  assert.equal(releaseNotes.match(/github\.token/g).length, 2)
+  assert.equal(releaseNotes.match(/GH_TOKEN/g).length, 2)
+  assert.deepEqual(
+    steps.map((step) => /\n {10}GH_TOKEN: \$\{\{ github\.token \}\}\n/.test(step)),
+    [true, false, true]
+  )
+  for (const step of [steps[0], steps[2]]) {
+    assert.doesNotMatch(step, /\b(pnpm|npm|npx|node) /, step)
+  }
+})
+
+const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url))
+const publishedFeed = {
+  version: '1.2.3',
+  notes: 'See the assets below to download this version and install.',
+  pub_date: '2026-01-02T03:04:05.678Z',
+  platforms: { 'darwin-aarch64': { signature: 'c2ln', url: 'https://example.test/app.tar.gz' } }
+}
+const publishedRelease = (overrides = {}) => ({
+  isDraft: false,
+  body: 'Notes',
+  assets: [
+    { id: 11, name: 'CanvaSlide.dmg', content: 'dmg' },
+    { id: 12, name: 'latest.json', content: JSON.stringify(publishedFeed) }
+  ],
+  ...overrides
+})
+
+// The release-notes steps in order against a fake `gh` that keeps `release` (isDraft, body and
+// assets) for tag v1.2.3 and fails the first `failOn` call ('upload', 'DELETE' or 'PATCH').
+function runReleaseNotes(release, failOn) {
+  const temp = mkdtempSync(join(tmpdir(), 'release-notes-'))
+  const bin = join(temp, 'bin')
+  const runnerTemp = join(temp, 'runner')
+  const state = join(temp, 'state.json')
+  try {
+    mkdirSync(bin)
+    mkdirSync(runnerTemp)
+    writeFileSync(state, JSON.stringify({ release, failOn, calls: [] }))
+    writeFileSync(
+      join(bin, 'gh'),
+      `#!${process.execPath}
+const fs = require('node:fs')
+const path = require('node:path')
+const { execFileSync } = require('node:child_process')
+const args = process.argv.slice(2)
+const state = JSON.parse(fs.readFileSync(${JSON.stringify(state)}, 'utf8'))
+const { release } = state
+const save = () => fs.writeFileSync(${JSON.stringify(state)}, JSON.stringify(state))
+const fail = (message) => {
+  save()
+  process.stderr.write(message + '\\n')
+  process.exit(1)
+}
+state.calls.push(args.join(' '))
+const operation = args[0] === 'api' ? args[args.indexOf('-X') + 1] : args[1]
+if (operation === state.failOn) {
+  state.failOn = null
+  if (operation === 'upload') {
+    // --clobber deletes the asset of the same name before the upload fails.
+    release.assets = release.assets.filter(({ name }) => name !== path.basename(args[3]))
+  }
+  fail('gh: HTTP 502')
+}
+if (args[0] === 'release' && args[2] !== 'v1.2.3') {
+  fail('release not found')
+}
+if (operation === 'view') {
+  const assets = release.assets.map(({ id, name }) => ({
+    name,
+    apiUrl: 'https://api.github.com/repos/owner/repo/releases/assets/' + id
+  }))
+  const input = JSON.stringify({ isDraft: release.isDraft, body: release.body, assets })
+  process.stdout.write(execFileSync('jq', ['-r', args[args.indexOf('--jq') + 1]], { input }))
+} else if (operation === 'download') {
+  const asset = release.assets.find(({ name }) => name === args[args.indexOf('--pattern') + 1])
+  if (!asset) {
+    fail('no assets match the file pattern')
+  }
+  fs.writeFileSync(args[args.indexOf('--output') + 1], asset.content)
+} else if (operation === 'upload') {
+  const name = path.basename(args[3])
+  release.assets = release.assets.filter((asset) => asset.name !== name)
+  const id = Math.max(0, ...release.assets.map((asset) => asset.id)) + 1
+  release.assets.push({ id, name, content: fs.readFileSync(args[3], 'utf8') })
+} else if (operation === 'DELETE' || operation === 'PATCH') {
+  const id = Number(/^repos\\/owner\\/repo\\/releases\\/assets\\/(\\d+)$/.exec(args[3])?.[1])
+  const asset = release.assets.find((asset) => asset.id === id)
+  if (!asset) {
+    fail('gh: Not Found (HTTP 404)')
+  }
+  if (operation === 'DELETE') {
+    release.assets = release.assets.filter((other) => other !== asset)
+  } else {
+    const name = args[args.indexOf('-f') + 1].replace(/^name=/, '')
+    if (release.assets.some((other) => other.name === name)) {
+      fail('gh: Validation Failed (HTTP 422)')
+    }
+    asset.name = name
+  }
+} else {
+  fail('unexpected gh call')
+}
+save()
+`
+    )
+    chmodSync(join(bin, 'gh'), 0o755)
+    const env = {
+      PATH: `${bin}:${process.env.PATH}`,
+      RUNNER_TEMP: runnerTemp,
+      TAG: 'v1.2.3',
+      GH_REPO: 'owner/repo'
+    }
+    let result
+    for (const step of stepsOf(jobsOf(releaseNotes).notes).filter((step) =>
+      step.includes('run: |')
+    )) {
+      result = runScript(step, env, repositoryRoot)
+      if (result.status !== 0) {
+        break
+      }
+    }
+    const final = JSON.parse(readFileSync(state, 'utf8'))
+    return {
+      status: result.status,
+      stderr: result.stderr,
+      calls: final.calls,
+      release: final.release
+    }
+  } finally {
+    rmSync(temp, { recursive: true, force: true })
+  }
+}
+
+// The release's feed names and the notes of its live latest.json.
+const feedState = ({ assets }) => ({
+  names: assets.map(({ name }) => name).toSorted(),
+  notes: JSON.parse(assets.find(({ name }) => name === 'latest.json')?.content ?? '{}').notes
+})
+
+test(
+  'publishing a release replaces its latest.json notes with the Release body',
+  { skip: shellSkip },
+  () => {
+    const before = publishedRelease({ body: '## What is new\r\n\r\n- Export as PDF\r\n' })
+    const { status, stderr, calls, release } = runReleaseNotes(before)
+    assert.equal(status, 0, stderr)
+    assert.deepEqual(release.assets[0], before.assets[0])
+    assert.deepEqual(release.assets.map(({ name }) => name).toSorted(), [
+      'CanvaSlide.dmg',
+      'latest.json'
+    ])
+    const feed = JSON.parse(release.assets.find(({ name }) => name === 'latest.json').content)
+    assert.deepEqual(feed, { ...publishedFeed, notes: '## What is new\n\n- Export as PDF' })
+    for (const call of calls.filter((call) => call.startsWith('release '))) {
+      assert.match(call, /^release \w+ v1\.2\.3 /)
+    }
+    assert.ok(calls.includes('api -X DELETE repos/owner/repo/releases/assets/12'), calls.join('\n'))
+  }
+)
+
+test('a release without a body gets a latest.json without notes', { skip: shellSkip }, () => {
+  for (const body of [null, '']) {
+    const { status, stderr, release } = runReleaseNotes(publishedRelease({ body }))
+    assert.equal(status, 0, stderr)
+    const feed = JSON.parse(release.assets.find(({ name }) => name === 'latest.json').content)
+    assert.equal('notes' in feed, false, String(body))
+    assert.deepEqual(feed.platforms, publishedFeed.platforms)
+  }
+})
+
+test('a draft or a latest.json for another version is left unchanged', { skip: shellSkip }, () => {
+  const draft = runReleaseNotes(publishedRelease({ isDraft: true }))
+  assert.notEqual(draft.status, 0)
+  assert.match(draft.stderr, /Release v1\.2\.3 is a draft/)
+  assert.deepEqual(draft.release, publishedRelease({ isDraft: true }))
+  const otherFeed = JSON.stringify({ ...publishedFeed, version: '1.2.2' })
+  const otherRelease = publishedRelease({
+    assets: [{ id: 12, name: 'latest.json', content: otherFeed }]
+  })
+  const other = runReleaseNotes(otherRelease)
+  assert.notEqual(other.status, 0)
+  assert.match(other.stderr, /latest\.json is for version 1\.2\.2, not 1\.2\.3/)
+  assert.deepEqual(other.release, otherRelease)
+})
+
+test(
+  'a failed replacement never removes the live latest.json, or is repaired by running again',
+  { skip: shellSkip },
+  () => {
+    const placeholder = { names: ['CanvaSlide.dmg', 'latest.json'], notes: publishedFeed.notes }
+    const replaced = { names: ['CanvaSlide.dmg', 'latest.json'], notes: 'Notes' }
+    for (const [failOn, afterFailure] of [
+      ['upload', placeholder],
+      ['DELETE', { ...placeholder, names: ['CanvaSlide.dmg', 'latest.json', 'latest.next.json'] }],
+      // Why: only a failed rename right after the delete leaves no latest.json, until the next run.
+      ['PATCH', { names: ['CanvaSlide.dmg', 'latest.next.json'], notes: undefined }]
+    ]) {
+      const failed = runReleaseNotes(publishedRelease(), failOn)
+      assert.notEqual(failed.status, 0, failOn)
+      assert.deepEqual(feedState(failed.release), afterFailure, failOn)
+      const rerun = runReleaseNotes(failed.release)
+      assert.equal(rerun.status, 0, `${failOn}: ${rerun.stderr}`)
+      assert.deepEqual(feedState(rerun.release), replaced, failOn)
+    }
   }
 )

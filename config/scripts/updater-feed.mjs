@@ -94,8 +94,8 @@ export function verifyUpdaterSignature(data, signatureBase64, publicKeysBase64) 
   }
 }
 
-/** The in-app updater's latest.json for the signed files in `directory`. */
-export function buildUpdaterFeed({ directory, tag, repository, notes, publicKeys, now }) {
+/** The in-app updater's latest.json for the signed files in `directory`; notes come on publishing. */
+export function buildUpdaterFeed({ directory, tag, repository, publicKeys, now }) {
   const platforms = {}
   for (const name of readdirSync(directory).sort()) {
     if (!name.endsWith('.sig')) {
@@ -120,7 +120,7 @@ export function buildUpdaterFeed({ directory, tag, repository, notes, publicKeys
   if (missing.length > 0) {
     throw new Error(`no signed update for ${missing.join(', ')}`)
   }
-  return { version: tag.replace(/^v/, ''), notes, pub_date: now.toISOString(), platforms }
+  return { version: tag.replace(/^v/, ''), pub_date: now.toISOString(), platforms }
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -130,22 +130,18 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
       options: {
         tag: { type: 'string' },
         repository: { type: 'string' },
-        notes: { type: 'string' },
         'trusted-config': { type: 'string', multiple: true }
       }
     })
-    const required = ['tag', 'repository', 'notes', 'trusted-config']
+    const required = ['tag', 'repository', 'trusted-config']
     if (positionals.length !== 1 || required.some((name) => !values[name])) {
-      throw new Error(
-        'usage: updater-feed.mjs <directory> --tag --repository --notes --trusted-config'
-      )
+      throw new Error('usage: updater-feed.mjs <directory> --tag --repository --trusted-config')
     }
     const configs = values['trusted-config'].map((path) => JSON.parse(readFileSync(path, 'utf8')))
     const feed = buildUpdaterFeed({
       directory: positionals[0],
       tag: values.tag,
       repository: values.repository,
-      notes: values.notes,
       publicKeys: configs.map((config) => config.plugins.updater.pubkey),
       now: new Date()
     })

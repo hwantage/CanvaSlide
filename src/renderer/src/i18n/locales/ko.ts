@@ -213,6 +213,7 @@ export const ko: UiStrings = {
   'tool.rectangle': '사각형',
   'tool.ellipse': '타원',
   'tool.diamond': '마름모',
+  'tool.triangle': '삼각형',
   'tool.frame': '프레젠테이션 프레임',
   'tool.connector': '연결선',
   'import.files': '파일 가져오기…',
@@ -704,7 +705,7 @@ export const ko: UiStrings = {
     '{fit}을 누르면 내용 전체가 화면에 맞춰집니다. 프레임 목록에서 항목을 클릭하면 해당 영역으로 이동합니다. 프레임은 별도 문서가 아니라 같은 캔버스를 바라보는 영역입니다.',
   'site.docs.edit.textHeading': '텍스트, 도형, 이미지',
   'site.docs.edit.textBody':
-    '텍스트는 {text}, 사각형은 {rectangle}, 타원은 {ellipse}, 마름모는 {diamond}로 만듭니다. 텍스트를 두 번 클릭하면 편집할 수 있습니다. 복사한 이미지는 {paste}로 붙여넣으세요. 속성 패널에서 채우기, 테두리, 텍스트 스타일을 조정합니다.',
+    '텍스트는 {text}, 사각형은 {rectangle}, 타원은 {ellipse}, 마름모는 {diamond}로 만듭니다. 삼각형은 툴바의 삼각형 도구로 그립니다. 텍스트를 두 번 클릭하면 편집할 수 있습니다. 복사한 이미지는 {paste}로 붙여넣으세요. 속성 패널에서 채우기, 테두리, 텍스트 스타일을 조정합니다.',
   'site.docs.edit.arrangeHeading': '선택과 배치',
   'site.docs.edit.arrangeBody':
     '{select}로 선택 도구를 사용하세요. 빈 공간을 드래그하면 여러 요소를 선택하고, {shift}를 누르면 선택에 추가합니다. 요소를 옮기거나 핸들로 크기를 조절하고, 선택 영역 위의 둥근 핸들을 드래그해 회전하세요. {shift}를 누르면 {step} 단위로 회전합니다. 정렬 도구로 줄을 맞추고 간격을 고르게 배치할 수 있습니다.',

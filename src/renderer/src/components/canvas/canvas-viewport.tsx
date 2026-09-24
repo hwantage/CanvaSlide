@@ -29,6 +29,7 @@ const cursorByTool = {
   rectangle: 'crosshair',
   ellipse: 'crosshair',
   diamond: 'crosshair',
+  triangle: 'crosshair',
   frame: 'crosshair',
   connector: 'crosshair'
 } as const

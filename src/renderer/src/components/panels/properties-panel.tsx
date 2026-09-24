@@ -11,6 +11,8 @@ import {
   Trash2,
   Ungroup
 } from 'lucide-react'
+import { pinEndsOn } from '@shared/canvas/connector-geometry'
+import { patchElements } from '@shared/canvas/document-mutations'
 import type { CanvasElement } from '@shared/canvas/element-types'
 import { canGroup, canUngroup, selectionGroupId } from '@shared/canvas/element-groups'
 import {
@@ -21,6 +23,7 @@ import {
   resizeKeepingOrigin
 } from '@shared/canvas/element-rotation'
 import { MIN_ELEMENT_SIZE } from '@shared/canvas/resize-handles'
+import { shapeUsesCornerRadius } from '@shared/canvas/shape-svg'
 import { FieldRow, inputClass } from '@/components/ui/field-row'
 import { TextButton } from '@/components/ui/text-button'
 import { t, tn } from '@/i18n/ui-strings'
@@ -50,6 +53,10 @@ export function PropertiesPanel() {
   }
   const store = useDocumentStore.getState()
   const shape = firstOfType(elements, 'shape')
+  const rounded = elements.find(
+    (e): e is Extract<CanvasElement, { type: 'shape' }> =>
+      e.type === 'shape' && shapeUsesCornerRadius(e.shape)
+  )
   const frame = firstOfType(elements, 'frame')
   const connector = firstOfType(elements, 'connector')
   const textStyle = (firstOfType(elements, 'text') ?? shape ?? connector)?.textStyle ?? null
@@ -106,12 +113,17 @@ export function PropertiesPanel() {
             min={-360}
             max={360}
             label={t('props.rotation')}
-            onChange={(degrees) =>
-              // Each element turns about its own centre, as a typed angle does in Figma.
-              store.patchElements(selectedIds, (element) =>
-                isRotatable(element) ? { rotation: normalizeRotation(degrees) } : {}
-              )
-            }
+            onChange={(degrees) => {
+              const rotation = normalizeRotation(degrees)
+              // Only what actually turns changes, and its lines keep their ports.
+              const turning = elements
+                .filter((element) => isRotatable(element) && elementRotation(element) !== rotation)
+                .map((element) => element.id)
+              if (turning.length > 0) {
+                // Each element turns about its own centre, as a typed angle does in Figma.
+                store.applyEdit((d) => patchElements(pinEndsOn(d, turning), turning, { rotation }))
+              }
+            }}
           />
           <span className="text-xs text-muted-foreground">°</span>
         </FieldRow>
@@ -144,7 +156,13 @@ export function PropertiesPanel() {
       {onlyFrames && <FrameTransitionFields frameIds={selectedIds} />}
       {!onlyFrames && <AlignmentToolbar count={elements.length} />}
       {connector && <ConnectorFields ids={selectedIds} sample={connector} />}
-      {shape && <ShapeStyleFields ids={selectedIds} style={shape.style} />}
+      {shape && (
+        <ShapeStyleFields
+          ids={selectedIds}
+          style={shape.style}
+          cornerRadius={rounded?.style.cornerRadius ?? null}
+        />
+      )}
       {textStyle && <TextStyleFields ids={selectedIds} style={textStyle} />}
       {!onlyFrames && (
         <div className="mt-2 flex flex-wrap gap-1">

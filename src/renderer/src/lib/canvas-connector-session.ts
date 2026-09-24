@@ -1,11 +1,12 @@
 import {
+  anchorOutline,
   anchorPoint,
   facingSide,
   isConnectable,
   nearestAnchorSide
 } from '@shared/canvas/connector-geometry'
 import { insertElement, patchElements } from '@shared/canvas/document-mutations'
-import { rectContainsPoint } from '@shared/canvas/element-bounds'
+import { rectContainsPoint, triangleContainsPoint } from '@shared/canvas/element-bounds'
 import { elementBox, toLocalPoint } from '@shared/canvas/element-rotation'
 import type {
   CanvasDocument,
@@ -49,7 +50,13 @@ function hostAt(document: CanvasDocument, point: Point, excludeId: ElementId) {
       width: box.width + halo * 2,
       height: box.height + halo * 2
     }
-    if (rectContainsPoint(padded, toLocalPoint(box, point))) {
+    const local = toLocalPoint(box, point)
+    // A triangle's empty upper corners belong to whatever lies beneath it.
+    const hit =
+      element.type === 'shape' && element.shape === 'triangle'
+        ? triangleContainsPoint(element, local, halo)
+        : rectContainsPoint(padded, local)
+    if (hit) {
       return element
     }
   }
@@ -73,12 +80,13 @@ export function resolveConnectorEndAt(
     return { x: point.x, y: point.y }
   }
   const rect = elementBox(host)
-  const nearest = nearestAnchorSide(rect, point)
-  const port = anchorPoint(rect, nearest)
+  const outline = anchorOutline(host)
+  const nearest = nearestAnchorSide(rect, point, outline)
+  const port = anchorPoint(rect, nearest, outline)
   const snapWorld = PORT_SNAP_PX / useCameraStore.getState().camera.zoom
   const pinned = Math.hypot(port.x - point.x, port.y - point.y) <= snapWorld
   const side = pinned || !otherEnd ? nearest : facingSide(rect, otherEnd)
-  overlay.setAnchorPreview({ rect, side })
+  overlay.setAnchorPreview({ rect, side, outline })
   return pinned
     ? { x: point.x, y: point.y, elementId: host.id, side, pinned: true }
     : { x: point.x, y: point.y, elementId: host.id, side }
@@ -95,16 +103,18 @@ export function previewConnectorHostAt(document: CanvasDocument, point: Point): 
     return
   }
   const rect = elementBox(host)
-  const side = nearestAnchorSide(rect, point)
+  const outline = anchorOutline(host)
+  const side = nearestAnchorSide(rect, point, outline)
   const current = overlay.anchorPreview
   if (
     !current ||
     current.side !== side ||
+    current.outline !== outline ||
     current.rect.x !== rect.x ||
     current.rect.y !== rect.y ||
     current.rect.rotation !== rect.rotation
   ) {
-    overlay.setAnchorPreview({ rect, side })
+    overlay.setAnchorPreview({ rect, side, outline })
   }
 }
 

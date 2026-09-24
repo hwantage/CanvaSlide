@@ -161,7 +161,7 @@ select {
   }
   .editor-tool-bar {
     display: grid;
-    grid-template-columns: repeat(5, 44px);
+    grid-template-columns: repeat(6, 44px);
     gap: 0;
   }
   .editor-tool-bar > button {

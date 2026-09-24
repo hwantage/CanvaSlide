@@ -1,4 +1,4 @@
-import { connectorDistance, connectorHosts } from './connector-geometry'
+import { connectorDistance, connectorHosts, distanceToSegment } from './connector-geometry'
 import {
   elementBox,
   elementRotation,
@@ -9,7 +9,15 @@ import {
   rotatedCorners,
   toLocalPoint
 } from './element-rotation'
-import type { CanvasDocument, CanvasElement, ElementId, Point, Rect } from './element-types'
+import type {
+  CanvasDocument,
+  CanvasElement,
+  ElementId,
+  Point,
+  Rect,
+  ShapeElement
+} from './element-types'
+import { triangleOutline } from './shape-svg'
 import { visibleTextRect } from './text-clip'
 
 /** The element's own upright box; a rotated element turns this about its centre. */
@@ -30,7 +38,36 @@ function visibleRect(element: CanvasElement): Rect {
 /** Point-in-outline test; the pivot is the whole box's centre even when text is clipped. */
 function elementContainsPoint(element: CanvasElement, point: Point): boolean {
   const local = elementRotation(element) === 0 ? point : toLocalPoint(elementBox(element), point)
-  return rectContainsPoint(visibleRect(element), local)
+  return element.type === 'shape' && element.shape === 'triangle'
+    ? triangleContainsPoint(element, local)
+    : rectContainsPoint(visibleRect(element), local)
+}
+
+function cross(o: Point, a: Point, b: Point): number {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+}
+
+/**
+ * Whether an upright-frame `point` lands on what a triangle draws (its fill and round-joined
+ * stroke), or within `halo` of it. The box's empty upper corners pass through to what lies beneath.
+ */
+export function triangleContainsPoint(element: ShapeElement, point: Point, halo = 0): boolean {
+  const { x, y, width, height } = element
+  const box = { x: x - halo, y: y - halo, width: width + halo * 2, height: height + halo * 2 }
+  if (!rectContainsPoint(box, point)) {
+    return false
+  }
+  const p = { x: point.x - x, y: point.y - y }
+  const [apex, right, left] = triangleOutline(element)
+  const reach = halo + element.style.strokeWidth / 2
+  const inside =
+    cross(apex, right, p) >= 0 && cross(right, left, p) >= 0 && cross(left, apex, p) >= 0
+  return (
+    inside ||
+    distanceToSegment(p, apex, right) <= reach ||
+    distanceToSegment(p, right, left) <= reach ||
+    distanceToSegment(p, left, apex) <= reach
+  )
 }
 
 /** Corners of the drawn outline on the canvas (nw, ne, se, sw). */
@@ -127,7 +164,11 @@ export function selectionContainsPoint(
   point: Point
 ): boolean {
   const only = ids.length === 1 ? document.elements[ids[0] as ElementId] : undefined
-  if (only && elementRotation(only) !== 0) {
+  // Why: a turned element or a triangle leaves parts of its bounding box empty.
+  if (
+    only &&
+    (elementRotation(only) !== 0 || (only.type === 'shape' && only.shape === 'triangle'))
+  ) {
     return elementContainsPoint(only, point)
   }
   const bounds = selectionBounds(document, ids)

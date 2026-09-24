@@ -17,11 +17,12 @@ export const DEFAULT_CAMERA_ARC = Math.SQRT2
 export const MAX_ROLL_DEGREES = 180
 export const MAX_TRANSITION_MS = 10_000
 
-export const shapeKinds = ['rectangle', 'ellipse', 'diamond'] as const
+export const shapeKinds = ['rectangle', 'ellipse', 'diamond', 'triangle'] as const
 
 export const textAligns = ['left', 'center', 'right'] as const
 
-export const anchorSides = ['top', 'right', 'bottom', 'left'] as const
+/** Connection ports; `bottomLeft` and `bottomRight` are a triangle's base corners. */
+export const anchorSides = ['top', 'right', 'bottom', 'left', 'bottomLeft', 'bottomRight'] as const
 
 export const connectorRoutes = ['straight', 'orthogonal', 'curved'] as const
 

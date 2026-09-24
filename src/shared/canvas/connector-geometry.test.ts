@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
   anchorPoint,
+  anchorPorts,
   connectorBounds,
   connectorDistance,
   connectorHosts,
   connectorMidpoint,
   connectorPath,
   facingSide,
+  hostsOf,
   nearestAnchorSide,
+  pinEndsOn,
   remapConnectorHosts,
   syncConnectorGeometry,
   translateConnector
@@ -15,6 +18,7 @@ import {
 import {
   duplicateElements,
   insertElement,
+  patchElements,
   removeElements,
   translateElements
 } from './document-mutations'
@@ -68,6 +72,93 @@ describe('connector-geometry', () => {
     expect(nearestAnchorSide(rect, { x: 50, y: 60 })).toBe('bottom')
   })
 
+  it("puts a triangle's side ports on its slanted edges and keeps apex and base ports", () => {
+    const rect = { x: 0, y: 0, width: 100, height: 50 }
+    expect(anchorPoint(rect, 'top', 'triangle')).toEqual({ x: 50, y: 0 })
+    expect(anchorPoint(rect, 'right', 'triangle')).toEqual({ x: 75, y: 25 })
+    expect(anchorPoint(rect, 'bottom', 'triangle')).toEqual({ x: 50, y: 50 })
+    expect(anchorPoint(rect, 'left', 'triangle')).toEqual({ x: 25, y: 25 })
+    expect(anchorPoint(rect, 'left', 'diamond')).toEqual({ x: 0, y: 25 })
+    // Near the slanted edge's port, not the empty box corner beside it.
+    expect(nearestAnchorSide(rect, { x: 22, y: 26 }, 'triangle')).toBe('left')
+  })
+
+  it('offers a triangle all three corners and side midpoints, and other kinds their four sides', () => {
+    const rect = { x: 0, y: 0, width: 100, height: 50 }
+    expect(anchorPorts('triangle')).toHaveLength(6)
+    expect(anchorPoint(rect, 'bottomLeft', 'triangle')).toEqual({ x: 0, y: 50 })
+    expect(anchorPoint(rect, 'bottomRight', 'triangle')).toEqual({ x: 100, y: 50 })
+    expect(nearestAnchorSide(rect, { x: 3, y: 48 }, 'triangle')).toBe('bottomLeft')
+    expect(nearestAnchorSide(rect, { x: 97, y: 49 }, 'triangle')).toBe('bottomRight')
+    for (const outline of ['rectangle', 'ellipse', 'diamond', undefined] as const) {
+      expect(anchorPorts(outline)).toEqual(['top', 'right', 'bottom', 'left'])
+    }
+    expect(nearestAnchorSide(rect, { x: 3, y: 48 }, 'rectangle')).toBe('left')
+    // Ports turn with the element: upside down, the bottom-left corner lands top right.
+    const flipped = { ...rect, rotation: 180 }
+    const corner = anchorPoint(flipped, 'bottomLeft', 'triangle')
+    expect(corner.x).toBeCloseTo(100)
+    expect(corner.y).toBeCloseTo(0)
+  })
+
+  it('leaves a base corner along the way that faces the other end', () => {
+    const fromCorner = (end: { x: number; y: number }) =>
+      connectorPath(
+        connector({
+          route: 'orthogonal',
+          start: { x: 0, y: 50, side: 'bottomLeft' },
+          end
+        }),
+        hostsOf({ ...shape('t', 0, 0), shape: 'triangle' }, null)
+      ).polyline[1]
+    // Mostly left of the corner: leave horizontally. Mostly below it: leave downward.
+    expect(fromCorner({ x: -300, y: 80 })).toMatchObject({ y: 50 })
+    expect(fromCorner({ x: -300, y: 80 })?.x).toBeLessThan(0)
+    expect(fromCorner({ x: -20, y: 300 })).toMatchObject({ x: 0 })
+    expect(fromCorner({ x: -20, y: 300 })?.y).toBeGreaterThan(50)
+  })
+
+  it('glues ends attached to a triangle to its outline ports', () => {
+    let doc: CanvasDocument = insertElement(createEmptyDocument(), {
+      ...shape('a', 0, 0),
+      shape: 'triangle'
+    })
+    doc = insertElement(doc, shape('b', 300, 0))
+    doc = insertElement(
+      doc,
+      connector({
+        start: { x: 0, y: 0, elementId: 'a' },
+        end: { x: 0, y: 0, elementId: 'b' }
+      })
+    )
+    const c = syncConnectorGeometry(doc).elements.c as ConnectorElement
+    expect(c.start).toEqual({ x: 75, y: 25, elementId: 'a', side: 'right' })
+    expect(c.end).toEqual({ x: 300, y: 25, elementId: 'b', side: 'left' })
+  })
+
+  it('keeps the port a line uses while its host turns, instead of jumping to another side', () => {
+    let doc: CanvasDocument = insertElement(createEmptyDocument(), shape('a', 0, 0))
+    doc = insertElement(doc, shape('b', 300, 0))
+    doc = syncConnectorGeometry(
+      insertElement(
+        doc,
+        connector({ start: { x: 0, y: 0, elementId: 'a' }, end: { x: 0, y: 0, elementId: 'b' } })
+      )
+    )
+    const pinned = pinEndsOn(doc, ['a'])
+    const c = pinned.elements.c as ConnectorElement
+    expect(c.start).toMatchObject({ side: 'right', pinned: true })
+    // Only ends on the turning host are pinned; nothing to pin leaves the document as it is.
+    expect(c.end.pinned).toBeUndefined()
+    expect(pinEndsOn(pinned, ['a'])).toBe(pinned)
+    const turned = (from: CanvasDocument) =>
+      syncConnectorGeometry(patchElements(from, ['a'], { rotation: 90 })).elements
+        .c as ConnectorElement
+    // Upright the right port faces b; turned 90° it faces down, but the pinned line stays on it.
+    expect(turned(pinned).start).toMatchObject({ side: 'right', x: 50, y: 75 })
+    expect(turned(doc).start.side).not.toBe('right')
+  })
+
   it('builds straight, orthogonal and curved paths with sensible bounds', () => {
     expect(connectorPath(connector()).d).toBe('M 0 0 L 100 50')
     const elbow = connectorPath(
@@ -112,6 +203,32 @@ describe('connector-geometry', () => {
     const points = connectorPath(stack).polyline
     expect(points[1]).toEqual({ x: -24, y: 50 })
     expect(points.at(-2)).toEqual({ x: 124, y: 250 })
+  })
+
+  it("clears a triangle's box before an elbow turns, but never the other end's host", () => {
+    const box = { width: 200, height: 120 }
+    const triangle = { ...shape('t', 0, 0), ...box, shape: 'triangle' as const }
+    // The left port sits on the slant at x=50; turning at x=26 would cut the triangle's corner.
+    const fromSlant = connector({
+      route: 'orthogonal',
+      start: { x: 50, y: 60, side: 'left' },
+      end: { x: 100, y: 400, side: 'top' }
+    })
+    expect(connectorPath(fromSlant, hostsOf(triangle, null)).polyline[1]).toEqual({ x: -24, y: 60 })
+    // The other end's host overlaps the port and shares its midline; only the port's own host counts.
+    const neighbour = { ...shape('n', -50, 0), width: 150, height: 120 }
+    expect(connectorPath(fromSlant, hostsOf(triangle, neighbour)).polyline[1]).toEqual({
+      x: -24,
+      y: 60
+    })
+    // A port on its own box edge keeps the usual stub.
+    const onEdge = connector({
+      route: 'orthogonal',
+      start: { x: 200, y: 60, side: 'right' },
+      end: { x: 100, y: 400, side: 'top' }
+    })
+    const rectangle = { ...shape('r', 0, 0), ...box }
+    expect(connectorPath(onEdge, hostsOf(rectangle, null)).polyline[1]).toEqual({ x: 224, y: 60 })
   })
 
   it('picks the port facing the other end', () => {

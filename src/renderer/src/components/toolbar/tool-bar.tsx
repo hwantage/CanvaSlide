@@ -8,6 +8,7 @@ import {
   Video,
   MousePointer2,
   Square,
+  Triangle,
   Type
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -20,13 +21,14 @@ import { shortcutLabel } from '@/lib/platform-keys'
 import { useStyleMemoryStore } from '@/store/style-memory-store'
 import { selectTool, useToolStore, type ToolId } from '@/store/tool-store'
 
-const tools: { id: ToolId; label: UiStringKey; key: string; icon: ReactNode }[] = [
+const tools: { id: ToolId; label: UiStringKey; key?: string; icon: ReactNode }[] = [
   { id: 'select', label: 'tool.select', key: 'V', icon: <MousePointer2 size={16} /> },
   { id: 'hand', label: 'tool.hand', key: 'H', icon: <Hand size={16} /> },
   { id: 'text', label: 'tool.text', key: 'T', icon: <Type size={16} /> },
   { id: 'rectangle', label: 'tool.rectangle', key: 'R', icon: <Square size={16} /> },
   { id: 'ellipse', label: 'tool.ellipse', key: 'O', icon: <Circle size={16} /> },
   { id: 'diamond', label: 'tool.diamond', key: 'D', icon: <Diamond size={16} /> },
+  { id: 'triangle', label: 'tool.triangle', icon: <Triangle size={16} /> },
   { id: 'frame', label: 'tool.frame', key: 'F', icon: <Frame size={16} /> },
   { id: 'connector', label: 'tool.connector', key: 'L', icon: <ArrowRight size={16} /> }
 ]
@@ -78,7 +80,7 @@ export function ToolBar() {
       {tools.map((tool) => (
         <IconButton
           key={tool.id}
-          label={`${t(tool.label)} (${tool.key})`}
+          label={tool.key ? `${t(tool.label)} (${tool.key})` : t(tool.label)}
           active={active === tool.id}
           onClick={() => setTool(tool.id)}
         >

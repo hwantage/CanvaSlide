@@ -12,14 +12,16 @@ export function isShareAccess(value: unknown): value is ShareAccess {
 }
 
 export function unwrapShareSnapshot(value: unknown): { access: ShareAccess; document: unknown } {
-  if (value && typeof value === 'object' && ('access' in value || 'document' in value)) {
-    if (!('access' in value) || !isShareAccess(value.access) || !('document' in value)) {
-      throw new CloudShareError('invalid')
-    }
-    return { access: value.access, document: value.document }
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('access' in value) ||
+    !isShareAccess(value.access) ||
+    !('document' in value)
+  ) {
+    throw new CloudShareError('invalid')
   }
-  // Links created before access modes stored the document directly and remain editable copies.
-  return { access: 'edit', document: value }
+  return { access: value.access, document: value.document }
 }
 
 export type CloudShareErrorCode =

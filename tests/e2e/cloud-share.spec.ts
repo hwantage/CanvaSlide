@@ -153,7 +153,10 @@ test('publishes a slideshow-only link with navigation and no path back to editin
     textStyle: { color: '#111111', fontSize: 24, align: 'left', bold: false }
   }
   document.order.push('second', 'text')
-  const values = await serveShares(page, new Map([[`share:${id}`, JSON.stringify(document)]]))
+  const values = await serveShares(
+    page,
+    new Map([[`share:${id}`, JSON.stringify({ access: 'edit', document })]])
+  )
   await page.goto(`/?share=${id}`)
   await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue(document.name)
   await page.getByRole('button', { name: 'Share', exact: true }).click()
@@ -261,7 +264,10 @@ test('slideshow-only shares retain linked-video playback and expansion @webkit',
 test('ignores a stored camera pointing at empty space and preserves other URL parameters @webkit', async ({
   page
 }) => {
-  await serveShares(page, new Map([[`share:${id}`, JSON.stringify(sharedBoard())]]))
+  await serveShares(
+    page,
+    new Map([[`share:${id}`, JSON.stringify({ access: 'edit', document: sharedBoard() })]])
+  )
   await page.goto(`/?lang=en&share=${id}#canvas`)
   await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue(
     'Shared presentation'
@@ -303,7 +309,7 @@ test('missing links can be retried after KV propagation @webkit', async ({ page 
   await expect(dialog.getByRole('alert')).toContainText('24-hour link has expired')
   await expect(dialog.getByRole('alert')).not.toContainText('local .canvaslide file')
   await expect(dialog.getByRole('button', { name: 'Export .canvaslide' })).toHaveCount(0)
-  values.set(`share:${id}`, JSON.stringify(sharedBoard()))
+  values.set(`share:${id}`, JSON.stringify({ access: 'edit', document: sharedBoard() }))
   await dialog.getByRole('button', { name: 'Try again' }).click()
   await expect(dialog).toHaveCount(0)
   await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue(
@@ -350,7 +356,10 @@ for (const format of ['raster', 'svg'] as const) {
       external.push(route.request().url())
       await route.abort()
     })
-    await serveShares(page, new Map([[`share:${id}`, JSON.stringify(document)]]))
+    await serveShares(
+      page,
+      new Map([[`share:${id}`, JSON.stringify({ access: 'edit', document })]])
+    )
     await page.goto(`/?share=${id}`)
     await expect(page.getByRole('alert')).toContainText('Shared images must be embedded')
     await expect(page.getByRole('textbox', { name: 'Document name' })).toHaveValue('Untitled')
@@ -434,7 +443,7 @@ test('closing a pending link cancels loading and keeps subsequent edits', async 
   })
   await page.route('**/api/share/**', async (route) => {
     await ready
-    await route.fulfill({ json: sharedBoard() }).catch(() => {})
+    await route.fulfill({ json: { access: 'edit', document: sharedBoard() } }).catch(() => {})
   })
   await page.goto(`/?share=${id}`)
   const dialog = page.getByRole('dialog', { name: 'Open shared canvas' })

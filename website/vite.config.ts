@@ -3,11 +3,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { exampleAssets } from '../config/example-assets.ts'
+import { exampleExports } from './example-exports.ts'
+import { exportedExampleIds } from './src/exported-examples.ts'
 
 export default defineConfig(({ command, isPreview }) => ({
   root: import.meta.dirname,
   base: process.env.WEBSITE_BASE_PATH ?? (command === 'serve' && !isPreview ? '/' : '/CanvaSlide/'),
-  plugins: [react(), tailwindcss(), exampleAssets()],
+  plugins: [react(), tailwindcss(), exampleAssets(), exampleExports(exportedExampleIds)],
   resolve: {
     alias: {
       '@app': resolve(import.meta.dirname, '../src/renderer/src'),

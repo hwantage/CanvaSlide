@@ -1,34 +1,34 @@
 import { useRef, useState } from 'react'
 import { ArrowUpRight, Database, Download, GitBranch, Presentation } from 'lucide-react'
 import { t } from '@app/i18n/ui-strings'
+import { exportedExampleIds, type ExportedExampleId } from './exported-examples'
 import { asset } from './site-preferences'
 
-const examples = [
-  {
-    id: 'flowchart',
+const copy = {
+  flowchart: {
     icon: GitBranch,
     label: 'site.possibilities.flowchart',
     title: 'site.possibilities.flowchartTitle',
     body: 'site.possibilities.flowchartBody',
     alt: 'site.possibilities.flowchartAlt'
   },
-  {
-    id: 'erd',
+  erd: {
     icon: Database,
     label: 'site.possibilities.erd',
     title: 'site.possibilities.erdTitle',
     body: 'site.possibilities.erdBody',
     alt: 'site.possibilities.erdAlt'
   },
-  {
-    id: 'slides',
+  slides: {
     icon: Presentation,
     label: 'site.possibilities.slides',
     title: 'site.possibilities.slidesTitle',
     body: 'site.possibilities.slidesBody',
     alt: 'site.possibilities.slidesAlt'
   }
-] as const
+} as const satisfies Record<ExportedExampleId, unknown>
+
+const examples = exportedExampleIds.map((id) => ({ id, ...copy[id] }))
 
 export function Possibilities() {
   const [active, setActive] = useState(0)

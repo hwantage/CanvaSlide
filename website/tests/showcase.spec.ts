@@ -1,6 +1,11 @@
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test } from '@playwright/test'
+import { createServer } from 'vite'
+import { syncConnectorGeometry } from '../../src/shared/canvas/connector-geometry'
+import { exampleExportHtml, exampleExportPath } from '../example-exports'
+import { exportedExampleIds } from '../src/exported-examples'
 
 test('the overview opens any slide, continues the sequence, and returns to the whole story', async ({
   page
@@ -46,7 +51,7 @@ test('example tabs support the keyboard and open working HTML presentations', as
   for (const [label, title, count] of [
     ['Flowcharts', 'Order Fulfillment Flow', 3],
     ['ER diagrams', 'Shop Schema', 4],
-    ['Presentation slides', 'Northwind Launch Deck', 6]
+    ['Presentation slides', 'Northwind Launch Deck', 7]
   ] as const) {
     await page.getByRole('tab', { name: label, exact: true }).click()
     const popupEvent = page.waitForEvent('popup')
@@ -57,6 +62,41 @@ test('example tabs support the keyboard and open working HTML presentations', as
     await popup.getByRole('button', { name: 'Next frame (→)' }).click()
     await expect(popup.getByTestId('presentation-counter')).toContainText(`2 / ${count}`)
     await popup.close()
+  }
+})
+
+test('HTML examples are exported with the current player', async ({ request }) => {
+  for (const id of exportedExampleIds) {
+    const response = await request.get(`./${exampleExportPath(id)}`)
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toBe(await exampleExportHtml(id))
+    const embedded = JSON.parse(
+      html.match(/<script id="canvas-document" type="application\/json">(.*?)<\/script>/s)![1]!
+    )
+    // The editor re-resolves connector ends on load; an export must not carry stale ones.
+    expect(syncConnectorGeometry(embedded)).toEqual(embedded)
+  }
+})
+
+test('the site dev server serves the same HTML examples under either base path', async () => {
+  for (const base of ['/', '/CanvaSlide/']) {
+    const server = await createServer({
+      configFile: resolve('website/vite.config.ts'),
+      base,
+      server: { port: 0, strictPort: false },
+      logLevel: 'silent'
+    })
+    try {
+      await server.listen()
+      const response = await fetch(
+        new URL(exampleExportPath('slides'), server.resolvedUrls!.local[0])
+      )
+      expect(response.headers.get('content-type')).toContain('text/html')
+      expect(await response.text()).toBe(await exampleExportHtml('slides'))
+    } finally {
+      await server.close()
+    }
   }
 })
 
@@ -85,9 +125,15 @@ test('a downloaded HTML file plays from disk with the network offline', async ({
   const player = await context.newPage()
   player.on('pageerror', (error) => errors.push(error.message))
   await player.goto(pathToFileURL(file).href)
-  await expect(player.getByTestId('presentation-counter')).toContainText('1 / 6')
+  await expect(player.getByTestId('presentation-counter')).toContainText('1 / 7')
   await player.keyboard.press('ArrowRight')
-  await expect(player.getByTestId('presentation-counter')).toContainText('2 / 6')
+  await expect(player.getByTestId('presentation-counter')).toContainText('2 / 7')
+  await player.keyboard.press('p')
+  await expect(player.locator('[data-action="togglePointer"]')).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  await expect(player.locator('[data-action="clearInk"]')).toHaveCount(1)
   await player.getByRole('button', { name: 'Overview (O)' }).click()
   await expect(player.getByRole('button', { name: 'Overview (O)' })).toHaveAttribute(
     'aria-pressed',

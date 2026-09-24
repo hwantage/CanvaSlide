@@ -1,22 +1,16 @@
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import type { ParseDocumentResult } from '@shared/canvas/document-file'
 import type { DocumentEncodingInput } from '@shared/canvas/document-resources'
-import type {
-  RecoveryInspection,
-  RecoverySnapshotInfo,
-  RecoverySnapshotMeta
-} from '@shared/canvas/recovery-snapshot'
+import type { RecoverySnapshotInfo, RecoverySnapshotMeta } from '@shared/canvas/recovery-snapshot'
 
 export type DocumentCodecRequest =
   | { kind: 'encode' | 'encode-native'; document: DocumentEncodingInput }
   | { kind: 'encode-recovery'; document: DocumentEncodingInput; snapshot: RecoverySnapshotMeta }
-  | { kind: 'inspect-recovery'; payload: string | Uint8Array<ArrayBuffer> }
-  | { kind: 'decode-recovery'; payload: string | Uint8Array<ArrayBuffer> }
+  | { kind: 'decode-recovery'; payload: Uint8Array<ArrayBuffer> }
   | { kind: 'decode'; bytes: Uint8Array<ArrayBuffer> }
   | { kind: 'decode-native'; contents: string }
 export type DocumentCodecResponse =
   | { kind: 'encoded' | 'encoded-recovery'; bytes: Uint8Array<ArrayBuffer> }
-  | { kind: 'inspected-recovery'; result: RecoveryInspection }
   | { kind: 'encoded-native'; contents: string }
   | { kind: 'decoded'; result: ParseDocumentResult }
   | { kind: 'decoded-recovery'; result: ParseDocumentResult; snapshot: RecoverySnapshotInfo | null }
@@ -75,7 +69,7 @@ function execute(request: Request): Promise<DocumentCodecResponse> {
       const transfer =
         request.kind === 'decode'
           ? [request.bytes.buffer]
-          : 'payload' in request && request.payload instanceof Uint8Array
+          : request.kind === 'decode-recovery'
             ? [request.payload.buffer]
             : []
       worker.postMessage(message, transfer)
@@ -121,18 +115,8 @@ export async function encodeRecoverySnapshot(
   return result.bytes
 }
 
-export async function inspectRecoveryFile(
-  payload: string | Uint8Array<ArrayBuffer>
-): Promise<RecoveryInspection> {
-  const result = await runCodec({ kind: 'inspect-recovery', payload })
-  if (result.kind !== 'inspected-recovery') {
-    throw new Error('Unexpected recovery inspection response')
-  }
-  return result.result
-}
-
 export async function decodeRecoveryFile(
-  payload: string | Uint8Array<ArrayBuffer>
+  payload: Uint8Array<ArrayBuffer>
 ): Promise<Extract<DocumentCodecResponse, { kind: 'decoded-recovery' }>> {
   const result = await runCodec({ kind: 'decode-recovery', payload })
   if (result.kind !== 'decoded-recovery') {

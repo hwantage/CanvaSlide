@@ -47,11 +47,9 @@ offers warn that the original may differ and should be compared before saving ov
 | Browser  | IndexedDB `canvaslide-recovery`, schema version 2. `snapshots` stores small metadata/byte counts; `payloads` stores binary envelopes. One transaction updates or removes both stores and explicitly requests `durability: 'strict'`. Acknowledgement waits for transaction completion. The browser decides how that durability hint is implemented. |
 | Native   | `<app data>/recovery/<session>.json`. Write `<session>.json.tmp`, synchronize the file, then replace the destination. Unix also synchronizes the parent directory; Windows uses `MoveFileExW` with replacement and write-through flags after synchronizing the file. Failures propagate before the store retires an adopted copy.                   |
 
-Browser schema upgrades retain legacy string records and the earlier combined metadata/Blob records.
-New-format launch scans read only metadata. Legacy strings still have to cross the renderer before
-worker inspection; legacy Blob records carry a Blob handle. Native scans read and parse each full
-envelope on a blocking worker thread and return only metadata. Neither legacy nor native scans are
-claimed to be metadata-only disk reads. Full document decoding happens only on Restore.
+Browser launch scans read only the metadata store. Native scans read and parse each full envelope on
+a blocking worker thread and return only metadata, so they are not metadata-only disk reads. Full
+document decoding happens only on Restore.
 
 Unknown versions and malformed envelopes are quarantined and shown with Restore disabled. They are
 retained for a compatible app or an explicit Discard. A missing record or failed read is a retryable
@@ -80,10 +78,10 @@ are reported alongside readable offers. Settings provides **Check recovery copie
 not reset active ownership. A rejected lock request remains a failure, and absent browser Web Locks
 leave recovery unsupported rather than allowing a misleading Saved status.
 
-Candidates are sorted newest first. File timestamps and legacy `canvaslide.recovery.exit.*` markers
-are not used to delete work. At most `MAX_RECOVERABLE_SESSIONS` (five) Discard decisions appear in one
-prompt batch; the remaining queue stays reachable through Settings → Review. Restore or Later returns
-to the editor without answering the other offers.
+Candidates are sorted newest first. File timestamps are not used to delete work. At most
+`MAX_RECOVERABLE_SESSIONS` (five) Discard decisions appear in one prompt batch; the remaining queue
+stays reachable through Settings → Review. Restore or Later returns to the editor without answering
+the other offers.
 
 ## Scheduling
 
@@ -132,15 +130,15 @@ Restore cannot delete the new adopted record. Writes and clears are serialized b
 This retains the previously persisted recovered revision during handoff; it does not promise a copy
 of every subsequent edit at every instant. Cleanup of an adopted-only copy also runs if Save happens
 before the first recovery timer. Failed deletion retains retryable state and reports an error rather
-than claiming the copy is gone. A browser unload never attempts destructive cleanup or records a new
-clean-exit marker. Native filesystem commands use blocking workers behind async commands; the quit
-command does not need their mutex. Native cleanup can be interrupted by the exit deadline. Native
-quit observes authored content and session changes from confirmation through cleanup and cancels if
-any occur, even if an edit was subsequently undone. Renderer measurements alone do not cancel quit.
-Overlapping close requests share that decision. Cancellation
-resumes scheduling and skips queued exit cleanup that has not started. Already-dispatched IO cannot
-be undone; new copies wait behind it in the same queue. A canceled quit therefore keeps the current
-work in the editor but does not promise uninterrupted storage availability during stalled IO.
+than claiming the copy is gone. A browser unload never attempts destructive cleanup. Native
+filesystem commands use blocking workers behind async commands; the quit command does not need their
+mutex. Native cleanup can be interrupted by the exit deadline. Native quit observes authored content
+and session changes from confirmation through cleanup and cancels if any occur, even if an edit was
+subsequently undone. Renderer measurements alone do not cancel quit. Overlapping close requests
+share that decision. Cancellation resumes scheduling and skips queued exit cleanup that has not
+started. Already-dispatched IO cannot be undone; new copies wait behind it in the same queue. A
+canceled quit therefore keeps the current work in the editor but does not promise uninterrupted
+storage availability during stalled IO.
 
 ## Bounded retention and native temporary files
 
@@ -149,8 +147,8 @@ writes are refused when their replacement would exceed **256 MiB per snapshot**,
 payloads**, or **1,000 records**. Existing unanswered work remains. Size/count checks and commits share
 one IndexedDB transaction or a native namespace lock, so competing writers cannot bypass the check.
 The limits describe application payload accounting, not exact disk allocation: database overhead,
-metadata/locks and the native old-plus-temporary replacement add space. Foreign files, oversized
-legacy data or externally modified storage can already exceed those limits; refusal does not erase them.
+metadata/locks and the native old-plus-temporary replacement add space. Foreign files or
+externally modified storage can already exceed those limits; refusal does not erase them.
 
 Native startup also discovers temp-only sessions. Under the abandoned session's claim it promotes a
 complete JSON value (including an unknown envelope version or shape), synchronizing it before
@@ -182,7 +180,7 @@ tests exercise actual IndexedDB, Web Locks and workers. Native tests use real fi
 | Scheduling observes edits during initialization and continuous input, and re-enabling permits a fresh attempt.      | Delayed scan under StrictMode, sustained input, Off/On after success/failure and adopted-only Save cases in [use-recovery-snapshot.test.tsx](../src/renderer/src/hooks/use-recovery-snapshot.test.tsx) execute the actual hook and store with fake time and controlled IO.                                                                                                                                                                                                                                                                                                          |
 | Unsupported ownership cannot become Saved, and scan/cleanup failures remain visible and retryable.                  | Acquisition rejection in [recovery-session.test.ts](../src/renderer/src/platform/recovery-session.test.ts), unsupported scheduling in [use-recovery-snapshot.test.tsx](../src/renderer/src/hooks/use-recovery-snapshot.test.tsx), failed cleanup in [recovery-store.test.ts](../src/renderer/src/store/recovery-store.test.ts), and actual failed/retried launch in [recovery-retention.spec.ts](../tests/e2e/recovery-retention.spec.ts).                                                                                                                                          |
 | Prompt operations cannot overlap or replace a document changed during decode; refusal allows Save.                  | Delayed-worker disabled-action test in [recovery-retention.spec.ts](../tests/e2e/recovery-retention.spec.ts), stale document/duplicate action tests in [recovery-store.test.ts](../src/renderer/src/store/recovery-store.test.ts), and refuse-then-Save in [autosave-recovery.spec.ts](../tests/e2e/autosave-recovery.spec.ts).                                                                                                                                                                                                                                                     |
-| New browser metadata scans do not load payloads, and encoding/decoding runs through the worker.                     | Native `metadata_scan_returns_only_known_metadata_fields` in [recovery_store_tests.rs](../src-tauri/src/recovery_store_tests.rs); payload-store/parse instrumentation and transferable-worker round trip in [recovery-retention.spec.ts](../tests/e2e/recovery-retention.spec.ts). [recovery-native-transport.test.ts](../src/renderer/src/platform/recovery-native-transport.test.ts) checks the binary IPC call boundary, not a live webview.                                                                                                                                     |
+| Browser metadata scans do not load payloads, and encoding/decoding runs through the worker.                         | Native `metadata_scan_returns_only_known_metadata_fields` in [recovery_store_tests.rs](../src-tauri/src/recovery_store_tests.rs); payload-store/parse instrumentation and transferable-worker round trip in [recovery-retention.spec.ts](../tests/e2e/recovery-retention.spec.ts). [recovery-native-transport.test.ts](../src/renderer/src/platform/recovery-native-transport.test.ts) checks the binary IPC call boundary, not a live webview.                                                                                                                                     |
 | A pending Open cannot replace recovered work or delete its source.                                                  | `a delayed Open cannot replace restored work or delete its recovery copy` in [recovery-retention.spec.ts](../tests/e2e/recovery-retention.spec.ts) delays a real browser file read and checks the document and actual IndexedDB records after decoding finishes. Confirmation and edit/undo races are covered in [use-document-commands.test.tsx](../src/renderer/src/hooks/use-document-commands.test.tsx).                                                                                                                                                                        |
 | Changes during native quit cancel that quit and resume recovery scheduling.                                         | Delayed cleanup with edit/Restore/undo and duplicate close requests in [window-lifecycle.test.ts](../src/renderer/src/platform/window-lifecycle.test.ts); canceled queued cleanup in [recovery-store.test.ts](../src/renderer/src/store/recovery-store.test.ts); a fresh write after canceled in-flight cleanup in [use-recovery-snapshot.test.tsx](../src/renderer/src/hooks/use-recovery-snapshot.test.tsx). These use controlled IO and mocked native dispatch.                                                                                                                  |
 | Suspended writes cannot create unbounded cost backoff, and wall-clock jumps do not affect scheduling.               | Interval cap in [recovery-snapshot.test.ts](../src/shared/canvas/recovery-snapshot.test.ts); hour-long pending write and forward/backward wall-clock adjustment in [use-recovery-snapshot.test.tsx](../src/renderer/src/hooks/use-recovery-snapshot.test.tsx), using fake clocks.                                                                                                                                                                                                                                                                                                   |

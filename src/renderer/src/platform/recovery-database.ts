@@ -19,13 +19,11 @@ const DATABASE_NAME = 'canvaslide-recovery'
 const STORE_NAME = 'snapshots'
 const PAYLOAD_STORE = 'payloads'
 export class RecoveryStorageUnavailableError extends Error {}
-export type StoredSnapshot =
-  | string
-  | { info: RecoverySnapshotInfo; payload: Blob | Uint8Array<ArrayBuffer> }
+export type StoredSnapshot = { info: RecoverySnapshotInfo; payload: Uint8Array<ArrayBuffer> }
 /** `null` means no record, as on native; anything unrecognised is kept for quarantine. */
-export type StoredMetadata = string | { info: unknown } | null
+export type StoredMetadata = { info: unknown } | null
 
-type SnapshotIndex = { info: RecoverySnapshotInfo; bytes: number; storage: 'payload' }
+type SnapshotIndex = { info: RecoverySnapshotInfo; bytes: number }
 function request<T>(source: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     source.onsuccess = () => resolve(source.result)
@@ -44,11 +42,8 @@ function openDatabase(): Promise<IDBDatabase> {
       reject(new RecoveryStorageUnavailableError('IndexedDB open timed out'))
     }, 5000)
     open.onupgradeneeded = () => {
-      for (const name of [STORE_NAME, PAYLOAD_STORE]) {
-        if (!open.result.objectStoreNames.contains(name)) {
-          open.result.createObjectStore(name)
-        }
-      }
+      open.result.createObjectStore(STORE_NAME)
+      open.result.createObjectStore(PAYLOAD_STORE)
     }
     open.onsuccess = () => {
       clearTimeout(timer)
@@ -112,8 +107,8 @@ export function listStoredSessions(): Promise<string[]> {
 export function readStoredMetadata(id: string): Promise<StoredMetadata> {
   return withStores('readonly', async (index) => {
     const value: unknown = await request(index.get(id))
-    if (value === undefined || typeof value === 'string') {
-      return value ?? null
+    if (value === undefined) {
+      return null
     }
     return { info: value && typeof value === 'object' && 'info' in value ? value.info : value }
   })
@@ -121,21 +116,13 @@ export function readStoredMetadata(id: string): Promise<StoredMetadata> {
 export function readStoredSnapshot(id: string): Promise<StoredSnapshot | null> {
   return withStores('readonly', async (index, payloads) => {
     const value: unknown = await request(index.get(id))
-    if (typeof value === 'string') {
-      return value
-    }
     if (!value || typeof value !== 'object' || !('info' in value)) {
       return null
     }
     const info = value.info as RecoverySnapshotInfo
-    if ('storage' in value && value.storage === 'payload') {
-      const payload: unknown = await request(payloads.get(id))
-      return payload instanceof Uint8Array && payload.buffer instanceof ArrayBuffer
-        ? { info, payload: new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength) }
-        : null
-    }
-    return 'payload' in value && value.payload instanceof Blob
-      ? { info, payload: value.payload }
+    const payload: unknown = await request(payloads.get(id))
+    return payload instanceof Uint8Array && payload.buffer instanceof ArrayBuffer
+      ? { info, payload: new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength) }
       : null
   })
 }
@@ -157,27 +144,15 @@ function budgetExcluding(
       if (entry.key !== id) {
         records++
         const value: unknown = entry.value
-        if (typeof value === 'string') {
-          bytes += new Blob([value]).size
-        } else if (
+        bytes +=
           value &&
           typeof value === 'object' &&
           'bytes' in value &&
           typeof value.bytes === 'number' &&
           Number.isFinite(value.bytes) &&
           value.bytes >= 0
-        ) {
-          bytes += value.bytes
-        } else if (
-          value &&
-          typeof value === 'object' &&
-          'payload' in value &&
-          value.payload instanceof Blob
-        ) {
-          bytes += value.payload.size
-        } else {
-          bytes += MAX_SNAPSHOT_BYTES
-        }
+            ? value.bytes
+            : MAX_SNAPSHOT_BYTES
       }
       entry.continue()
     }
@@ -196,7 +171,7 @@ export function writeStoredSnapshot(
     ) {
       throw new DOMException('Recovery storage size limit', 'QuotaExceededError')
     }
-    const metadata: SnapshotIndex = { info, bytes: bytes.byteLength, storage: 'payload' }
+    const metadata: SnapshotIndex = { info, bytes: bytes.byteLength }
     await Promise.all([request(payloads.put(bytes, id)), request(index.put(metadata, id))])
   })
 }

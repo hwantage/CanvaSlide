@@ -4,7 +4,7 @@ import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 // Actual IndexedDB contents establish persistence independently of the status label.
 const SNAPSHOT_TIMEOUT_MS = 15_000
 
-/** The stored envelopes, by the name of the document each one holds. */
+/** The stored recovery records, by the name of the document each one holds. */
 function storedDocuments(page: Page): Promise<string[]> {
   return page.evaluate<string[]>(
     () =>
@@ -30,11 +30,9 @@ function storedDocuments(page: Page): Promise<string[]> {
           all.onsuccess = () =>
             done(
               (all.result as unknown[]).flatMap((value) =>
-                typeof value === 'string'
-                  ? [JSON.parse(value).documentName as string]
-                  : value && typeof value === 'object' && 'info' in value
-                    ? [(value.info as { documentName: string }).documentName]
-                    : []
+                value && typeof value === 'object' && 'info' in value
+                  ? [(value.info as { documentName: string }).documentName]
+                  : []
               )
             )
         }

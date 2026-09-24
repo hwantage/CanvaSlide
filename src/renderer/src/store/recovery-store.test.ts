@@ -127,12 +127,6 @@ describe('launch ownership, retention and failures', () => {
     expect(readRecoveryDocument).not.toHaveBeenCalled()
     expect(clearRecoverySnapshots).not.toHaveBeenCalled()
   })
-  it('does not let legacy clean-exit markers delete work', async () => {
-    localStorage.setItem('canvaslide.recovery.exit.a', '9000')
-    await launch('a')
-    expect(store.getState().offers.map((s) => s.sessionId)).toEqual(['a'])
-    expect(clearRecoverySnapshots).not.toHaveBeenCalled()
-  })
   it('defers payload decoding until Restore', async () => {
     await launch('a', 'b')
     expect(readRecoveryDocument).not.toHaveBeenCalled()

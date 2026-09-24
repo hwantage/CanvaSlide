@@ -229,16 +229,14 @@ test('ordinary browser unload retains the last persisted copy without relying on
   await expect(prompt(page)).toContainText('Lost 0')
 })
 
-test('metadata scan never parses or materializes a new-format payload in the renderer @core-interaction', async ({
+test('metadata scan never reads or parses a payload in the renderer @core-interaction', async ({
   page
 }) => {
   await seed(page)
   const result = await page.evaluate(async () => {
     const path = '/src/platform/recovery-storage.ts'
     const storage = await import(path)
-    const originalText = Blob.prototype.text,
-      originalArrayBuffer = Blob.prototype.arrayBuffer,
-      originalParse = JSON.parse,
+    const originalParse = JSON.parse,
       originalGet = IDBObjectStore.prototype.get
     let reads = 0,
       envelopeParses = 0
@@ -247,14 +245,6 @@ test('metadata scan never parses or materializes a new-format payload in the ren
         reads++
       }
       return originalGet.apply(this, args)
-    }
-    Blob.prototype.text = function () {
-      reads++
-      return originalText.call(this)
-    }
-    Blob.prototype.arrayBuffer = function () {
-      reads++
-      return originalArrayBuffer.call(this)
     }
     JSON.parse = (text, reviver) => {
       if (text.includes('contents')) {
@@ -272,8 +262,6 @@ test('metadata scan never parses or materializes a new-format payload in the ren
         )
       }
     } finally {
-      Blob.prototype.text = originalText
-      Blob.prototype.arrayBuffer = originalArrayBuffer
       JSON.parse = originalParse
       IDBObjectStore.prototype.get = originalGet
     }
@@ -332,7 +320,8 @@ test('record quota refuses new writes without evicting any unanswered work @core
       open.onsuccess = () => {
         const tx = open.result.transaction('snapshots', 'readwrite')
         for (let i = 1; i < 1000; i++) {
-          tx.objectStore('snapshots').put('old', `extra-${i}`)
+          const info = { version: 1, file: null, documentName: 'old', savedAt: 1 }
+          tx.objectStore('snapshots').put({ info, bytes: 1 }, `extra-${i}`)
         }
         tx.oncomplete = () => {
           open.result.close()
@@ -360,7 +349,7 @@ test('record quota refuses new writes without evicting any unanswered work @core
   expect(result.ids).not.toContain('extra')
 })
 
-test('worker serializes bytes and validates legacy, corrupt and future envelopes @core-interaction', async ({
+test('worker serializes bytes and rejects corrupt and future envelopes @core-interaction', async ({
   page
 }) => {
   await page.goto('/__checkout')
@@ -372,17 +361,16 @@ test('worker serializes bytes and validates legacy, corrupt and future envelopes
     const transferable = bytes instanceof Uint8Array
     const decoded = await codec.decodeRecoveryFile(bytes)
     const detached = bytes.byteLength === 0
-    const legacy = await codec.inspectRecoveryFile(
-      JSON.stringify({ ...meta, version: 1, contents: JSON.stringify(document) })
+    const encode = (text: string) => new TextEncoder().encode(text)
+    const future = await codec.decodeRecoveryFile(
+      encode(JSON.stringify({ ...meta, version: 99, contents: JSON.stringify(document) }))
     )
-    const future = await codec.inspectRecoveryFile('{"version":99,"contents":"keep"}')
-    const corrupt = await codec.decodeRecoveryFile('not json')
+    const corrupt = await codec.decodeRecoveryFile(encode('not json'))
     return {
       transferable,
       detached,
       name: decoded.result.document.name,
-      legacy: legacy.kind,
-      future,
+      future: { ok: future.result.ok, snapshot: future.snapshot },
       corrupt: corrupt.result.ok
     }
   }, createEmptyDocument('Worker deck'))
@@ -390,8 +378,7 @@ test('worker serializes bytes and validates legacy, corrupt and future envelopes
     transferable: true,
     detached: true,
     name: 'Worker deck',
-    legacy: 'valid',
-    future: { kind: 'quarantined', version: 99 },
+    future: { ok: false, snapshot: null },
     corrupt: false
   })
 })
@@ -495,39 +482,6 @@ test('failed launch scanning is visible and a real subsequent scan can recover @
   await expect(settings.getByText(/Some recovery copies could not be checked/)).toBeVisible()
   await settings.getByRole('button', { name: 'Check recovery copies again' }).click()
   await expect(prompt(page)).toContainText('Lost 0')
-})
-
-test('schema upgrade retains legacy version-one recovery work @core-interaction', async ({
-  page
-}) => {
-  await page.goto('/__checkout')
-  const envelope = JSON.stringify({
-    version: 1,
-    file: null,
-    documentName: 'Legacy deck',
-    savedAt: 1000,
-    contents: serializeDocument(createEmptyDocument('Legacy deck'))
-  })
-  await page.evaluate(async (envelope) => {
-    await new Promise<void>((resolve, reject) => {
-      const open = indexedDB.open('canvaslide-recovery', 1)
-      open.onupgradeneeded = () => open.result.createObjectStore('snapshots')
-      open.onsuccess = () => {
-        const tx = open.result.transaction('snapshots', 'readwrite')
-        tx.objectStore('snapshots').put(envelope, 'legacy')
-        tx.oncomplete = () => {
-          open.result.close()
-          resolve()
-        }
-        tx.onabort = () => reject(tx.error)
-      }
-    })
-  }, envelope)
-  await page.goto('/')
-  await expect(prompt(page)).toContainText('Legacy deck')
-  expect(await ids(page)).toEqual(['legacy'])
-  await prompt(page).getByRole('button', { name: 'Restore', exact: true }).click()
-  await expect(page).toHaveTitle('• Legacy deck — CanvaSlide')
 })
 
 test('partial scan errors stay visible alongside a readable recovery offer @core-interaction', async ({

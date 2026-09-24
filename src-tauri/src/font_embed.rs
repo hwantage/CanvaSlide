@@ -17,6 +17,8 @@ use font_kit::properties::{Properties, Weight};
 use font_kit::source::SystemSource;
 use serde::{Deserialize, Serialize};
 
+use crate::command_error::{off_main_thread, CommandError};
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FontRequest {
@@ -113,10 +115,8 @@ fn subset_installed_fonts(requests: &[FontRequest]) -> Vec<EmbeddedFont> {
 
 /// Runs on the blocking pool: subsetting reads and parses whole font files.
 #[tauri::command]
-pub async fn subset_fonts(requests: Vec<FontRequest>) -> Vec<EmbeddedFont> {
-    tauri::async_runtime::spawn_blocking(move || subset_installed_fonts(&requests))
-        .await
-        .unwrap_or_default()
+pub async fn subset_fonts(requests: Vec<FontRequest>) -> Result<Vec<EmbeddedFont>, CommandError> {
+    off_main_thread(move || Ok(subset_installed_fonts(&requests))).await
 }
 
 #[cfg(test)]

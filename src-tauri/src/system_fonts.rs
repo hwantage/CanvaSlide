@@ -3,12 +3,12 @@
 
 use font_kit::source::SystemSource;
 
+use crate::command_error::{off_main_thread, CommandError};
+
 /// Runs on the blocking pool: the OS enumerates every installed face to answer.
 #[tauri::command]
-pub async fn list_system_fonts() -> Vec<String> {
-    tauri::async_runtime::spawn_blocking(installed_families)
-        .await
-        .unwrap_or_default()
+pub async fn list_system_fonts() -> Result<Vec<String>, CommandError> {
+    off_main_thread(|| Ok(installed_families())).await
 }
 
 /// Family names sorted case-insensitively, deduplicated, hidden system faces (leading `.`) dropped.

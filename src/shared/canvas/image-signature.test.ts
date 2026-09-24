@@ -44,6 +44,11 @@ it('finds AVIF in the compatible brands and ignores brands past the ftyp box', (
   expect(rasterImageMime(bytes(ftyp('isom', 'mp41')))).toBeNull()
 })
 
+it('ignores brands in a box too small to hold them', () => {
+  expect(rasterImageMime(bytes(`${u32(8)}ftypavif\0\0\0\0mif1`))).toBeNull()
+  expect(rasterImageMime(bytes(`${u32(12)}ftypavif\0\0\0\0`))).toBeNull()
+})
+
 it('reads brands only within the signature window even when the box claims to be larger', () => {
   const huge = `\xff\xff\xff\xffftypisom\0\0\0\0${'mp41'.repeat(30)}avif`
   expect(rasterImageMime(bytes(huge))).toBeNull()

@@ -26,6 +26,10 @@ function isAvif(bytes: Uint8Array): boolean {
     return false
   }
   const size = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0)
+  // The box must hold its major brand and minor version for a brand to belong to it.
+  if (size < 16) {
+    return false
+  }
   // Callers may pass a whole file; the declared box size must not make detection scan all of it.
   const end = Math.min(size, bytes.length, IMAGE_SIGNATURE_BYTES)
   const brands = [ascii(bytes, 8, 4)]

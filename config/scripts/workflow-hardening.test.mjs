@@ -713,8 +713,10 @@ test('wrangler.toml binds production KV, keeps it from previews, and is what dev
   const pnpmMajor = /^pnpm@(\d+)\./.exec(
     JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).packageManager
   )[1]
+  const nodeVersion = readFileSync(new URL('../../.node-version', import.meta.url), 'utf8')
+  const [nodeMajor] = nodeVersion.split('.')
   for (const env of ['production', 'preview']) {
-    assert.equal(pagesSetting(`env.${env}.vars`, 'NODE_VERSION'), '22', env)
+    assert.equal(pagesSetting(`env.${env}.vars`, 'NODE_VERSION'), nodeMajor, env)
     assert.equal(pagesSetting(`env.${env}.vars`, 'PNPM_VERSION'), pnpmMajor, env)
   }
   assert.match(pagesSetting('', 'compatibility_date'), /^\d{4}-\d{2}-\d{2}$/)

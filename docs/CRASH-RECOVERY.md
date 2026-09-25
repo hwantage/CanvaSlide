@@ -63,8 +63,8 @@ a valid envelope alone does not establish a valid document.
 ## Ownership and launch
 
 Each renderer gets a random session id. It must acquire its own claim before scans or writes can
-succeed. Browsers use an exclusive Web Lock; native instances use OS file locks
-(`std::fs::File::lock`).
+succeed. Browsers use an exclusive Web Lock; native instances take an OS file lock with
+`std::fs::File::try_lock`, so a claim held by another instance is refused instead of waited for.
 Native ownership therefore also applies to multiple macOS instances launched with `open -n`.
 A native renderer reload releases that process's previous renderer claims before acquiring new ones.
 

@@ -39,6 +39,25 @@ pnpm dev:web        # browser only, http://127.0.0.1:1420
 ```
 
 `pnpm install` sets up a husky pre-commit hook that runs lint-staged (oxlint + oxfmt) on staged files.
+oxlint runs with type information (`options.typeAware` in [`.oxlintrc.json`](./.oxlintrc.json), through
+the `oxlint-tsgolint` dev dependency), so rules that need types run in the hook, `pnpm lint` and CI alike.
+
+### Editor Setup
+
+The project uses TypeScript 7, whose package has no `tsserver`: its native `tsc` is both the compiler
+and, with `--lsp`, the language server, so an editor's built-in TypeScript support, which loads
+`tsserver.js` from `node_modules/typescript`, cannot use it. In VS Code, install the extensions
+recommended in [`.vscode/extensions.json`](./.vscode/extensions.json):
+
+- **TypeScript 7** (`TypeScriptTeam.native-preview`), the TypeScript 7 language server. It turns
+  itself on after installation; if you turned it off, run **TypeScript: Enable TypeScript 7 Language
+  Server** from the Command Palette. It runs the TypeScript 7 bundled with the extension, whose
+  version can differ from the project's.
+- **Oxc** (`oxc.oxc-vscode`), which shows oxlint's diagnostics, type-aware rules included, from the
+  project's `.oxlintrc.json` and `node_modules`.
+
+In other editors, use a TypeScript 7 language server; `pnpm typecheck` and `pnpm lint` decide what CI
+accepts.
 
 ## Branch Naming
 

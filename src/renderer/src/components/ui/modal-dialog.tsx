@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { pushModalDialog } from '@/store/modal-stack'
 
 function restoreFocus(opener: HTMLElement, wasFocusVisible: boolean) {
   opener.focus({ preventScroll: true })
@@ -24,7 +25,8 @@ export function ModalDialog({
   children
 }: {
   label: string
-  onClose: () => void
+  /** Omitted for a prompt that needs a deliberate answer: Escape and the backdrop leave it open. */
+  onClose?: () => void
   /** Sizing of the panel; every dialog has its own width. */
   className: string
   children: ReactNode
@@ -32,6 +34,10 @@ export function ModalDialog({
   const dialogRef = useRef<HTMLDialogElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const keyboardInteraction = useRef(false)
+  const onCloseRef = useRef(onClose)
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current!
@@ -47,8 +53,25 @@ export function ModalDialog({
     }
     // Why: a native modal makes the background inert for keyboard and assistive technology.
     dialog.showModal()
+    const removeFromStack = pushModalDialog({ dismiss: () => onCloseRef.current?.() })
+    // Why: browsers force-close a dialog after repeated Escape, ignoring cancel's preventDefault.
+    const onNativeClose = () => {
+      // A remount (StrictMode) reopens the dialog before its earlier close() event arrives.
+      if (dialog.open) {
+        return
+      }
+      if (onCloseRef.current) {
+        onCloseRef.current()
+        return
+      }
+      dialog.showModal()
+      panelRef.current?.focus({ preventScroll: true })
+    }
+    dialog.addEventListener('close', onNativeClose)
     panelRef.current?.focus({ preventScroll: true })
     return () => {
+      dialog.removeEventListener('close', onNativeClose)
+      removeFromStack()
       dialog.close()
       for (const previous of previousDialogs) {
         previous.inert = false
@@ -68,13 +91,14 @@ export function ModalDialog({
       onPointerDown={() => {
         keyboardInteraction.current = false
       }}
-      onClick={onClose}
+      onClick={() => onClose?.()}
       onCancel={(event) => {
         event.preventDefault()
-        onClose()
+        onClose?.()
       }}
       onKeyDown={(event) => {
         keyboardInteraction.current = true
+        // Why: keys typed here belong to the dialog; window listeners consult the modal stack.
         event.stopPropagation()
         if (event.key !== 'Tab') {
           return

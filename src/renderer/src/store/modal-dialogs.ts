@@ -1,9 +1,5 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
 import { defaultExportFormat, type ExportFormat } from '@/lib/export-format'
-import { useFigImportStore } from './fig-import-store'
-import { useCloudShareStore } from './cloud-share-store'
-import { selectSlideShowActive, usePresentationStore } from './presentation-store'
-import { useRecoveryStore } from './recovery-store'
 
 export type DialogStore = {
   open: boolean
@@ -40,29 +36,3 @@ export const useSettingsDialogStore = createDialogStore()
 export const useShortcutHelpStore = createDialogStore()
 export const useAboutDialogStore = createDialogStore()
 export const useAiGuideStore = createDialogStore()
-
-/** Every modal that blocks canvas shortcuts while open, and that Escape closes. */
-const modalDialogs = [
-  useExportDialogStore,
-  useSettingsDialogStore,
-  useShortcutHelpStore,
-  useAboutDialogStore,
-  useAiGuideStore,
-  useCloudShareStore,
-  useFigImportStore
-]
-
-export function isModalDialogOpen(): boolean {
-  // Why the recovery prompt is not in `modalDialogs`: it blocks the canvas like the others, but
-  // Escape must not answer it — either choice is irreversible, so it waits for a deliberate one.
-  // A slide show hides the prompt until it ends, so it must not swallow presentation keys meanwhile.
-  const recoveryPrompt =
-    useRecoveryStore.getState().prompting && !selectSlideShowActive(usePresentationStore.getState())
-  return recoveryPrompt || modalDialogs.some((dialog) => dialog.getState().open)
-}
-
-export function closeModalDialogs(): void {
-  for (const dialog of modalDialogs) {
-    dialog.getState().hide()
-  }
-}

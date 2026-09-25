@@ -14,6 +14,7 @@ import {
 } from '@/lib/object-clipboard'
 import { isEditableTarget } from '@/lib/platform-keys'
 import { reportError } from '@/platform/document-file-access'
+import { isModalDialogOpen } from '@/store/modal-stack'
 import { usePresentationStore } from '@/store/presentation-store'
 
 /** A PDF copied from the file manager arrives as a file item on engines that expose it. */
@@ -23,9 +24,7 @@ function findPdfFile(data: DataTransfer | null): File | null {
 
 function ignoring(event: ClipboardEvent): boolean {
   return (
-    isEditableTarget(event.target) ||
-    usePresentationStore.getState().active ||
-    document.querySelector('dialog[open]') !== null
+    isEditableTarget(event.target) || usePresentationStore.getState().active || isModalDialogOpen()
   )
 }
 

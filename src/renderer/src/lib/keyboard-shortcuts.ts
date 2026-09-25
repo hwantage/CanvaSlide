@@ -14,12 +14,11 @@ import { useCameraStore } from '@/store/camera-store'
 import { useContextMenuStore } from '@/store/context-menu-store'
 import { useDocumentStore } from '@/store/document-store'
 import {
-  closeModalDialogs,
-  isModalDialogOpen,
   useExportDialogStore,
   useSettingsDialogStore,
   useShortcutHelpStore
 } from '@/store/modal-dialogs'
+import { dismissTopModalDialog, isModalDialogOpen } from '@/store/modal-stack'
 import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore, type ToolId } from '@/store/tool-store'
 
@@ -36,7 +35,7 @@ export function handleCanvasKeyDown(event: KeyboardEvent, commands: DocumentComm
   // Why: with a modal open, Delete/arrows/tool keys must not reach the canvas behind it.
   if (isModalDialogOpen()) {
     if (event.key === 'Escape') {
-      closeModalDialogs()
+      dismissTopModalDialog()
       event.preventDefault()
     }
     return

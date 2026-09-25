@@ -5,7 +5,7 @@ import { t } from '@/i18n/ui-strings'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
-import { isModalDialogOpen } from '@/store/modal-dialogs'
+import { isModalDialogOpen } from '@/store/modal-stack'
 import { annotationSession } from '@/store/presentation-annotation-store'
 import {
   selectPresentationRoll,

@@ -30,6 +30,16 @@ async function watchEscape(dialog: Locator) {
 
 /** Offers one unreadable recovery copy, as a launch after a crash would. */
 async function promptRecovery(page: Page) {
+  const storeUrl = appModuleUrl('store/recovery-store.ts')
+  // The launch scan disables the prompt's buttons and replaces its offers when it ends.
+  await expect
+    .poll(() =>
+      page.evaluate(async (url) => {
+        const { ready, scanning } = (await import(url)).useRecoveryStore.getState()
+        return ready && !scanning
+      }, storeUrl)
+    )
+    .toBe(true)
   await page.evaluate(async (url) => {
     const { useRecoveryStore } = await import(url)
     useRecoveryStore.setState({
@@ -37,7 +47,7 @@ async function promptRecovery(page: Page) {
       offers: [{ sessionId: 'crashed', quarantined: true, version: null }],
       batchRemaining: 1
     })
-  }, appModuleUrl('store/recovery-store.ts'))
+  }, storeUrl)
 }
 
 const escapeRecord = (page: Page) =>

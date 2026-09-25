@@ -43,6 +43,17 @@ export function cloudShareOrigin(
   }
 }
 
+/** The maintainers' service; its terms (docs/CLOUD-SHARE.md#hosted-service) cover no other host. */
+export const HOSTED_SHARE_ORIGIN = 'https://canvaslide.pages.dev'
+
+export function usesHostedShareService(...args: Parameters<typeof cloudShareOrigin>): boolean {
+  try {
+    return cloudShareOrigin(...args) === HOSTED_SHARE_ORIGIN
+  } catch {
+    return false
+  }
+}
+
 async function requestShare(path: string, init: RequestInit): Promise<string> {
   const controller = new AbortController()
   const cancel = () => controller.abort()

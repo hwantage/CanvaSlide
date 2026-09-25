@@ -1,6 +1,13 @@
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import { MAX_SHARE_BYTES } from '@shared/cloud-share'
-import { cloudShareOrigin, copyShareLink, createCloudShare, fetchCloudShare } from './cloud-share'
+import {
+  cloudShareOrigin,
+  copyShareLink,
+  createCloudShare,
+  fetchCloudShare,
+  HOSTED_SHARE_ORIGIN,
+  usesHostedShareService
+} from './cloud-share'
 
 vi.mock('./tauri-runtime', () => ({ isTauriRuntime: vi.fn(() => false) }))
 vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({ writeText: vi.fn() }))
@@ -30,6 +37,19 @@ it('uses the browser origin or the configured desktop service', () => {
   expect(cloudShareOrigin(origin, true, 'tauri://localhost')).toBe(origin)
   expect(cloudShareOrigin('http://127.0.0.1:8788', true)).toBe('http://127.0.0.1:8788')
   expect(() => cloudShareOrigin('', true)).toThrow('unavailable')
+})
+
+it("recognizes only the maintainers' hosted service, whether configured or same-origin", () => {
+  expect(usesHostedShareService(HOSTED_SHARE_ORIGIN, true, 'tauri://localhost')).toBe(true)
+  expect(usesHostedShareService(`${HOSTED_SHARE_ORIGIN}/`, true, 'http://tauri.localhost')).toBe(
+    true
+  )
+  expect(usesHostedShareService('', false, HOSTED_SHARE_ORIGIN)).toBe(true)
+  expect(usesHostedShareService('', false, 'https://branch.canvaslide.pages.dev')).toBe(false)
+  expect(usesHostedShareService(origin, false, HOSTED_SHARE_ORIGIN)).toBe(false)
+  expect(usesHostedShareService('http://localhost:8788', true)).toBe(false)
+  expect(usesHostedShareService(`${HOSTED_SHARE_ORIGIN}/path`, true)).toBe(false)
+  expect(usesHostedShareService('', true)).toBe(false)
 })
 
 it.each([

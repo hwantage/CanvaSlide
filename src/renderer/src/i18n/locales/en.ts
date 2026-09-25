@@ -200,6 +200,8 @@ Use the skill at {skill} to create the file.`,
   'share.copying': 'Copying link…',
   'share.loading': 'Loading shared canvas…',
   'share.exportFile': 'Export {format}',
+  'share.service': 'Terms, privacy and limits',
+  'share.serviceError': 'Could not open the share service terms: {message}',
   'share.fallback':
     'You can save the current canvas as a local {format} file and share that file instead.',
   'share.error.invalid':

@@ -2,7 +2,11 @@ import { beforeEach, afterEach, expect, test, vi } from 'vitest'
 import { isTauriRuntime } from './tauri-runtime'
 import { canInstallInApp, checkForAppUpdate, openReleasesPage } from './app-update'
 import { useUpdateStore } from '@/store/update-store'
-import { openRepositoryPage } from './external-links'
+import {
+  HOSTED_SHARE_SERVICE_URL,
+  openHostedShareServicePage,
+  openRepositoryPage
+} from './external-links'
 
 const { openUrl, message, check } = vi.hoisted(() => ({
   openUrl: vi.fn(),
@@ -148,4 +152,15 @@ test('browser update checks never contact a desktop release feed', async () => {
   const fetch = vi.spyOn(window, 'fetch')
   await expect(checkForAppUpdate()).resolves.toBeNull()
   expect(fetch).not.toHaveBeenCalled()
+})
+
+test('opens the hosted share terms natively and reports a rejected opener', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  openUrl.mockRejectedValueOnce('URL is not allowed')
+  await expect(openHostedShareServicePage()).resolves.toBeUndefined()
+  expect(openUrl).toHaveBeenCalledExactlyOnceWith(HOSTED_SHARE_SERVICE_URL)
+  expect(message).toHaveBeenCalledExactlyOnceWith(
+    'Could not open the share service terms: URL is not allowed',
+    { title: 'CanvaSlide', kind: 'error' }
+  )
 })

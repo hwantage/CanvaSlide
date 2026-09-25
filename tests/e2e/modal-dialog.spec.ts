@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 /** Keys pressed before the editor has mounted would miss its listeners. */
@@ -28,19 +29,14 @@ async function watchEscape(dialog: Locator) {
 
 /** Offers one unreadable recovery copy, as a launch after a crash would. */
 async function promptRecovery(page: Page) {
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .filter((name) => name.includes('/src/store/recovery-store.ts'))
-      .at(-1)!
+  await page.evaluate(async (url) => {
     const { useRecoveryStore } = await import(url)
     useRecoveryStore.setState({
       prompting: true,
       offers: [{ sessionId: 'crashed', quarantined: true, version: null }],
       batchRemaining: 1
     })
-  })
+  }, appModuleUrl('store/recovery-store.ts'))
 }
 
 const escapeRecord = (page: Page) =>
@@ -153,8 +149,6 @@ test('a paste inside a dialog stays out of the canvas behind it @core-interactio
 test('a recovery prompt that arrives during a slide show waits for it to end @core-interaction', async ({
   page
 }) => {
-  // Why: the store's module URL is read back from resource timing, which the app outgrows.
-  await page.addInitScript(() => performance.setResourceTimingBufferSize(10_000))
   await openEditor(page)
   for (const x of [200, 700]) {
     await page.keyboard.press('f')
@@ -175,8 +169,6 @@ test('a recovery prompt that arrives during a slide show waits for it to end @co
 test('the recovery prompt stays open when repeated Escape makes the browser force-close it @core-interaction', async ({
   page
 }) => {
-  // Why: the store's module URL is read back from resource timing, which the app outgrows.
-  await page.addInitScript(() => performance.setResourceTimingBufferSize(10_000))
   await openEditor(page)
   await promptRecovery(page)
   const prompt = page.getByRole('dialog', { name: 'Recover unsaved work' })

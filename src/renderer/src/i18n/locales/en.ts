@@ -98,7 +98,7 @@ Use the skill at {skill} to create the file.`,
   'fig.appearance': 'Preserve appearance',
   'fig.appearanceHint':
     'Keep each top-level layer as a vector image. Text remains outlined where available.',
-  'fig.experimentalHint':
+  'fig.formatHint':
     '{product} does not publish its file format, so files from newer versions may not import or may convert differently.',
   'fig.limitations':
     'Pages are placed side by side. Effects, component instances, and advanced fills may be incomplete; the import report lists conversion limitations.',

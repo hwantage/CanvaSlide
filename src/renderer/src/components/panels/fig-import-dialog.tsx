@@ -38,7 +38,7 @@ export function FigImportDialog() {
         : error === 'FIG_DOCUMENT_CHANGED'
           ? 'fig.error.changed'
           : 'fig.error.invalid'
-  const experimentalHint = t('fig.experimentalHint', { product: 'Figma' })
+  const formatHint = t('fig.formatHint', { product: 'Figma' })
   return (
     <ModalDialog
       label={t('fig.title', { product: 'Figma' })}
@@ -117,7 +117,7 @@ export function FigImportDialog() {
             ))}
           </fieldset>
           <p className="mt-3 text-xs text-muted-foreground">{t('fig.limitations')}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{experimentalHint}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{formatHint}</p>
         </>
       )}
       {phase === 'error' && (
@@ -126,7 +126,7 @@ export function FigImportDialog() {
             {t(errorKey)}
           </p>
           {errorKey === 'fig.error.invalid' && (
-            <p className="mt-1 text-xs text-muted-foreground">{experimentalHint}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{formatHint}</p>
           )}
         </>
       )}

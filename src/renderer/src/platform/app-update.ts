@@ -10,7 +10,7 @@ const CHECK_UPDATES_EVENT = 'check-updates-requested'
 export type AvailableUpdate = {
   version: string
   notes: string | null
-  /** True when this build can download and apply the update itself (Windows desktop). */
+  /** True when this build can download and apply the update itself (see `canInstallInApp`). */
   installable: boolean
 }
 
@@ -18,9 +18,31 @@ export function currentAppVersion(): string {
   return __APP_VERSION__
 }
 
-/** In-app installs are limited to Windows: macOS needs Apple signing before a swapped .app runs. */
-export function canInstallInApp(): boolean {
-  return isTauriRuntime() && /Windows/i.test(navigator.userAgent)
+/**
+ * Whether the desktop app can apply the update in `feed` (its latest.json) itself: always on
+ * Windows, and on macOS only when the feed marks the update notarized, since a swapped-in .app
+ * without Apple's signature may not run.
+ */
+export function canInstallInApp(feed: Record<string, unknown>): boolean {
+  if (!isTauriRuntime()) {
+    return false
+  }
+  if (/Windows/i.test(navigator.userAgent)) {
+    return true
+  }
+  return /Macintosh/i.test(navigator.userAgent) && isNotarizedForMac(feed.platforms)
+}
+
+// Every macOS entry comes from the one universal archive, so a partly marked feed is malformed.
+function isNotarizedForMac(platforms: unknown): boolean {
+  if (typeof platforms !== 'object' || platforms === null) {
+    return false
+  }
+  const mac = Object.entries(platforms).filter(([platform]) => platform.startsWith('darwin-'))
+  return (
+    mac.length > 0 &&
+    mac.every(([, entry]) => (entry as { notarized?: unknown } | null)?.notarized === true)
+  )
 }
 
 let pendingUpdate: Update | null = null
@@ -38,7 +60,7 @@ export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
   return {
     version: pendingUpdate.version,
     notes: pendingUpdate.body ?? null,
-    installable: canInstallInApp()
+    installable: canInstallInApp(pendingUpdate.rawJson)
   }
 }
 

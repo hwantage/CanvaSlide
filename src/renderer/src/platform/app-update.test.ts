@@ -4,10 +4,15 @@ import { canInstallInApp, checkForAppUpdate, openReleasesPage } from './app-upda
 import { useUpdateStore } from '@/store/update-store'
 import { openRepositoryPage } from './external-links'
 
-const { openUrl, message } = vi.hoisted(() => ({ openUrl: vi.fn(), message: vi.fn() }))
+const { openUrl, message, check } = vi.hoisted(() => ({
+  openUrl: vi.fn(),
+  message: vi.fn(),
+  check: vi.fn()
+}))
 vi.mock('./tauri-runtime', () => ({ isTauriRuntime: vi.fn() }))
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl }))
 vi.mock('@tauri-apps/plugin-dialog', () => ({ message }))
+vi.mock('@tauri-apps/plugin-updater', () => ({ check }))
 
 const releasesUrl = 'https://github.com/hwantage/CanvaSlide/releases'
 const repositoryUrl = 'https://github.com/hwantage/CanvaSlide'
@@ -19,19 +24,62 @@ beforeEach(() => {
 
 afterEach(() => vi.restoreAllMocks())
 
+// A latest.json as the release workflow writes it, with the macOS entries marked as given.
+function feedWith(...darwinMarks: (boolean | undefined)[]): Record<string, unknown> {
+  const entry = { signature: 'c2ln', url: 'https://example.test/update' }
+  const darwin = ['darwin-aarch64', 'darwin-x86_64', 'darwin-aarch64-app', 'darwin-x86_64-app']
+  return {
+    version: '99.0.0',
+    platforms: {
+      ...Object.fromEntries(
+        darwin
+          .slice(0, darwinMarks.length)
+          .map((platform, i) => [
+            platform,
+            darwinMarks[i] === undefined ? entry : { ...entry, notarized: darwinMarks[i] }
+          ])
+      ),
+      'windows-x86_64-nsis': entry
+    }
+  }
+}
+const notarized = feedWith(true, true, true, true)
+const unmarked = feedWith(undefined, undefined, undefined, undefined)
+
 test.each([
-  { agent: 'Macintosh', installable: false },
-  { agent: 'Windows NT 10.0', installable: true }
+  { agent: 'Macintosh', feed: unmarked, installable: false },
+  { agent: 'Macintosh', feed: notarized, installable: true },
+  { agent: 'Macintosh', feed: feedWith(true, undefined, true, true), installable: false },
+  { agent: 'Macintosh', feed: feedWith(true, 'yes' as never, true, true), installable: false },
+  { agent: 'Macintosh', feed: feedWith(), installable: false },
+  { agent: 'Macintosh', feed: { version: '99.0.0' }, installable: false },
+  { agent: 'Windows NT 10.0', feed: unmarked, installable: true },
+  { agent: 'Windows NT 10.0', feed: notarized, installable: true },
+  { agent: 'X11; Linux x86_64', feed: notarized, installable: false }
 ])(
-  'opens releases through the default native browser on $agent',
-  async ({ agent, installable }) => {
+  'on $agent an update installs in the app: $installable',
+  async ({ agent, feed, installable }) => {
+    vi.mocked(isTauriRuntime).mockReturnValue(true)
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(agent)
+    check.mockResolvedValueOnce({ version: '99.0.0', body: 'Notes', rawJson: feed })
+    await expect(checkForAppUpdate()).resolves.toEqual({
+      version: '99.0.0',
+      notes: 'Notes',
+      installable
+    })
+    expect(canInstallInApp(feed)).toBe(installable)
+  }
+)
+
+test.each(['Macintosh', 'Windows NT 10.0'])(
+  'opens releases through the default native browser on %s',
+  async (agent) => {
     vi.mocked(isTauriRuntime).mockReturnValue(true)
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(agent)
     const openWindow = vi.spyOn(window, 'open').mockReturnValue(null)
     await openReleasesPage()
     expect(openUrl).toHaveBeenCalledExactlyOnceWith(releasesUrl)
     expect(openWindow).not.toHaveBeenCalled()
-    expect(canInstallInApp()).toBe(installable)
   }
 )
 
@@ -42,7 +90,7 @@ test('opens the exact release page synchronously in browser mode', async () => {
   expect(openWindow).toHaveBeenCalledExactlyOnceWith(releasesUrl, '_blank', 'noopener')
   await opened
   expect(openUrl).not.toHaveBeenCalled()
-  expect(canInstallInApp()).toBe(false)
+  expect(canInstallInApp(notarized)).toBe(false)
 })
 
 test.each(['Macintosh', 'Windows NT 10.0'])(

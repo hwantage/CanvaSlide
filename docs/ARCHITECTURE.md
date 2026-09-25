@@ -238,4 +238,4 @@ document, viewport, DPR, browser and hardware; it cannot promise a native frame 
   third-party scripts, frames only that host, and plays direct video files over HTTPS only.
   Players must tear down on navigation/exit and ignore late callbacks.
 - App update installation is platform-specific; the [release guide](./RELEASE.md#7-자동-업데이트)
-  distinguishes updater signatures from OS code signing and describes the actual workflow.
+  (in Korean) distinguishes updater signatures from OS code signing and describes the actual workflow.

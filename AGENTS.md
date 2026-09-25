@@ -4,7 +4,7 @@ Infinite-canvas presentation app for macOS and Windows (Tauri 2 + React 19), als
 
 This file is the one place for the repository layout, code rules and verification commands, for human
 contributors and coding agents alike. How to propose, name and submit a change is in
-[`CONTRIBUTING.md`](./CONTRIBUTING.md); releases are in [`docs/RELEASE.md`](./docs/RELEASE.md).
+[`CONTRIBUTING.md`](./CONTRIBUTING.md); releases are in [`docs/RELEASE.md`](./docs/RELEASE.md) (in Korean).
 
 ## Layout
 

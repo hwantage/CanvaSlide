@@ -1,54 +1,58 @@
 name: Website
 
+# Why: CI builds and tests the site on every change, so whenever CI finishes on main this publishes
+# the newest commit of main that passed it, whatever files changed, instead of guessing from paths.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-    paths:
-      - 'website/**'
-      - 'src/renderer/src/i18n/**'
-      - 'src/renderer/src/assets/*.css'
-      - 'src/renderer/src/lib/platform-keys.ts'
-      - 'src/shared/**'
-      - 'src/player/**'
-      - 'examples/**'
-      - 'config/vite.player.config.ts'
-      - 'config/scripts/*player*.mjs'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'config/tsconfig.base.json'
-      - '.github/workflows/deploy-website.yml'
-  pull_request:
-    paths:
-      - 'website/**'
-      - 'src/renderer/src/i18n/**'
-      - 'src/renderer/src/assets/*.css'
-      - 'src/renderer/src/lib/platform-keys.ts'
-      - 'src/shared/**'
-      - 'src/player/**'
-      - 'examples/**'
-      - 'config/vite.player.config.ts'
-      - 'config/scripts/*player*.mjs'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'config/tsconfig.base.json'
-      - '.github/workflows/deploy-website.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Why: a Pages deployment is never cut off halfway; a queued run replaces an older queued one.
 concurrency:
-  group: website-${{ github.ref }}
-  cancel-in-progress: true
+  group: website
+  cancel-in-progress: false
 
 jobs:
-  build:
+  # Why: CI runs on main finish out of order or fail, and a queued run can displace another; runs are
+  # listed newest first, in merge order, so whichever run starts publishes the newest passing commit.
+  gate:
+    name: newest main commit with passing CI
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      sha: ${{ steps.newest.outputs.sha }}
+    steps:
+      - name: Find the commit to publish
+        id: newest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          sha="$(gh api -X GET "repos/$GH_REPO/actions/workflows/ci.yml/runs" \
+            -f branch=main -f event=push -f status=success -f per_page=1 \
+            --jq '.workflow_runs[0].head_sha // empty')"
+          if [ -z "$sha" ]; then
+            echo "No CI run from a push to main has passed" >&2
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          ref: ${{ needs.gate.outputs.sha }}
           persist-credentials: false
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -56,23 +60,15 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec oxlint website
-      - run: pnpm exec oxfmt --check website
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:site
+      - run: pnpm build:site
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
           path: website/dist
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: failure()
-        with:
-          name: website-test-results
-          path: test-results/website/
 
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

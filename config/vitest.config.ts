@@ -6,8 +6,7 @@ export default defineConfig({
     alias: {
       '@': resolve(import.meta.dirname, '../src/renderer/src'),
       '@app': resolve(import.meta.dirname, '../src/renderer/src'),
-      '@shared': resolve(import.meta.dirname, '../src/shared'),
-      '@player': resolve(import.meta.dirname, '../src/player')
+      '@shared': resolve(import.meta.dirname, '../src/shared')
     }
   },
   test: {

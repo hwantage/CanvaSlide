@@ -136,8 +136,6 @@ select {
   outline: none;
   user-select: text;
   -webkit-user-select: text;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 .canvas-text-editor:empty::before {
   content: attr(data-placeholder);

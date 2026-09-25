@@ -1,7 +1,7 @@
 import type { ImageElement as ImageElementModel } from '@shared/canvas/element-types'
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { mergeDetailTiles } from '@shared/canvas/image-detail'
-import { rotationTransform } from '@shared/canvas/element-rotation'
+import { rotationCss } from '@shared/canvas/element-style'
 import { svgImageLayoutScale } from '@shared/canvas/image-rendering'
 import { imageSurfaceStyle } from '@shared/canvas/image-surface'
 import { useImageSource } from '@/hooks/use-image-source'
@@ -59,6 +59,7 @@ export function ImageElement({
   const showDetail = visible && detail && painted === detail && revealed
   // An SVG shown as-is is rasterized at its layout size: lay it out larger and scale it back.
   const vector = asset?.mime === 'image/svg+xml' && preview?.src === asset.data
+  const turn = rotationCss(element)
   const previewSize = vector
     ? { width: element.width * scale, height: element.height * scale }
     : (preview?.size ?? asset ?? element)
@@ -66,10 +67,9 @@ export function ImageElement({
     <div
       className="absolute left-0 top-0"
       style={{
-        transform:
-          `translate(${element.x}px, ${element.y}px) ${rotationTransform(element.rotation) ?? ''}`.trim(),
+        transform: `translate(${element.x}px, ${element.y}px) ${turn.transform ?? ''}`.trim(),
         // Why: the wrapper has no size of its own; turn about the image's centre, not its corner.
-        transformOrigin: element.rotation ? `${element.width / 2}px ${element.height / 2}px` : '0 0'
+        transformOrigin: turn.transformOrigin ?? '0 0'
       }}
     >
       <img

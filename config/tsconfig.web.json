@@ -16,8 +16,7 @@
     "types": ["vite/client", "vitest/globals"],
     "paths": {
       "@/*": ["../src/renderer/src/*"],
-      "@shared/*": ["../src/shared/*"],
-      "@player/*": ["../src/player/*"]
+      "@shared/*": ["../src/shared/*"]
     }
   }
 }

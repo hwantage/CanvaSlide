@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { insertEditorLineBreak, readEditorText } from '@/lib/editable-text-content'
 import type { TextStyle } from '@shared/canvas/element-types'
-import { fontStackFor } from '@shared/canvas/font-family'
+import { textCss } from '@shared/canvas/element-style'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
 
@@ -71,23 +71,11 @@ export function EditableText({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing])
 
-  const cssStyle = {
-    color: style.color,
-    fontSize: style.fontSize,
-    lineHeight: style.lineHeight ?? 1.4,
-    textAlign: style.align,
-    fontWeight: style.bold ? 700 : 400,
-    fontStyle: style.italic ? 'italic' : undefined,
-    fontFamily: fontStackFor(style.fontFamily)
-  } as const
+  const cssStyle = textCss(style)
 
   if (!editing) {
     return (
-      <div
-        ref={ref}
-        className={`whitespace-pre-wrap break-words ${className ?? ''}`}
-        style={cssStyle}
-      >
+      <div ref={ref} className={className} style={cssStyle}>
         {text === '' ? <span className="text-zinc-400">{placeholder}</span> : text}
       </div>
     )

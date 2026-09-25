@@ -1,0 +1,36 @@
+/* Class rules for `element-dom.ts` nodes; the HTML player and PDF pages inline this file. */
+:root {
+  color-scheme: light;
+  --video-backdrop: #000000;
+  /* The player's board; connector labels mask their line with it. */
+  --canvas: #f7f7f8;
+  /* Text with the default family inherits this stack, as it inherits the app's in the editor. */
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    sans-serif;
+}
+/* Content never intercepts pointer events; frames are the only click targets (overview). */
+.uc-el,
+.uc-img {
+  position: absolute;
+  pointer-events: none;
+  /* Frames carry negative z-indices (largest at the bottom), so content always paints above. */
+  z-index: 0;
+}
+.uc-connector svg,
+.uc-shape svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.uc-img {
+  max-width: none;
+  display: block;
+}

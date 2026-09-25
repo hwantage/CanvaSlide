@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import type { ConnectorHeads } from '@shared/canvas/connector-markers'
+import type { NewElementContext } from '@shared/canvas/element-factory'
 import type { CanvasElement, ElementId } from '@shared/canvas/element-types'
-import { useDocumentStore } from './document-store'
+import { newElementId, useDocumentStore } from './document-store'
 import {
   defaultStyleMemory,
   rememberStyleFrom,
@@ -33,6 +34,11 @@ export const useStyleMemoryStore = create<StyleMemoryStore>()((set, get) => ({
 
 export function currentStyleMemory(): StyleMemory {
   return useStyleMemoryStore.getState().memory
+}
+
+/** Why here: the shared factories stay store-free, so the editor supplies both from its stores. */
+export function newElementContext(): NewElementContext {
+  return { id: newElementId(), style: currentStyleMemory() }
 }
 
 /** After a panel edit, the first selected element's style becomes the default for new ones. */

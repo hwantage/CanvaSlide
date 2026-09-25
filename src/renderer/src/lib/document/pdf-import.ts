@@ -1,5 +1,6 @@
 import { visibleWorldRect } from '@shared/canvas/camera-transform'
 import { createImageAsset } from '@shared/canvas/document-assets'
+import { createImageElement } from '@shared/canvas/element-factory'
 import type {
   CanvasElement,
   FrameElement,
@@ -11,7 +12,6 @@ import { PDF_PAGE_GAP, PDF_PAGE_WIDTH, layoutPdfPages } from '@shared/canvas/pdf
 import { nextFrameOrder } from '@shared/canvas/presentation-sequence'
 import { t } from '@/i18n/ui-strings'
 import { MAX_PASTED_IMAGE_EDGE } from '@/lib/raster/clipboard-image'
-import { createImageElement } from '@/lib/element-factory'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 import { useCameraStore } from '@/store/camera-store'
 import { useToolStore } from '@/store/tool-store'
@@ -116,7 +116,7 @@ export async function importPdfFile(file: File, at?: Point): Promise<void> {
     }
     // Why: frames go in first so they never cover a page in z-order even though the world layer
     // already paints frames beneath content.
-    elements.push(frame, createImageElement(asset.id, page, placement.page))
+    elements.push(frame, createImageElement(asset.id, page, placement.page, newElementId()))
     frameIds.push(frame.id)
   })
   store.insertImported(assets, elements, frameIds)

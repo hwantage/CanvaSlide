@@ -1,6 +1,11 @@
 import { visibleWorldRect } from '@shared/canvas/camera-transform'
 import { parseClipboardPayload } from '@shared/canvas/clipboard-payload'
 import { createImageAsset } from '@shared/canvas/document-assets'
+import {
+  createImageElement,
+  createTextElement,
+  placeImageRect
+} from '@shared/canvas/element-factory'
 import type { Point, Rect } from '@shared/canvas/element-types'
 import { cascadeRect } from '@shared/canvas/paste-placement'
 import { normalizePastedText, pastedTextWidth } from '@shared/canvas/pasted-text'
@@ -9,12 +14,12 @@ import { initialVideoAspectRatio, videoInsertionRect } from '@shared/canvas/vide
 import { readVideoAspectRatio } from '@/lib/video-metadata'
 import { decodeImageFile } from '@/lib/raster/clipboard-image'
 import { pickFiles } from '@/lib/file-picker'
-import { createImageElement, createTextElement, placeImageRect } from '@/lib/element-factory'
 import { memoryPayload, objectPasteTarget, pasteObjects } from '@/lib/document/object-clipboard'
 import { reportError } from '@/platform/document-file-access'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { useCameraStore } from '@/store/camera-store'
 import { newElementId, useDocumentStore } from '@/store/document-store'
+import { newElementContext } from '@/store/style-memory-store'
 import { useToolStore } from '@/store/tool-store'
 import { importFigFile } from '@/store/fig-import-store'
 
@@ -42,7 +47,9 @@ export async function insertImageFile(
   const asset = createImageAsset(decoded.src, decoded.width, decoded.height)
   const document = useDocumentStore.getState().document
   const rect = cascadeRect(placeImageRect(decoded, landingBox(at)), document)
-  useDocumentStore.getState().insertImage(asset, createImageElement(asset.id, decoded, rect))
+  useDocumentStore
+    .getState()
+    .insertImage(asset, createImageElement(asset.id, decoded, rect, newElementId()))
   useToolStore.getState().setTool('select')
 }
 
@@ -53,7 +60,7 @@ export function insertPlainText(raw: string, at?: Point): boolean {
     return false
   }
   const box = landingBox(at)
-  const element = createTextElement({ x: 0, y: 0 })
+  const element = createTextElement({ x: 0, y: 0 }, newElementContext())
   const width = pastedTextWidth(text, element.textStyle.fontSize, box.width)
   const lines = text.split('\n').length
   const height = element.height * lines

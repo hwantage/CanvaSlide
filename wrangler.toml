@@ -19,8 +19,9 @@ PNPM_VERSION = "11"
 binding = "SHARED_DOCUMENTS"
 id = "473238a4164d442889037c9e8c04d9d5"
 
-# Why: pull request previews run branches that have not been reviewed, so they get no namespace and
-# sharing there reports that it is unavailable.
+# Why: previews build unreviewed branches, so they get no namespace and sharing there reports that
+# it is unavailable. Each branch builds with its own copy of this file, so this is a default that
+# holds only while everyone who can push a branch here is trusted (docs/CLOUD-SHARE.md).
 [env.preview]
 kv_namespaces = []
 

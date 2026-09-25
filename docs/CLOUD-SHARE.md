@@ -61,7 +61,14 @@ Production is published only from commits that passed CI, by the
 - Pull request previews are still built by Cloudflare's Git integration, whose automatic production
   deployments are turned off; publishing previews from a workflow would hand the token to pull request
   runs. Previews run unreviewed branches, so `wrangler.toml` gives them no KV namespace and sharing
-  there reports that it is unavailable.
+  there reports that it is unavailable. Each preview builds with its own branch's `wrangler.toml`, so
+  a branch that edits the file can bind the production namespace to its preview: this keeps previews
+  away from production snapshots by default, not against someone who can push a branch. The Git
+  integration builds no previews for pull requests from forks, so only people with write access to
+  the repository can create such a branch. Before giving write access to anyone who should not reach
+  production snapshots, set **Preview branch** to **None** under the Pages project's Settings →
+  Builds → Branch control; any Pages project in the account can bind the namespace, so a separate
+  project does not help.
 
 To host another copy, create a Pages project whose production branch is `main` and a KV namespace,
 put their name and id in `wrangler.toml`, give the `web-editor` environment your own token and

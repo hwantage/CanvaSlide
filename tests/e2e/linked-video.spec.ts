@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Page, type Locator } from '@playwright/test'
+import { holdControlsOpen } from './presentation-fixture'
 
 const clip = readFileSync('tests/fixtures/linked-video.mp4')
 const thumbnailFixture =
@@ -544,6 +545,7 @@ test('save/open and standalone HTML preserve URLs without video bytes; exported 
   await player.keyboard.press('Escape')
   await expect(exportedVideo).not.toHaveAttribute('data-expanded', 'true')
   await expandVideo(player, exportedVideo, player.getByTestId('canvas-viewport'))
+  await holdControlsOpen(player)
   await player.getByRole('button', { name: 'Next frame (→)' }).click()
   await expect(player.locator('video')).toHaveCount(1)
   await expect(player.locator('[data-video-id="c"]')).toHaveAttribute('data-playback', 'playing')

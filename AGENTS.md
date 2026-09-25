@@ -119,13 +119,16 @@ pnpm test:site    # if website content, code or build inputs changed
 ```
 
 - E2E runs the Chromium suite plus core interactions in Firefox and WebKit, spec files in parallel;
-  CI splits it into shards that each run one test at a time, and fails on a committed `test.only`.
-  It starts Vite on a port derived from the checkout and verifies the server belongs to it. Install
-  browsers with `pnpm exec playwright install chromium firefox webkit`; `CANVASLIDE_E2E_WEBKIT=1`
-  adds the WebKit rendering regressions.
+  it fails CI on a committed `test.only`. It starts Vite on a port derived from the checkout and
+  verifies the server belongs to it. Install browsers with
+  `pnpm exec playwright install chromium firefox webkit`. Tag a scenario `@webkit` when it must also
+  hold in WebKit, the engine the macOS app runs on, beyond core input: mostly rendering, fonts,
+  focus, clipboard, media and CSP. `CANVASLIDE_E2E_WEBKIT=1` adds them to the WebKit run. CI runs
+  Chromium and Firefox in Linux shards and WebKit with `@webkit` on macOS, one test at a time each.
 - `bundle:local` builds unsigned installers for the current OS without the updater key. On Windows run
   it without `--bundles`; on macOS drop `--bundles app` to also build the DMG.
-- CI runs the Rust checks and the macOS/Windows bundle jobs on every change; see
+- CI runs `pnpm check`'s steps on Linux and Windows, the Rust checks on Linux, macOS and Windows,
+  and the macOS/Windows bundle jobs on every change; see
   [`.github/workflows/`](./.github/workflows/). Pin every action to a full commit SHA with its version
   in a comment, and keep signing secrets out of jobs that run build or package scripts
   ([`docs/RELEASE.md`](./docs/RELEASE.md) §4); `pnpm test` checks both.

@@ -21,6 +21,10 @@ const workflows = readdirSync(workflowDirectory)
 const release = workflows.find(({ name }) => name === 'release.yml').text
 const ci = workflows.find(({ name }) => name === 'ci.yml').text
 const releaseNotes = workflows.find(({ name }) => name === 'release-notes.yml').text
+const playwrightConfig = readFileSync(
+  new URL('../../tests/playwright.config.ts', import.meta.url),
+  'utf8'
+)
 
 // Each job's lines, keyed by job id, from a workflow whose jobs sit at two-space indent.
 function jobsOf(workflow) {
@@ -156,12 +160,33 @@ test('every CI job has a time limit', () => {
   }
 })
 
-test('E2E runs once, split into shards that together cover the suite', () => {
+// The step whose `run:` is exactly `command`, failing unless exactly one exists and nothing lets it
+// or its job be skipped or fail without failing the run.
+function checkedStep(job, command) {
+  // Why: job keys may follow `steps:`, and only they sit at four spaces.
+  assert.doesNotMatch(job, /\n {4}(if|continue-on-error):/)
+  const steps = stepsOf(job).filter(
+    (step) => step.startsWith(`      - run: ${command}\n`) || step === `      - run: ${command}`
+  )
+  assert.equal(steps.length, 1, command)
+  assert.doesNotMatch(steps[0], bypassesFailure, command)
+  return steps[0]
+}
+
+test('E2E runs each Playwright project once, splitting Linux into shards', () => {
   const { e2e } = jobsOf(ci)
-  assert.equal(ci.match(/test:e2e/g).length, 1)
+  const projectsOf = (args) => [...args.matchAll(/--project=(\S+)/g)].map(([, name]) => name)
+  const runs = [...ci.matchAll(/\n {6}- run: pnpm test:e2e (.+)\n/g)].map(([, args]) => args)
+  assert.equal(runs.length, ci.match(/test:e2e/g).length)
+  const projects = playwrightConfig.slice(playwrightConfig.indexOf('\n  projects: ['))
+  const configured = [...projects.matchAll(/\bname: '([^']+)'/g)].map(([, name]) => name)
+  assert.ok(configured.length > 1)
+  assert.deepEqual(runs.flatMap(projectsOf).toSorted(), configured.toSorted())
+  const [shardRun] = runs.filter((args) => args.includes('--shard='))
+  checkedStep(e2e, `pnpm test:e2e ${shardRun}`)
   assert.match(
-    e2e,
-    /\n {6}- run: pnpm test:e2e --shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ strategy\.job-total \}\}\n/
+    shardRun,
+    /^(--project=\S+ )+--shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ strategy\.job-total \}\}$/
   )
   // Why: `job-total` is the shard count only while the matrix has no other dimension.
   const matrix = /\n {6}matrix:\n((?: {8}.*\n)+)/.exec(`${e2e}\n`)[1]
@@ -176,6 +201,41 @@ test('E2E runs once, split into shards that together cover the suite', () => {
   // Why: a failing shard must not cancel the others, or their failures go unreported.
   assert.match(e2e, /\n {6}fail-fast: false\n/)
   assert.match(e2e, /\n\s+name: playwright-traces-\$\{\{ matrix\.shard \}\}\n/)
+})
+
+test('WebKit runs on macOS with the @webkit scenarios', () => {
+  const [job, ...others] = Object.values(jobsOf(ci)).filter((job) =>
+    /\n {6}- run: pnpm test:e2e [^\n]*--project=webkit\b/.test(job)
+  )
+  assert.ok(job && others.length === 0)
+  assert.match(job, /\n {4}runs-on: macos-latest\n/)
+  const step = checkedStep(job, 'pnpm test:e2e --project=webkit')
+  // Why: the flag CI sets must be the one the config reads to add the `@webkit` scenarios.
+  const flag = /process\.env\.(\w+) \? \/[^/\n]*@webkit/.exec(playwrightConfig)[1]
+  assert.match(`${step}\n`, new RegExp(`\\n {10}${flag}: '1'\\n`))
+  assert.match(job, /\n\s+name: playwright-traces-webkit\n/)
+})
+
+test('Rust is checked on Linux, macOS and Windows, the scripts on Linux and Windows', () => {
+  const { verify, rust } = jobsOf(ci)
+  const osMatrix = (job) => /\n {8}os: \[([^\]]*)\]\n/.exec(`${job}\n`)[1].split(/,\s*/)
+  for (const job of [verify, rust]) {
+    assert.match(job, /\n {4}runs-on: \$\{\{ matrix\.os \}\}\n/)
+    assert.match(job, /\n {6}fail-fast: false\n/)
+  }
+  assert.deepEqual(osMatrix(verify), ['ubuntu-latest', 'windows-latest'])
+  for (const script of ['lint', 'format:check', 'typecheck', 'test']) {
+    checkedStep(verify, `pnpm ${script}`)
+  }
+  assert.deepEqual(osMatrix(rust), ['ubuntu-latest', 'macos-latest', 'windows-latest'])
+  for (const command of [
+    'cargo fmt --manifest-path src-tauri/Cargo.toml --check',
+    // Why: without `--all-targets`, the platform-specific tests are never linted.
+    'cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings',
+    'cargo test --manifest-path src-tauri/Cargo.toml'
+  ]) {
+    checkedStep(rust, command)
+  }
 })
 
 test('CI artifacts expire instead of keeping the 90-day default', () => {

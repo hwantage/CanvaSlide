@@ -295,7 +295,7 @@ fn corrupt_temp_does_not_hide_or_replace_the_completed_copy() {
         read_bytes(&snapshot_path(&dir, &retained, "json").unwrap()).unwrap(),
         corrupt
     );
-    files.clear(&dir, &[retained.clone()]).unwrap();
+    files.clear(&dir, std::slice::from_ref(&retained)).unwrap();
     files.release(&dir, &retained).unwrap();
     std::fs::remove_dir_all(dir).unwrap();
 }
@@ -331,7 +331,7 @@ fn unreadable_temp_does_not_hide_the_completed_copy() {
     .unwrap();
     let temp = dir.join("lost.json.tmp");
     std::fs::write(&temp, b"unreadable").unwrap();
-    std::fs::set_permissions(&temp, std::fs::Permissions::from_mode(0)).unwrap();
+    std::fs::set_permissions(&temp, std::fs::Permissions::from_mode(0o000)).unwrap();
     assert!(read_bytes(&temp).is_err());
     let info = read_info(&dir, "lost").unwrap();
     assert_eq!(info["documentName"], "old");

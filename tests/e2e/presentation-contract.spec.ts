@@ -3,6 +3,7 @@ import { appModuleUrl } from './app-module'
 import { dragOnCanvas } from './canvas-gestures'
 import {
   downloadPresentation,
+  holdControlsOpen,
   inkEndpoints,
   inkStrokes,
   openPresentation,
@@ -17,6 +18,7 @@ for (const surface of ['app', 'html'] as const) {
       page
     }) => {
       await openPresentation(page, surface, { count: 1 })
+      await holdControlsOpen(page)
       const controls = presentationControls(page)
       const previous = controls.getByRole('button', { name: /^Previous/ })
       const next = controls.getByRole('button', { name: /^Next/ })
@@ -36,6 +38,7 @@ for (const surface of ['app', 'html'] as const) {
       page
     }) => {
       await openPresentation(page, surface)
+      await holdControlsOpen(page)
       const controls = presentationControls(page)
       const previous = controls.getByRole('button', { name: /^Previous/ })
       const next = controls.getByRole('button', { name: /^Next/ })

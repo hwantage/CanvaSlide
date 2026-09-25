@@ -32,6 +32,6 @@ export function createTranslator<Key extends string>(
 ): Translator<Key> {
   const t = (key: Key, params?: Params) => interpolate(tables[locale()][key], params)
   const tn = (key: PluralKey<Key>, count: number, params?: Params) =>
-    t(`${key}.${count === 1 ? 'one' : 'other'}` as Key, { n: count, ...params })
+    t(`${key}.${count === 1 ? 'one' : 'other'}` as Key, { ...params, n: count })
   return { t, tn }
 }

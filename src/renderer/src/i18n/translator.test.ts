@@ -29,6 +29,7 @@ describe('createTranslator', () => {
     expect(tn('item', 1)).toBe('1 item')
     expect(tn('item', 0)).toBe('0 items')
     expect(tn('item', 2)).toBe('2 items')
+    expect(tn('item', 2, { n: 3 })).toBe('2 items')
   })
 })
 

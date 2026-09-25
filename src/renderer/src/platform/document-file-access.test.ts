@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { createEmptyDocument } from '@shared/canvas/element-types'
-import { encodeNativeDocumentFile } from '@/lib/document-file-codec'
+import { encodeNativeDocumentFile } from '@/lib/workers/document-file-codec'
 import { parseDocument, serializeDocument } from '@shared/canvas/document-file'
 import { useDocumentCommands, useWindowTitle } from '@/hooks/use-document-commands'
 import { useDocumentStore } from '@/store/document-store'
@@ -18,7 +18,7 @@ const { invoke, listen, setTitle } = vi.hoisted(() => ({
 vi.mock('@tauri-apps/api/core', () => ({ invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen }))
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ setTitle }) }))
-vi.mock('@/lib/document-file-codec', async () => {
+vi.mock('@/lib/workers/document-file-codec', async () => {
   const codec = await import('@shared/canvas/document-file')
   return {
     encodeDocumentFile: vi.fn((document) =>

@@ -6,7 +6,7 @@ import {
   type ShareAccess
 } from '@shared/cloud-share'
 import type { CanvasDocument } from '@shared/canvas/element-types'
-import { loadSharedDocument } from '@/lib/load-shared-document'
+import { loadSharedDocument } from '@/lib/document/load-shared-document'
 import { clearShareQuery, createCloudShare } from '@/platform/cloud-share'
 import { useCameraStore } from './camera-store'
 import { useDocumentStore } from './document-store'

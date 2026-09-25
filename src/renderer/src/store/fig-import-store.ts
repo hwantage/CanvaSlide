@@ -5,7 +5,7 @@ import type { FigImportOptions } from '@shared/canvas/fig-convert'
 import type { Point } from '@shared/canvas/element-types'
 import { nextFrameOrder } from '@shared/canvas/presentation-sequence'
 import { visibleWorldRect } from '@shared/canvas/camera-transform'
-import type { FigImportRequest, FigImportResponse } from '@/lib/fig-import.worker'
+import type { FigImportRequest, FigImportResponse } from '@/lib/workers/fig-import.worker'
 import { useCameraStore } from './camera-store'
 import { newElementId, useDocumentStore } from './document-store'
 import { useToolStore } from './tool-store'
@@ -137,7 +137,7 @@ function receive(session: ImportSession, message: FigImportResponse): void {
 
 async function read(file: File, session: ImportSession): Promise<void> {
   try {
-    const worker = new Worker(new URL('../lib/fig-import.worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('../lib/workers/fig-import.worker.ts', import.meta.url), {
       type: 'module'
     })
     session.worker = worker

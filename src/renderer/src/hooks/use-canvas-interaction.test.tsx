@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { useDocumentStore } from '@/store/document-store'
 import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
 import { useToolStore } from '@/store/tool-store'
-import { createElementForTool } from '@/lib/create-element-for-tool'
+import { createElementForTool } from '@/lib/interaction/create-element-for-tool'
 import { useCanvasInteraction } from './use-canvas-interaction'
 
 const initialDocument = useDocumentStore.getState()

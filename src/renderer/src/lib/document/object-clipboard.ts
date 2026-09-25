@@ -8,7 +8,7 @@ import { elementBounds } from '@shared/canvas/element-bounds'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 import type { Point } from '@shared/canvas/element-types'
 import { objectPastePlacement, type ObjectPastePlacement } from '@shared/canvas/paste-placement'
-import { canvasPastePointer } from './canvas-paste-pointer'
+import { canvasPastePointer } from '@/lib/interaction/canvas-paste-pointer'
 
 /**
  * Real engines (Chromium, WebView2, WKWebView with an Edit menu) dispatch `paste` within a few

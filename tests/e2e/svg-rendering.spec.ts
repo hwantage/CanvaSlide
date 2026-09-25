@@ -229,7 +229,7 @@ test('keeps the previous preview visible while preparing a resized image', async
       useDocumentStore.getState().patchElements(['first'], { width: 33000 })
     },
     {
-      cacheUrl: appModuleUrl('lib/svg-preview-cache.ts'),
+      cacheUrl: appModuleUrl('lib/raster/svg-preview-cache.ts'),
       documentUrl: appModuleUrl('store/document-store.ts')
     }
   )
@@ -290,7 +290,7 @@ test('waits for flight images, lets a gesture cancel preparation, and settles zo
       useCameraStore.getState().animateTo({ x: -3999900, y: 120, zoom: 4 }, 500)
     },
     {
-      cacheUrl: appModuleUrl('lib/svg-preview-cache.ts'),
+      cacheUrl: appModuleUrl('lib/raster/svg-preview-cache.ts'),
       cameraUrl: appModuleUrl('store/camera-store.ts')
     }
   )

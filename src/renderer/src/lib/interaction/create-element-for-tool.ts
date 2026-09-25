@@ -7,7 +7,7 @@ import {
   createFrameElement,
   createShapeElement,
   createTextElement
-} from './element-factory'
+} from '@/lib/element-factory'
 
 export const createTools = ['text', 'rectangle', 'ellipse', 'diamond', 'triangle', 'frame'] as const
 export type CreateTool = (typeof createTools)[number]

@@ -1,4 +1,4 @@
-import { canvasVideoFocus } from '@/lib/video-expansion'
+import { canvasVideoFocus } from '@/lib/interaction/video-expansion'
 import { useEffect, type RefObject } from 'react'
 import { createViewportRefit } from '@shared/presentation/viewport-refit'
 import { useCameraStore } from '@/store/camera-store'

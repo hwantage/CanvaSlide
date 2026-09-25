@@ -3,8 +3,8 @@ import type { Point } from '@shared/canvas/element-types'
 import { canGroup, canUngroup } from '@shared/canvas/element-groups'
 import { clampMenuToViewport } from '@shared/canvas/menu-placement'
 import { t } from '@/i18n/ui-strings'
-import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/external-content'
-import { copySelection, cutSelection } from '@/lib/object-clipboard'
+import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/document/external-content'
+import { copySelection, cutSelection } from '@/lib/document/object-clipboard'
 import { shiftLabel, shortcutLabel } from '@/lib/platform-keys'
 import { selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import {
@@ -14,8 +14,12 @@ import {
   startEditingSelection,
   zoomToContent,
   zoomToSelection
-} from '@/lib/selection-commands'
-import { copySelectedStyle, hasCopiedStyle, pasteStyleToSelection } from '@/lib/style-clipboard'
+} from '@/lib/document/selection-commands'
+import {
+  copySelectedStyle,
+  hasCopiedStyle,
+  pasteStyleToSelection
+} from '@/lib/document/style-clipboard'
 import { selectViewport, useCameraStore } from '@/store/camera-store'
 import { useContextMenuStore } from '@/store/context-menu-store'
 import { selectDocument, selectSelectedIds, useDocumentStore } from '@/store/document-store'

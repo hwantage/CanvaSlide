@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { trackCanvasPastePointer } from '@/lib/canvas-paste-pointer'
+import { trackCanvasPastePointer } from '@/lib/interaction/canvas-paste-pointer'
 import { useCanvasInteraction } from '@/hooks/use-canvas-interaction'
 import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { useSwipeNavigation } from '@/hooks/use-swipe-navigation'

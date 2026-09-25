@@ -2,7 +2,7 @@ import { parseDocumentFile, serializeDocument } from '@shared/canvas/document-fi
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import { fetchExampleDocument } from './example-document'
 
-vi.mock('@/lib/document-file-codec', () => ({
+vi.mock('@/lib/workers/document-file-codec', () => ({
   decodeDocumentFile: vi.fn(async (bytes: Uint8Array) => parseDocumentFile(bytes))
 }))
 vi.mock('@shared/example-catalog', async (original) => ({

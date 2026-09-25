@@ -21,7 +21,7 @@ The home page is `/`, ShowCase is `/showcase/`, and documentation is `/docs/`. D
 - Download links open the [official Releases page](https://github.com/hwantage/CanvaSlide/releases). Installer availability comes from published releases; source-build instructions describe the checkout. Keep availability wording and download links aligned when maintaining installation copy.
 - Screenshots show the actual editor and presentation view. Verify feature copy against the current code, tests and [maintained guides](../docs/README.md); historical plans and implementation reports are not a source for current behavior. Platform prerequisites link to the official Tauri guide.
 
-For navigation and drawing keys, check [`keyboard-shortcuts.ts`](../src/renderer/src/lib/keyboard-shortcuts.ts) and the app’s shortcut help. Keep English and Korean guide copy aligned. Record test results in the PR, not as a dated status section here.
+For navigation and drawing keys, check [`keyboard-shortcuts.ts`](../src/renderer/src/lib/interaction/keyboard-shortcuts.ts) and the app’s shortcut help. Keep English and Korean guide copy aligned. Record test results in the PR, not as a dated status section here.
 
 ## Brand and motion
 

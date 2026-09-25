@@ -1,10 +1,10 @@
 import { cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ImageAsset, ImageElement } from '@shared/canvas/element-types'
-import { svgPreviewCache } from '@/lib/svg-preview-cache'
+import { svgPreviewCache } from '@/lib/raster/svg-preview-cache'
 import { useImageSource } from './use-image-source'
 
-vi.mock('@/lib/svg-preview-cache', () => ({ svgPreviewCache: { acquire: vi.fn() } }))
+vi.mock('@/lib/raster/svg-preview-cache', () => ({ svgPreviewCache: { acquire: vi.fn() } }))
 
 const asset: ImageAsset = {
   id: 'vector',

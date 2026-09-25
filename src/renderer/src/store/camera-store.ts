@@ -9,7 +9,7 @@ import {
   zoomByWheel
 } from '@shared/canvas/camera-transform'
 import { createCameraAnimator, type CameraFlightOptions } from '@shared/canvas/camera-animator'
-import { prepareCameraFlight } from '@/lib/camera-flight-preparation'
+import { prepareCameraFlight } from '@/lib/raster/camera-flight-preparation'
 import type { Camera, Point, Rect, Size } from '@shared/canvas/element-types'
 import {
   fitContentToViewport,

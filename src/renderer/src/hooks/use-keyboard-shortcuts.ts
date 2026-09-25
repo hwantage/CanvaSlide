@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { handleCanvasKeyDown } from '@/lib/keyboard-shortcuts'
+import { handleCanvasKeyDown } from '@/lib/interaction/keyboard-shortcuts'
 import { useToolStore } from '@/store/tool-store'
 import type { DocumentCommands } from './use-document-commands'
 

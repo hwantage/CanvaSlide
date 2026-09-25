@@ -53,7 +53,7 @@ export function PdfExportPanel({
       return
     }
     const controller = new AbortController()
-    void import('@/lib/pdf-export')
+    void import('@/lib/raster/pdf-export')
       .then(({ buildPdfExport }) =>
         buildPdfExport({
           document,

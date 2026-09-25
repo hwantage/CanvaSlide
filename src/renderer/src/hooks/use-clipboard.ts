@@ -1,17 +1,17 @@
 import { useEffect } from 'react'
-import { findImageFile } from '@/lib/clipboard-image'
+import { findImageFile } from '@/lib/raster/clipboard-image'
 import {
   insertClipboardText,
   insertFile,
   isPdfFile,
   pasteFromSystemClipboard
-} from '@/lib/external-content'
+} from '@/lib/document/external-content'
 import {
   copySelection,
   cutSelection,
   nativePasteArrived,
   setKeyboardPasteFallback
-} from '@/lib/object-clipboard'
+} from '@/lib/document/object-clipboard'
 import { isEditableTarget } from '@/lib/platform-keys'
 import { reportError } from '@/platform/document-file-access'
 import { isModalDialogOpen } from '@/store/modal-stack'

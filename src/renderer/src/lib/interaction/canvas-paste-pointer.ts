@@ -1,7 +1,7 @@
 import { screenToWorld } from '@shared/canvas/camera-transform'
 import type { Point } from '@shared/canvas/element-types'
 import { useCameraStore } from '@/store/camera-store'
-import { isEditableTarget } from './platform-keys'
+import { isEditableTarget } from '@/lib/platform-keys'
 
 let revision = 0
 let readPointer: () => Point | null = () => null

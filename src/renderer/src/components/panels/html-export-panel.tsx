@@ -12,7 +12,7 @@ import {
   exportQualities,
   recompressDocumentAssets,
   type ExportQuality
-} from '@/lib/export-image-recompress'
+} from '@/lib/raster/export-image-recompress'
 import { canEmbedFonts, subsetFonts } from '@/platform/font-embedding'
 import { saveHtmlExport } from '@/platform/html-export-file'
 import { reportError } from '@/platform/document-file-access'

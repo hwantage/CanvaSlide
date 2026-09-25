@@ -2,7 +2,7 @@ import { Focus, Maximize, Minus, Plus } from 'lucide-react'
 import { IconButton } from '@/components/ui/icon-button'
 import { t } from '@/i18n/ui-strings'
 import { shiftLabel, shortcutLabel } from '@/lib/platform-keys'
-import { zoomToContent, zoomToSelection } from '@/lib/selection-commands'
+import { zoomToContent, zoomToSelection } from '@/lib/document/selection-commands'
 import { selectZoom, useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 

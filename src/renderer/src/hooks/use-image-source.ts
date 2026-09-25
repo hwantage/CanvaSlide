@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ImageAsset, ImageElement } from '@shared/canvas/element-types'
 import { imageIntersectsViewport } from '@shared/canvas/image-rendering'
-import { svgPreviewCache } from '@/lib/svg-preview-cache'
-import type { ImagePreview } from '@/lib/svg-image-preview'
+import { svgPreviewCache } from '@/lib/raster/svg-preview-cache'
+import type { ImagePreview } from '@/lib/raster/svg-image-preview'
 import { useCameraStore } from '@/store/camera-store'
 
 function visible(element: ImageElement, selected: boolean): boolean {

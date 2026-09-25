@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { createEmptyDocument } from '@shared/canvas/element-types'
-import { encodeRecoverySnapshot } from '@/lib/document-file-codec'
+import { encodeRecoverySnapshot } from '@/lib/workers/document-file-codec'
 import { t } from '@/i18n/ui-strings'
 import { readRecoverySnapshots, writeRecoverySnapshot } from './recovery-storage'
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn(async () => {}) }))
@@ -11,7 +11,7 @@ vi.mock('./recovery-session', () => ({
   claimRecoverySession: vi.fn(async () => true),
   releaseRecoverySession: vi.fn()
 }))
-vi.mock('@/lib/document-file-codec', () => ({ encodeRecoverySnapshot: vi.fn() }))
+vi.mock('@/lib/workers/document-file-codec', () => ({ encodeRecoverySnapshot: vi.fn() }))
 it('offers the completed native snapshot while reporting its quarantined temporary data', async () => {
   const snapshot = { version: 1, file: null, documentName: 'Old work', savedAt: 1000 }
   vi.mocked(invoke).mockImplementation(

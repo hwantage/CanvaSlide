@@ -5,12 +5,12 @@ import { useDocumentStore } from '@/store/document-store'
 import { useCameraStore } from '@/store/camera-store'
 import { insertClipboardText, pasteFromSystemClipboard } from './external-content'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
-import { readVideoAspectRatio } from './video-metadata'
-import { decodeImageFile } from './clipboard-image'
+import { readVideoAspectRatio } from '@/lib/video-metadata'
+import { decodeImageFile } from '@/lib/raster/clipboard-image'
 import { VIDEO_CHROME_HEIGHT } from '@shared/canvas/video-placement'
 
-vi.mock('./video-metadata', () => ({ readVideoAspectRatio: vi.fn(async () => null) }))
-vi.mock('./clipboard-image', () => ({ decodeImageFile: vi.fn() }))
+vi.mock('@/lib/video-metadata', () => ({ readVideoAspectRatio: vi.fn(async () => null) }))
+vi.mock('@/lib/raster/clipboard-image', () => ({ decodeImageFile: vi.fn() }))
 
 vi.mock('@/platform/native-clipboard', () => ({
   readNativeClipboardImage: vi.fn(async () => null),

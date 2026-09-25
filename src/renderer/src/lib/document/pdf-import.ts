@@ -10,7 +10,7 @@ import type {
 import { PDF_PAGE_GAP, PDF_PAGE_WIDTH, layoutPdfPages } from '@shared/canvas/pdf-page-layout'
 import { nextFrameOrder } from '@shared/canvas/presentation-sequence'
 import { t } from '@/i18n/ui-strings'
-import { MAX_PASTED_IMAGE_EDGE } from '@/lib/clipboard-image'
+import { MAX_PASTED_IMAGE_EDGE } from '@/lib/raster/clipboard-image'
 import { createImageElement } from '@/lib/element-factory'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 import { useCameraStore } from '@/store/camera-store'

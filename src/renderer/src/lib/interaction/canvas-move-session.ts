@@ -11,7 +11,7 @@ import { computeSnap } from '@shared/canvas/snap-guides'
 import { useCameraStore } from '@/store/camera-store'
 import { newElementId, useDocumentStore } from '@/store/document-store'
 import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
-import { SNAP_THRESHOLD_PX } from './frame-chrome'
+import { SNAP_THRESHOLD_PX } from '@/lib/frame-chrome'
 
 export type MoveSession = {
   kind: 'move'

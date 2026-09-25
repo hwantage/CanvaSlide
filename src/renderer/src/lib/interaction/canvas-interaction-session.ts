@@ -35,7 +35,7 @@ import {
 import { applyResizeSession, beginResizeSession, type ResizeSession } from './canvas-resize-session'
 import { applyRotateSession, beginRotateSession, type RotateSession } from './canvas-rotate-session'
 import { createElementForTool, isCreateTool, type CreateTool } from './create-element-for-tool'
-import { DRAG_THRESHOLD_PX, frameHitChromeAt } from './frame-chrome'
+import { DRAG_THRESHOLD_PX, frameHitChromeAt } from '@/lib/frame-chrome'
 
 export type PointerInfo = {
   screen: Point

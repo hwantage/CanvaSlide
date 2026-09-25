@@ -15,7 +15,11 @@ contributors and coding agents alike. How to propose, name and submit a change i
   provider bridges. `src/shared/render/` — the static element DOM and CSS that HTML and PDF export
   draw with. None of them depends on React, Zustand, Tauri, renderer code or app localization.
 - `src/renderer/src/` — React app. `store/` (zustand), `hooks/`, `components/{canvas,toolbar,panels,ui}`,
-  `lib/` (browser-side helpers and workers), `platform/` (Tauri ↔ browser fallbacks), `i18n/`.
+  `lib/`, `platform/` (Tauri ↔ browser fallbacks), `i18n/`. `lib/` groups editor code by role:
+  `interaction/` (canvas pointer sessions, keyboard shortcuts, paste pointer), `document/` (selection
+  commands, clipboard, external content, document loaders and replacement), `raster/` (SVG and PDF
+  rasterization, bitmap caches), `workers/` (document codec and its worker, `.fig` import worker);
+  leaf helpers without store access stay at its top level.
 - `src/player/` — vanilla standalone player inlined into HTML exports; built by `pnpm build:player` into
   `src/renderer/src/generated/player.iife.js` (gitignored, rebuilt by `dev:web`/`build:web`/`tc:web`
   and `dev:site`/`build:site`).

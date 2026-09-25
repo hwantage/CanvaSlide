@@ -175,7 +175,7 @@ test('discards an obsolete detail render when a new camera movement interrupts i
         )
       }
     }
-  }, appModuleUrl('lib/svg-preview-cache.ts'))
+  }, appModuleUrl('lib/raster/svg-preview-cache.ts'))
   await camera(page, { x: 10, y: 20, zoom: 0.03 })
   await page.waitForFunction(() => 'pendingDetail' in window)
   await camera(page, { x: -10000000, y: 0, zoom: 0.03 })
@@ -252,7 +252,7 @@ test('matches original SVG pixels after cropping, filtering and changing aspect 
       }
       return differences
     },
-    { asset, url: appModuleUrl('lib/svg-image-preview.ts') }
+    { asset, url: appModuleUrl('lib/raster/svg-image-preview.ts') }
   )
   for (const difference of differences) {
     expect(difference).toBeLessThan(1)
@@ -288,7 +288,7 @@ test('keeps the fallback until all detail surfaces are ready without encoding PN
     HTMLCanvasElement.prototype.toBlob = () => {
       throw new Error('Detail should not encode PNGs')
     }
-  }, appModuleUrl('lib/svg-preview-cache.ts'))
+  }, appModuleUrl('lib/raster/svg-preview-cache.ts'))
   await camera(page, { x: 80, y: 60, zoom: 0.021 })
   await page.waitForFunction(
     () => (window as unknown as { pendingDetailCount: number }).pendingDetailCount >= 2
@@ -387,7 +387,7 @@ test('preserves translucent bitmap alpha at fractional crop edges @webkit', asyn
       detail.dispose()
       return { min, max }
     },
-    { asset, url: appModuleUrl('lib/svg-image-preview.ts') }
+    { asset, url: appModuleUrl('lib/raster/svg-image-preview.ts') }
   )
   expect(alpha.min).toBeGreaterThanOrEqual(127)
   expect(alpha.max).toBeLessThanOrEqual(128)

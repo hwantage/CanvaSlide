@@ -1,15 +1,15 @@
 import type { DocumentCommands } from '@/hooks/use-document-commands'
-import { importPickedFiles } from './external-content'
-import { copySelection, cutSelection, requestKeyboardPaste } from './object-clipboard'
-import { hasPrimaryModifier, isEditableTarget, isMacPlatform } from './platform-keys'
+import { importPickedFiles } from '@/lib/document/external-content'
+import { copySelection, cutSelection, requestKeyboardPaste } from '@/lib/document/object-clipboard'
+import { hasPrimaryModifier, isEditableTarget, isMacPlatform } from '@/lib/platform-keys'
 import {
   frameSelection,
   presentFromSelection,
   startEditingSelection,
   zoomToContent,
   zoomToSelection
-} from './selection-commands'
-import { copySelectedStyle, pasteStyleToSelection } from './style-clipboard'
+} from '@/lib/document/selection-commands'
+import { copySelectedStyle, pasteStyleToSelection } from '@/lib/document/style-clipboard'
 import { useCameraStore } from '@/store/camera-store'
 import { useContextMenuStore } from '@/store/context-menu-store'
 import { useDocumentStore } from '@/store/document-store'

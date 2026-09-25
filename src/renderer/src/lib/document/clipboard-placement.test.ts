@@ -3,7 +3,7 @@ import { createEmptyDocument } from '@shared/canvas/element-types'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
-import * as pointerTracking from './canvas-paste-pointer'
+import * as pointerTracking from '@/lib/interaction/canvas-paste-pointer'
 import { insertClipboardText, pasteFromSystemClipboard } from './external-content'
 import { copySelection } from './object-clipboard'
 

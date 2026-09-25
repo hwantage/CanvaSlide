@@ -11,7 +11,7 @@ import {
   requestKeyboardPaste
 } from './object-clipboard'
 
-import * as pointerTracking from './canvas-paste-pointer'
+import * as pointerTracking from '@/lib/interaction/canvas-paste-pointer'
 
 const text = (id: string): CanvasElement => ({
   id,

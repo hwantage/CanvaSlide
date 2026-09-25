@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSvgImagePreview, staticMaskedSvg } from './svg-image-preview'
+import { createSvgImagePreview } from './svg-image-preview'
 import { rasterizeSvg } from './svg-raster'
 
 vi.mock(import('./svg-raster'), async (importOriginal) => ({
@@ -16,13 +16,26 @@ function svg(extra = '', image = png) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1602 981"><defs><mask id="fade"><rect width="100%" height="100%" fill="white"/></mask></defs><image href="${image}" width="100%" height="100%" mask="url(#fade)"/>${extra}</svg>`)}`
 }
 
+/** The SVG a camera-flight preview rasterizes, or null when the original stays in place. */
+async function motionRaster(data: string): Promise<SVGSVGElement | null> {
+  vi.mocked(rasterizeSvg).mockResolvedValue({ src: 'blob:preview', bytes: 0, dispose: vi.fn() })
+  try {
+    await createSvgImagePreview(
+      { id: 'photo', mime: 'image/svg+xml', data, width: 1602, height: 981 },
+      2
+    )
+    return vi.mocked(rasterizeSvg).mock.calls[0]?.[0] ?? null
+  } finally {
+    vi.mocked(rasterizeSvg).mockReset()
+  }
+}
+
 describe('static masked bitmap SVG detection', () => {
   it('rasterizes a masked lossless WebP into a bounded camera-flight preview', async () => {
     const data = svg('', `data:image/webp;base64,${webp}`)
     const preview = { src: 'blob:photo', bytes: 128, dispose: vi.fn() }
     vi.mocked(rasterizeSvg).mockResolvedValue(preview)
     try {
-      expect(staticMaskedSvg(data)).not.toBeNull()
       expect(
         await createSvgImagePreview(
           { id: 'photo', mime: 'image/svg+xml', data, width: 1602, height: 981 },
@@ -52,7 +65,6 @@ describe('static masked bitmap SVG detection', () => {
   ])('keeps %s live during motion and detail rendering', async (_, image) => {
     const data = svg('', image)
     const asset = { id: 'photo', mime: 'image/svg+xml', data, width: 1602, height: 981 }
-    expect(staticMaskedSvg(data)).toBeNull()
     expect((await createSvgImagePreview(asset, 2)).src).toBe(data)
     expect(
       (
@@ -83,8 +95,8 @@ describe('static masked bitmap SVG detection', () => {
     }
   })
 
-  it('rejects a masked PNG with invalid base64 without throwing', () => {
-    expect(staticMaskedSvg(svg('', 'data:image/png;base64,?'))).toBeNull()
+  it('rejects a masked PNG with invalid base64 without throwing', async () => {
+    expect(await motionRaster(svg('', 'data:image/png;base64,?'))).toBeNull()
   })
 
   it('falls back to the original masked SVG when its PNG cannot be decoded', async () => {
@@ -195,10 +207,10 @@ describe('static masked bitmap SVG detection', () => {
     }
   })
 
-  it('accepts masked photos with percent-encoded and base64 SVG data', () => {
-    expect(staticMaskedSvg(svg())?.getAttribute('viewBox')).toBe('0 0 1602 981')
+  it('accepts masked photos with percent-encoded and base64 SVG data', async () => {
+    expect((await motionRaster(svg()))?.getAttribute('viewBox')).toBe('0 0 1602 981')
     const text = decodeURIComponent(svg().split(',')[1]!)
-    expect(staticMaskedSvg(`data:image/svg+xml;base64,${btoa(text)}`)).not.toBeNull()
+    expect(await motionRaster(`data:image/svg+xml;base64,${btoa(text)}`)).not.toBeNull()
   })
 
   it.each([
@@ -207,8 +219,8 @@ describe('static masked bitmap SVG detection', () => {
     '<style>@keyframes fade { to { opacity: 0 } }</style>',
     '<text>Sharp at every zoom</text>',
     '<foreignObject/>'
-  ])('preserves dynamic or vector content: %s', (extra) => {
-    expect(staticMaskedSvg(svg(extra))).toBeNull()
+  ])('preserves dynamic or vector content: %s', async (extra) => {
+    expect(await motionRaster(svg(extra))).toBeNull()
   })
 
   it('keeps CSS animation live for every detail crop and caches its rejection', async () => {
@@ -237,18 +249,18 @@ describe('static masked bitmap SVG detection', () => {
     }
   })
 
-  it('keeps external images and animated bitmap formats in the original renderer', () => {
-    expect(staticMaskedSvg(svg('', 'https://example.com/photo.png'))).toBeNull()
-    expect(staticMaskedSvg(svg('', 'data:image/gif;base64,R0lGODlh'))).toBeNull()
+  it('keeps external images and animated bitmap formats in the original renderer', async () => {
+    expect(await motionRaster(svg('', 'https://example.com/photo.png'))).toBeNull()
+    expect(await motionRaster(svg('', 'data:image/gif;base64,R0lGODlh'))).toBeNull()
     const apngHeader = btoa('\x89PNG\r\n\x1a\n' + '\0\0\0\0acTL' + '\0\0\0\0' + '\0\0\0\0IDAT')
-    expect(staticMaskedSvg(svg('', `data:image/png;base64,${apngHeader}`))).toBeNull()
+    expect(await motionRaster(svg('', `data:image/png;base64,${apngHeader}`))).toBeNull()
   })
 
-  it('preserves SVGs without scalable coordinates instead of cropping their contents', () => {
+  it('preserves SVGs without scalable coordinates instead of cropping their contents', async () => {
     const source = decodeURIComponent(svg().split(',')[1]!)
     for (const viewBox of ['', 'viewBox="0 0 -1602 981"', 'viewBox="0 0 invalid 981"']) {
       const data = source.replace('viewBox="0 0 1602 981"', viewBox)
-      expect(staticMaskedSvg(`data:image/svg+xml;base64,${btoa(data)}`)).toBeNull()
+      expect(await motionRaster(`data:image/svg+xml;base64,${btoa(data)}`)).toBeNull()
     }
   })
 })

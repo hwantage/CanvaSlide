@@ -2,15 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_CAMERA_ARC } from '@shared/canvas/element-types'
 import type { ResolvedFrameTransition } from '@shared/canvas/frame-transition'
 import { setLocale } from '@/i18n/ui-strings'
-import {
-  arcPresets,
-  matchedPreset,
-  motionSummary,
-  motionValueLabel,
-  rollOptions,
-  rollPresets,
-  spotlightPresets
-} from './motion-presets'
+import { motionSummary, motionValueLabel, rollOptions } from './motion-presets'
 
 const resolved = (patch: Partial<ResolvedFrameTransition> = {}): ResolvedFrameTransition => ({
   ms: 1000,
@@ -22,18 +14,6 @@ const resolved = (patch: Partial<ResolvedFrameTransition> = {}): ResolvedFrameTr
 })
 
 beforeEach(() => setLocale('en'))
-
-describe('matchedPreset', () => {
-  it('finds the step a value sits on', () => {
-    expect(matchedPreset(15, rollPresets)).toBe(15)
-    expect(matchedPreset(DEFAULT_CAMERA_ARC, arcPresets)).toBe(DEFAULT_CAMERA_ARC)
-  })
-
-  it('marks nothing for a value between the steps', () => {
-    expect(matchedPreset(22, rollPresets)).toBeNull()
-    expect(matchedPreset(0.35, spotlightPresets)).toBeNull()
-  })
-})
 
 describe('motionValueLabel', () => {
   it('names the step when the value is on one', () => {

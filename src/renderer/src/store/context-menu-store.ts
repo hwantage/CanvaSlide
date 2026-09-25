@@ -16,5 +16,3 @@ export const useContextMenuStore = create<ContextMenuState>()((set) => ({
   show: (position, world) => set({ position, world }),
   hide: () => set({ position: null, world: null })
 }))
-
-export const selectContextMenuOpen = (s: ContextMenuState) => s.position !== null

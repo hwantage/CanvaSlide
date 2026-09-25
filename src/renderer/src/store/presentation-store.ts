@@ -259,7 +259,6 @@ export const selectPresentationActive = (s: PresentationStore) => s.active
 export const selectSlideShowActive = (s: PresentationStore) => s.active && s.previewFrameId === null
 export const selectPreviewing = (s: PresentationStore) => s.active && s.previewFrameId !== null
 export const selectPreviewFrameId = (s: PresentationStore) => s.previewFrameId
-export const selectPresentationIndex = (s: PresentationStore) => s.index
 export const selectPresentationOverview = (s: PresentationStore) => s.active && s.overview
 export const selectPresentationRoll = (s: PresentationStore) => (s.active ? s.roll : 0)
 export const selectPresentationSpotlight = (s: PresentationStore) =>

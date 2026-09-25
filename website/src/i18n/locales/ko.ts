@@ -305,8 +305,6 @@ export const ko: SiteStrings = {
   'site.nav.product': '제품',
   'site.nav.showcase': 'ShowCase',
   'site.nav.docs': '사용 문서',
-  'site.nav.download': '앱 받기',
-  'site.nav.github': 'GitHub 소스',
   'site.nav.menu': '메뉴 열기',
   'site.nav.close': '메뉴 닫기',
   'site.nav.label': '주요 탐색',
@@ -344,7 +342,6 @@ export const ko: SiteStrings = {
   'site.hero.description':
     '아이디어를 연결하고 디자인을 가져와 전체 흐름에서 작은 디테일까지 안내하세요. 실제 프레젠테이션을 열고 나만의 이야기로 바꿔보세요.',
   'site.hero.try': 'ShowCase 둘러보기',
-  'site.hero.platforms': '{mac}·{windows}를 위한 앱',
   'site.hero.note': '무료 오픈 소스. 오프라인에서도 자유롭게.',
   'site.hero.scroll': '캔버스의 가능성을 만나보세요',
   'site.hero.eyebrow': '생각을 펼치는 캔버스, 시선을 이끄는 이야기.',
@@ -450,7 +447,6 @@ export const ko: SiteStrings = {
   'site.download.title': '다음 아이디어는\n여기서 시작됩니다.',
   'site.download.body': '작은 시작, 무한한 가능성.',
   'site.download.releases': '릴리스 확인',
-  'site.download.mac': '{platform}용',
   'site.download.macDetail': '{version} 이상',
   'site.download.windowsDetail': '데스크톱 앱',
   'site.download.pending':

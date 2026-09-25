@@ -75,7 +75,6 @@ export const ko: UiStrings = {
   'video.retry': '다시 시도',
   'video.open': '원본 열기',
   'video.linked': '연결된 동영상',
-  'video.autoplayLimit': '이 공급자의 추가 영상은 직접 재생합니다.',
 
   'tool.select': '선택',
   'tool.hand': '손 (이동)',
@@ -274,7 +273,6 @@ export const ko: UiStrings = {
   'motion.arc': '궤적',
   'motion.roll': '기울기',
   'motion.spotlight': '스포트라이트',
-  'motion.spotlightHint': '슬라이드 쇼에서 이 프레임 바깥을 어둡게 합니다.',
   'motion.default': '앱 기본값 사용 중',
   'motion.nonDefault': '앱 기본값과 다름',
   'motion.resetAll': '초기화',
@@ -465,7 +463,6 @@ export const ko: UiStrings = {
   'about.releaseNotes': '릴리스 노트',
   'about.repository': '{host} 저장소 열기',
   'about.repositoryError': '저장소를 열지 못했습니다: {message}',
-  'help.button': '단축키',
   'help.tools': '도구',
   'help.edit': '편집',
   'help.arrange': '정렬',

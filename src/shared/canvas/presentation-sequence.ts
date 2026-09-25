@@ -68,19 +68,6 @@ export function gapToIndex(from: number, gap: number): number {
   return gap > from ? gap - 1 : gap
 }
 
-/** Moves `id` into the gap `gap` (0..n) of the displayed sequence; no-op gaps return `{}`. */
-export function moveFrameToGap(
-  frames: readonly FrameElement[],
-  id: ElementId,
-  gap: number
-): Record<ElementId, number> {
-  const from = frameIndexById(frames, id)
-  if (from === -1) {
-    return {}
-  }
-  return moveFrameToIndex(frames, id, gapToIndex(from, gap))
-}
-
 export function clampFrameIndex(index: number, count: number): number {
   if (count <= 0) {
     return 0

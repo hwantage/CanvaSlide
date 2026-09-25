@@ -310,8 +310,6 @@ export const en = {
   'site.nav.product': 'Product',
   'site.nav.showcase': 'ShowCase',
   'site.nav.docs': 'Docs',
-  'site.nav.download': 'Get the app',
-  'site.nav.github': 'Source on GitHub',
   'site.nav.menu': 'Open navigation',
   'site.nav.close': 'Close navigation',
   'site.nav.label': 'Main navigation',
@@ -348,7 +346,6 @@ export const en = {
   'site.hero.description':
     'Connect ideas, bring in your designs, and guide your audience from the big picture to the smallest detail. Try a real presentation, then make it yours.',
   'site.hero.try': 'Explore ShowCase',
-  'site.hero.platforms': 'Made for {mac} & {windows}',
   'site.hero.note': 'Free & open source. Yours, offline.',
   'site.hero.scroll': 'A canvas full of possibilities',
   'site.hero.eyebrow': 'A canvas to think on. A story to move through.',
@@ -457,7 +454,6 @@ export const en = {
   'site.download.title': 'Your next idea\nstarts here.',
   'site.download.body': 'A little canvas. A lot of possibilities.',
   'site.download.releases': 'View releases',
-  'site.download.mac': 'For {platform}',
   'site.download.macDetail': '{version} or later',
   'site.download.windowsDetail': 'Desktop application',
   'site.download.pending':

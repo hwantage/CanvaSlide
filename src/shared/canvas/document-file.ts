@@ -1,4 +1,4 @@
-import { documentFileSchema, createEmptyDocument, type CanvasDocument } from './element-types'
+import { documentFileSchema, type CanvasDocument } from './element-types'
 import {
   createDocumentEncoder,
   MAX_DOCUMENT_BYTES,
@@ -6,14 +6,6 @@ import {
 } from './document-resources'
 
 export const DOCUMENT_FILE_EXTENSION = 'canvaslide'
-export const DOCUMENT_FILE_FILTER = {
-  name: 'CanvaSlide document',
-  extensions: [DOCUMENT_FILE_EXTENSION]
-}
-export const DOCUMENT_OPEN_FILE_FILTER = {
-  name: 'CanvaSlide document',
-  extensions: [DOCUMENT_FILE_EXTENSION, 'json']
-}
 
 export type ParseDocumentResult =
   | { ok: true; document: CanvasDocument }
@@ -114,5 +106,3 @@ export function documentNameFromPath(path: string): string {
 export function withDocumentName(document: CanvasDocument, path: string): CanvasDocument {
   return document.name.trim() === '' ? { ...document, name: documentNameFromPath(path) } : document
 }
-
-export { createEmptyDocument }

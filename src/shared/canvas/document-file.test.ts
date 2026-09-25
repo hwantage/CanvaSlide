@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DOCUMENT_FILE_FILTER,
-  DOCUMENT_OPEN_FILE_FILTER,
   documentFileName,
   documentNameFromPath,
   fileNameStem,
@@ -120,10 +118,8 @@ describe('document-file', () => {
     expect(documentNameFromPath('/tmp/plan.CANVASLIDE')).toBe('plan')
   })
 
-  it('opens hand-authored JSON while saving with the canonical extension', () => {
+  it('names a hand-authored JSON document after its file', () => {
     expect(documentNameFromPath('/tmp/plan.json')).toBe('plan')
-    expect(DOCUMENT_OPEN_FILE_FILTER.extensions).toEqual(['canvaslide', 'json'])
-    expect(DOCUMENT_FILE_FILTER.extensions).toEqual(['canvaslide'])
   })
 
   it('replaces whitespace and characters the file systems reject', () => {

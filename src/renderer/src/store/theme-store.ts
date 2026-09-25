@@ -70,5 +70,3 @@ export function syncTheme(): void {
 }
 
 export const selectThemePreference = (s: ThemeStore): ThemePreference => s.preference
-export const selectResolvedTheme = (s: ThemeStore): ResolvedTheme =>
-  resolveTheme(s.preference, s.systemDark)

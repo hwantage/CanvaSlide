@@ -1,6 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
+/** Keys pressed before the editor has mounted would miss its listeners. */
+async function openEditor(page: Page) {
+  await page.goto('/')
+  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+}
+
 /** Focus that falls back to the body sends keys to the window listeners instead of the dialog. */
 async function blurToBody(page: Page) {
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
@@ -59,7 +65,7 @@ test('opens and dismisses nested dialogs without requiring the modal pseudo-clas
 test('a dialog opened from component state keeps canvas keys from the selection behind it @core-interaction', async ({
   page
 }) => {
-  await page.goto('/')
+  await openEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [300, 300], [420, 380])
   const shapes = page.locator('[data-element-type="shape"]')
@@ -80,7 +86,7 @@ test('a dialog opened from component state keeps canvas keys from the selection 
 })
 
 test('Escape from the body closes only the top dialog @core-interaction', async ({ page }) => {
-  await page.goto('/')
+  await openEditor(page)
   await page.getByRole('button', { name: 'Share', exact: true }).click()
   const share = page.getByRole('dialog', { name: 'Share', exact: true })
   await share.getByRole('button', { name: 'Export HTML', exact: true }).click()
@@ -96,7 +102,7 @@ test('Escape from the body closes a dialog before the compact side panel behind 
   page
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await openEditor(page)
   await page.getByRole('button', { name: 'Open panels', exact: true }).click()
   const panel = page.getByTestId('side-panel')
   await expect(panel).toBeVisible()
@@ -112,7 +118,7 @@ test('Escape from the body closes a dialog before the compact side panel behind 
 test('a paste inside a dialog stays out of the canvas behind it @core-interaction', async ({
   page
 }) => {
-  await page.goto('/')
+  await openEditor(page)
   await page.keyboard.press(`${await primaryModifier(page)}+,`)
   const done = page
     .getByRole('dialog', { name: 'Settings', exact: true })
@@ -132,7 +138,7 @@ test('a recovery prompt that arrives during a slide show waits for it to end @co
 }) => {
   // Why: the store's module URL is read back from resource timing, which the app outgrows.
   await page.addInitScript(() => performance.setResourceTimingBufferSize(10_000))
-  await page.goto('/')
+  await openEditor(page)
   for (const x of [200, 700]) {
     await page.keyboard.press('f')
     await dragOnCanvas(page, [x, 200], [x + 300, 450])

@@ -83,9 +83,10 @@ cases:
 | Using the web editor or opening a web example                                  | The web editor's host (Cloudflare Pages)                            | Ordinary page requests. Documents stay in the browser unless you share them.                                                                              |
 | Opening the repository, release notes or a video's original page               | Your default browser                                                | The page you chose.                                                                                                                                       |
 
-As with any web request, each service sees your IP address and a user agent. Linked videos play
-automatically by default when a slideshow, cloud slideshow or exported HTML reaches their frame, so
-presenting one contacts its provider without a click.
+As with any web request, each service sees your IP address and a user agent. A linked video set to
+play automatically, the default, starts loading when a slideshow, cloud slideshow or exported HTML
+reaches its frame, so presenting it contacts its provider without a click. Only one YouTube video per
+frame does so, and the browser or provider may still ask for a click to play it.
 The launch update check has no setting to turn it off. Offline or when the request is blocked, the
 app keeps working and shows the failure only in the **About CanvaSlide** dialog; nothing is installed
 without your confirmation. A managed network that must prevent the check can block the manifest URL

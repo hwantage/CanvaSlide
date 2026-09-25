@@ -116,5 +116,6 @@ The full procedure, troubleshooting and the signing roadmap are in [`docs/RELEAS
 
 ## License
 
-CanvaSlide is released under the [MIT License](./LICENSE). By contributing, you agree that your
-contributions will be licensed under the same terms.
+CanvaSlide's code and documentation are released under the [MIT License](./LICENSE). By
+contributing, you agree that your contributions will be licensed under the same terms. The name,
+logo and mascot artwork are not covered; see [License in the README](./README.md#license).

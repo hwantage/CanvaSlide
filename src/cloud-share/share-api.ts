@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { canvasDocumentSchema } from '../shared/canvas/element-types'
-import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '../shared/canvas/share-document'
+import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '../shared/cloud-share/share-document'
 import { orderedFrames } from '../shared/canvas/presentation-sequence'
 import {
   CloudShareError,
@@ -10,7 +10,7 @@ import {
   SHARE_ID_LENGTH,
   SHARE_TTL_SECONDS,
   unwrapShareSnapshot
-} from '../shared/cloud-share'
+} from '../shared/cloud-share/share-protocol'
 
 // Structural types keep the handlers portable to tests while matching Pages' KV binding.
 export type ShareEnvironment = {

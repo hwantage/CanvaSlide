@@ -2,8 +2,8 @@
 import { readFileSync } from 'node:fs'
 import { convertFigFile } from './fig-convert'
 import { readFigFile } from './fig-file'
-import { canvasDocumentSchema, createEmptyDocument } from './element-types'
-import { parseDocument, serializeDocument } from './document-file'
+import { canvasDocumentSchema, createEmptyDocument } from '../canvas/element-types'
+import { parseDocument, serializeDocument } from '../canvas/document-file'
 
 const file = () => readFigFile(new Uint8Array(readFileSync('tests/fixtures/figma-basic.fig')))
 const options = {

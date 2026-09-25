@@ -1,7 +1,7 @@
 import { figText, clipFigText } from './fig-text'
 import { FIG_IDENTITY } from './fig-scene'
 import { emptyFigWarnings, type FigNode } from './fig-types'
-import { textElementSchema } from './element-types'
+import { textElementSchema } from '../canvas/element-types'
 
 const node: FigNode = {
   guid: { sessionID: 0, localID: 1 },

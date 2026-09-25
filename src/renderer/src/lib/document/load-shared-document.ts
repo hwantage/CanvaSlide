@@ -1,4 +1,4 @@
-import { CloudShareError, type SharedSnapshot } from '@shared/cloud-share'
+import { CloudShareError, type SharedSnapshot } from '@shared/cloud-share/share-protocol'
 import { fetchCloudShare } from '@/platform/cloud-share'
 import { loadReplacement, replaceDocument } from './document-replacement'
 

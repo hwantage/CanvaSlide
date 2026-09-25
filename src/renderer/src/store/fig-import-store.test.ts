@@ -1,8 +1,8 @@
 import { importFigFile, useFigImportStore } from './fig-import-store'
 import { useDocumentStore } from './document-store'
-import { MAX_FIG_BYTES, emptyFigWarnings } from '@shared/canvas/fig-types'
+import { MAX_FIG_BYTES, emptyFigWarnings } from '@shared/fig/fig-types'
 import { createEmptyDocument, defaultTextStyle } from '@shared/canvas/element-types'
-import type { FigImportResult } from '@shared/canvas/fig-convert'
+import type { FigImportResult } from '@shared/fig/fig-convert'
 import type { FigImportRequest, FigImportResponse } from '@/lib/workers/fig-import.worker'
 
 class ImportWorker {

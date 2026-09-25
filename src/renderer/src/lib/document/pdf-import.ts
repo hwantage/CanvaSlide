@@ -8,7 +8,7 @@ import type {
   Point,
   Size
 } from '@shared/canvas/element-types'
-import { PDF_PAGE_GAP, PDF_PAGE_WIDTH, layoutPdfPages } from '@shared/canvas/pdf-page-layout'
+import { PDF_PAGE_GAP, PDF_PAGE_WIDTH, layoutPdfPages } from '@shared/pdf/pdf-page-layout'
 import { nextFrameOrder } from '@shared/canvas/presentation-sequence'
 import { t } from '@/i18n/ui-strings'
 import { MAX_PASTED_IMAGE_EDGE } from '@/lib/raster/clipboard-image'

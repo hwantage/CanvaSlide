@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
-import { SIDE_PANEL_SPLIT, clampSplit, defaultSplit } from '@shared/canvas/panel-split'
+import { SIDE_PANEL_SPLIT, clampSplit, defaultSplit } from '@shared/ui/panel-split'
 import { t } from '@/i18n/ui-strings'
 import { selectSelectedIds, useDocumentStore } from '@/store/document-store'
 import { FrameListPanel } from './frame-list-panel'

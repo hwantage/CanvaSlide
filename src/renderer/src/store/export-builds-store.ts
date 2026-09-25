@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { CanvasDocument } from '@shared/canvas/element-types'
-import type { PdfResolution } from '@shared/canvas/pdf-export-pages'
+import type { PdfResolution } from '@shared/pdf/pdf-export-pages'
 import type { ExportQuality } from '@/lib/raster/export-image-recompress'
 import { useDocumentStore } from './document-store'
 

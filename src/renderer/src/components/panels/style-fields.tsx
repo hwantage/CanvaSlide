@@ -1,7 +1,7 @@
 import { AlignCenter, AlignLeft, AlignRight, Bold } from 'lucide-react'
 import { useState } from 'react'
 import type { ShapeKind, ShapeStyle, TextAlign, TextStyle } from '@shared/canvas/element-types'
-import { parseBoundedNumber } from '@shared/canvas/numeric-input'
+import { parseBoundedNumber } from '@shared/ui/numeric-input'
 import { shapeUsesCornerRadius } from '@shared/canvas/shape-svg'
 import { ColorField } from '@/components/ui/color-field'
 import { FontPicker } from '@/components/ui/font-picker'

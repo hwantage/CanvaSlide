@@ -1,6 +1,6 @@
-import type { Point, Rect } from './element-types'
-import { unionRects } from './element-bounds'
-import { normalizeRotation, type RotatedRect } from './element-rotation'
+import type { Point, Rect } from '../canvas/element-types'
+import { unionRects } from '../canvas/element-bounds'
+import { normalizeRotation, type RotatedRect } from '../canvas/element-rotation'
 import { figId, type FigFile, type FigMatrix, type FigNode, type FigPage } from './fig-types'
 
 export const FIG_IDENTITY: FigMatrix = { m00: 1, m01: 0, m02: 0, m10: 0, m11: 1, m12: 0 }

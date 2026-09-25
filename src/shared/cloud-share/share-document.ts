@@ -1,9 +1,9 @@
 import { SaxesParser } from 'saxes'
-import { MAX_SHARE_BYTES } from '../cloud-share'
-import { base64ToBytes } from './binary-data'
-import type { CanvasDocument } from './element-types'
-import { hasImageSignature, IMAGE_SIGNATURE_BYTES } from './image-signature'
-import { parseVideoSource } from './video-source'
+import { MAX_SHARE_BYTES } from './share-protocol'
+import { base64ToBytes } from '../canvas/binary-data'
+import type { CanvasDocument } from '../canvas/element-types'
+import { hasImageSignature, IMAGE_SIGNATURE_BYTES } from '../canvas/image-signature'
+import { parseVideoSource } from '../canvas/video-source'
 
 const imageDataPrefix =
   /^data:(image\/(?:png|jpeg|webp|gif|avif|bmp|x-icon|vnd\.microsoft\.icon|svg\+xml))(?:;charset=(?:utf-8|us-ascii))?(;base64)?,/i

@@ -1,11 +1,11 @@
-import { readFigFile } from '@shared/canvas/fig-file'
+import { readFigFile } from '@shared/fig/fig-file'
 import {
   convertFigFile,
   type FigImportOptions,
   type FigImportResult
-} from '@shared/canvas/fig-convert'
-import { figPages } from '@shared/canvas/fig-scene'
-import type { FigFile, FigPage } from '@shared/canvas/fig-types'
+} from '@shared/fig/fig-convert'
+import { figPages } from '@shared/fig/fig-scene'
+import type { FigFile, FigPage } from '@shared/fig/fig-types'
 
 export type FigImportRequest =
   | { type: 'read'; bytes: ArrayBuffer; name: string }

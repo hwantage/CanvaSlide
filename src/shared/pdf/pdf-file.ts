@@ -1,4 +1,4 @@
-import type { Size } from './element-types'
+import type { Size } from '../canvas/element-types'
 
 /**
  * Writes PDF files whose every page is one full-bleed JPEG. That is all the PDF export needs, and

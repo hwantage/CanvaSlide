@@ -1,4 +1,4 @@
-import type { Point } from './element-types'
+import type { Point } from '../canvas/element-types'
 
 export const MAX_FIG_BYTES = 128 * 1024 * 1024
 

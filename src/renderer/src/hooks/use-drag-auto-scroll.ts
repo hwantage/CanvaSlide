@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { edgeScrollVelocity } from '@shared/canvas/list-drop-gap'
+import { edgeScrollVelocity } from '@shared/ui/list-drop-gap'
 
 /** Pointer this close (px) to the pane's top or bottom edge scrolls it while dragging. */
 const EDGE_ZONE_PX = 40

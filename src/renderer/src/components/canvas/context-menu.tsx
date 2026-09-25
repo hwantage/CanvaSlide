@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Point } from '@shared/canvas/element-types'
 import { canGroup, canUngroup } from '@shared/canvas/element-groups'
-import { clampMenuToViewport } from '@shared/canvas/menu-placement'
+import { clampMenuToViewport } from '@shared/ui/menu-placement'
 import { t } from '@/i18n/ui-strings'
 import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/document/external-content'
 import type { ObjectClipboard } from '@/lib/document/object-clipboard'

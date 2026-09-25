@@ -1,4 +1,4 @@
-import { createEmptyDocument } from './element-types'
+import { createEmptyDocument } from '../canvas/element-types'
 import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from './share-document'
 
 const signatures: Record<string, string> = {

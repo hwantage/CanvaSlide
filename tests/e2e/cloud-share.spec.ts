@@ -74,6 +74,7 @@ test('creates, copies, and opens a snapshot with its content fitted @webkit', as
   await dragOnCanvas(page, [300, 300], [550, 450])
   await page.getByRole('button', { name: 'Share', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Share', exact: true })
+  await expect(dialog.getByText('Experimental', { exact: true })).toBeVisible()
   await expect(dialog).toContainText('anyone with the link')
   await expect(dialog).toContainText('automatically deleted 24 hours after creation')
   await expect(dialog.getByRole('radio', { name: /View slide show only/ })).toBeChecked()

@@ -2,6 +2,9 @@
 
 [Documentation map](./README.md) · [Product overview](../README.md)
 
+Cloud sharing is [experimental](../README.md#feature-status): the hosted service's limits and
+availability depend on its Cloudflare plan.
+
 ## Sharing a snapshot
 
 The top-bar **Share** button lets you choose **Edit a copy** or **View slide show only** before

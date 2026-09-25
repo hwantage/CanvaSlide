@@ -65,7 +65,12 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
       onClose={hide}
       className="max-h-[85vh] w-[480px] max-w-[calc(100vw-2rem)] overflow-y-auto"
     >
-      <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+          {t('share.experimental')}
+        </span>
+      </div>
       {mode === 'publish' && (
         <>
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">

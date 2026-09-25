@@ -269,7 +269,7 @@ export function docSections(topic: TopicId): DocSection[] {
         id: 'cloud-links',
         heading: 'site.docs.sharing.cloudHeading',
         body: 'site.docs.sharing.cloudBody',
-        params: { limit: '5 MiB', html: 'HTML' }
+        params: { limit: '5 MiB', html: 'HTML', cloudflare: 'Cloudflare' }
       },
       {
         id: 'export-html',

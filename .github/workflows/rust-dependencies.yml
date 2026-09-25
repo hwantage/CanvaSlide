@@ -1,0 +1,58 @@
+name: Rust dependencies
+
+# Why: advisories are published and crates yanked without any change here, so this runs weekly;
+# a pull request runs it when it changes the Rust code or what cargo resolves. CI's clippy flags only
+# library APIs newer than `rust-version`, not newer syntax or trait impls, so this job builds with it.
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  pull_request:
+    paths:
+      - src-tauri/**/*.rs
+      - src-tauri/Cargo.toml
+      - src-tauri/Cargo.lock
+      - src-tauri/deny.toml
+      - .github/workflows/rust-dependencies.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  advisories:
+    name: cargo deny · advisories
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          manifest-path: src-tauri/Cargo.toml
+          command: check
+          command-arguments: advisories
+
+  rust-version:
+    name: builds with the declared rust-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      # Why: RUSTUP_TOOLCHAIN overrides rust-toolchain.toml for the steps after this one.
+      - name: Install the Rust version Cargo.toml declares
+        run: |
+          version="$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' src-tauri/Cargo.toml)"
+          if [ -z "$version" ]; then
+            echo "src-tauri/Cargo.toml declares no rust-version" >&2
+            exit 1
+          fi
+          rustup toolchain install "$version" --profile minimal --no-self-update
+          echo "RUSTUP_TOOLCHAIN=$version" >> "$GITHUB_ENV"
+      - name: Install Tauri Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: cargo check --manifest-path src-tauri/Cargo.toml --locked --all-targets

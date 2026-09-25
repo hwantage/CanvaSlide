@@ -1,0 +1,6 @@
+# Why: read by `cargo deny check advisories` in .github/workflows/rust-dependencies.yml.
+[advisories]
+# Why: only a direct dependency's maintenance is ours to change; the rest reach us through Tauri.
+unmaintained = "workspace"
+# Why: the default only warns, and a crate yanked after it was locked is what the weekly run is for.
+yanked = "deny"

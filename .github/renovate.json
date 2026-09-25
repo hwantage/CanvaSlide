@@ -1,0 +1,56 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "schedule:weekly",
+    ":maintainLockFilesWeekly",
+    "helpers:pinGitHubActionDigests",
+    "security:minimumReleaseAgeNpm",
+    "security:minimumReleaseAgeCrate"
+  ],
+  "timezone": "Asia/Seoul",
+  "packageRules": [
+    {
+      "description": "Development tools update together unless an update is breaking; Playwright changes the test browsers, so it gets its own pull request.",
+      "matchDepTypes": ["devDependencies"],
+      "matchPackageNames": ["!@playwright/test"],
+      "groupName": "dev tooling",
+      "matchIsBreaking": false
+    },
+    {
+      "description": "Rust crates other than Tauri's update together unless an update is breaking, which for 0.x crates includes a minor version.",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Rust crates",
+      "matchIsBreaking": false
+    },
+    {
+      "description": "The Tauri CLI refuses to build when an npm package and its Rust crate differ in major or minor version, so they update in one pull request.",
+      "matchPackageNames": ["@tauri-apps/**", "tauri", "tauri-build", "tauri-plugin-*"],
+      "groupName": "Tauri"
+    },
+    {
+      "description": "Actions stay pinned to a full commit SHA with the version in a comment.",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "@types/node follows the Node.js major in .node-version and is raised by hand with it.",
+      "matchPackageNames": ["@types/node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Node.js and pnpm majors also change NODE_VERSION or PNPM_VERSION in wrangler.toml, and @types/node for Node.js, by hand, so their pull requests open only when approved on the Dependency Dashboard.",
+      "matchManagers": ["nodenv"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "See the Node.js rule above.",
+      "matchDepTypes": ["packageManager"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

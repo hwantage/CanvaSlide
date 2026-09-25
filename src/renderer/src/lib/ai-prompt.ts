@@ -1,4 +1,5 @@
-import { t } from '../i18n/ui-strings'
+import { t as appT, type UiStringKey } from '../i18n/ui-strings'
+import type { Translator } from '../i18n/translator'
 
 export const aiAuthoringSkillUrl =
   'https://github.com/hwantage/CanvaSlide/blob/main/skills/canvaslide/SKILL.md'
@@ -6,7 +7,12 @@ export const aiAuthoringSkillUrl =
 export const aiPromptStyles = ['general', 'dynamic'] as const
 export type AiPromptStyle = (typeof aiPromptStyles)[number]
 
-export function buildAiPrompt(style: AiPromptStyle, includeHtml = false): string {
+/** `t` defaults to the app's language; the website passes its own. */
+export function buildAiPrompt(
+  style: AiPromptStyle,
+  includeHtml = false,
+  t: Translator<UiStringKey>['t'] = appT
+): string {
   const prompt = t(`aiGuide.prompt.${style}`, {
     website: 'https://hwantage.github.io/CanvaSlide/',
     app: 'CanvaSlide',

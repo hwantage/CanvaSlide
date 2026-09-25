@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { CanvasDemo } from './canvas-demo'
 
 const chapters = [

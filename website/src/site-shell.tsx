@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ArrowUp, Menu, Moon, Sun, X } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 
 export function Brand() {

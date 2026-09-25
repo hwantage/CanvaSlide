@@ -1,6 +1,6 @@
 import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { SiteShell } from './site-shell'
 import { Landing } from './landing'
 import { Documentation } from './docs'

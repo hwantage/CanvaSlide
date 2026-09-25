@@ -1,18 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { en } from './locales/en'
-import { ko } from './locales/ko'
-import {
-  currentLocale,
-  detectLocale,
-  interpolate,
-  locales,
-  setLocale,
-  t,
-  tn,
-  type UiStringKey
-} from './ui-strings'
-
-const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
+import { stringTableProblems } from './string-table-checks'
+import { currentLocale, detectLocale, locales, setLocale, t, tn, uiStringsIn } from './ui-strings'
 
 describe('detectLocale', () => {
   it('maps Korean tags to ko and everything else to en', () => {
@@ -27,37 +15,20 @@ describe('detectLocale', () => {
 })
 
 describe('locales', () => {
-  it('have no empty values', () => {
-    for (const [name, strings] of Object.entries(locales)) {
-      for (const [key, value] of Object.entries(strings)) {
-        expect(value.trim(), `${name}:${key}`).not.toBe('')
-      }
-    }
+  it('have no empty values, English placeholders and paired plurals', () => {
+    expect(stringTableProblems(locales)).toEqual([])
   })
 
-  it('use the same placeholders as English for every key', () => {
-    for (const key of Object.keys(en) as UiStringKey[]) {
-      expect(placeholders(ko[key]), key).toEqual(placeholders(en[key]))
-    }
-  })
-
-  it('pair every plural .one key with .other', () => {
-    for (const key of Object.keys(en)) {
-      if (key.endsWith('.one')) {
-        expect(en).toHaveProperty(key.replace(/\.one$/, '.other'))
-      }
-    }
+  it('leave website copy to the website tables', () => {
+    const websiteKeys = Object.values(locales).flatMap((strings) =>
+      Object.keys(strings).filter((key) => key.startsWith('site.'))
+    )
+    expect(websiteKeys).toEqual([])
   })
 })
 
 describe('t / tn', () => {
   afterEach(() => setLocale('en'))
-
-  it('interpolates named params and leaves unknown placeholders intact', () => {
-    expect(interpolate('{a} and {b}', { a: 1, b: 'x' })).toBe('1 and x')
-    expect(interpolate('{a} and {b}', { a: 1 })).toBe('1 and {b}')
-    expect(interpolate('plain')).toBe('plain')
-  })
 
   it('reads from the active locale', () => {
     setLocale('en')
@@ -74,5 +45,14 @@ describe('t / tn', () => {
     expect(tn('selection.count', 2)).toBe('2 elements')
     setLocale('ko')
     expect(tn('selection.count', 2)).toBe('요소 2개')
+  })
+
+  it('keeps a fixed language for a host with its own language setting', () => {
+    setLocale('en')
+    expect(uiStringsIn('ko').t('file.save')).toBe('저장')
+    expect(uiStringsIn('ko').tn('selection.count', 2)).toBe('요소 2개')
+    setLocale('ko')
+    expect(uiStringsIn('en').t('file.save')).toBe('Save')
+    expect(uiStringsIn('en').tn('export.frames', 1)).toBe('1 frame')
   })
 })

@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUpRight, FileCode2 } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { ScrollStory } from './scroll-story'
 import { DownloadSection, ProductFeatures, SharingSection } from './product-sections'
 import { useSectionReveal } from './use-section-reveal'

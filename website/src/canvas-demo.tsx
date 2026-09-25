@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Maximize2, MousePointer2, Pause, Play } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { asset } from './site-preferences'
 import { useDemoCamera } from './use-demo-camera'
 

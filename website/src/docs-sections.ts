@@ -1,12 +1,12 @@
 import { ROTATION_SNAP_DEGREES } from '@shared/canvas/element-rotation'
-import type { UiStringKey } from '@app/i18n/ui-strings'
+import type { SiteStringKey } from './i18n/site-strings'
 import { shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
 import type { TopicId } from './docs-topics'
 
 export type DocSection = {
   id: string
-  heading: UiStringKey
-  body: UiStringKey
+  heading: SiteStringKey
+  body: SiteStringKey
   params?: Record<string, string>
 }
 

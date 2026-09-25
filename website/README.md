@@ -15,7 +15,7 @@ The home page is `/`, ShowCase is `/showcase/`, and documentation is `/docs/`. D
 
 - English is the first-visit default, regardless of browser language. `?lang=ko` and `?lang=en` explicitly select a language. Language and theme choices persist on the current device, independently of desktop app settings.
 - The initial theme follows the operating system. `public/appearance.js` applies preferences before the page renders; storage failures are nonfatal.
-- Visible copy uses the shared typed `t()` dictionary in `src/renderer/src/i18n/locales/{en,ko}.ts`, under `site.*`. Add English keys first and provide Korean equivalents.
+- Visible copy uses `t()` from `src/i18n/site-strings.ts`, with its `site.*` keys in `src/i18n/locales/{en,ko}.ts`, separate from the app's tables. Add English keys first; the type then requires the Korean equivalents. The translator itself is shared with the app ([`translator.ts`](../src/renderer/src/i18n/translator.ts)), and the site's language never changes the app's. The AI guide's controls and prompt are the editor's own strings, shown in the site's language.
 - Documentation covers installation, first steps, examples, navigation, editing, connectors, Figma/PDF/image imports, linked video, AI-assisted authoring, frame camera direction and batch editing, saving, cloud snapshots, HTML export, shortcuts, and common questions.
 - The AI guide includes the editor’s shared introduction prompt, General/Dynamic style selection, an optional HTML request, and prompt copying. It also explains how to adapt the brief, choose output files, and open the result. Prompt text and the authoring skill URL come from `src/renderer/src/lib/ai-prompt.ts` so the website and editor stay aligned.
 - Download links open the [official Releases page](https://github.com/hwantage/CanvaSlide/releases). Installer availability comes from published releases; source-build instructions describe the checkout. Keep availability wording and download links aligned when maintaining installation copy.
@@ -69,7 +69,7 @@ To add an example:
    the build rejects larger assets. Verify image quality, animation, and camera-motion previews after
    optimizing images. Sources and deployed assets are the same bytes.
 2. Add a stable kebab-case ID and its source path to `exampleCatalog`. Keep published IDs stable.
-3. Add `site.showcase.<id>.title`, `.body`, and `.alt` in both app locale dictionaries.
+3. Add `site.showcase.<id>.title`, `.body`, and `.alt` in both website locale tables.
 4. Run `pnpm build:player && node website/scripts/prepare-showcase.ts` to capture real presentation
    thumbnails. Commit the product preview `public/examples/<id>-showcase.png`; temporary HTML stays
    under ignored `discuss/`. The catalog automatically supplies cards, editor links, and downloads.

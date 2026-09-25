@@ -73,9 +73,10 @@ The Share dialog links here when the app uses this service.
   [KV pricing](https://developers.cloudflare.com/kv/platform/pricing/)).
 - The Free plan also limits the CPU time of each request, and validating a large snapshot takes more,
   so an upload can fail well below 5 MiB, especially one with many elements. Send the file instead.
-- A quota caps the cost: once one is used up, the service refuses requests until it resets instead of
-  charging for more. The Share dialog then reports that sharing is over its limit, unavailable or
-  unreachable, and offers a local save.
+- The quotas cap the cost: once one is used up, the service refuses requests instead of charging for
+  more, until the daily quotas reset or, for the storage cap, until expiring snapshots free space.
+  The Share dialog then reports that sharing is over its limit, unavailable or unreachable, and
+  offers a local save.
 - No per-client rate limit applies yet: a [WAF rule](#rate-limiting) needs a custom domain, and the
   service runs on `canvaslide.pages.dev`. Until then, one client can use up the daily quotas for
   everyone.

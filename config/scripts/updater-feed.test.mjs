@@ -52,12 +52,13 @@ function signedRelease(key, files = releaseFiles, password = '') {
   }
 }
 
-function feed(publicKey) {
+function feed(publicKey, notarized) {
   return buildUpdaterFeed({
     directory: root,
     tag: 'v1.2.3',
     repository: 'owner/CanvaSlide',
     publicKeys: [publicKey],
+    notarized,
     now: new Date('2026-01-02T03:04:05.678Z')
   })
 }
@@ -84,6 +85,30 @@ test('the feed lists every signed file under the platform keys installed apps lo
       'windows-x86_64-msi': msi
     }
   })
+})
+
+test('only the platforms of a notarized file are marked notarized', () => {
+  const publicKey = generateKey('release.key')
+  signedRelease('release.key')
+  const marked = (notarized) =>
+    Object.entries(feed(publicKey, notarized).platforms)
+      .filter(([, entry]) => 'notarized' in entry)
+      .map(([platform, entry]) => [platform, entry.notarized])
+  assert.deepEqual(marked(undefined), [])
+  assert.deepEqual(marked([]), [])
+  assert.deepEqual(marked([releaseFiles[1]]), [
+    ['darwin-aarch64', true],
+    ['darwin-x86_64', true],
+    ['darwin-aarch64-app', true],
+    ['darwin-x86_64-app', true]
+  ])
+  // Why: a misspelt or unsigned name would silently leave macOS installs on the download page.
+  for (const name of [releaseFiles[0], 'CanvaSlide.app.tar.gz']) {
+    assert.throws(
+      () => feed(publicKey, [releaseFiles[1], name]),
+      new RegExp(`no signed update ${name.replaceAll('.', '\\.')} to mark notarized`)
+    )
+  }
 })
 
 test('a password-protected key signs files the feed accepts', () => {
@@ -262,6 +287,9 @@ test('the command checks signatures against the keys in the trusted tauri.conf.j
   assert.equal(JSON.parse(accepted.stdout).version, '1.2.3')
   // Why: the notes are the published Release body, added by release-notes.yml, never a placeholder.
   assert.equal('notes' in JSON.parse(accepted.stdout), false)
+  const notarized = run([root, ...flags(), ...trusted, '--notarized', releaseFiles[1]])
+  assert.equal(notarized.status, 0, notarized.stderr)
+  assert.equal(JSON.parse(notarized.stdout).platforms['darwin-aarch64'].notarized, true)
   const rejected = run([root, ...flags(), ...other])
   assert.equal(rejected.status, 1)
   assert.equal(rejected.stdout, '')

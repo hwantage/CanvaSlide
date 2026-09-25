@@ -94,9 +94,13 @@ export function verifyUpdaterSignature(data, signatureBase64, publicKeysBase64) 
   }
 }
 
-/** The in-app updater's latest.json for the signed files in `directory`; notes come on publishing. */
-export function buildUpdaterFeed({ directory, tag, repository, publicKeys, now }) {
+/**
+ * The in-app updater's latest.json for the signed files in `directory`; notes come on publishing.
+ * Entries for the `notarized` files are marked, since macOS installs in the app only those.
+ */
+export function buildUpdaterFeed({ directory, tag, repository, publicKeys, notarized = [], now }) {
   const platforms = {}
+  const unmarked = new Set(notarized)
   for (const name of readdirSync(directory).sort()) {
     if (!name.endsWith('.sig')) {
       continue
@@ -109,12 +113,18 @@ export function buildUpdaterFeed({ directory, tag, repository, publicKeys, now }
       throw new Error(`${fileName}: ${error.message}`, { cause: error })
     }
     const url = `https://github.com/${repository}/releases/download/${tag}/${encodeURIComponent(fileName)}`
+    const entry = unmarked.delete(fileName)
+      ? { signature, url, notarized: true }
+      : { signature, url }
     for (const platform of platformsFor(fileName)) {
       if (platforms[platform]) {
         throw new Error(`${platform} is provided by more than one file`)
       }
-      platforms[platform] = { signature, url }
+      platforms[platform] = entry
     }
+  }
+  if (unmarked.size > 0) {
+    throw new Error(`no signed update ${[...unmarked].join(', ')} to mark notarized`)
   }
   const missing = requiredPlatforms.filter((platform) => !platforms[platform])
   if (missing.length > 0) {
@@ -130,7 +140,8 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
       options: {
         tag: { type: 'string' },
         repository: { type: 'string' },
-        'trusted-config': { type: 'string', multiple: true }
+        'trusted-config': { type: 'string', multiple: true },
+        notarized: { type: 'string', multiple: true }
       }
     })
     const required = ['tag', 'repository', 'trusted-config']
@@ -143,6 +154,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
       tag: values.tag,
       repository: values.repository,
       publicKeys: configs.map((config) => config.plugins.updater.pubkey),
+      notarized: values.notarized,
       now: new Date()
     })
     process.stdout.write(`${JSON.stringify(feed, null, 2)}\n`)

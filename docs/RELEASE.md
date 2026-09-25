@@ -60,11 +60,12 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    git push origin v0.8.0
    ```
 5. Actions 탭에서 **Release** 워크플로가 끝나기를 기다린다. 먼저 태그 커밋의 `main` CI가 성공으로 끝나기를
-   기다리고, macOS와 Windows 빌드가 병렬로 돈 뒤 서명, 게시 잡이 이어진다.
+   기다리고, macOS와 Windows 빌드가 병렬로 돈 뒤 macOS 서명·공증, 업데이터 서명, 게시 잡이 이어진다.
 6. **Releases** 페이지에 본문이 빈 초안이 생겨 있다. 다음을 확인하고 노트를 쓴다.
    - 첨부 파일: `CanvaSlide_<버전>_universal.dmg`, `CanvaSlide_<버전>_x64-setup.exe`, `CanvaSlide_<버전>_x64_en-US.msi`
    - **Generate release notes** 버튼을 눌러 지난 태그 이후 머지된 PR 제목을 불러온 뒤 사용자 관점으로 다듬는다.
-   - 서명이 없는 동안은 §6의 안내 문구를 노트에 넣는다.
+   - OS 코드 서명이 없는 설치 파일은 §6의 안내 문구를 노트에 넣는다. Windows 설치 파일은 아직 서명하지 않고,
+     macOS 파일은 **sign and notarize · macOS** 잡에 `No Apple credentials` 경고가 있으면 서명되지 않은 것이다.
    - Release 본문이 릴리즈 노트의 유일한 원본이다. 공개하면 이 본문이 그대로 데스크톱 앱의 업데이트 안내에 나간다(§7).
 7. **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
 8. Actions 탭에서 **Release notes** 워크플로가 성공했는지 확인한다. 이 워크플로는 공개 직후 본문을
@@ -73,15 +74,16 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
 ## 4. 워크플로가 하는 일
 
 `release.yml`은 `v*` 태그 푸시에서만 실행된다. 태그 커밋의 CI를 먼저 확인하고, 빌드 스크립트와 의존성이
-실행되는 잡에는 업데이터 서명 키도, 저장소 쓰기 권한도 주지 않도록 잡을 나눈다.
+실행되는 잡에는 업데이터 서명 키도, Apple 자격 증명도, 저장소 쓰기 권한도 주지 않도록 잡을 나눈다.
 
-| 잡                               | 러너             | 받는 권한·비밀           | 산출물                                                   |
-| -------------------------------- | ---------------- | ------------------------ | -------------------------------------------------------- |
-| wait for CI on the tagged commit | `ubuntu-latest`  | `actions: read`          | 없음(태그 커밋의 `main` CI 결과 확인)                    |
-| build · macOS (universal)        | `macos-latest`   | 읽기 전용, 비밀 없음     | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel) |
-| build · Windows (x64)            | `windows-latest` | 읽기 전용, 비밀 없음     | `.exe` (NSIS 설치 파일), `.msi`                          |
-| sign updater files               | `ubuntu-latest`  | `release` 환경의 서명 키 | 업데이터 파일의 서명(`.sig`)                             |
-| publish draft release            | `ubuntu-latest`  | `contents: write`        | 노트 없는 `latest.json`, 본문이 빈 Release 초안          |
+| 잡                               | 러너             | 받는 권한·비밀                   | 산출물                                                             |
+| -------------------------------- | ---------------- | -------------------------------- | ------------------------------------------------------------------ |
+| wait for CI on the tagged commit | `ubuntu-latest`  | `actions: read`                  | 없음(태그 커밋의 `main` CI 결과 확인)                              |
+| build · macOS (universal)        | `macos-latest`   | 읽기 전용, 비밀 없음             | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel)           |
+| build · Windows (x64)            | `windows-latest` | 읽기 전용, 비밀 없음             | `.exe` (NSIS 설치 파일), `.msi`                                    |
+| sign and notarize · macOS        | `macos-latest`   | `release` 환경의 Apple 자격 증명 | 서명·공증한 `.dmg`와 `.app.tar.gz`(자격 증명이 없으면 빌드 그대로) |
+| sign updater files               | `ubuntu-latest`  | `release` 환경의 서명 키         | 업데이터 파일의 서명(`.sig`)                                       |
+| publish draft release            | `ubuntu-latest`  | `contents: write`                | 노트 없는 `latest.json`, 본문이 빈 Release 초안                    |
 
 0. **wait for CI**: 태그 커밋에서 `main`에 푸시되어 실행된 **CI** 워크플로 실행을 Actions API로 찾아 끝나기를
    기다린다. 10분 안에 실행이 나타나지 않거나(태그 커밋이 `main` 푸시의 끝 커밋, 즉 PR의 머지 커밋이 아님)
@@ -92,12 +94,19 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    `pnpm install --frozen-lockfile`, 태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
    릴리즈할 파일을 워크플로 아티팩트로 올린다.
-2. **sign**: 패키지 스크립트를 실행하지 않고 의존성을 설치한 뒤(`pnpm install --ignore-scripts`)
+2. **notarize**: 체크아웃과 macOS 빌드 아티팩트만 받고 의존성은 설치하지 않는다. Apple 자격 증명은
+   [`notarize-macos-release.sh`](../config/scripts/notarize-macos-release.sh)를 실행하는 단계에만 전달되고, 이
+   스크립트는 macOS와 Xcode에 들어 있는 Apple 도구(`security`, `codesign`, `notarytool`, `stapler`, `hdiutil` 등)만
+   실행한다. 빌드 잡의 `macos-build` 아티팩트를 읽고, 서명·공증한 파일을 `release-macos-latest`로 올리며, 공증했는지를
+   게시 잡에 넘긴다(§6). 서명·게시 잡은 `release-*` 아티팩트만 읽는다.
+3. **sign**: 패키지 스크립트를 실행하지 않고 의존성을 설치한 뒤(`pnpm install --ignore-scripts`)
    `tauri signer sign`만으로 `.app.tar.gz`, `-setup.exe`, `.msi`를 서명한다. 서명 키는 이 단계에만 전달된다.
-3. **publish**: [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 설치된 앱이 신뢰하는
+   OS 코드 서명이 파일을 바꾸므로 이 잡은 notarize 잡 뒤에 실행된다.
+4. **publish**: [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 설치된 앱이 신뢰하는
    공개키, 즉 공개된 최신 릴리즈(앱이 업데이트를 받는 `releases/latest`) 태그의 `tauri.conf.json` 공개키로
    앱과 같은 규칙에 따라 검증하고 `latest.json`을 만든다. 공개된 릴리즈가 없거나 저장소 변수
    `UPDATER_KEY_CHANGE_TAG`가 이 태그 이름이면 이 태그의 공개키도 신뢰한다(§7 키 교체).
+   notarize 잡이 공증했으면 macOS 항목에 `"notarized": true`를 붙인다(§7).
    서명이 맞지 않거나 플랫폼이 빠지면 업로드 전에 실패한다. 그다음 같은 태그의 Release 초안을 본문 없이 만들고
    파일을 올린다. 초안이 이미 있으면 파일을 교체하고, 이미 공개된 Release면 실패한다. 이때의 `latest.json`에는
    `notes`가 없다. 대체 문구를 넣지 않으므로 노트 없이 공개하면 앱의 안내에는 새 버전과 버튼만 보인다. 공개한 뒤
@@ -148,8 +157,13 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
 - **태그 불일치로 실패**: 태그와 `package.json`의 차이를 확인한다. 아직 공개하지 않은 태그만
   메인테이너가 수정하며, 이미 공개한 버전이면 새 버전·태그를 만든다.
 - **한쪽 플랫폼만 실패**: 초안은 두 빌드가 모두 성공해야 만들어진다. Actions에서 **Re-run failed jobs**를 하면
-  실패한 빌드만 다시 돌고 서명·게시 잡이 이어서 실행된다.
-- **서명 또는 게시 잡이 실패**: `release` 환경의 서명 키와 암호를 확인한다. 게시 잡이
+  실패한 빌드만 다시 돌고 macOS 서명·공증, 업데이터 서명, 게시 잡이 이어서 실행된다.
+- **macOS 서명·공증 잡이 실패**: 실패 메시지에 따라 고친 뒤 **Re-run failed jobs**를 누른다. 이 잡은 빌드
+  아티팩트(`macos-build`)를 바꾸지 않으므로 다시 실행해도 빌드한 파일부터 시작한다.
+  - `Missing Apple credentials`: `release` 환경의 Apple secret이 일부만 있다. 여섯 개를 모두 넣거나 모두 지운다(§6).
+  - `Notarization of … finished with Invalid`: 이어서 출력된 공증 로그의 문제(서명 누락, hardened runtime 등)를 고친다.
+  - `security import` 또는 `codesign` 오류: `.p12`의 암호, 인증서 종류(Developer ID Application), 만료일을 확인한다.
+- **업데이터 서명 또는 게시 잡이 실패**: `release` 환경의 서명 키와 암호를 확인한다. 게시 잡이
   `signed with a key other than the one installed apps trust`로 실패하면 환경의 개인키가 공개된 최신 릴리즈의
   공개키와 짝이 아니다.
 - **Release notes 워크플로가 실패**: 대개 앱의 업데이트 안내에 노트가 없거나 이전 노트가 남는다. 마지막 이름 변경에서
@@ -174,10 +188,59 @@ pnpm bundle:local --bundles app
 
 ## 6. OS 코드 서명
 
-현재 릴리즈 워크플로는 업데이터 파일만 서명하고 Apple/Windows 코드 서명은 하지 않는다. 업데이터 서명과
-OS 코드 서명은 별개다. 서명 없는 배포에서 나타날 수 있는 다음 경고와 설치 방법을 릴리즈 노트에 안내한다.
+업데이터 서명(§7)과 OS 코드 서명은 별개다. `release` 환경에 Apple 자격 증명이 있으면 릴리즈 워크플로가 macOS 앱을
+Developer ID로 서명하고 Apple 공증을 받는다. 자격 증명이 없으면 macOS 앱도 서명하지 않고, Windows 설치 파일은
+아직 코드 서명하지 않는다.
 
-해결 방법은 macOS 버전보다 경고 문구에 따라 다르다. 현재 빌드의 Apple Silicon 코드는 링커가 붙인 임시 서명만 있고
+### macOS 서명과 공증
+
+빌드 잡은 서명 없이(`--no-sign`) 앱을 만들고, **sign and notarize · macOS** 잡이
+[`notarize-macos-release.sh`](../config/scripts/notarize-macos-release.sh)로 다음을 한다.
+
+1. 임시 키체인에 인증서를 넣는다. 빌드한 `.dmg`를 쓰기 가능한 사본으로 열어 그 안의 앱을 hardened runtime과
+   타임스탬프를 붙여 서명한다. 디스크 이미지의 창 배치, 볼륨 아이콘, 응용 프로그램 폴더 바로 가기는 그대로 남는다.
+2. 앱을 공증에 제출한다. 결과가 `Accepted`가 아니면 공증 로그를 출력하고 실패한다. 통과하면 공증 티켓을 앱에
+   붙이고(staple) Gatekeeper 평가(`spctl`)를 확인한다.
+3. 서명한 앱으로 업데이터용 `.app.tar.gz`를 다시 만들고, 디스크 이미지를 압축한 뒤 서명·공증·스테이플한다.
+4. 두 파일을 `release-macos-latest` 아티팩트로 올려서 업데이터 서명 잡이 공증된 파일에 서명하게 한다. 키체인과
+   임시 파일은 성공과 실패에 관계없이 지우고, 사용자 키체인 검색 목록은 원래대로 되돌린다.
+
+자격 증명은 저장소 **Settings → Environments → `release`**의 환경 secret으로 두고, 저장소 수준 secret에는
+두지 않는다. 이 환경은 §7처럼 `v*` 태그에서만 쓸 수 있게 제한한다. 제한이 없는 환경은 어느 브랜치의 워크플로에서도
+쓸 수 있다.
+
+| Secret                       | 값                                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| `APPLE_CERTIFICATE`          | Developer ID Application 인증서와 개인키를 내보낸 `.p12`의 base64(`base64 -i cert.p12`)  |
+| `APPLE_CERTIFICATE_PASSWORD` | `.p12`를 내보낼 때 정한 암호                                                             |
+| `APPLE_SIGNING_IDENTITY`     | `Developer ID Application: <이름> (<팀 ID>)`, `security find-identity -v -p codesigning` |
+| `APPLE_ID`                   | Apple Developer Program에 가입한 Apple 계정                                              |
+| `APPLE_PASSWORD`             | 그 계정의 앱 암호(account.apple.com에서 만든 app-specific password)                      |
+| `APPLE_TEAM_ID`              | 10자리 팀 ID(developer.apple.com → Membership)                                           |
+
+여섯 개가 모두 없으면 잡은 `No Apple credentials` 경고만 남기고 빌드한 파일을 그대로 넘긴다. 이때 릴리즈는
+지금까지처럼 서명 없이 나간다. 일부만 있으면 서명하기 전에 실패한다. 공증한 릴리즈의 `latest.json`에서는 macOS
+항목에 `"notarized": true`가 붙고, 이 표시가 있는 업데이트만 macOS 앱이 앱 안에서 설치한다(§7). 서명을 시작한
+뒤에는 secret을 지우지 않는다. 지우면 다음 릴리즈가 서명 없이 나가고 macOS 앱은 다시 다운로드 페이지로 안내한다.
+
+인증서와 계정을 확인하려면 그 인증서가 있는 Mac에서 같은 환경 변수를 주고 릴리즈 아티팩트(`.dmg`와
+`.app.tar.gz`)가 든 폴더로 `bash config/scripts/notarize-macos-release.sh <폴더>`를 실행한다. 스크립트는 폴더의
+두 파일을 서명한 파일로 바꾸고, 사용자 키체인 검색 목록에 임시 키체인을 잠시 넣었다가 되돌린다.
+
+### Windows 서명
+
+Windows 설치 파일에는 아직 Authenticode 서명이 없다. 서명 서비스(Azure Trusted Signing, 또는 SignPath
+Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#146). 붙일 때도 macOS처럼 빌드 잡에는 자격 증명을 주지
+않고, 서명 전용 잡이 빌드 산출물을 서명한 뒤 업데이터 서명 잡이 그 파일에 서명하게 한다. 설치 파일 안의 실행
+파일까지 서명하려면 `tauri build --no-bundle`로 실행 파일만 만들어 서명하고, `tauri bundle`로 설치 파일을 만든 뒤
+설치 파일을 서명한다.
+
+### 서명 없는 배포의 안내
+
+서명 없는 설치 파일에서 나타날 수 있는 다음 경고와 설치 방법을 릴리즈 노트에 안내한다. macOS 안내는 macOS
+파일을 서명하지 못한 릴리즈에만 넣는다.
+
+해결 방법은 macOS 버전보다 경고 문구에 따라 다르다. 서명하지 않은 빌드의 Apple Silicon 코드는 링커가 붙인 임시 서명만 있고
 번들 리소스가 봉인되지 않아 서명 검증에 실패하므로, Apple Silicon Mac에서는 "손상" 경고가 나올 수 있다.
 
 - **macOS, "손상되었기 때문에 열 수 없습니다"**: 이 경고는 **그래도 열기**나 우클릭 → 열기로 넘길 수 없다. 앱을
@@ -202,15 +265,6 @@ OS 코드 서명은 별개다. 서명 없는 배포에서 나타날 수 있는 �
 - **Windows:** If SmartScreen appears, click **More info → Run anyway**.
 ```
 
-OS 코드 서명은 번들러가 빌드 중에 하므로, 붙일 때는 빌드 잡의 `--no-sign`을 빼고 아래 자격 증명을 그 단계에
-전달해야 한다. `--no-sign`이 없으면 `tauri build`가 업데이터 키도 요구하므로, 서명 키를 빌드 단계에 다시
-넣지 않도록 업데이터 서명 방식과 함께 설계한다.
-
-| 플랫폼  | 준비물                                          | Secrets                                                                                                                    |
-| ------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| macOS   | Apple Developer 계정, Developer ID 인증서(.p12) | `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` |
-| Windows | 코드 서명 인증서(EV 권장)                       | `tauri.conf.json`의 `bundle.windows.certificateThumbprint` 또는 Azure Trusted Signing 설정                                 |
-
 ## 7. 자동 업데이트
 
 데스크톱 앱은 시작 3초 뒤 한 번 업데이트를 확인한다. **CanvaSlide 정보** 대화상자에서 현재 버전,
@@ -219,15 +273,16 @@ macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시
 [`use-update-check.ts`](../src/renderer/src/hooks/use-update-check.ts)와
 [`app-update.ts`](../src/renderer/src/platform/app-update.ts)에서 확인한다.
 
-| 플랫폼   | 동작                                                                                                       |
-| -------- | ---------------------------------------------------------------------------------------------------------- |
-| Windows  | 새 버전을 앱 안에서 내려받은 뒤 앱을 닫고 설치 파일을 실행한다. 설치가 끝나면 앱이 다시 열린다.            |
-| macOS    | 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. Apple 서명이 생기면 앱 내 설치로 바꾼다. |
-| 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리즈 노트 링크로 공개 버전을 확인한다.             |
+| 플랫폼   | 동작                                                                                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows  | 새 버전을 앱 안에서 내려받은 뒤 앱을 닫고 설치 파일을 실행한다. 설치가 끝나면 앱이 다시 열린다.                                                                                                                                     |
+| macOS    | 공증된 업데이트(§6)는 Windows처럼 앱 안에서 내려받아 앱을 바꾸고 다시 시작한다. 앱 폴더에 쓸 권한이 없으면 macOS가 관리자 암호를 묻는다. 공증되지 않은 업데이트는 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. |
+| 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리즈 노트 링크로 공개 버전을 확인한다.                                                                                                                                      |
 
 동작 원리:
 
-- 빌드가 `bundle.createUpdaterArtifacts`로 업데이터 파일을 만들고, 서명 잡이 그 서명 파일(`.sig`)을, 게시 잡이 `latest.json`을 만들어 Release에 첨부한다(§4). 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
+- 빌드가 `bundle.createUpdaterArtifacts`로 업데이터 파일을 만들고(공증한 릴리즈의 macOS 파일은 notarize 잡이
+  서명한 앱으로 다시 만든다, §6), 서명 잡이 그 서명 파일(`.sig`)을, 게시 잡이 `latest.json`을 만들어 Release에 첨부한다(§4). 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
 - 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`에 있다. 개인키와 암호는
   저장소 Settings → Environments → `release`의 환경 secret `TAURI_SIGNING_PRIVATE_KEY`,
   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`에 두고, 이 환경은 `v*` 태그에서만 쓸 수 있게 제한한다. 저장소 수준

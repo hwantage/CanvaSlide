@@ -79,11 +79,12 @@ test('no checkout leaves the job token in the working copy', () => {
 
 test('only the release sign job receives the updater key, from the release environment', () => {
   const jobs = jobsOf(release)
-  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'sign', 'publish'])
+  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'notarize', 'sign', 'publish'])
   for (const { name, text } of workflows.filter(({ name }) => name !== 'release.yml')) {
     assert.doesNotMatch(text, /TAURI_SIGNING/, name)
   }
-  assert.doesNotMatch(jobs.build + jobs.publish, /TAURI_SIGNING|secrets\./)
+  assert.doesNotMatch(jobs.build + jobs.notarize + jobs.publish, /TAURI_SIGNING/)
+  assert.doesNotMatch(jobs.build + jobs.publish, /secrets\./)
   assert.match(jobs.sign, /\n {4}environment: release\n/)
   const keySteps = stepsOf(jobs.sign).filter((step) => step.includes('TAURI_SIGNING'))
   assert.equal(keySteps.length, 1)
@@ -94,11 +95,90 @@ test('only the release sign job receives the updater key, from the release envir
   }
 })
 
+const appleCredentials = [
+  'APPLE_CERTIFICATE',
+  'APPLE_CERTIFICATE_PASSWORD',
+  'APPLE_SIGNING_IDENTITY',
+  'APPLE_ID',
+  'APPLE_PASSWORD',
+  'APPLE_TEAM_ID'
+]
+
+test('only the notarize job receives Apple credentials, in one step that runs no package code', () => {
+  const jobs = jobsOf(release)
+  for (const { name, text } of workflows) {
+    const outside = name === 'release.yml' ? text.replace(jobs.notarize, '') : text
+    assert.doesNotMatch(outside, /\bAPPLE_/, name)
+  }
+  assert.match(jobs.notarize, /\n {4}environment: release\n/)
+  assert.match(jobs.notarize, /\n {4}needs: build\n/)
+  assert.match(jobs.notarize, /\n {4}runs-on: macos-latest\n/)
+  assert.doesNotMatch(jobs.notarize, /\b(pnpm|npm|npx|node) /)
+  // Why: a job-level `env:` would hand a secret to every step, including the artifact actions.
+  assert.doesNotMatch(jobs.notarize.split('\n    steps:\n')[0], /secrets\./)
+  const secretSteps = stepsOf(jobs.notarize).filter((step) => step.includes('secrets.'))
+  assert.equal(secretSteps.length, 1)
+  const [step] = secretSteps
+  const passed = [...step.matchAll(/\n {10}(\w+): \$\{\{ secrets\.(\w+) \}\}/g)]
+  assert.deepEqual(
+    passed.map(([, env, secret]) => `${env}=${secret}`),
+    appleCredentials.map((name) => `${name}=${name}`)
+  )
+  assert.match(step, /\n {8}run: bash config\/scripts\/notarize-macos-release\.sh release-assets$/)
+  // Why: the job's `notarized` output reads this step by its id.
+  assert.match(step, /\n {8}id: notarize\n/)
+  assert.match(jobs.notarize, /\n {6}notarized: \$\{\{ steps\.notarize\.outputs\.notarized \}\}\n/)
+  // The script's list of credentials must be the one the workflow passes.
+  const script = readFileSync(new URL('./notarize-macos-release.sh', import.meta.url), 'utf8')
+  const listed = /\ncredentials=\(([^)]*)\)/.exec(script)[1].split(/\s+/).filter(Boolean)
+  assert.deepEqual(listed, appleCredentials)
+})
+
+// The `name:` or `pattern:` of an artifact step, which the step must have exactly one of.
+function artifactOf(step) {
+  const names = [...step.matchAll(/\n {10}(?:name|pattern): (.+)$/gm)].map(([, name]) => name)
+  assert.equal(names.length, 1, step)
+  return names[0]
+}
+
+test('the notarize job reads the macOS build and publishes the files the later jobs read', () => {
+  const jobs = jobsOf(release)
+  const artifactSteps = (job) => stepsOf(job).filter((step) => /-artifact@/.test(step))
+  // Why: only files under a release-* name reach the sign and publish jobs.
+  const matrix = [...jobs.build.matchAll(/\n {12}os: (\S+)\n[^]*?\n {12}artifact: (\S+)\n/g)]
+  assert.deepEqual(
+    matrix.map(([, os, artifact]) => [os, artifact]),
+    [
+      ['macos-latest', 'macos-build'],
+      ['windows-latest', 'release-windows-latest']
+    ]
+  )
+  assert.deepEqual(artifactSteps(jobs.build).map(artifactOf), ['${{ matrix.artifact }}'])
+  const [download, upload] = artifactSteps(jobs.notarize)
+  assert.match(download, /download-artifact@/)
+  assert.equal(artifactOf(download), 'macos-build')
+  assert.match(upload, /upload-artifact@/)
+  assert.equal(artifactOf(upload), 'release-macos-latest')
+  // Why: the replaced artifact must hold the updater archive as well as the disk image.
+  assert.match(upload, /\n {10}path: release-assets\/\n/)
+  assert.match(upload, /\n {10}overwrite: true\n/)
+  assert.deepEqual(artifactSteps(jobs.sign).map(artifactOf), [
+    'release-*',
+    'release-updater-signatures'
+  ])
+  assert.deepEqual(artifactSteps(jobs.publish).map(artifactOf), ['release-*'])
+  assert.match(jobs.sign, /\n {4}needs: notarize\n/)
+  assert.match(jobs.publish, /\n {4}needs: \[notarize, sign\]\n/)
+})
+
 test('the release build runs without secrets or write access, and only publish can write', () => {
   const jobs = jobsOf(release)
-  // Build and sign inherit the workflow-level map, so it must hold nothing beyond read access.
+  // Build, notarize and sign inherit the workflow-level map, so it must hold only read access.
   assert.deepEqual(permissionsAt(release, ''), ['contents: read'])
-  assert.doesNotMatch(jobs.build + jobs.sign, /permissions:|github\.token|GITHUB_TOKEN/)
+  assert.doesNotMatch(
+    jobs.build + jobs.notarize + jobs.sign,
+    /permissions:|github\.token|GITHUB_TOKEN/
+  )
   assert.match(jobs.build, /\n\s+- run: pnpm tauri build [^\n]*--no-sign\n/)
   assert.deepEqual(permissionsAt(`\n${jobs.publish}\n`, '    '), ['contents: write'])
   const tokenSteps = stepsOf(jobs.publish).filter((step) => step.includes('github.token'))
@@ -275,7 +355,7 @@ test('a new push cancels superseded pull request checks but never a run on main'
 test('the release builds only after the gate job, which reads CI runs and runs no code', () => {
   const jobs = jobsOf(release)
   assert.match(jobs.build, /\n {4}needs: gate\n/)
-  for (const id of ['gate', 'build', 'sign', 'publish']) {
+  for (const id of ['gate', 'build', 'notarize', 'sign', 'publish']) {
     assert.doesNotMatch(`\n${jobs[id]}`, bypassesFailure, id)
   }
   assert.deepEqual(permissionsAt(`\n${jobs.gate}\n`, '    '), ['actions: read'])
@@ -496,13 +576,67 @@ test('the release draft starts without notes and passes the feed script only fla
   )
   // The step's only other command is `git show`, so every flag in it is one for the feed script.
   const flags = [...new Set(feedStep.match(/(?<=[\s(])--[\w-]+/g))]
-  assert.deepEqual(flags.toSorted(), ['--repository', '--tag', '--trusted-config'])
+  assert.deepEqual(flags.toSorted(), ['--notarized', '--repository', '--tag', '--trusted-config'])
   const script = fileURLToPath(new URL('./updater-feed.mjs', import.meta.url))
   const args = ['missing-directory', ...flags.flatMap((flag) => [flag, 'x'])]
   const result = spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' })
   assert.equal(result.status, 1)
   assert.doesNotMatch(result.stderr, /usage|Unknown option/)
 })
+
+// The feed step's arguments for the feed script, with `git` and `node` standing in as recorders.
+function feedArguments(macosNotarized) {
+  const step = stepsOf(jobsOf(release).publish).find((step) => step.includes('updater-feed.mjs'))
+  const temp = mkdtempSync(join(tmpdir(), 'release-feed-'))
+  const bin = join(temp, 'bin')
+  const recorded = join(temp, 'arguments')
+  try {
+    mkdirSync(bin)
+    mkdirSync(join(temp, 'release-assets'))
+    writeFileSync(join(temp, 'latest-release'), 'v1.2.2\n')
+    writeFileSync(join(bin, 'git'), '#!/bin/sh\necho {}\n')
+    writeFileSync(
+      join(bin, 'node'),
+      `#!/bin/sh\nprintf '%s\\n' "$@" > ${JSON.stringify(recorded)}\n`
+    )
+    chmodSync(join(bin, 'git'), 0o755)
+    chmodSync(join(bin, 'node'), 0o755)
+    const result = runScript(
+      step,
+      {
+        PATH: `${bin}:${process.env.PATH}`,
+        RUNNER_TEMP: temp,
+        TAG: 'v1.2.3',
+        REPOSITORY: 'owner/repo',
+        KEY_CHANGE_TAG: '',
+        MACOS_NOTARIZED: macosNotarized
+      },
+      temp
+    )
+    assert.equal(result.status, 0, result.stderr)
+    return readFileSync(recorded, 'utf8').trimEnd().split('\n')
+  } finally {
+    rmSync(temp, { recursive: true, force: true })
+  }
+}
+
+test(
+  'the feed marks the macOS update notarized only when the notarize job signed it',
+  { skip: process.platform === 'win32' && 'runs the feed step with POSIX executables' },
+  () => {
+    const { build, publish } = jobsOf(release)
+    const archive = /\/(CanvaSlide_universal\.app\.tar\.gz)\n/.exec(build)[1]
+    assert.match(
+      publish,
+      /\n {10}MACOS_NOTARIZED: \$\{\{ needs\.notarize\.outputs\.notarized \}\}\n/
+    )
+    const notarized = feedArguments('true')
+    assert.equal(notarized[notarized.indexOf('--notarized') + 1], archive)
+    for (const value of ['false', '']) {
+      assert.ok(!feedArguments(value).includes('--notarized'), value)
+    }
+  }
+)
 
 test('release notes are copied only from a published release, and only steps without code get the token', () => {
   assert.match(

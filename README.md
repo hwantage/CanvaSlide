@@ -48,7 +48,7 @@ the editor also runs in a browser.
 Until 1.0, each feature is core or experimental. Core features ship in every release on the platforms
 that support them, and their regressions are fixed first; the table lists the limits they inherit from
 formats and services outside the project. Experimental features work today, but they depend on a
-hosted service the project does not control; they may change, gain limits or be removed before 1.0,
+hosting platform the project does not control; they may change, gain limits or be removed before 1.0,
 and their fixes are best-effort.
 
 | Feature                                                                     | Status       | Limitations                                                                                                            |
@@ -90,7 +90,8 @@ cover the file schema, scene counts, nested frames and export validation.
 
 Save an editable `.canvaslide` using the [current JSON format](./docs/ARCHITECTURE.md#document-formats), or export HTML with its own player.
 Press **Copy link** to upload a cloud snapshot and share it for 24 hours.
-See [cloud sharing](./docs/CLOUD-SHARE.md) for access options, limits and hosting setup.
+See [cloud sharing](./docs/CLOUD-SHARE.md) for access options, limits and hosting setup, and the
+[hosted service](./docs/CLOUD-SHARE.md#hosted-service) for its terms, privacy, availability and limits.
 
 ## Network and privacy
 
@@ -101,12 +102,14 @@ cases:
 | When                                                                                  | Contacted                                                           | What is sent                                                                                                                                              |
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Desktop app: 3 seconds after launch unless turned off, and when you check for updates | GitHub (`github.com`, `release-assets.githubusercontent.com`)       | A request for the latest release's `latest.json`, with no document content, app version or device identifier. An update downloads only if you install it. |
-| **Copy link** in the Share dialog, and opening a share link                           | The cloud share service (`canvaslide.pages.dev` in official builds) | The whole document, including embedded images, kept for 24 hours; see [cloud sharing](./docs/CLOUD-SHARE.md).                                             |
+| **Copy link** in the Share dialog, and opening a share link                           | The cloud share service (`canvaslide.pages.dev` in official builds) | The whole document, including embedded images, kept for 24 hours; see [hosted service](./docs/CLOUD-SHARE.md#hosted-service).                             |
 | Adding a linked video, showing a YouTube video, or playing a video                    | YouTube, Vimeo, or the server of a direct video link                | The video link when it is added, to read its size; then thumbnail, player and video requests.                                                             |
 | Using the web editor or opening a web example                                         | The web editor's host (Cloudflare Pages)                            | Ordinary page requests. Documents stay in the browser unless you share them.                                                                              |
 | Opening the repository, release notes or a video's original page                      | Your default browser                                                | The page you chose.                                                                                                                                       |
 
-As with any web request, each service sees your IP address and a user agent. A linked video set to
+As with any web request, each service sees your IP address and a user agent, and Cloudflare, which hosts
+the web editor and the share service, asks browsers that support Network Error Logging to report
+failed requests to it. A linked video set to
 play automatically, the default, starts loading when a slideshow, cloud slideshow or exported HTML
 reaches its frame, so presenting it contacts its provider without a click. Only one YouTube video per
 frame does so, and the browser or provider may still ask for a click to play it.

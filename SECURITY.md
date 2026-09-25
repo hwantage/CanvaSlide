@@ -35,6 +35,9 @@ that could affect other users.
   while we work on a fix.
 - Once a fixed release or deployment is available, we publish the advisory and credit you, unless you
   prefer not to be named.
+- A report of an abusive share link or a request to delete a snapshot
+  ([cloud share](./docs/CLOUD-SHARE.md#reporting-abuse-and-deleting-a-snapshot)) stays private and is
+  closed without publishing an advisory.
 
 Please keep the details private until the advisory is published. If a fix takes longer than
 expected, we will agree on a disclosure date with you in the advisory.

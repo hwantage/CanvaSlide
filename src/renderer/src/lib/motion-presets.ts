@@ -69,15 +69,6 @@ export const motionFieldLabels: Record<MotionField, UiStringKey> = {
   spotlight: 'motion.spotlight'
 }
 
-/**
- * The preset this value sits on, or null when it came from the sliders or a hand-written file.
- * Returning null rather than the nearest step is deliberate: a highlighted button has to mean the
- * value really is that step, otherwise clicking it would look like a no-op and silently move it.
- */
-export function matchedPreset(value: number, presets: readonly MotionPreset[]): number | null {
-  return presets.find((preset) => Math.abs(preset.value - value) < 1e-6)?.value ?? null
-}
-
 function presetLabel(value: number, presets: readonly MotionPreset[]): UiStringKey | null {
   return presets.find((preset) => Math.abs(preset.value - value) < 1e-6)?.label ?? null
 }

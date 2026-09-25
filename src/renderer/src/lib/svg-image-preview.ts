@@ -94,11 +94,6 @@ function stillSvg(data: string): SVGSVGElement | null {
   return root as unknown as SVGSVGElement
 }
 
-export function staticMaskedSvg(data: string): SVGSVGElement | null {
-  const source = parseSvgSource(data)
-  return source?.masked ? source.root : null
-}
-
 type SvgSource = { root: SVGSVGElement; masked: boolean } | null
 const sources = new WeakMap<ImageAsset, SvgSource>()
 

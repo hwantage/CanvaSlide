@@ -200,7 +200,6 @@ export const canvasElementSchema = z.discriminatedUnion('type', [
   connectorElementSchema
 ])
 export type CanvasElement = z.infer<typeof canvasElementSchema>
-export type ElementType = CanvasElement['type']
 
 export const cameraSchema = z.object({
   x: z.number().finite(),

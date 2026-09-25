@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test('groups move as one, deep-select with the primary modifier, and ungroup again', async ({
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [100, 100], [200, 200])
   await page.keyboard.press('r')
@@ -55,6 +57,7 @@ test('groups move as one, deep-select with the primary modifier, and ungroup aga
 
 test('the context menu and panel expose group and ungroup', async ({ page }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [100, 100], [200, 200])
   await page.keyboard.press('r')

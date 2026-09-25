@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Frame, type Page } from '@playwright/test'
+import { waitForEditor } from './editor-ready'
 
 const embedOrigin = 'http://127.0.0.1:19998'
 const embedHost = readFileSync('src-tauri/src/video_embed.rs', 'utf8')
@@ -98,7 +99,7 @@ async function openDesktopEditor(page: Page) {
     await page.route(endpoint, (route) => route.fulfill({ json: { width: 640, height: 360 } }))
   }
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
   // Install after startup so only video playback takes the desktop path.
   await page.evaluate((origin) => {
     Object.assign(window, {

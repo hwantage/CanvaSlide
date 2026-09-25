@@ -9,7 +9,8 @@ import {
   openPresentation,
   presentationControls,
   revealControls,
-  sendPointer
+  sendPointer,
+  waitForOverview
 } from './presentation-fixture'
 
 for (const surface of ['app', 'html'] as const) {
@@ -304,11 +305,14 @@ for (const surface of ['app', 'html'] as const) {
       await expect(inkStrokes(page)).toHaveCount(1)
       await page.keyboard.press('p')
       await page.keyboard.press('o')
-      const sameFrame =
+      const overviewFrames =
         surface === 'app'
-          ? page.getByTestId('overview-frame').first()
-          : page.locator('[data-frame-index="0"]')
-      await sameFrame.click()
+          ? page.getByTestId('overview-frame')
+          : page.locator('.uc-overview .uc-frame')
+      await waitForOverview(overviewFrames, 3)
+      await overviewFrames.first().click()
+      await expect(page.getByTestId('presentation-counter')).toContainText('1 / 3')
+      await expect(overviewFrames).toHaveCount(0)
       await expect(inkStrokes(page)).toHaveCount(1)
       await page.keyboard.press('p')
       await page.keyboard.press('ArrowRight')
@@ -380,7 +384,9 @@ for (const surface of ['app', 'html'] as const) {
         surface === 'app'
           ? page.getByTestId('overview-frame')
           : page.locator('.uc-overview .uc-frame')
+      await waitForOverview(frames, 3)
       await frames.first().click()
+      await expect(page.getByTestId('presentation-counter')).toContainText('1 / 3')
       await expect(inkStrokes(page)).toHaveCount(0)
       await page.evaluate(() => {
         const viewport = document.querySelector('[data-testid="canvas-viewport"]')!

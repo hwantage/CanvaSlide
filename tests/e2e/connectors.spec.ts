@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [100, 100], [250, 200])
   await page.keyboard.press('o')

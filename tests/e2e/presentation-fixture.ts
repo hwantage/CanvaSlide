@@ -2,7 +2,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 export type PresentationSurface = 'app' | 'html'
 export type DeckOptions = { count?: number; tiny?: boolean; roll?: number; transitionMs?: number }
@@ -72,14 +72,49 @@ export const inkStrokes = (page: Page) => page.getByTestId('presentation-ink').l
 
 export async function revealControls(page: Page) {
   await page.mouse.move(10, page.viewportSize()!.height - 4)
-  // Why: a bar still sliding in counts as visible, and hovering it then scrolls the whole viewport.
-  await expect(presentationControls(page)).toBeInViewport({ ratio: 1 })
+  const bar = presentationControls(page)
+  await expect(bar).toBeInViewport({ ratio: 1 })
+  // Why: WebKit scrolls the whole viewport to hover or click a bar still sliding in, even one
+  // already fully on screen.
+  await expect.poll(() => bar.evaluate((node) => node.getAnimations().length)).toBe(0)
 }
 
 // Why: the controls hide after an idle pause, which a slow host can spend before the first check.
 export async function holdControlsOpen(page: Page) {
   await revealControls(page)
   await presentationControls(page).hover()
+}
+
+/**
+ * Waits for the overview flight to land, so a click reaches the frame it aims at. Playwright's own
+ * stability check spans two animation frames, which a slow host passes before the flight has moved.
+ */
+export async function waitForOverview(frames: Locator, count: number) {
+  await expect(frames).toHaveCount(count)
+  for (const frame of await frames.all()) {
+    await expect(frame).toBeInViewport()
+  }
+  await frames.evaluateAll(
+    (nodes, quietMs) =>
+      new Promise<void>((resolve) => {
+        let boxes = ''
+        let since = 0
+        const check = (now: number) => {
+          const next = nodes.map((node) => JSON.stringify(node.getBoundingClientRect())).join()
+          if (next !== boxes) {
+            boxes = next
+            since = now
+          }
+          if (now - since >= quietMs) {
+            resolve()
+          } else {
+            requestAnimationFrame(check)
+          }
+        }
+        requestAnimationFrame(check)
+      }),
+    250
+  )
 }
 
 export async function sendPointer(

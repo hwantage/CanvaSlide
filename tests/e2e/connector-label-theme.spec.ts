@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import type { CanvasDocument } from '../../src/shared/canvas/element-types'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 const colours = {
   light: { text: 'rgb(24, 24, 27)', background: 'rgb(247, 247, 248)' },
@@ -31,6 +32,7 @@ for (const initialTheme of ['light', 'dark'] as const) {
   }, testInfo) => {
     await page.emulateMedia({ colorScheme: initialTheme })
     await page.goto('/')
+    await waitForEditor(page)
     await page.keyboard.press('r')
     await dragOnCanvas(page, [100, 100], [250, 200])
     await page.keyboard.press('o')
@@ -72,6 +74,7 @@ test('saved labels retain their colours and export from dark mode to the light p
 }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' })
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 100], [700, 500])
   await page.keyboard.press('l')

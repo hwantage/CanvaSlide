@@ -27,6 +27,13 @@ async function openBytes(page: Page, buffer: Buffer) {
     .toBe(true)
 }
 
+/** The first image as shown once its sharp surface has replaced the preview, which hides the img. */
+async function firstImagePixels(page: Page) {
+  await expect(page.locator('[data-image-detail-id="image-0"]')).toBeVisible()
+  const box = await page.locator('img[data-element-type="image"]').first().boundingBox()
+  return page.screenshot({ clip: box! })
+}
+
 test('shared crops and masks survive save/reopen and offline HTML export @webkit', async ({
   page
 }, info) => {
@@ -79,8 +86,7 @@ test('shared crops and masks survive save/reopen and offline HTML export @webkit
   }
   await openBytes(page, encodeDocumentFixture(doc))
   await page.mouse.move(0, 0)
-  const images = page.locator('img[data-element-type="image"]')
-  const before = await images.first().screenshot()
+  const before = await firstImagePixels(page)
   const downloaded = page.waitForEvent('download')
   await page.keyboard.press(`${await primaryModifier(page)}+s`)
   const download = await downloaded
@@ -93,7 +99,7 @@ test('shared crops and masks survive save/reopen and offline HTML export @webkit
   await page.reload()
   await openBytes(page, bytes)
   await page.mouse.move(0, 0)
-  expect(await images.first().screenshot()).toEqual(before)
+  expect(await firstImagePixels(page)).toEqual(before)
 
   await page.getByRole('button', { name: 'Share', exact: true }).click()
   await page.getByRole('button', { name: 'Export HTML', exact: true }).click()

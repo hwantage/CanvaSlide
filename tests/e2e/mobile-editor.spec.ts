@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { createEmptyDocument, type CanvasDocument } from '../../src/shared/canvas/element-types'
 import { encodeDocumentFixture, readSavedDocument } from './saved-document'
+import { waitForOverview } from './presentation-fixture'
 
 const shareId = 'abcdefghijklmnopqr_-1'
 
@@ -378,6 +379,7 @@ test.describe('compact editor', () => {
     await page.getByRole('button', { name: /Next frame/ }).tap()
     await expect(page.getByTestId('presentation-counter')).toContainText('2 / 3')
     await page.getByRole('button', { name: /Overview/ }).tap()
+    await waitForOverview(page.getByTestId('overview-frame'), 3)
     await page.getByTestId('overview-frame').last().tap()
     await expect(page.getByTestId('presentation-counter')).toContainText('3 / 3')
     await expect(page.getByRole('button', { name: /^Exit/ })).toHaveCount(0)

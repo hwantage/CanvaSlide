@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { appModuleUrl } from './app-module'
+import { waitForEditor } from './editor-ready'
 
 const RELEASES_URL = 'https://github.com/hwantage/CanvaSlide/releases'
 
@@ -16,7 +17,7 @@ async function offerUpdate(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('reports desktop updates in About and links to the exact download page @webkit', async ({

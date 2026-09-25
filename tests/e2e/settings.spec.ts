@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test('settings dialog controls background, the default transition and the frame border', async ({
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 100], [400, 300])
   // Deselect: a selected frame always shows a solid highlight outline.
@@ -36,6 +38,7 @@ test('settings dialog controls background, the default transition and the frame 
 
 test('blocks canvas shortcuts while the settings dialog is open', async ({ page }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [300, 300], [500, 420])
   const shapes = page.locator('[data-element-type="shape"]')
@@ -88,6 +91,7 @@ test('theme preference overrides the OS and survives a reload', async ({ page })
 test('dark mode darkens the canvas, grid and frame sheet together', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 100], [400, 300])
   await page.keyboard.press('Escape')

@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
 import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 const shape = (page: Page) => page.locator('[data-element-type="shape"]').first()
 const turn = (page: Page) => shape(page).evaluate((node) => (node as HTMLElement).style.transform)
@@ -22,7 +23,7 @@ async function viewportPoint(page: Page, testId: string): Promise<[number, numbe
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
   await page.keyboard.press('r')
   // 200×80 box centred on (400, 340).
   await dragOnCanvas(page, [300, 300], [500, 380])

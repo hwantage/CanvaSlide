@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 const fixture = resolve('tests/fixtures/figma-basic.fig')
 
@@ -21,7 +22,7 @@ async function editText(page: Page, target: Locator, value: string) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('imports selected Figma pages with editable layers and one undo step @webkit', async ({
@@ -80,6 +81,7 @@ test('edits nested mixed-style text, undoes, saves and reopens it @webkit', asyn
   const document = readSavedDocument(readFileSync(saved))
   expect(document.elements[document.order.at(-1)!]).toMatchObject({ text: 'Clipped edit' })
   await page.reload()
+  await waitForEditor(page)
   const openChooser = page.waitForEvent('filechooser')
   await page.keyboard.press(`${primary}+o`)
   await (await openChooser).setFiles(saved)

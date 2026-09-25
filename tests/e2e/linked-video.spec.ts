@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test, type Page, type Locator } from '@playwright/test'
 import { holdControlsOpen } from './presentation-fixture'
+import { waitForEditor } from './editor-ready'
 
 const clip = readFileSync('tests/fixtures/linked-video.mp4')
 const thumbnailFixture =
@@ -66,6 +67,7 @@ test('YouTube shows a thumbnail before playback and falls back safely when it is
     })
   )
   await page.goto('/')
+  await waitForEditor(page)
   await paste(page, 'https://youtu.be/M7lc1UVf-VE')
   const first = page.locator('[data-element-type="video"]').first()
   const thumbnail = first.getByRole('img', { name: 'YouTube video thumbnail' })
@@ -140,6 +142,7 @@ test('Command/Ctrl paste creates one video and preserves ordinary text, input pa
   browserName
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await clearClipboard(page, browserName)
   const primary = await page.evaluate(() =>
     /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Meta' : 'Control'
@@ -181,6 +184,7 @@ test('Windows Ctrl+V uses the URL path @webkit', async ({ page, browserName }) =
     })
   )
   await page.goto('/')
+  await waitForEditor(page)
   await clearClipboard(page, browserName)
   await page.keyboard.press('Control+v')
   await paste(page, 'https://vimeo.com/76979871')
@@ -233,6 +237,7 @@ test('paste sizes a portrait direct video from metadata, without playing or addi
     })
   )
   await page.goto('/')
+  await waitForEditor(page)
   await paste(page, 'https://media.example/portrait.mp4')
   const video = page.locator('[data-element-type="video"]')
   await expect
@@ -269,6 +274,7 @@ test('provider metadata selects portrait placement and Shorts retain a portrait 
     route.fulfill({ json: { width: 1080, height: 1920 } })
   )
   await page.goto('/')
+  await waitForEditor(page)
   await paste(page, 'https://vimeo.com/123456789')
   const first = page.locator('[data-element-type="video"]').first()
   await expect
@@ -315,6 +321,7 @@ test('manual controls preserve placement; presentation starts only current clips
       ...document.querySelectorAll('video')
     ]
   })
+  await holdControlsOpen(page)
   await page.getByRole('button', { name: /^Next frame/ }).click()
   await expect(page.locator('video')).toHaveCount(1)
   await expect(page.locator('[data-element-id="c"]')).toHaveAttribute('data-playback', 'playing')
@@ -467,6 +474,7 @@ test('WebM decodes and an unavailable direct URL exposes retry and the original 
       : route.fulfill({ status: 404, body: 'Missing' })
   )
   await page.goto('/')
+  await waitForEditor(page)
   await paste(page, 'https://media.example/clip.webm')
   const videos = page.locator('[data-element-type="video"]')
   await videos.first().getByRole('button', { name: 'Play video', exact: true }).click()

@@ -43,7 +43,9 @@ export function rememberStyleFrom(memory: StyleMemory, element: CanvasElement): 
         connectorText: { ...element.textStyle },
         connectorHeads: { startHead: element.startHead, endHead: element.endHead }
       }
-    default:
+    case 'frame':
+    case 'image':
+    case 'video':
       return memory
   }
 }

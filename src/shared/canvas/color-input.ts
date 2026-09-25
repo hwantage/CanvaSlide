@@ -9,7 +9,7 @@ export function normalizeHexColor(input: string): string | null {
     return `#${trimmed.toLowerCase()}`
   }
   if (/^[0-9a-f]{3}$/i.test(trimmed)) {
-    return `#${[...trimmed.toLowerCase()].map((c) => c + c).join('')}`
+    return `#${trimmed.toLowerCase().replace(/./g, (c) => c + c)}`
   }
   return null
 }

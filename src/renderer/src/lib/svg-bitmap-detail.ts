@@ -7,7 +7,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
 
 function fullViewportPhoto(svg: SVGSVGElement, aspect: number): Element | undefined {
   const box = parseViewBox(svg)
-  if (!box || box[0] !== 0 || box[1] !== 0 || Math.abs(box[2] / box[3] / aspect - 1) > 0.00001) {
+  if (box?.[0] !== 0 || box[1] !== 0 || Math.abs(box[2] / box[3] / aspect - 1) > 0.00001) {
     return undefined
   }
   // Only a single full-viewport photo has the same geometry after separating its color from alpha.

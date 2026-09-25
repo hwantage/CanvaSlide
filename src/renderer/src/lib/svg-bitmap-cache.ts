@@ -60,7 +60,7 @@ export function createSvgBitmapCache(decode = decodeBitmap, budget = 64 * 1024 *
       let released = false
       return {
         ready: entry.ready,
-        release() {
+        release: () => {
           if (!released) {
             released = true
             entry.users--

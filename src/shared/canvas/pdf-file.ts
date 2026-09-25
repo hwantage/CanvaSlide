@@ -44,10 +44,7 @@ function num(value: number): string {
 }
 
 function isPrintableAscii(text: string): boolean {
-  return [...text].every((char) => {
-    const code = char.codePointAt(0)!
-    return code >= 32 && code <= 126
-  })
+  return /^[ -~]*$/.test(text)
 }
 
 /** A PDF text string: a literal where ASCII allows it, UTF-16BE hex otherwise. */

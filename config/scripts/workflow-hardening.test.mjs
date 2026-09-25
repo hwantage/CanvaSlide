@@ -51,13 +51,13 @@ function jobsOf(workflow) {
 // The `permissions:` map at the given indent, as its entry lines; null when the block is absent.
 function permissionsAt(text, indent) {
   const block = new RegExp(`\\n${indent}permissions:\\n((?:${indent}  .*\\n)*)`).exec(text)
-  return (
-    block &&
-    block[1]
-      .trimEnd()
-      .split('\n')
-      .map((line) => line.trim())
-  )
+  if (!block) {
+    return null
+  }
+  return block[1]
+    .trimEnd()
+    .split('\n')
+    .map((line) => line.trim())
 }
 
 // Steps split at their `- ` marker, so each keeps its own `with:`, `env:` and `run:`.
@@ -268,7 +268,8 @@ test('E2E runs each Playwright project once, splitting Linux into shards', () =>
   const projects = playwrightConfig.slice(playwrightConfig.indexOf('\n  projects: ['))
   const configured = [...projects.matchAll(/\bname: '([^']+)'/g)].map(([, name]) => name)
   assert.ok(configured.length > 1)
-  assert.deepEqual(runs.flatMap(projectsOf).toSorted(), configured.toSorted())
+  const byName = (a, b) => a.localeCompare(b)
+  assert.deepEqual(runs.flatMap(projectsOf).toSorted(byName), configured.toSorted(byName))
   const [shardRun] = runs.filter((args) => args.includes('--shard='))
   checkedStep(e2e, `pnpm test:e2e ${shardRun}`)
   assert.match(
@@ -735,7 +736,10 @@ test('the release draft starts without notes and passes the feed script only fla
   )
   // The step's only other command is `git show`, so every flag in it is one for the feed script.
   const flags = [...new Set(feedStep.match(/(?<=[\s(])--[\w-]+/g))]
-  assert.deepEqual(flags.toSorted(), ['--notarized', '--repository', '--tag', '--trusted-config'])
+  assert.deepEqual(
+    flags.toSorted((a, b) => a.localeCompare(b)),
+    ['--notarized', '--repository', '--tag', '--trusted-config']
+  )
   const script = fileURLToPath(new URL('./updater-feed.mjs', import.meta.url))
   const args = ['missing-directory', ...flags.flatMap((flag) => [flag, 'x'])]
   const result = spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' })
@@ -1014,11 +1018,20 @@ test(
   () => {
     const placeholder = { names: ['CanvaSlide.dmg', 'latest.json'], notes: publishedFeed.notes }
     const replaced = { names: ['CanvaSlide.dmg', 'latest.json'], notes: 'Notes' }
-    for (const [failOn, afterFailure] of [
-      ['upload', placeholder],
-      ['DELETE', { ...placeholder, names: ['CanvaSlide.dmg', 'latest.json', 'latest.next.json'] }],
+    for (const { failOn, afterFailure } of [
+      { failOn: 'upload', afterFailure: placeholder },
+      {
+        failOn: 'DELETE',
+        afterFailure: {
+          ...placeholder,
+          names: ['CanvaSlide.dmg', 'latest.json', 'latest.next.json']
+        }
+      },
       // Why: only a failed rename right after the delete leaves no latest.json, until the next run.
-      ['PATCH', { names: ['CanvaSlide.dmg', 'latest.next.json'], notes: undefined }]
+      {
+        failOn: 'PATCH',
+        afterFailure: { names: ['CanvaSlide.dmg', 'latest.next.json'], notes: undefined }
+      }
     ]) {
       const failed = runReleaseNotes(publishedRelease(), failOn)
       assert.notEqual(failed.status, 0, failOn)

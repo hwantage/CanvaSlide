@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Locale } from './translator'
 
-const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
+const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]!).sort()
 
 /** Problems the key type cannot catch, shared by the app's and the website's table tests. */
 export function stringTableProblems(tables: Record<Locale, Record<string, string>>): string[] {

@@ -39,7 +39,9 @@ export function mountPresentationExperience(
       case 'exit':
         host.exit?.()
         break
-      default:
+      case 'next':
+      case 'previous':
+      case 'toggleOverview':
         annotations.finish()
         host[command]()
         break

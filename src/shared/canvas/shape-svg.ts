@@ -51,7 +51,8 @@ export function shapePolygon(element: ShapeElement): Point[] | undefined {
       return diamondOutline(element)
     case 'triangle':
       return triangleOutline(element)
-    default:
+    case 'rectangle':
+    case 'ellipse':
       return undefined
   }
 }

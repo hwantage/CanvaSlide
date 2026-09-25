@@ -335,7 +335,7 @@ export const ko: UiStrings = {
   'share.exportFile': '{format} 내보내기',
   'share.fallback': '현재 캔버스를 로컬 {format} 파일로 저장하여 공유할 수 있습니다.',
   'share.error.invalid':
-    '공유 링크 또는 문서가 올바르지 않습니다. 공유할 이미지는 문서에 포함되어 있어야 합니다.',
+    '공유 링크 또는 문서가 올바르지 않습니다. 공유할 이미지는 문서에 포함되어 있어야 하며, 이미지 데이터가 형식과 일치해야 합니다.',
   'share.error.tooLarge': '문서가 클라우드 공유의 최대 크기를 초과했습니다.',
   'share.error.noFrames': '슬라이드 쇼로 공유하려면 프레젠테이션 프레임을 추가해 주세요.',
   'share.error.unsupportedVideo':

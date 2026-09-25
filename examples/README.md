@@ -184,6 +184,8 @@ All coordinates are absolute canvas coordinates; a frame does not create a local
   `height` and `resourceId`; that resource must exist in `resources`. Resource IDs can be readable
   names such as `logo` or `photo-1`. The app generates its own IDs when saving; authors need no hash tool.
 - **Image resources.** A `type: "data"` resource has `data` containing a complete image data URL.
+  Its type must match the image bytes; cloud sharing rejects, for example, JPEG bytes labelled
+  `image/png`.
   Store the same image once and reference its ID wherever needed. A `type: "svg"` resource has
   `parts`, an array of SVG text strings and `{ "resourceId": "photo-1" }` objects. These objects
   insert a shared data URL between text parts. They must reference `type: "data"` resources;

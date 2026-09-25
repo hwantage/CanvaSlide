@@ -14,7 +14,8 @@ Viewing-only controls do not prevent recipients from copying content they can vi
 
 Anyone with the link can read the document. Each snapshot is automatically deleted from KV
 24 hours after creation; reading a link or sharing again does not extend an earlier link's lifetime.
-Later edits do not change existing links. The app has no account or manual revocation.
+Later edits do not change existing links. The app has no account or manual revocation; the service
+operator can delete a snapshot on request ([abuse reports](#reporting-abuse-and-deleting-a-snapshot)).
 Keep private content in local files. Documents over 5 MiB (UTF-8 JSON, including embedded images)
 stay local. The dialog offers a `.canvaslide` save when sharing is unavailable, offline, or over quota.
 
@@ -48,9 +49,12 @@ message for cloud sharing. Export this variable in the build process environment
 receive the same value; setting it only in a Vite `.env` file does not configure the native CSP.
 The Rust build pins the Tauri CSP to that exact origin, including its port. Packaged builds require
 HTTPS; `pnpm dev` also accepts an explicit local HTTP origin such as `http://localhost:8788`.
-The API's credential-free CORS responses allow desktop WebViews and Vite to reach it. Desktop
-link copying uses the native clipboard plugin. Share URLs open the hosted editor in a browser;
-OS deep-link registration is outside this feature.
+The hosted editor calls the API on its own origin. Cross-origin, the API answers only the desktop
+WebViews (`tauri://localhost` on macOS, `http://tauri.localhost` on Windows) and loopback HTTP origins
+(`localhost`, `127.0.0.1`, `[::1]`, any port) used by `pnpm dev` and Vite, without credentials.
+CORS requests and uploads from any other origin receive 403 before the body is read or KV is
+touched. Desktop link copying uses the native clipboard plugin. Share URLs open the hosted editor in
+a browser; OS deep-link registration is outside this feature.
 
 ## API contract and limits
 
@@ -59,6 +63,8 @@ OS deep-link registration is outside this feature.
   Shared images must use embedded image data URLs; external URLs, including image references nested
   inside SVGs, are rejected on upload and again by the viewer.
   SVG validation rejects malformed XML, DTDs, processing instructions, and excessive nesting.
+  Raster images (PNG, JPEG, GIF, WebP, AVIF, BMP, ICO), including those nested inside SVGs, must be
+  base64 data whose leading bytes carry the signature of the declared image type.
 - **Video policy:** shared videos accept YouTube, Vimeo, and direct files hosted on the share service's
   exact origin; arbitrary external video URLs must be removed or replaced before sharing. YouTube and
   Vimeo playback still contacts those providers. Local documents keep any linked video URL; the desktop
@@ -67,8 +73,8 @@ OS deep-link registration is outside this feature.
   application and the required provider origins, blocks external image loads except YouTube thumbnails,
   and omits referrers.
 - **Errors:** KV quota failures return 429 with Retry-After; other storage failures return 503.
-  Configure request limits for `/api/share` in the Cloudflare deployment if needed; the application
-  does not implement an atomic per-IP limiter in KV.
+  Requests from a disallowed browser origin return 403. Request rate limits belong to the deployment
+  ([rate limiting](#rate-limiting)); the application does not implement a per-client limiter.
 - **Propagation:** new snapshots may take up to a minute to become visible in another region because of
   [KV's propagation behavior](https://developers.cloudflare.com/kv/api/write-key-value-pairs/#concurrent-writes-to-the-same-key).
   The missing-link dialog provides a retry action.
@@ -84,3 +90,48 @@ the API, first load it with the current document parser to obtain the runtime re
 See [document formats](./ARCHITECTURE.md#document-formats). The implementation is in
 [`src/cloud-share/`](../src/cloud-share/) and [`functions/api/`](../functions/api/); deployment policies
 are in [`_headers`](../src/renderer/public/_headers) and [`_routes.json`](../src/renderer/public/_routes.json).
+
+## Abuse controls
+
+The API accepts uploads without an account. The checks above bound what one request can store
+(5 MiB for 24 hours) and keep other websites from uploading through their visitors' browsers.
+Per-client request rate limits belong to the deployment rather than the application.
+
+### Rate limiting
+
+Pages Functions cannot bind the Workers rate-limiting API directly, and an exact per-client counter
+cannot be built on eventually consistent KV. Configure a
+[WAF rate limiting rule](https://developers.cloudflare.com/waf/rate-limiting-rules/) instead:
+
+- **Scope:** WAF rules run on a zone the account owns, so serve the Pages project from a
+  [custom domain](https://developers.cloudflare.com/pages/configuration/custom-domains/) and
+  [redirect `*.pages.dev`](https://developers.cloudflare.com/pages/how-to/redirect-to-custom-domain/)
+  to it. Desktop builds fetch without following redirects and pin their CSP to the
+  `VITE_CLOUD_SHARE_URL` they were built with, so build them with the custom domain before the
+  redirect takes effect; installed builds that use the old origin cannot share once it does.
+- **Expression:** `http.request.uri.path in {"/api/share" "/api/share/"}`. Both paths reach the
+  upload route. This counts uploads and their CORS preflights and leaves `/api/share/<id>` reads alone.
+- **Counting:** by IP. The period, request count and mitigation timeout available depend on the
+  Cloudflare plan; the Free plan offers one rule with a 10-second period and a 10-second timeout.
+- **Action:** Block with the default 429 response. The hosted editor then shows its quota message.
+  The block response carries no CORS headers, so the desktop app reports a network error instead.
+  Both offer a local save.
+
+### Reporting abuse and deleting a snapshot
+
+Report a share link that contains abusive or illegal content privately, through
+[GitHub's private report form](https://github.com/hwantage/CanvaSlide/security/advisories/new).
+Include the share ID (the `share` value in the link) and the reason; do not post the link publicly.
+
+A maintainer with access to the Cloudflare account deletes the snapshot with Wrangler:
+
+```bash
+pnpm exec wrangler login
+pnpm exec wrangler kv namespace list        # note the id of the namespace bound as SHARED_DOCUMENTS
+pnpm exec wrangler kv key get "share:<share-id>" --namespace-id <namespace-id> --remote   # confirm
+pnpm exec wrangler kv key delete "share:<share-id>" --namespace-id <namespace-id> --remote
+```
+
+Links created on a preview deployment are stored in the namespace bound to the preview environment.
+Other regions can keep serving the snapshot for a minute or more after deletion because of KV
+propagation, and a recipient who already opened the link keeps the copy loaded in their tab.

@@ -1,5 +1,6 @@
+import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { stringTableProblems } from './string-table-checks'
+import { stringTableProblems, unusedKeys } from './string-table-checks'
 import { currentLocale, detectLocale, locales, setLocale, t, tn, uiStringsIn } from './ui-strings'
 
 describe('detectLocale', () => {
@@ -17,6 +18,13 @@ describe('detectLocale', () => {
 describe('locales', () => {
   it('have no empty values, English placeholders and paired plurals', () => {
     expect(stringTableProblems(locales)).toEqual([])
+  })
+
+  it('hold no key that the app or website sources never name', () => {
+    const sources = ['../../..', '../../../../website/src'].map((dir) =>
+      resolve(import.meta.dirname, dir)
+    )
+    expect(unusedKeys(Object.keys(locales.en), sources)).toEqual([])
   })
 
   it('leave website copy to the website tables', () => {

@@ -2,6 +2,7 @@ import { encodeDocumentFixture } from './saved-document'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 import { waitForEditor } from './editor-ready'
+import { waitForOverview } from './presentation-fixture'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -335,7 +336,7 @@ test('presentation nav buttons work and overview lets you click a frame', async 
   await expect(counter).toContainText('1 / 2')
   await page.getByRole('button', { name: 'Overview (O)' }).click()
   const targets = page.getByTestId('overview-frame')
-  await expect(targets).toHaveCount(2)
+  await waitForOverview(targets, 2)
   await targets.nth(1).click()
   await expect(counter).toContainText('2 / 2')
   await expect(targets).toHaveCount(0)
@@ -410,7 +411,7 @@ test('overview keeps a frame nested inside a bigger one clickable', async ({ pag
   await expect(counter).toContainText('2 / 2')
   await page.getByRole('button', { name: 'Overview (O)' }).click()
   const targets = page.getByTestId('overview-frame')
-  await expect(targets).toHaveCount(2)
+  await waitForOverview(targets, 2)
   await targets.first().click()
   await expect(counter).toContainText('1 / 2')
 })

@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { holdControlsOpen, waitForOverview } from './presentation-fixture'
 import { waitForEditor } from './editor-ready'
 
 test('exports a self-contained HTML player that presents the frames @webkit', async ({
@@ -66,8 +67,10 @@ test('exports a self-contained HTML player that presents the frames @webkit', as
   await player.keyboard.press('ArrowRight')
   await expect(counter).toContainText('2 / 2')
   await expect.poll(() => world.evaluate((el) => el.style.transform)).not.toBe(before)
+  await holdControlsOpen(player)
   await player.getByRole('button', { name: 'Overview (O)' }).click()
   await expect(player.locator('.uc-overview')).toHaveCount(1)
+  await waitForOverview(player.locator('.uc-frame'), 2)
   // Smaller frames stack above bigger ones so a wrapping frame can't swallow their clicks.
   const stacking = await player
     .locator('.uc-frame')

@@ -321,6 +321,7 @@ test('manual controls preserve placement; presentation starts only current clips
       ...document.querySelectorAll('video')
     ]
   })
+  await holdControlsOpen(page)
   await page.getByRole('button', { name: /^Next frame/ }).click()
   await expect(page.locator('video')).toHaveCount(1)
   await expect(page.locator('[data-element-id="c"]')).toHaveAttribute('data-playback', 'playing')

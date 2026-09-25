@@ -54,8 +54,9 @@ contributors and coding agents alike. How to propose, name and submit a change i
   Keep cohesive logic together; split at responsibility, dependency or lifecycle boundaries, never
   just to hit a smaller line count. Never disable `max-lines`.
 - User-visible strings come from `t()`/`tn()` in `src/renderer/src/i18n/ui-strings.ts`; add the key to
-  `i18n/locales/en.ts` first (the type forces every other locale to follow). Keep product names, key
-  names (Esc, ⌘), file formats and units out of resources; compose shortcuts with `shortcutLabel()`.
+  `i18n/locales/en.ts` first (the type forces every other locale to follow). Website copy follows the
+  same rule in `website/src/i18n/`, never in the app's tables. Keep product names, key names (Esc, ⌘),
+  file formats and units out of resources; compose shortcuts with `shortcutLabel()`.
   Translate a term the way Figma / PowerPoint's Korean editions do; the HTML export player stays English.
 - Name files after the concept they hold (`frame-fit.ts`, `camera-animator.ts`), never `utils`/`helpers`.
 - Comments explain _why_, one line, only when non-obvious.

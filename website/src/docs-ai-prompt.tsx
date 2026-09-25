@@ -1,20 +1,24 @@
 import { useRef, useState } from 'react'
 import { ArrowUpRight, Copy } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { uiStringsIn } from '@app/i18n/ui-strings'
 import {
   aiAuthoringSkillUrl,
   aiPromptStyles,
   buildAiPrompt,
   type AiPromptStyle
 } from '@app/lib/ai-prompt'
+import { t as siteT } from './i18n/site-strings'
+import { useSitePreferences } from './site-preferences'
 
 export function DocsAiPrompt() {
+  // Why: the prompt and its controls are the editor's own copy, shown in the website's language.
+  const { t } = uiStringsIn(useSitePreferences((s) => s.locale))
   const [style, setStyle] = useState<AiPromptStyle>('general')
   const [includeHtml, setIncludeHtml] = useState(false)
   const [pending, setPending] = useState(false)
   const [result, setResult] = useState<{ prompt: string; state: 'copied' | 'failed' } | null>(null)
   const copying = useRef(false)
-  const prompt = buildAiPrompt(style, includeHtml)
+  const prompt = buildAiPrompt(style, includeHtml, t)
   const status = pending ? 'copying' : result?.prompt === prompt ? result.state : 'idle'
 
   async function copy() {
@@ -73,7 +77,7 @@ export function DocsAiPrompt() {
           {t(pending ? 'aiGuide.copying' : 'aiGuide.copy')}
         </button>
         <a className="doc-text-link" href={aiAuthoringSkillUrl} target="_blank" rel="noreferrer">
-          {t('site.docs.ai.skill')}
+          {siteT('site.docs.ai.skill')}
           <ArrowUpRight size={14} aria-hidden />
         </a>
       </div>

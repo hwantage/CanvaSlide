@@ -1,20 +1,10 @@
 import { en } from './locales/en'
 import { ko } from './locales/ko'
+import { createTranslator, type Locale, type Translator } from './translator'
 
+export type { Locale }
 export type UiStringKey = keyof typeof en
 export type UiStrings = Record<UiStringKey, string>
-export type Locale = 'en' | 'ko'
-
-// Why: a generic parameter is needed for the conditional to distribute over the key union.
-type PluralBase<K> = K extends `${infer Base}.one`
-  ? `${Base}.other` extends UiStringKey
-    ? Base
-    : never
-  : never
-/** Keys that come in `.one` / `.other` pairs, addressed by their base for `tn()`. */
-export type PluralKey = PluralBase<UiStringKey>
-
-type Params = Record<string, string | number>
 
 export const locales: Record<Locale, UiStrings> = { en, ko }
 export const defaultLocale: Locale = 'en'
@@ -38,21 +28,9 @@ export function setLocale(locale: Locale): void {
   current = locale
 }
 
-export function interpolate(template: string, params?: Params): string {
-  if (!params) {
-    return template
-  }
-  return template.replaceAll(/\{(\w+)\}/g, (match, name: string) =>
-    name in params ? String(params[name]) : match
-  )
-}
+export const { t, tn }: Translator<UiStringKey> = createTranslator(locales, currentLocale)
 
-export function t(key: UiStringKey, params?: Params): string {
-  return interpolate(locales[current][key], params)
-}
-
-/** Picks `${key}.one` for exactly one, `${key}.other` otherwise; `{n}` is filled with the count. */
-export function tn(key: PluralKey, count: number, params?: Params): string {
-  const form: UiStringKey = `${key}.${count === 1 ? 'one' : 'other'}`
-  return t(form, { n: count, ...params })
+/** The app's strings in a fixed language, for a host that keeps its own language (the website). */
+export function uiStringsIn(locale: Locale): Translator<UiStringKey> {
+  return createTranslator(locales, () => locale)
 }

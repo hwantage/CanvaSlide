@@ -9,7 +9,7 @@ import {
   Search,
   X
 } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 import { currentTopic, topics, topicGroups, topicSummary, topicTitle } from './docs-topics'
 import { docSections } from './docs-sections'

@@ -1,5 +1,5 @@
 import { ArrowUpRight, Focus, Import, Link, Sparkles } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { siteHref } from './site-preferences'
 
 const workflows = [

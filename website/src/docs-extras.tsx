@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Check, Copy, Info } from 'lucide-react'
-import { t, type UiStringKey } from '@app/i18n/ui-strings'
+import { t, type SiteStringKey } from './i18n/site-strings'
 import { isMacPlatform, shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
 import { asset, repositoryUrl, siteHref } from './site-preferences'
 import type { TopicId } from './docs-topics'
@@ -88,7 +88,7 @@ function InstallPlatforms() {
 
 function ShortcutsTable() {
   const p = shortcutLabel
-  const rows: [UiStringKey, string][] = [
+  const rows: [SiteStringKey, string][] = [
     ['site.docs.shortcuts.new', p('N')],
     ['site.docs.shortcuts.open', p('O')],
     ['site.docs.shortcuts.save', p('S')],

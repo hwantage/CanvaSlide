@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pause, Play } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { asset } from './site-preferences'
 import { useRayFlight } from './use-ray-flight'
 

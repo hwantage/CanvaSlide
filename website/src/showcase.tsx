@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { ArrowUpRight, Download, Play } from 'lucide-react'
 import { exampleAssetPath, exampleCatalog, type ExampleId } from '@shared/example-catalog'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { asset, siteHref, useSitePreferences } from './site-preferences'
 import { exampleEditorUrl } from './example-links'
 import { updateMetadata } from './site-metadata'

@@ -1,4 +1,4 @@
-import type { UiStringKey } from '@app/i18n/ui-strings'
+import type { SiteStringKey } from './i18n/site-strings'
 
 export const topics = [
   { id: 'overview', group: 'start', minutes: 2 },
@@ -17,8 +17,8 @@ export const topics = [
 
 export type Topic = (typeof topics)[number]
 export type TopicId = Topic['id']
-export const topicTitle = (id: TopicId): UiStringKey => `site.docs.${id}.title`
-export const topicSummary = (id: TopicId): UiStringKey => `site.docs.${id}.summary`
+export const topicTitle = (id: TopicId): SiteStringKey => `site.docs.${id}.title`
+export const topicSummary = (id: TopicId): SiteStringKey => `site.docs.${id}.summary`
 
 export const topicGroups = [
   { id: 'start', title: 'site.docs.startGroup' },

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowUpRight, Maximize, Scan, ZoomIn } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { asset, siteHref } from './site-preferences'
 import { useDemoCamera } from './use-demo-camera'
 

@@ -12,7 +12,7 @@ import {
   Scan,
   SlidersHorizontal
 } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { shortcutLabel } from '@app/lib/platform-keys'
 import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 

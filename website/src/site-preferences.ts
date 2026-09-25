@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { setLocale, type Locale } from '@app/i18n/ui-strings'
+import type { Locale } from '@app/i18n/translator'
 
 type Theme = 'light' | 'dark'
 type Preferences = {
@@ -19,13 +19,11 @@ function remember(key: string, value: string) {
 
 const locale: Locale = document.documentElement.lang === 'ko' ? 'ko' : 'en'
 const theme: Theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
-setLocale(locale)
 
 export const useSitePreferences = create<Preferences>((set, get) => ({
   locale,
   theme,
   changeLocale: (next) => {
-    setLocale(next)
     document.documentElement.lang = next
     remember('language', next)
     const url = new URL(location.href)

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { ArrowUpRight, Database, Download, GitBranch, Presentation } from 'lucide-react'
-import { t } from '@app/i18n/ui-strings'
+import { t } from './i18n/site-strings'
 import { exportedExampleIds, type ExportedExampleId } from './exported-examples'
 import { asset } from './site-preferences'
 

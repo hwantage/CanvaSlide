@@ -1,0 +1,6 @@
+# Why: CI lints with `-D warnings`, so a new stable Rust could fail it without a code change; this
+# version is updated in its own pull request, and rustup installs it for every cargo command here.
+[toolchain]
+channel = "1.98.1"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

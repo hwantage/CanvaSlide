@@ -90,8 +90,9 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    결과가 성공이 아니거나 API 호출이 실패하면 실패하고, 이후 잡은 실행되지 않는다. 체크아웃도 패키지
    스크립트도 실행하지 않는다. 이 잡은 태그 커밋에 들어 있는 `release.yml`에서 실행되므로, 이 잡이 없는
    커밋(예: 옛 태그에서 갈라진 핫픽스)에 태그를 달면 CI 확인 없이 빌드된다. 핫픽스도 §3처럼 `main`을 거친다.
-1. **build**: pnpm·Node 22·Rust stable을 준비하고(맥은 `aarch64-apple-darwin`, `x86_64-apple-darwin` 타깃 추가)
-   `pnpm install --frozen-lockfile`, 태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
+1. **build**: pnpm, `.node-version`의 Node, `rust-toolchain.toml`의 Rust를 준비하고(맥은
+   `aarch64-apple-darwin`, `x86_64-apple-darwin` 타깃 추가) `pnpm install --frozen-lockfile`,
+   태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
    릴리즈할 파일을 워크플로 아티팩트로 올린다.
 2. **notarize**: 체크아웃과 macOS 빌드 아티팩트만 받고 의존성은 설치하지 않는다. Apple 자격 증명은
@@ -135,7 +136,6 @@ gh workflow run release-notes.yml -f tag=v0.8.0
 
 모든 잡의 체크아웃은 토큰을 작업 폴더에 남기지 않는다(`persist-credentials: false`). 모든 워크플로의 액션은 커밋
 SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
-버전 태그 없이 브랜치로 배포하는 `dtolnay/rust-toolchain`은 `stable` 브랜치의 커밋으로 고정하고 주석에 `stable`을 적는다.
 
 CI의 `CI passed` 잡은 다른 모든 CI 잡이 성공해야 통과한다. `main` ruleset은 PR과 이 검사 하나를 요구하므로,
 CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요가 없다. 새 잡은 `CI passed`의 `needs`에 넣으며,

@@ -141,6 +141,8 @@ pnpm test:site    # if website content, code or build inputs changed
   ([`docs/RELEASE.md`](./docs/RELEASE.md) §4); `pnpm test` checks both.
 - Merging to `main` requires the `CI passed` job, and a release builds only a commit whose CI on
   `main` passed. List every new CI job in that job's `needs`; `pnpm test` checks this too.
+- Workflows install Node.js from `.node-version` and Rust from `rust-toolchain.toml`; `rust-version`
+  in `src-tauri/Cargo.toml` is the oldest Rust that builds the app.
 - Fixers: `pnpm format`, `pnpm lint:fix`, `pnpm rust:fmt`.
 - Add tests that would catch the regression: math or document logic → `*.test.ts` beside the module;
   interaction (tools, shortcuts, selection, presenting) → Playwright in `tests/e2e/`; Rust commands →

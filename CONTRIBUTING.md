@@ -24,8 +24,10 @@ to get it merged.
 
 Requirements:
 
-- Node.js 22.20+ and pnpm 11 (`corepack enable` picks up the pinned version from `package.json`)
-- Rust stable toolchain (only for the Tauri window and `src-tauri/` changes)
+- Node.js 22.20+ (CI uses the version in `.node-version`) and pnpm 11 (`corepack enable` picks up
+  the pinned version from `package.json`)
+- Rust 1.89+ (only for the Tauri window and `src-tauri/` changes); with rustup, the first `cargo`
+  command installs the version CI uses, pinned in `rust-toolchain.toml`
 - Tauri prerequisites for your OS: <https://v2.tauri.app/start/prerequisites/>
 
 Exact commands and dependency versions are maintained in [`package.json`](./package.json).

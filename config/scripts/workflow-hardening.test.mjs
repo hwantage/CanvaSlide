@@ -25,6 +25,10 @@ const playwrightConfig = readFileSync(
   new URL('../../tests/playwright.config.ts', import.meta.url),
   'utf8'
 )
+const websitePlaywrightConfig = readFileSync(
+  new URL('../../website/playwright.config.ts', import.meta.url),
+  'utf8'
+)
 
 // Each job's lines, keyed by job id, from a workflow whose jobs sit at two-space indent.
 function jobsOf(workflow) {
@@ -214,6 +218,19 @@ test('WebKit runs on macOS with the @webkit scenarios', () => {
   const flag = /process\.env\.(\w+) \? \/[^/\n]*@webkit/.exec(playwrightConfig)[1]
   assert.match(`${step}\n`, new RegExp(`\\n {10}${flag}: '1'\\n`))
   assert.match(job, /\n\s+name: playwright-traces-webkit\n/)
+})
+
+test('CI builds and tests the website for every pull request and push to main', () => {
+  const [job, ...others] = Object.values(jobsOf(ci)).filter((job) => job.includes('test:site'))
+  assert.ok(job && others.length === 0)
+  assert.match(job, /\n {4}runs-on: ubuntu-latest\n/)
+  checkedStep(job, 'pnpm exec playwright install --with-deps chromium')
+  checkedStep(job, 'pnpm test:site')
+  // Why: a path list goes stale as the site imports more of the app, so CI runs on every change.
+  assert.match(ci, /\non:\n {2}push:\n {4}branches: \[main\]\n {2}pull_request:\n\n/)
+  const outputDir = /\n {2}outputDir: '\.\.\/([^']+)',\n/.exec(websitePlaywrightConfig)[1]
+  assert.match(job, new RegExp(`\\n\\s+path: ${outputDir}/\\n`))
+  assert.match(job, /\n\s+name: website-test-results\n/)
 })
 
 test('Rust is checked on Linux, macOS and Windows, the scripts on Linux and Windows', () => {

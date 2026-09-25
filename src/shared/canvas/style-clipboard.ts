@@ -21,7 +21,9 @@ export function extractStyleClip(element: CanvasElement): StyleClip | null {
         connectorHeads: { startHead: element.startHead, endHead: element.endHead },
         text: { ...element.textStyle }
       }
-    default:
+    case 'frame':
+    case 'image':
+    case 'video':
       return null
   }
 }
@@ -42,7 +44,9 @@ export function styleClipPatch(element: CanvasElement, clip: StyleClip): Partial
         ...clip.connectorHeads,
         ...(clip.text ? { textStyle: { ...clip.text } } : {})
       }
-    default:
+    case 'frame':
+    case 'image':
+    case 'video':
       return {}
   }
 }

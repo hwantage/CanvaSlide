@@ -17,8 +17,7 @@ const LOCK_PREFIX = 'canvaslide.recovery.session.'
 const sessionId =
   crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 export const currentSessionId = (): string => sessionId
-export const supportsSessionOwnership = (): boolean =>
-  typeof navigator !== 'undefined' && navigator.locks !== undefined
+export const supportsSessionOwnership = (): boolean => globalThis.navigator?.locks !== undefined
 
 /** A claim remains held while its record is offered, adopted or being modified. */
 export function createSessionClaims(manager: LockManager) {

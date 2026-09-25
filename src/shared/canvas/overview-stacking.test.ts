@@ -38,7 +38,7 @@ describe('overview-stacking', () => {
 
   it('ranks every frame exactly once', () => {
     const frames = [frame('a', 1, 10, 10), frame('b', 2, 10, 10), frame('c', 3, 20, 5)]
-    expect(Object.values(overviewStackRanks(frames)).sort()).toEqual([0, 1, 2])
+    expect(Object.values(overviewStackRanks(frames)).sort((a, b) => a - b)).toEqual([0, 1, 2])
     expect(overviewStackRanks([])).toEqual({})
   })
 

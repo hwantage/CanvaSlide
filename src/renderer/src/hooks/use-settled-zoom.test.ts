@@ -16,6 +16,10 @@ afterEach(() => {
 })
 
 const at = (zoom: number) => ({ x: 0, y: 0, zoom })
+const advance = (ms: number) =>
+  act(() => {
+    vi.advanceTimersByTime(ms)
+  })
 
 describe('settled layout zoom', () => {
   it('preserves a preview hold layout independently of the density threshold', () => {
@@ -39,7 +43,7 @@ describe('settled layout zoom', () => {
     const { result } = renderHook(() => useSettledZoom(false))
     expect(result.current).toBe(1)
     act(() => useCameraStore.setState({ camera: at(8) }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS * 2))
+    advance(ZOOM_SETTLE_MS * 2)
     expect(result.current).toBe(1)
     act(() => useCameraStore.setState({ animationActive: true, animationTarget: at(2) }))
     expect(result.current).toBe(1)
@@ -54,17 +58,17 @@ describe('settled layout zoom', () => {
     })
     expect(result.current).toBe(4)
     act(() => useCameraStore.setState({ camera: at(2) }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS - 1))
+    advance(ZOOM_SETTLE_MS - 1)
     expect(result.current).toBe(4)
-    act(() => vi.advanceTimersByTime(1))
+    advance(1)
     expect(result.current).toBe(2)
     rerender({ denseVectors: false })
     expect(result.current).toBe(2)
     act(() => useCameraStore.setState({ camera: at(3) }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS - 1))
+    advance(ZOOM_SETTLE_MS - 1)
     rerender({ denseVectors: true })
     expect(result.current).toBe(2)
-    act(() => vi.advanceTimersByTime(1))
+    advance(1)
     expect(result.current).toBe(3)
   })
 
@@ -79,7 +83,7 @@ describe('settled layout zoom', () => {
     act(() => useCameraStore.setState({ camera: at(4) }))
     act(() => usePresentationStore.setState({ active: false, previewFrameId: null }))
     expect(result.current).toBe(1)
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
+    advance(ZOOM_SETTLE_MS)
     expect(result.current).toBe(4)
   })
 
@@ -94,7 +98,7 @@ describe('settled layout zoom', () => {
       isAnimating.mockReturnValue(true)
       act(() => useCameraStore.setState({ animationActive: true, animationTarget: at(2.4) }))
       act(() => useCameraStore.setState({ camera: at(2.4) }))
-      act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS * 3))
+      advance(ZOOM_SETTLE_MS * 3)
       expect(result.current).toBe(1)
       isAnimating.mockReturnValue(false)
       act(() => useCameraStore.setState({ animationActive: false, animationTarget: null }))
@@ -114,10 +118,10 @@ describe.each([false, true])('editor settled layout zoom (denseVectors=%s)', (de
     expect(result.current).toBe(1.6)
     for (const zoom of [2, 2.4, 1.8]) {
       act(() => useCameraStore.setState({ camera: at(zoom) }))
-      act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS - 1))
+      advance(ZOOM_SETTLE_MS - 1)
       expect(result.current).toBe(1.6)
     }
-    act(() => vi.advanceTimersByTime(1))
+    advance(1)
     expect(result.current).toBe(1.8)
     expect(vi.getTimerCount()).toBe(0)
   })
@@ -128,10 +132,10 @@ describe.each([false, true])('editor settled layout zoom (denseVectors=%s)', (de
     useCameraStore.setState({ camera: at(8), isAnimating })
     const { result } = renderHook(() => useSettledZoom(denseVectors))
     act(() => useCameraStore.setState({ camera: at(2) }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS * 5))
+    advance(ZOOM_SETTLE_MS * 5)
     expect(result.current).toBe(8)
     isAnimating.mockReturnValue(false)
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
+    advance(ZOOM_SETTLE_MS)
     expect(result.current).toBe(2)
   })
 
@@ -152,7 +156,7 @@ describe.each([false, true])('editor settled layout zoom (denseVectors=%s)', (de
     act(() => useCameraStore.setState({ camera: { x: -900, y: 0, zoom: 1.174 } }))
     isAnimating.mockReturnValue(false)
     act(() => useCameraStore.setState({ animationActive: false, animationTarget: null }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
+    advance(ZOOM_SETTLE_MS)
     expect(result.current).toBe(1.174)
     // Zooming out lands lower: the flight is laid out at the arrival scale from the start.
     isAnimating.mockReturnValue(true)
@@ -167,7 +171,7 @@ describe.each([false, true])('editor settled layout zoom (denseVectors=%s)', (de
     act(() => useCameraStore.setState({ camera: at(4) }))
     isAnimating.mockReturnValue(false)
     act(() => useCameraStore.setState({ animationActive: false, animationTarget: null }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
+    advance(ZOOM_SETTLE_MS)
     expect(result.current).toBe(4)
   })
 
@@ -176,7 +180,7 @@ describe.each([false, true])('editor settled layout zoom (denseVectors=%s)', (de
     useCameraStore.setState({ camera: at(4) })
     const { result, unmount } = renderHook(() => useSettledZoom(denseVectors))
     act(() => useCameraStore.setState({ camera: at(0.02) }))
-    act(() => vi.advanceTimersByTime(ZOOM_SETTLE_MS))
+    advance(ZOOM_SETTLE_MS)
     expect(result.current).toBe(1)
     act(() => useCameraStore.setState({ camera: at(3) }))
     unmount()

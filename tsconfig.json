@@ -6,6 +6,12 @@
     },
     {
       "path": "./config/tsconfig.node.json"
+    },
+    {
+      "path": "./config/tsconfig.e2e.json"
+    },
+    {
+      "path": "./config/tsconfig.examples.json"
     }
   ],
   "compilerOptions": {

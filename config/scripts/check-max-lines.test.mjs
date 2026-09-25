@@ -7,7 +7,11 @@ import { afterEach, beforeEach, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { checkMaxLines, countLines, limitFor, lintedFiles } from './check-max-lines.mjs'
 
-const config = JSON.parse(readFileSync(new URL('../../.oxlintrc.json', import.meta.url), 'utf8'))
+// Why: the fixtures lie outside the checkout, where oxlint finds no tsgolint; max-lines needs no types.
+const config = {
+  ...JSON.parse(readFileSync(new URL('../../.oxlintrc.json', import.meta.url), 'utf8')),
+  options: undefined
+}
 const oxlint = resolve(
   dirname(fileURLToPath(import.meta.resolve('oxlint/package.json'))),
   'bin/oxlint'

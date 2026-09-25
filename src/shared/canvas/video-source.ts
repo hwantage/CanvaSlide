@@ -28,7 +28,7 @@ export function parseVideoSource(raw: string, explicit = false): VideoSource | n
   if (
     !text ||
     /\s/u.test(text) ||
-    [...text].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
+    text.split('').some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
   ) {
     return null
   }

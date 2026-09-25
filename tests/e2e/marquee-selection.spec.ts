@@ -91,7 +91,7 @@ async function start(page: Page, x: number, y: number) {
 async function selectedIds(page: Page): Promise<string[]> {
   return page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
-    return [...useDocumentStore.getState().selectedIds].sort()
+    return ([...useDocumentStore.getState().selectedIds] as string[]).sort()
   }, appModuleUrl('store/document-store.ts'))
 }
 
@@ -102,7 +102,7 @@ async function expectSelection(page: Page, ids: string[], outlinedIds = ids) {
     .poll(() =>
       page
         .locator('[data-selection-id]')
-        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-selection-id')).sort())
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-selection-id')!).sort())
     )
     .toEqual([...outlinedIds].sort())
 }

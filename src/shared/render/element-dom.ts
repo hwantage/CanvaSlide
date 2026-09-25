@@ -26,7 +26,11 @@ import { textClipPath } from '../canvas/text-clip'
  * few class rules these nodes need.
  */
 
-type Css = { [K in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[K] | undefined }
+type Css = {
+  [K in Exclude<keyof CSSStyleDeclaration, typeof Symbol.iterator>]?:
+    | CSSStyleDeclaration[K]
+    | undefined
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,

@@ -16,9 +16,9 @@ to get it merged.
   is declared stable. The [feature status](./README.md#feature-status) lists which features are core
   and which are experimental; a feature changes status only when a maintainer updates that list.
 - Keep a new feature's complexity in proportion to its importance. Split a large feature into steps
-  that each leave the app working, one pull request per step, so reviewers can follow it. A feature
-  whose results depend on a file format or service the project can neither pin nor test starts as
-  experimental.
+  that each leave the app working, one pull request per step, so reviewers can follow it. New
+  features ship as core; a maintainer decides when one is marked experimental, for example when it
+  depends on a hosted service the project does not control.
 
 ## Local Setup
 

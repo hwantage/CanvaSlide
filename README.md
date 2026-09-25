@@ -46,20 +46,22 @@ the editor also runs in a browser.
 ## Feature status
 
 Until 1.0, each feature is core or experimental. Core features ship in every release on the platforms
-that support them, and their regressions are fixed first. Experimental features work today, but their
-results depend on a file format or service the project can neither pin nor test; they may change, gain
-limits or be removed before 1.0, and their fixes are best-effort.
+that support them, and their regressions are fixed first; the table lists the limits they inherit from
+formats and services outside the project. Experimental features work today, but they depend on a
+hosted service the project does not control; they may change, gain limits or be removed before 1.0,
+and their fixes are best-effort.
 
-| Feature                                                                     | Status       | Why it is experimental                                                          |
-| --------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
-| Canvas editing, presentation frames and Slide Show, including laser and ink | Core         |                                                                                 |
-| Desktop apps for macOS and Windows, the browser editor, update checks       | Core         |                                                                                 |
-| Opening and saving `.canvaslide` files, crash recovery                      | Core         |                                                                                 |
-| Image and PDF import, HTML export with its player, PDF export               | Core         |                                                                                 |
-| [Figma import](./docs/FIGMA-IMPORT.md)                                      | Experimental | Figma does not publish the `.fig` format, and any Figma release can change it   |
-| Linked videos                                                               | Experimental | Playback depends on YouTube, Vimeo or the video's server, and on browser codecs |
-| [Cloud sharing](./docs/CLOUD-SHARE.md)                                      | Experimental | The hosted service's limits and availability depend on its Cloudflare plan      |
-| [Create with AI](./examples/README.md#authoring-with-ai)                    | Experimental | The result depends on the assistant and model you choose                        |
+| Feature                                                                     | Status       | Limitations                                                                                                            |
+| --------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Canvas editing, presentation frames and Slide Show, including laser and ink | Core         |                                                                                                                        |
+| Desktop apps for macOS and Windows, the browser editor                      | Core         |                                                                                                                        |
+| Update checks and in-app installation                                       | Core         | On macOS, only notarized releases install in the app; otherwise the app opens the download page                        |
+| Opening and saving `.canvaslide` files, crash recovery                      | Core         |                                                                                                                        |
+| Image and PDF import, HTML export with its player, PDF export               | Core         |                                                                                                                        |
+| [Figma import](./docs/FIGMA-IMPORT.md)                                      | Core         | Figma does not publish the `.fig` format, so files from newer Figma versions may not import or may convert differently |
+| Linked videos, including YouTube and Vimeo                                  | Core         | Playback depends on YouTube, Vimeo or the video's server, the network and browser codecs                               |
+| [Create with AI](./examples/README.md#authoring-with-ai)                    | Core         | The result depends on the assistant and model you choose                                                               |
+| [Cloud sharing](./docs/CLOUD-SHARE.md)                                      | Experimental | The hosted service's limits and availability depend on its Cloudflare plan                                             |
 
 The `.canvaslide` format is declared stable at 1.0; until then a newer version may not open older files,
 as the [compatibility policy](./AGENTS.md#code) explains.

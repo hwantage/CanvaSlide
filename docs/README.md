@@ -9,6 +9,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | Task                                                   | Start here                                                                                        |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | Understand features, get started, use shortcuts        | [English README](../README.md), [한국어 README](../README.ko.md)                                  |
+| Check which features are core or experimental          | [Feature status](../README.md#feature-status)                                                     |
 | Follow a step-by-step user guide                       | [Website documentation](https://hwantage.github.io/CanvaSlide/docs/)                              |
 | Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [code rules and checks](../AGENTS.md)                         |
 | Change rendering, history, presentation or document IO | [Architecture and constraints](./ARCHITECTURE.md)                                                 |

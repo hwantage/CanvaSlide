@@ -43,6 +43,27 @@ the editor also runs in a browser.
 - **Sharing:** use a configured cloud service for editable copies or slideshow-only snapshots,
   or send an exported HTML file.
 
+## Feature status
+
+Until 1.0, each feature is core or experimental. Core features ship in every release on the platforms
+that support them, and their regressions are fixed first. Experimental features work today, but their
+results depend on a file format or service the project can neither pin nor test; they may change, gain
+limits or be removed before 1.0, and their fixes are best-effort.
+
+| Feature                                                                     | Status       | Why it is experimental                                                          |
+| --------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| Canvas editing, presentation frames and Slide Show, including laser and ink | Core         |                                                                                 |
+| Desktop apps for macOS and Windows, the browser editor, update checks       | Core         |                                                                                 |
+| Opening and saving `.canvaslide` files, crash recovery                      | Core         |                                                                                 |
+| Image and PDF import, HTML export with its player, PDF export               | Core         |                                                                                 |
+| [Figma import](./docs/FIGMA-IMPORT.md)                                      | Experimental | Figma does not publish the `.fig` format, and any Figma release can change it   |
+| Linked videos                                                               | Experimental | Playback depends on YouTube, Vimeo or the video's server, and on browser codecs |
+| [Cloud sharing](./docs/CLOUD-SHARE.md)                                      | Experimental | The hosted service's limits and availability depend on its Cloudflare plan      |
+| [Create with AI](./examples/README.md#authoring-with-ai)                    | Experimental | The result depends on the assistant and model you choose                        |
+
+The `.canvaslide` format is declared stable at 1.0; until then a newer version may not open older files,
+as the [compatibility policy](./AGENTS.md#code) explains.
+
 ## Get started
 
 1. Create content with the text or shape tools, paste an image, or import a file.

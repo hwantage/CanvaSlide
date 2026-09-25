@@ -12,6 +12,13 @@ to get it merged.
 - Keep each change scoped to one improvement, bug fix, refactor, or documentation topic.
 - Check existing issues first. Except for a small bug fix, open an issue describing the problem and
   your proposed approach before writing code, so we can agree on direction early.
+- Until 1.0, stabilizing what exists comes before new features; 1.0 is also where the document format
+  is declared stable. The [feature status](./README.md#feature-status) lists which features are core
+  and which are experimental; a feature changes status only when a maintainer updates that list.
+- Keep a new feature's complexity in proportion to its importance. Split a large feature into steps
+  that each leave the app working, one pull request per step, so reviewers can follow it. A feature
+  whose results depend on a file format or service the project can neither pin nor test starts as
+  experimental.
 
 ## Local Setup
 

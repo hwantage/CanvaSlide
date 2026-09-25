@@ -1,3 +1,4 @@
+import { appModuleUrl } from './app-module'
 import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
@@ -79,26 +80,16 @@ const stageRollOf = (page: Page) =>
   })
 
 const cameraState = (page: Page) =>
-  page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)!
+  page.evaluate(async (url) => {
     const { useCameraStore } = await import(url)
     const { camera, animationActive } = useCameraStore.getState()
     return { x: camera.x as number, animationActive: animationActive as boolean }
-  })
+  }, appModuleUrl('store/camera-store.ts'))
 
 const cameraX = async (page: Page) => (await cameraState(page)).x
 
 const observeDepartureHold = (page: Page) =>
-  page.evaluateHandle(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)!
+  page.evaluateHandle(async (url) => {
     const { useCameraStore } = await import(url)
     const initialX = useCameraStore.getState().camera.x
     const stage = document.querySelector('[data-testid="presentation-stage"]')!
@@ -124,7 +115,7 @@ const observeDepartureHold = (page: Page) =>
         requestAnimationFrame(sample)
       })
     }
-  })
+  }, appModuleUrl('store/camera-store.ts'))
 
 test('inherited values stay highlighted until restored to application defaults', async ({
   page

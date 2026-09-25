@@ -7,6 +7,7 @@ import {
   type CanvasDocument,
   type CanvasElement
 } from '../../src/shared/canvas/element-types'
+import { appModuleUrl } from './app-module'
 import { primaryModifier } from './canvas-gestures'
 
 function scene(): CanvasDocument {
@@ -58,15 +59,18 @@ async function loadScene(page: Page, doc = scene(), camera: Camera = { x: 0, y: 
   await page.goto('/')
   await page.getByTestId('canvas-viewport').waitFor()
   await page.evaluate(
-    async ({ doc, camera }) => {
-      const docUrl = '/src/store/document-store.ts'
-      const cameraUrl = '/src/store/camera-store.ts'
+    async ({ doc, camera, docUrl, cameraUrl }) => {
       const { useDocumentStore } = await import(docUrl)
       const { useCameraStore } = await import(cameraUrl)
       useDocumentStore.getState().loadDocument(doc, null)
       useCameraStore.getState().setCamera(camera)
     },
-    { doc, camera }
+    {
+      doc,
+      camera,
+      docUrl: appModuleUrl('store/document-store.ts'),
+      cameraUrl: appModuleUrl('store/camera-store.ts')
+    }
   )
   await expect(page.locator('[data-element-id="a"]')).toBeVisible()
 }
@@ -85,11 +89,10 @@ async function start(page: Page, x: number, y: number) {
 }
 
 async function selectedIds(page: Page): Promise<string[]> {
-  return page.evaluate(async () => {
-    const url = '/src/store/document-store.ts'
+  return page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     return [...useDocumentStore.getState().selectedIds].sort()
-  })
+  }, appModuleUrl('store/document-store.ts'))
 }
 
 async function expectSelection(page: Page, ids: string[], outlinedIds = ids) {
@@ -130,12 +133,11 @@ test('marquee outlines each intersecting object live and releases the same selec
   await expect(page.getByTestId('selection-marquee')).toHaveCount(0)
   await expect(page.getByTestId('selection-handle')).toHaveCount(8)
   await expect(page.getByTestId('selection-bounds')).toHaveCount(1)
-  const state = await page.evaluate(async () => {
-    const url = '/src/store/document-store.ts'
+  const state = await page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     const s = useDocumentStore.getState()
     return { dirty: s.dirty, past: s.past.length }
-  })
+  }, appModuleUrl('store/document-store.ts'))
   expect(state).toEqual({ dirty: false, past: 0 })
 })
 

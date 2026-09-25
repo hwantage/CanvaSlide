@@ -1,3 +1,4 @@
+import { appModuleUrl } from './app-module'
 import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 import type { Camera } from '../../src/shared/canvas/element-types'
@@ -6,16 +7,11 @@ test.use({ deviceScaleFactor: 2 })
 
 async function camera(page: Page, value: Camera, duration = 0) {
   await page.evaluate(
-    async ({ value, duration }) => {
-      const url = performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((name) => name.includes('/src/store/camera-store.ts'))
-        .at(-1)!
+    async ({ url, value, duration }) => {
       const { useCameraStore } = await import(url)
       useCameraStore.getState().animateTo(value, duration)
     },
-    { value, duration }
+    { url: appModuleUrl('store/camera-store.ts'), value, duration }
   )
 }
 
@@ -158,12 +154,7 @@ test('discards an obsolete detail render when a new camera movement interrupts i
   page
 }) => {
   await openDetailDocument(page)
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/lib/svg-preview-cache.ts'))
-      .at(-1)!
+  await page.evaluate(async (url) => {
     const { svgDetailCache } = await import(url)
     const acquire = svgDetailCache.acquire.bind(svgDetailCache)
     const releases: (() => void)[] = []
@@ -184,7 +175,7 @@ test('discards an obsolete detail render when a new camera movement interrupts i
         )
       }
     }
-  })
+  }, appModuleUrl('lib/svg-preview-cache.ts'))
   await camera(page, { x: 10, y: 20, zoom: 0.03 })
   await page.waitForFunction(() => 'pendingDetail' in window)
   await camera(page, { x: -10000000, y: 0, zoom: 0.03 })
@@ -197,69 +188,72 @@ test('matches original SVG pixels after cropping, filtering and changing aspect 
   page
 }) => {
   const asset = await openDetailDocument(page)
-  const differences = await page.evaluate(async (asset) => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/lib/svg-image-preview.ts'))
-      .at(-1)!
-    const { createSvgImagePreview } = await import(url)
-    const differences: number[] = []
-    for (const [aspect, alignment, filter] of [
-      [1, 'xMidYMid meet', false],
-      [2, 'none', false],
-      [0.5, 'xMaxYMin slice', false],
-      [1, 'xMinYMax meet', true]
-    ] as const) {
-      const root = new DOMParser().parseFromString(
-        atob(asset.data.split(',')[1]!),
-        'image/svg+xml'
-      ).documentElement
-      root.setAttribute('preserveAspectRatio', alignment)
-      if (filter) {
-        root
-          .querySelector('defs')!
-          .insertAdjacentHTML(
-            'beforeend',
-            '<filter id="soft"><feGaussianBlur stdDeviation=".1"/></filter>'
-          )
-        root.querySelector('image')!.setAttribute('filter', 'url(#soft)')
+  const differences = await page.evaluate(
+    async ({ asset, url }) => {
+      const { createSvgImagePreview } = await import(url)
+      const differences: number[] = []
+      for (const [aspect, alignment, filter] of [
+        [1, 'xMidYMid meet', false],
+        [2, 'none', false],
+        [0.5, 'xMaxYMin slice', false],
+        [1, 'xMinYMax meet', true]
+      ] as const) {
+        const root = new DOMParser().parseFromString(
+          atob(asset.data.split(',')[1]!),
+          'image/svg+xml'
+        ).documentElement
+        root.setAttribute('preserveAspectRatio', alignment)
+        if (filter) {
+          root
+            .querySelector('defs')!
+            .insertAdjacentHTML(
+              'beforeend',
+              '<filter id="soft"><feGaussianBlur stdDeviation=".1"/></filter>'
+            )
+          root.querySelector('image')!.setAttribute('filter', 'url(#soft)')
+        }
+        const data = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
+        const width = 2048
+        const height = width / aspect
+        const pixels = { width: width / 2, height: height / 2 }
+        const crop = { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }
+        const preview = await createSvgImagePreview({ ...asset, data }, aspect, { crop, pixels })
+        root.setAttribute('width', String(width))
+        root.setAttribute('height', String(height))
+        const original = new Image()
+        original.src = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
+        await original.decode()
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const context = canvas.getContext('2d')!
+        context.drawImage(original, 0, 0)
+        const expected = context.getImageData(
+          width / 4,
+          height / 4,
+          pixels.width,
+          pixels.height
+        ).data
+        const detailed = new Image()
+        detailed.src = preview.src
+        await detailed.decode()
+        canvas.width = pixels.width
+        canvas.height = pixels.height
+        context.drawImage(detailed, 0, 0)
+        const actual = context.getImageData(0, 0, pixels.width, pixels.height).data
+        let error = 0
+        for (let i = 0; i < actual.length; i++) {
+          error += Math.abs(actual[i]! - expected[i]!)
+        }
+        differences.push(error / actual.length)
+        preview.dispose()
+        original.src = detailed.src = ''
+        canvas.width = canvas.height = 0
       }
-      const data = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
-      const width = 2048
-      const height = width / aspect
-      const pixels = { width: width / 2, height: height / 2 }
-      const crop = { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }
-      const preview = await createSvgImagePreview({ ...asset, data }, aspect, { crop, pixels })
-      root.setAttribute('width', String(width))
-      root.setAttribute('height', String(height))
-      const original = new Image()
-      original.src = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
-      await original.decode()
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      const context = canvas.getContext('2d')!
-      context.drawImage(original, 0, 0)
-      const expected = context.getImageData(width / 4, height / 4, pixels.width, pixels.height).data
-      const detailed = new Image()
-      detailed.src = preview.src
-      await detailed.decode()
-      canvas.width = pixels.width
-      canvas.height = pixels.height
-      context.drawImage(detailed, 0, 0)
-      const actual = context.getImageData(0, 0, pixels.width, pixels.height).data
-      let error = 0
-      for (let i = 0; i < actual.length; i++) {
-        error += Math.abs(actual[i]! - expected[i]!)
-      }
-      differences.push(error / actual.length)
-      preview.dispose()
-      original.src = detailed.src = ''
-      canvas.width = canvas.height = 0
-    }
-    return differences
-  }, asset)
+      return differences
+    },
+    { asset, url: appModuleUrl('lib/svg-image-preview.ts') }
+  )
   for (const difference of differences) {
     expect(difference).toBeLessThan(1)
   }
@@ -270,12 +264,7 @@ test('keeps the fallback until all detail surfaces are ready without encoding PN
 }) => {
   await openDetailDocument(page)
   await expect(page.locator('[data-image-detail-id="photo"]').first()).toBeVisible()
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/lib/svg-preview-cache.ts'))
-      .at(-1)!
+  await page.evaluate(async (url) => {
     const { svgDetailCache } = await import(url)
     const acquire = svgDetailCache.acquire.bind(svgDetailCache)
     const pending: (() => void)[] = []
@@ -299,7 +288,7 @@ test('keeps the fallback until all detail surfaces are ready without encoding PN
     HTMLCanvasElement.prototype.toBlob = () => {
       throw new Error('Detail should not encode PNGs')
     }
-  })
+  }, appModuleUrl('lib/svg-preview-cache.ts'))
   await camera(page, { x: 80, y: 60, zoom: 0.021 })
   await page.waitForFunction(
     () => (window as unknown as { pendingDetailCount: number }).pendingDetailCount >= 2
@@ -320,13 +309,7 @@ test('pauses background detail during edits even when the camera and image stay 
   await openDetailDocument(page)
   const tiles = page.locator('[data-image-detail-id="photo"]')
   await expect(tiles.first()).toBeVisible()
-  const documentUrl = await page.evaluate(() =>
-    performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/document-store.ts'))
-      .at(-1)!
-  )
+  const documentUrl = appModuleUrl('store/document-store.ts')
   await page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     useDocumentStore.getState().beginEdit()
@@ -346,12 +329,7 @@ test('pauses background detail during edits even when the camera and image stay 
 test('replaces translucent previews and detail in the same paint @webkit', async ({ page }) => {
   await openDetailDocument(page)
   await expect(page.locator('[data-image-detail-id="photo"]')).toBeVisible()
-  const states = await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/store/camera-store.ts'))
-      .at(-1)!
+  const states = await page.evaluate(async (url) => {
     const { useCameraStore } = await import(url)
     useCameraStore.getState().animateTo({ x: 80.3, y: 60.7, zoom: 0.023 }, 200)
     const states: { preview: boolean; detail: boolean }[] = []
@@ -374,7 +352,7 @@ test('replaces translucent previews and detail in the same paint @webkit', async
       requestAnimationFrame(tick)
     })
     return states
-  })
+  }, appModuleUrl('store/camera-store.ts'))
   expect(states.some((s) => s.preview && !s.detail)).toBe(true)
   expect(states.some((s) => !s.preview && s.detail)).toBe(true)
   expect(states.filter((s) => s.preview === s.detail)).toEqual([])
@@ -382,37 +360,35 @@ test('replaces translucent previews and detail in the same paint @webkit', async
 
 test('preserves translucent bitmap alpha at fractional crop edges @webkit', async ({ page }) => {
   const asset = await openDetailDocument(page)
-  const alpha = await page.evaluate(async (asset) => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((r) => r.name)
-      .filter((name) => name.includes('/src/lib/svg-image-preview.ts'))
-      .at(-1)!
-    const { createSvgImagePreview } = await import(url)
-    const root = new DOMParser().parseFromString(atob(asset.data.split(',')[1]!), 'image/svg+xml')
-    root.querySelectorAll('mask rect[fill="black"]').forEach((rect) => rect.remove())
-    const data = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
-    const detail = await createSvgImagePreview(
-      { ...asset, data },
-      2,
-      {
-        crop: { x: 0.123456789, y: 0.287654321, width: 0.006543219, height: 0.004321987 },
-        pixels: { width: 257, height: 193 }
-      },
-      undefined,
-      'canvas'
-    )
-    const canvas = detail.canvas as HTMLCanvasElement
-    const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
-    let min = 255,
-      max = 0
-    for (let i = 3; i < pixels.length; i += 4) {
-      min = Math.min(min, pixels[i]!)
-      max = Math.max(max, pixels[i]!)
-    }
-    detail.dispose()
-    return { min, max }
-  }, asset)
+  const alpha = await page.evaluate(
+    async ({ asset, url }) => {
+      const { createSvgImagePreview } = await import(url)
+      const root = new DOMParser().parseFromString(atob(asset.data.split(',')[1]!), 'image/svg+xml')
+      root.querySelectorAll('mask rect[fill="black"]').forEach((rect) => rect.remove())
+      const data = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(root))}`
+      const detail = await createSvgImagePreview(
+        { ...asset, data },
+        2,
+        {
+          crop: { x: 0.123456789, y: 0.287654321, width: 0.006543219, height: 0.004321987 },
+          pixels: { width: 257, height: 193 }
+        },
+        undefined,
+        'canvas'
+      )
+      const canvas = detail.canvas as HTMLCanvasElement
+      const pixels = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+      let min = 255,
+        max = 0
+      for (let i = 3; i < pixels.length; i += 4) {
+        min = Math.min(min, pixels[i]!)
+        max = Math.max(max, pixels[i]!)
+      }
+      detail.dispose()
+      return { min, max }
+    },
+    { asset, url: appModuleUrl('lib/svg-image-preview.ts') }
+  )
   expect(alpha.min).toBeGreaterThanOrEqual(127)
   expect(alpha.max).toBeLessThanOrEqual(128)
 })

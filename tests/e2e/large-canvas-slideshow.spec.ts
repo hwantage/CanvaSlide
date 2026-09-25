@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import type { StoreApi } from 'zustand'
 import type { Camera, CanvasDocument } from '../../src/shared/canvas/element-types'
 
@@ -116,21 +117,21 @@ for (const exitFrame of [18, 20]) {
     const world = page.getByTestId('world-layer')
     const editorHint = browserName === 'chromium' ? 'auto' : 'transform'
     await expect(world).toHaveCSS('will-change', editorHint)
-    await page.evaluate(async () => {
-      const url = (name: string) =>
-        performance
-          .getEntriesByType('resource')
-          .map((entry) => entry.name)
-          .filter((path) => path.includes(`/src/store/${name}.ts`))
-          .at(-1)!
-      const camera = (await import(url('camera-store'))).useCameraStore
-      const document = (await import(url('document-store'))).useDocumentStore
-      ;(window as unknown as TourWindow).tour = {
-        camera,
-        document,
-        original: document.getState().document
+    await page.evaluate(
+      async ({ cameraUrl, documentUrl }) => {
+        const camera = (await import(cameraUrl)).useCameraStore
+        const document = (await import(documentUrl)).useDocumentStore
+        ;(window as unknown as TourWindow).tour = {
+          camera,
+          document,
+          original: document.getState().document
+        }
+      },
+      {
+        cameraUrl: appModuleUrl('store/camera-store.ts'),
+        documentUrl: appModuleUrl('store/document-store.ts')
       }
-    })
+    )
     const editorCamera = { zoom: 0.04, x: 400, y: 100 }
     await waitForArrival(page)
     await page.evaluate((camera) => {

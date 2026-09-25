@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 // Keep native macOS Control-click from becoming a context menu in the Windows device preset.
@@ -53,31 +54,32 @@ const row = (page: Page, index: number) =>
 const selectedRows = (page: Page) => page.locator('[data-testid="frame-row"][data-current="true"]')
 
 async function state(page: Page) {
-  return page.evaluate(async () => {
-    const storeUrl = (name: string) =>
-      performance
-        .getEntriesByType('resource')
-        .map((resource) => resource.name)
-        .filter((url) => url.includes(`/src/store/${name}.ts`))
-        .at(-1)!
-    const { useDocumentStore } = await import(storeUrl('document-store'))
-    const { useCameraStore } = await import(storeUrl('camera-store'))
-    const { usePresentationStore } = await import(storeUrl('presentation-store'))
-    const doc = useDocumentStore.getState()
-    const camera = useCameraStore.getState()
-    const preview = usePresentationStore.getState()
-    return {
-      elements: doc.document.elements,
-      selectedIds: doc.selectedIds,
-      past: doc.past.length,
-      camera: camera.camera,
-      animating: camera.animationActive,
-      previewId: preview.previewFrameId,
-      previewIds: preview.previewFrameIds,
-      roll: preview.roll,
-      spotlight: preview.spotlight
+  return page.evaluate(
+    async ({ documentUrl, cameraUrl, presentationUrl }) => {
+      const { useDocumentStore } = await import(documentUrl)
+      const { useCameraStore } = await import(cameraUrl)
+      const { usePresentationStore } = await import(presentationUrl)
+      const doc = useDocumentStore.getState()
+      const camera = useCameraStore.getState()
+      const preview = usePresentationStore.getState()
+      return {
+        elements: doc.document.elements,
+        selectedIds: doc.selectedIds,
+        past: doc.past.length,
+        camera: camera.camera,
+        animating: camera.animationActive,
+        previewId: preview.previewFrameId,
+        previewIds: preview.previewFrameIds,
+        roll: preview.roll,
+        spotlight: preview.spotlight
+      }
+    },
+    {
+      documentUrl: appModuleUrl('store/document-store.ts'),
+      cameraUrl: appModuleUrl('store/camera-store.ts'),
+      presentationUrl: appModuleUrl('store/presentation-store.ts')
     }
-  })
+  )
 }
 
 async function rest(page: Page) {

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas } from './canvas-gestures'
 import {
   downloadPresentation,
@@ -515,14 +516,10 @@ test('changing app language updates labels without restarting the presentation o
   await dragOnCanvas(page, [300, 250], [500, 350])
   const path = await inkStrokes(page).first().getAttribute('d')
   await expect(presentationControls(page)).toBeHidden({ timeout: 6000 })
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .find((name) => name.includes('/src/store/language-store.ts'))!
+  await page.evaluate(async (url) => {
     const { useLanguageStore } = await import(url)
     useLanguageStore.getState().setPreference('ko')
-  })
+  }, appModuleUrl('store/language-store.ts'))
   await expect(page.getByTestId('pointer-toggle')).toHaveAttribute('aria-label', /포인터/)
   await expect(page.getByTestId('pointer-toggle')).toHaveAttribute('aria-pressed', 'true')
   await expect(inkStrokes(page).first()).toHaveAttribute('d', path!)
@@ -538,16 +535,12 @@ test('replacing a document with the same frame IDs starts a fresh annotation ses
   await page.keyboard.press('p')
   await dragOnCanvas(page, [300, 250], [500, 350])
   await expect(inkStrokes(page)).toHaveCount(1)
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .find((name) => name.includes('/src/store/document-store.ts'))!
+  await page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     const document = structuredClone(useDocumentStore.getState().document)
     document.name = 'Replacement document'
     useDocumentStore.getState().loadDocument(document, null)
-  })
+  }, appModuleUrl('store/document-store.ts'))
   await expect(inkStrokes(page)).toHaveCount(0)
   await expect(page.getByTestId('pointer-toggle')).toHaveAttribute('aria-pressed', 'false')
   await expect(page.getByTestId('presentation-counter')).toContainText('1 / 3')

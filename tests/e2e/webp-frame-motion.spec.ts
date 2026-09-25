@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import { encodeDocumentFixture } from './saved-document'
 
 const losslessWebp = 'UklGRh4AAABXRUJQVlA4TBEAAAAvAUAAEAdQy8oUuYCBiOh/AAA='
@@ -73,12 +74,7 @@ for (const [label, animated, whitespace] of [
         await image.evaluate((node: HTMLImageElement) => node.naturalWidth)
       ).toBeLessThanOrEqual(2048)
     }
-    const flight = await page.evaluate(async () => {
-      const url = performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((name) => name.includes('/src/store/camera-store.ts'))
-        .at(-1)!
+    const flight = await page.evaluate(async (url) => {
       const { useCameraStore } = await import(url)
       const sources = new Set<string>()
       const before = useCameraStore.getState().camera
@@ -99,7 +95,7 @@ for (const [label, animated, whitespace] of [
         requestAnimationFrame(sample)
       })
       return [...sources]
-    })
+    }, appModuleUrl('store/camera-store.ts'))
     expect(flight.length).toBeGreaterThan(0)
     expect(flight.every((src) => (animated ? src === data : src.startsWith('blob:')))).toBe(true)
     await expect(image).toHaveAttribute('src', animated ? data : /^blob:/)

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { appModuleUrl } from './app-module'
 import type { CanvasDocument } from '../../src/shared/canvas/element-types'
 import { primaryModifier } from './canvas-gestures'
 
@@ -19,18 +20,10 @@ for (const example of [
     await page.keyboard.press(`${await primaryModifier(page)}+Enter`)
     await expect(page.getByTestId('presentation-counter')).toContainText(`1 / ${example.frames}`)
     const report = await page.evaluate(
-      async ({ frameCount, animatedImage }) => {
-        const module = async (part: string) =>
-          import(
-            performance
-              .getEntriesByType('resource')
-              .map((r) => r.name)
-              .filter((name) => name.includes(part))
-              .at(-1)!
-          )
-        const { useCameraStore } = await module('/src/store/camera-store.ts')
-        const { useDocumentStore } = await module('/src/store/document-store.ts')
-        const { usePresentationStore } = await module('/src/store/presentation-store.ts')
+      async ({ frameCount, animatedImage, cameraUrl, documentUrl, presentationUrl }) => {
+        const { useCameraStore } = await import(cameraUrl)
+        const { useDocumentStore } = await import(documentUrl)
+        const { usePresentationStore } = await import(presentationUrl)
         const original = useDocumentStore.getState().document as CanvasDocument
         const photos = Object.values(original.elements)
           .filter((element) => {
@@ -118,7 +111,13 @@ for (const example of [
                 ?.src === original.assets[animatedElement.assetId]!.data)
         }
       },
-      { frameCount: example.frames, animatedImage: example.animatedImage }
+      {
+        frameCount: example.frames,
+        animatedImage: example.animatedImage,
+        cameraUrl: appModuleUrl('store/camera-store.ts'),
+        documentUrl: appModuleUrl('store/document-store.ts'),
+        presentationUrl: appModuleUrl('store/presentation-store.ts')
+      }
     )
     await testInfo.attach(`${example.id} photo frame flights`, {
       body: JSON.stringify(report, null, 2),

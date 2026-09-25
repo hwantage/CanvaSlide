@@ -1,3 +1,4 @@
+import { appModuleUrl } from './app-module'
 import { encodeDocumentFixture } from './saved-document'
 import { expect, test, type Page } from '@playwright/test'
 import type { StoreApi } from 'zustand'
@@ -93,19 +94,19 @@ async function openDeck(page: Page, dense: boolean) {
 }
 
 async function bindStores(page: Page) {
-  await page.evaluate(async () => {
-    const url = (name: string) =>
-      performance
-        .getEntriesByType('resource')
-        .map((r) => r.name)
-        .filter((path) => path.includes(`/src/store/${name}.ts`))
-        .at(-1)!
-    const w = window as unknown as ReflowWindow
-    w.reflow = {
-      camera: (await import(url('camera-store'))).useCameraStore,
-      presentation: (await import(url('presentation-store'))).usePresentationStore
+  await page.evaluate(
+    async ({ cameraUrl, presentationUrl }) => {
+      const w = window as unknown as ReflowWindow
+      w.reflow = {
+        camera: (await import(cameraUrl)).useCameraStore,
+        presentation: (await import(presentationUrl)).usePresentationStore
+      }
+    },
+    {
+      cameraUrl: appModuleUrl('store/camera-store.ts'),
+      presentationUrl: appModuleUrl('store/presentation-store.ts')
     }
-  })
+  )
 }
 
 const measureLines = (page: Page) =>

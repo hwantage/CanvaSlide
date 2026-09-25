@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { insertElements } from '../../src/shared/canvas/document-mutations'
 import { createEmptyDocument, type FrameElement } from '../../src/shared/canvas/element-types'
+import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
 
 async function expectSlides(page: Page, names: number[]) {
@@ -29,15 +30,17 @@ test('marquee copy and paste retain slide order when frame paint order is revers
   await page.goto('/')
   await page.getByTestId('canvas-viewport').waitFor()
   await page.evaluate(
-    async (doc) => {
-      const docUrl = '/src/store/document-store.ts'
-      const cameraUrl = '/src/store/camera-store.ts'
+    async ({ doc, docUrl, cameraUrl }) => {
       const { useDocumentStore } = await import(docUrl)
       const { useCameraStore } = await import(cameraUrl)
       useDocumentStore.getState().loadDocument(doc, null)
       useCameraStore.getState().setCamera({ x: 0, y: 0, zoom: 1 })
     },
-    insertElements(createEmptyDocument(), frames)
+    {
+      doc: insertElements(createEmptyDocument(), frames),
+      docUrl: appModuleUrl('store/document-store.ts'),
+      cameraUrl: appModuleUrl('store/camera-store.ts')
+    }
   )
   await expectSlides(page, [1, 2, 3])
   await dragOnCanvas(page, [90, 100], [1000, 390])

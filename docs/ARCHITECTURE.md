@@ -39,6 +39,14 @@ This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`).
   pre-edit state. The saved document baseline lets undo return to an unmodified state; camera and
   selection changes do not represent content edits. `savedDocument` is `null` for work restored from
   a crash, where nothing on disk matches it — see [crash recovery](./CRASH-RECOVERY.md).
+- Every replacement of the open document (New, Open, a file the OS hands over, Restore, a share or
+  example link) goes through [`replaceDocument`](../src/renderer/src/lib/document-replacement.ts).
+  It refuses while an edit gesture is in progress, guards unsaved work, cancels if authored content
+  or the session changes while it waits, leaves presentation, loads, closes and clears launch links
+  that no longer name the document and places the camera. Commands and Restore ask before
+  discarding unsaved work; a link refuses and keeps it, since nobody chose to replace it in this
+  window. Restore returns to the camera its recovery copy recorded; everything else fits the board.
+  A slideshow-only link loads once the editor has unmounted.
 - Shapes, text and images may carry `rotation`: degrees clockwise about the centre of their unrotated
   `x`/`y`/`width`/`height` box. Every renderer applies it as a CSS `rotate()` about that centre.
   Code that measures position on the canvas (selection, snapping, alignment, frame contents, fitting)

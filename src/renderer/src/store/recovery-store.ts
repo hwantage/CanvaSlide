@@ -12,7 +12,6 @@ import {
   type RecoverySnapshotMeta
 } from '@shared/canvas/recovery-snapshot'
 import type { CanvasDocument } from '@shared/canvas/element-types'
-import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import {
   canOwnSessions,
   clearOwnRecoverySnapshot,
@@ -27,10 +26,8 @@ import {
   type RecoveryWriteFailure
 } from '@/platform/recovery-storage'
 import { claimSession, releaseRecoverySession } from '@/platform/recovery-session'
-import { confirmDiscardChanges } from '@/platform/document-file-access'
-import { useCameraStore } from './camera-store'
-import { useDocumentStore, watchDocumentChanges } from './document-store'
-import { useExampleStore } from './example-store'
+import { loadReplacement, replaceDocument } from '@/lib/document-replacement'
+import { useDocumentStore } from './document-store'
 
 const STORAGE_KEY = 'canvaslide.recovery'
 export type RecoveryStatus = 'off' | 'unsupported' | 'idle' | 'saved' | RecoveryWriteFailure
@@ -249,53 +246,48 @@ export function createRecoveryStore() {
           return
         }
         const adopted = get().adopted
-        let changed = false
-        // Content, not identity: a text remeasurement (e.g. a web font loading) must not cancel it.
-        const unwatch = watchDocumentChanges(() => {
-          changed = true
-        })
         set({ busy: true, error: null })
         try {
-          if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
+          const outcome = await replaceDocument({
+            onDirty: 'ask',
+            read: async () => {
+              const decoded = await readRecoveryDocument(offer.sessionId)
+              if (!decoded.result.ok || !decoded.snapshot) {
+                set((s) => ({
+                  offers: s.offers.map((entry) =>
+                    entry.sessionId === offer.sessionId
+                      ? { sessionId: entry.sessionId, quarantined: true, version: null }
+                      : entry
+                  )
+                }))
+                return null
+              }
+              return {
+                document: decoded.result.document,
+                filePath: snapshotFilePath(decoded.snapshot.file)
+              }
+            },
+            load: (opened) => {
+              // Why the saved camera: a recovery copy records the view from when it was last written.
+              loadReplacement(opened, { camera: 'saved', recovered: true })
+              set((s) => ({
+                offers: s.offers.filter((entry) => entry.sessionId !== offer.sessionId),
+                prompting: false,
+                batchRemaining: 0,
+                adopted: offer.sessionId
+              }))
+            }
+          })
+          if (outcome === 'declined' || outcome === 'refused' || outcome === 'changed') {
             get().deferOffers()
             return
           }
-          const decoded = await readRecoveryDocument(offer.sessionId)
-          if (!decoded.result.ok || !decoded.snapshot) {
-            set((s) => ({
-              offers: s.offers.map((entry) =>
-                entry.sessionId === offer.sessionId
-                  ? { sessionId: entry.sessionId, quarantined: true, version: null }
-                  : entry
-              )
-            }))
-            return
-          }
-          if (changed) {
-            get().deferOffers()
-            return
-          }
-          unwatch()
-          const document = decoded.result.document
-          useExampleStore.getState().hide()
-          useDocumentStore
-            .getState()
-            .restoreDocument(document, snapshotFilePath(decoded.snapshot.file))
-          const camera = useCameraStore.getState()
-          camera.setCamera(document.camera ?? cameraForOpenedDocument(document, camera.viewport))
-          set((s) => ({
-            offers: s.offers.filter((entry) => entry.sessionId !== offer.sessionId),
-            prompting: false,
-            batchRemaining: 0,
-            adopted: offer.sessionId
-          }))
-          if (adopted !== null && adopted !== offer.sessionId) {
+          if (outcome === 'replaced' && adopted !== null && adopted !== offer.sessionId) {
             await enqueue(() => remove(adopted))
           }
         } catch (error) {
           fail(error)
         } finally {
-          unwatch()
           set({ busy: false })
         }
       },

@@ -18,7 +18,7 @@ vi.mock('@/platform/document-file-access', () => ({
 beforeEach(() => {
   vi.resetAllMocks()
   vi.mocked(confirmDiscardChanges).mockResolvedValue(true)
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
 })
 afterEach(cleanup)
 
@@ -91,8 +91,6 @@ it.each(['typing', 'drag'])(
       height: 10,
       textStyle: defaultTextStyle
     })
-    store.beginEdit()
-    store.patchElements(['text'], { text: 'First input', x: 10 }, false)
     let finish!: (opened: OpenedDocument) => void
     vi.mocked(openDocumentFile).mockImplementationOnce(
       () =>
@@ -106,6 +104,10 @@ it.each(['typing', 'drag'])(
       opening = result.current.openDocument()
     })
     expect(openDocumentFile).toHaveBeenCalledTimes(1)
+    act(() => {
+      store.beginEdit()
+      store.patchElements(['text'], { text: 'First input', x: 10 }, false)
+    })
     const before = useDocumentStore.getState()
     act(() =>
       store.patchElements(
@@ -123,6 +125,24 @@ it.each(['typing', 'drag'])(
       await opening
     })
     expect(useDocumentStore.getState().document).toBe(current.document)
+  }
+)
+
+it.each(['clean', 'unsaved'])(
+  'neither asks nor opens while an edit gesture is in progress in %s work',
+  async (state) => {
+    const store = useDocumentStore.getState()
+    if (state === 'unsaved') {
+      store.renameDocument('Unsaved')
+    }
+    store.beginEdit()
+    const current = useDocumentStore.getState().document
+    const { result } = renderHook(useDocumentCommands)
+    await act(() => result.current.openDocument())
+    await act(() => result.current.newDocument())
+    expect(confirmDiscardChanges).not.toHaveBeenCalled()
+    expect(openDocumentFile).not.toHaveBeenCalled()
+    expect(useDocumentStore.getState().document).toBe(current)
   }
 )
 

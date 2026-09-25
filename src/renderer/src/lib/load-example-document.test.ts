@@ -56,7 +56,7 @@ it.each(['edit', 'undo', 'open', 'begin-edit', 'cancel'] as const)(
       useDocumentStore.getState().undo()
     }
     if (action === 'open') {
-      store.newDocument()
+      store.loadDocument(createEmptyDocument(), null)
     }
     if (action === 'begin-edit') {
       store.beginEdit()
@@ -70,6 +70,22 @@ it.each(['edit', 'undo', 'open', 'begin-edit', 'cancel'] as const)(
     expect(useDocumentStore.getState().document).toBe(current)
   }
 )
+
+it('loads after an edit gesture that ended without changing anything', async () => {
+  let finish!: (document: CanvasDocument) => void
+  vi.mocked(fetchExampleDocument).mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve
+      })
+  )
+  const task = loadExampleDocument('flowchart', new AbortController().signal)
+  useDocumentStore.getState().beginEdit()
+  useDocumentStore.getState().endEdit()
+  finish(document)
+  await task
+  expect(useDocumentStore.getState().document).toBe(document)
+})
 
 it('refuses a retry over unsaved work', async () => {
   useDocumentStore.getState().renameDocument('Unsaved')

@@ -77,14 +77,14 @@ it('drops a late native read after the DOM paste owns the gesture or the documen
   await pending
   expect(useDocumentStore.getState().document.order).toHaveLength(1)
   vi.mocked(readNativeClipboardText).mockImplementationOnce(async () => {
-    useDocumentStore.getState().newDocument()
+    useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     return 'https://vimeo.com/76979871'
   })
   await pasteFromSystemClipboard()
   expect(useDocumentStore.getState().document.order).toHaveLength(0)
 })
 
-it.each(['new', 'open', 'superseded', 'current'] as const)(
+it.each(['open', 'superseded', 'current'] as const)(
   'rechecks a decoded native image before insertion when the paste is %s',
   async (action) => {
     let resolve!: (image: { src: string; width: number; height: number }) => void
@@ -99,9 +99,7 @@ it.each(['new', 'open', 'superseded', 'current'] as const)(
     let valid = true
     const pending = pasteFromSystemClipboard(undefined, null, () => valid)
     await vi.waitFor(() => expect(decodeImageFile).toHaveBeenCalledOnce())
-    if (action === 'new') {
-      useDocumentStore.getState().newDocument()
-    } else if (action === 'open') {
+    if (action === 'open') {
       useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     } else if (action === 'superseded') {
       valid = false
@@ -155,7 +153,7 @@ it.each(['resize', 'undo', 'new'] as const)(
     } else if (action === 'undo') {
       state.undo()
     } else {
-      state.newDocument()
+      state.loadDocument(createEmptyDocument(), null)
     }
     const expected = useDocumentStore.getState().document
     resolve(9 / 16)

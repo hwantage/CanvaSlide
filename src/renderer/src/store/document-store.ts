@@ -59,7 +59,6 @@ export type DocumentActions = {
   loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
   /** Loads a crash-recovery snapshot: the work is unsaved until the author writes it out. */
   restoreDocument: (document: CanvasDocument, filePath: FilePath | null) => void
-  newDocument: () => void
   takeSaveSnapshot: () => SaveSnapshot
   /** Applies a finished save: path + baseline, preserving any content that differs from the saved snapshot. */
   completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
@@ -180,7 +179,6 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
     // every store update, and a single clean frame would tell it this work is saved and make it
     // delete the very copy it was restored from.
     restoreDocument: (document, filePath) => replace(document, filePath, true),
-    newDocument: () => get().loadDocument(createEmptyDocument(), null),
     takeSaveSnapshot: () => ({
       document: get().document,
       session: get().session

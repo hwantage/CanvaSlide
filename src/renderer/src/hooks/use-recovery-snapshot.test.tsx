@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { act, cleanup, renderHook } from '@testing-library/react'
+import { createEmptyDocument } from '@shared/canvas/element-types'
 import { useRecoverySnapshot } from './use-recovery-snapshot'
 import { useDocumentStore } from '@/store/document-store'
 import { useRecoveryStore } from '@/store/recovery-store'
@@ -39,7 +40,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'performance'] })
   vi.setSystemTime(100_000)
   vi.clearAllMocks()
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   useRecoveryStore.setState(useRecoveryStore.getInitialState())
   vi.mocked(canOwnSessions).mockReturnValue(true)
   vi.mocked(readRecoverySnapshots).mockResolvedValue(empty)
@@ -207,7 +208,7 @@ describe('recovery scheduling lifecycle', () => {
     await advance(0)
     edit()
     await advance(5_000)
-    await act(async () => useDocumentStore.getState().newDocument())
+    await act(async () => useDocumentStore.getState().loadDocument(createEmptyDocument(), null))
     expect(clearOwnRecoverySnapshot).toHaveBeenCalledTimes(1)
     expect(useRecoveryStore.getState().stored).toBe(false)
   })

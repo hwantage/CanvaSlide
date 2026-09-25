@@ -56,7 +56,7 @@ const contents = serializeDocument({ ...createEmptyDocument(), name: '' })
 
 beforeEach(() => {
   vi.clearAllMocks()
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   listen.mockResolvedValue(() => {})
   invoke.mockImplementation((command: string, args?: { path?: FilePath }) => {
     if (command === 'read_document') {

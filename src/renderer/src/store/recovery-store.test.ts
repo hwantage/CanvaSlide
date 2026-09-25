@@ -13,7 +13,9 @@ import {
 } from '@/platform/recovery-storage'
 import { claimSession, releaseRecoverySession } from '@/platform/recovery-session'
 import { confirmDiscardChanges } from '@/platform/document-file-access'
+import { useCameraStore } from './camera-store'
 import { useDocumentStore } from './document-store'
+import { usePresentationStore } from './presentation-store'
 import { createRecoveryStore } from './recovery-store'
 
 vi.mock('@/platform/document-file-access', () => ({ confirmDiscardChanges: vi.fn() }))
@@ -67,7 +69,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
   store = createRecoveryStore()
-  useDocumentStore.getState().newDocument()
+  useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   vi.mocked(canOwnSessions).mockReturnValue(true)
   vi.mocked(claimSession).mockResolvedValue(true)
   vi.mocked(releaseRecoverySession).mockResolvedValue()
@@ -225,6 +227,24 @@ describe('answering offers', () => {
     expect(store.getState().offers.map((s) => s.sessionId)).toEqual(['a'])
     expect(clearRecoverySnapshots).not.toHaveBeenCalled()
   })
+  it("ends a frame preview, drops a share link and returns to the copy's camera", async () => {
+    const camera = { x: 120, y: -40, zoom: 2 }
+    vi.mocked(readRecoveryDocument).mockResolvedValue({
+      ...decoded('b'),
+      result: { ok: true, document: { ...createEmptyDocument('b'), camera } }
+    })
+    window.history.replaceState(null, '', '/?lang=en&share=abc')
+    usePresentationStore.setState({
+      active: true,
+      previewFrameId: 'frame',
+      cameraBeforeStart: null
+    })
+    await store.getState().restoreOffer()
+    expect(useDocumentStore.getState().document.name).toBe('b')
+    expect(usePresentationStore.getState().active).toBe(false)
+    expect(window.location.search).toBe('?lang=en')
+    expect(useCameraStore.getState().camera).toEqual(camera)
+  })
   it('keeps restored work dirty after an edit is undone', async () => {
     await store.getState().restoreOffer()
     useDocumentStore.getState().renameDocument('changed')
@@ -268,7 +288,7 @@ describe('answering offers', () => {
     const first = save()
     await Promise.resolve()
     const stale = save()
-    useDocumentStore.getState().newDocument()
+    useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     pending.resolve()
     await Promise.all([first, stale])
     expect(writeRecoverySnapshot).toHaveBeenCalledTimes(1)
@@ -294,6 +314,32 @@ describe('answering offers', () => {
     await restore
     expect(useDocumentStore.getState().document.name).toBe('new work')
     expect(store.getState().offers).toHaveLength(2)
+    expect(store.getState().prompting).toBe(false)
+  })
+  it('does not read a copy after the document changed during the discard confirmation', async () => {
+    useDocumentStore.getState().renameDocument('Unsaved')
+    const answer = deferred<boolean>()
+    vi.mocked(confirmDiscardChanges).mockReturnValue(answer.promise)
+    const restore = store.getState().restoreOffer()
+    useDocumentStore.getState().renameDocument('Still mine')
+    answer.resolve(true)
+    await restore
+    expect(readRecoveryDocument).not.toHaveBeenCalled()
+    expect(useDocumentStore.getState().document.name).toBe('Still mine')
+    expect(store.getState().prompting).toBe(false)
+  })
+  it('keeps the adopted copy when the next copy turns out to be malformed', async () => {
+    await store.getState().restoreOffer()
+    store.getState().reviewOffers()
+    vi.mocked(readRecoveryDocument).mockResolvedValue({
+      kind: 'decoded-recovery',
+      result: { ok: false, error: 'invalid' },
+      snapshot: null
+    })
+    await store.getState().restoreOffer()
+    expect(store.getState().offers[0]).toMatchObject({ sessionId: 'a', quarantined: true })
+    expect(store.getState().adopted).toBe('b')
+    expect(clearRecoverySnapshots).not.toHaveBeenCalled()
   })
   it('is not canceled by a text remeasurement during asynchronous Restore', async () => {
     const text = {

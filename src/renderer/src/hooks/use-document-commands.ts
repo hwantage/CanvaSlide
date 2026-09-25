@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { createEmptyDocument } from '@shared/canvas/element-types'
-import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import {
-  confirmDiscardChanges,
   openDocumentAtPath,
   openDocumentFile,
   reportError,
@@ -11,11 +9,9 @@ import {
 } from '@/platform/document-file-access'
 import type { FilePath } from '@/platform/file-path'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
-import { clearShareQuery } from '@/platform/cloud-share'
-import { useExampleStore } from '@/store/example-store'
+import { replaceDocument } from '@/lib/document-replacement'
 import { useCameraStore } from '@/store/camera-store'
-import { useDocumentStore, watchDocumentChanges } from '@/store/document-store'
-import { usePresentationStore } from '@/store/presentation-store'
+import { useDocumentStore } from '@/store/document-store'
 
 export type DocumentCommands = {
   newDocument: () => Promise<void>
@@ -34,33 +30,10 @@ async function guarded(action: () => Promise<void>): Promise<void> {
   }
 }
 
-// Why: every document replacement must confirm edits and leave presentation before loading.
-async function replaceWith(read: () => Promise<OpenedDocument | null>): Promise<void> {
-  let changed = false
-  const unsubscribe = watchDocumentChanges(() => {
-    changed = true
+function replaceWith(read: () => Promise<OpenedDocument | null>): Promise<void> {
+  return guarded(async () => {
+    await replaceDocument({ read, onDirty: 'ask', load: { camera: 'fit' } })
   })
-  try {
-    if (useDocumentStore.getState().dirty && !(await confirmDiscardChanges())) {
-      return
-    }
-    if (changed) {
-      return
-    }
-    const opened = await read()
-    if (!opened || changed) {
-      return
-    }
-    usePresentationStore.getState().exit()
-    useDocumentStore.getState().loadDocument(opened.document, opened.filePath)
-    clearShareQuery()
-    useExampleStore.getState().hide()
-    // Why: the saved camera may point at empty space; show the whole board instead.
-    const camera = useCameraStore.getState()
-    camera.setCamera(cameraForOpenedDocument(opened.document, camera.viewport))
-  } finally {
-    unsubscribe()
-  }
 }
 
 // Saves share a queue across hook instances so slow compression cannot overwrite a newer save.
@@ -92,12 +65,9 @@ export function useDocumentCommands(): DocumentCommands {
       saveDocument: () => save(false),
       saveDocumentAs: () => save(true),
       newDocument: () =>
-        guarded(() =>
-          replaceWith(async () => ({ document: createEmptyDocument(), filePath: null }))
-        ),
-      openDocument: () => guarded(() => replaceWith(openDocumentFile)),
-      openDocumentPath: (path: FilePath) =>
-        guarded(() => replaceWith(() => openDocumentAtPath(path)))
+        replaceWith(async () => ({ document: createEmptyDocument(), filePath: null })),
+      openDocument: () => replaceWith(openDocumentFile),
+      openDocumentPath: (path: FilePath) => replaceWith(() => openDocumentAtPath(path))
     }),
     [save]
   )

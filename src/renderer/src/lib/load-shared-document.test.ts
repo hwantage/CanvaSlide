@@ -1,4 +1,8 @@
-import { createEmptyDocument, type CanvasDocument } from '@shared/canvas/element-types'
+import {
+  createEmptyDocument,
+  defaultTextStyle,
+  type CanvasDocument
+} from '@shared/canvas/element-types'
 import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import { fetchCloudShare } from '@/platform/cloud-share'
 import { useCameraStore } from '@/store/camera-store'
@@ -100,6 +104,34 @@ it.each(['edit', 'open', 'cancel'] as const)(
     expect(useDocumentStore.getState().document).toBe(current)
   }
 )
+
+it('is not cancelled by a text remeasurement during the download', async () => {
+  const current = createEmptyDocument('Current')
+  current.order = ['text']
+  current.elements.text = {
+    id: 'text',
+    type: 'text',
+    text: 'Hello',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 10,
+    textStyle: defaultTextStyle
+  }
+  useDocumentStore.getState().loadDocument(current, null)
+  let finish!: (value: SharedSnapshot) => void
+  vi.mocked(fetchCloudShare).mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve
+      })
+  )
+  const task = loadSharedDocument(id, new AbortController().signal)
+  useDocumentStore.getState().syncTextHeight('text', 200)
+  finish({ access: 'edit', document })
+  await expect(task).resolves.toEqual({ access: 'edit', document })
+  expect(useDocumentStore.getState().document).toBe(document)
+})
 
 it('refuses to replace unsaved work when retrying a link', async () => {
   useDocumentStore.getState().renameDocument('Unsaved')

@@ -1,35 +1,27 @@
 import { CloudShareError, type SharedSnapshot } from '@shared/cloud-share'
-import { cameraForOpenedDocument } from '@shared/canvas/frame-fit'
 import { fetchCloudShare } from '@/platform/cloud-share'
-import { useCameraStore } from '@/store/camera-store'
-import { useDocumentStore } from '@/store/document-store'
-import { usePresentationStore } from '@/store/presentation-store'
+import { loadReplacement, replaceDocument } from './document-replacement'
 
 export async function loadSharedDocument(
   id: string,
   signal: AbortSignal
 ): Promise<SharedSnapshot | null> {
-  const before = useDocumentStore.getState()
-  if (before.dirty || before.editBaseline) {
+  let snapshot = null as SharedSnapshot | null
+  const outcome = await replaceDocument({
+    onDirty: 'refuse',
+    read: async () => {
+      snapshot = await fetchCloudShare(id, signal)
+      return signal.aborted ? null : { document: snapshot.document, filePath: null }
+    },
+    load: (opened) => {
+      // The presentation document enters its store only after the editor and its input hooks unmount.
+      if (snapshot?.access !== 'present') {
+        loadReplacement(opened, { camera: 'fit', keepLink: true })
+      }
+    }
+  })
+  if (outcome === 'refused' || outcome === 'changed') {
     throw new CloudShareError('changed')
   }
-  const snapshot = await fetchCloudShare(id, signal)
-  if (signal.aborted) {
-    return null
-  }
-  const current = useDocumentStore.getState()
-  // A late response must never replace a file opened or edited while the request was pending.
-  if (current.session !== before.session || current.document !== before.document) {
-    throw new CloudShareError('changed')
-  }
-  // The presentation document enters its store only after the editor and its input hooks unmount.
-  if (snapshot.access === 'present') {
-    return snapshot
-  }
-  const { document } = snapshot
-  usePresentationStore.getState().exit()
-  current.loadDocument(document, null)
-  const camera = useCameraStore.getState()
-  camera.setCamera(cameraForOpenedDocument(document, camera.viewport))
-  return snapshot
+  return outcome === 'replaced' ? snapshot : null
 }

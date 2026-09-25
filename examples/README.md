@@ -41,15 +41,9 @@ closing or reloading. Refreshing the example link opens its original again. Arbi
 are not accepted in `example`. The [website guide](../website/README.md#editable-showcase-catalog)
 explains catalog additions, preview generation, deployment outputs, and file-size validation.
 
-`showcase/freefall.canvaslide` contains ten frames, embedded photographs, SVG masks, and animated
-fireworks. It is served directly as a current-format document; no extraction is needed. When changing
-embedded image formats, verify camera-motion previews as well as file size and visual fidelity.
-
-`anatomy/inside.canvaslide` contains 13 frames and embedded anatomical artwork. Its current-format
-JSON retains all nine PNG photographs with lossless recompression. It stays within the
-[hosting file-size limit](../website/README.md#editable-showcase-catalog) without reducing image
-dimensions or changing the canvas layout, and keeps the masked photo preview path available. Initial
-high-resolution detail rendering can still take time.
+`showcase/freefall.canvaslide` and `anatomy/inside.canvaslide` embed their photographs as lossy WebP,
+most of them inside masked SVG wrappers. Replace one with a still WebP, PNG or JPEG so camera-motion
+previews keep working, and compare the reopened presentation with the original.
 
 ## Editing a sample
 
@@ -60,11 +54,14 @@ sync. Two things to check before committing an edit:
   saving in the app. Review its file diff and reopened presentation when editing a sample.
 - **File size.** Images are stored once in the JSON's shared `resources` table. SVG text remains
   readable and references shared image data. Keep raster artwork small; it still affects file
-  size, runtime memory and HTML exports.
+  size, runtime memory and HTML exports. Encode photographs as lossy WebP (for example
+  `cwebp -q 90 -m 6 -sharp_yuv`) no larger than a frame shows them. Replaced images stay in Git
+  history, so each sample must stay within 8 MiB.
 
 `pnpm test` runs `examples.test.ts`, which parses every `.canvaslide` here with the app's own
-`parseDocumentFile` and checks that frames and attached connector endpoints are intact. It also
-validates the complete JSON example below and its save/open round trip against the current loader.
+`parseDocumentFile`, checks the 8 MiB size budget and that frames and attached connector endpoints are
+intact. It also validates the complete JSON example below and its save/open round trip against the
+current loader.
 
 ## Authoring with AI
 

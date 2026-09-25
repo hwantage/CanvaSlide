@@ -9,6 +9,8 @@ import {
 import { orderedFrames } from '../src/shared/canvas/presentation-sequence.ts'
 
 const examplesDir = import.meta.dirname
+// Replaced images stay in Git history, so keep each sample far below the 25 MiB hosting limit.
+const MAX_SAMPLE_BYTES = 8 * 1024 * 1024
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
@@ -27,6 +29,10 @@ describe('examples/*.canvaslide', () => {
 
   it('ships at least five samples', () => {
     expect(files.length).toBeGreaterThanOrEqual(5)
+  })
+
+  it.each(files)('%s stays within the sample size budget', (file) => {
+    expect(statSync(file).size).toBeLessThanOrEqual(MAX_SAMPLE_BYTES)
   })
 
   it.each(files)('%s parses and has frames to present', (file) => {

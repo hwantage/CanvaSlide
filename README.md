@@ -144,4 +144,18 @@ Report security vulnerabilities privately as described in the [security policy](
 
 ## License
 
-[MIT](./LICENSE)
+CanvaSlide's source code and documentation are released under the [MIT License](./LICENSE).
+
+The MIT License does not cover the CanvaSlide name, logo or mascot artwork, and grants no right to
+use them: the app icons in `src-tauri/icons/`, `src/renderer/src/assets/canvaslide-light.png`, and
+in `website/public/` the images `brand/canvaslide-*.png`, `brand/ray-master.png`,
+`brand/wing-smile-*.png`, `favicon.ico`, `apple-touch-icon.png`, `og.png` and
+`images/canvaslide-showcase.webp`.
+
+The GitHub mark (`website/public/brand/github-mark-*.svg` and the icon in
+`src/renderer/src/components/ui/github-icon.tsx`) is a trademark of GitHub, Inc. It is not covered
+by the MIT License and is used only to link to this repository.
+
+Third-party software keeps its own license. Every build lists what it includes, with the license
+texts, in `THIRD-PARTY-NOTICES.txt`: the app shows it under **About CanvaSlide** → **Third-party notices**, and the
+website links it from its footer.

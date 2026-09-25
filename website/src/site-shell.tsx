@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ArrowUp, Menu, Moon, Sun, X } from 'lucide-react'
+import { THIRD_PARTY_NOTICES_FILE } from '@shared/third-party-notices'
 import { t } from './i18n/site-strings'
 import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 
@@ -147,6 +148,7 @@ export function SiteShell({
           <a href={`${repositoryUrl}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
             {t('site.footer.licenseLink')}
           </a>
+          <a href={asset(THIRD_PARTY_NOTICES_FILE)}>{t('site.footer.thirdPartyNotices')}</a>
         </nav>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} CanvaSlide</span>

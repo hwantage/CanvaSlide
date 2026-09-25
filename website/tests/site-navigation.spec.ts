@@ -112,3 +112,18 @@ for (const theme of ['light', 'dark'] as const) {
     expect(artworkPixels).toBeGreaterThan(500)
   })
 }
+
+test('the footer links the third-party notices this build ships', async ({ page }) => {
+  await page.goto('./?lang=ko')
+  const link = page
+    .locator('.site-footer')
+    .getByRole('link', { name: '타사 고지 사항', exact: true })
+  await expect(link).toHaveAttribute('href', '/CanvaSlide/THIRD-PARTY-NOTICES.txt')
+  const response = await page.request.get(await link.evaluate((a: HTMLAnchorElement) => a.href))
+  expect(response.headers()['content-type']).toMatch(/^text\/plain/)
+  const notices = await response.text()
+  for (const bundled of ['react', 'react-dom', 'lucide-react', 'vite', 'rolldown', 'tailwindcss']) {
+    expect(notices).toMatch(new RegExp(`^${bundled} \\d+\\.\\d+\\.\\d+ \\(`, 'm'))
+  }
+  expect(notices).not.toContain('Rust crates')
+})

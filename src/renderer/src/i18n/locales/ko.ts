@@ -463,6 +463,10 @@ export const ko: UiStrings = {
   'help.title': '키보드 단축키',
   'about.title': '{app} 정보',
   'about.releaseNotes': '릴리스 노트',
+  'about.thirdPartyNotices': '타사 고지 사항',
+  'about.thirdPartyNoticesLoading': '불러오는 중…',
+  'about.thirdPartyNoticesError':
+    '타사 고지 사항을 불러오지 못했습니다. 닫았다가 다시 열어 보세요.',
   'about.repository': '{host} 저장소 열기',
   'about.repositoryError': '저장소를 열지 못했습니다: {message}',
   'help.tools': '도구',

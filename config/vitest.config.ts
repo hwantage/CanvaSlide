@@ -15,6 +15,7 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: [resolve(import.meta.dirname, 'vitest.setup.ts')],
     include: [
+      'config/**/*.test.ts',
       'src/**/*.test.ts',
       'src/**/*.test.tsx',
       'examples/**/*.test.ts',

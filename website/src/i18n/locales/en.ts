@@ -464,6 +464,7 @@ export const en = {
   'site.footer.license': 'Free, open source, and made to explore.',
   'site.footer.issues': 'Feedback & issues',
   'site.footer.licenseLink': 'License',
+  'site.footer.thirdPartyNotices': 'Third-party notices',
   'site.footer.top': 'Back to top',
   'site.meta.home': '{product} — Your ideas. Room to fly.',
   'site.meta.description':

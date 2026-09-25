@@ -457,6 +457,7 @@ export const ko: SiteStrings = {
   'site.footer.license': '무료 오픈 소스, 자유롭게 펼치는 생각.',
   'site.footer.issues': '의견과 문제 제보',
   'site.footer.licenseLink': '라이선스',
+  'site.footer.thirdPartyNotices': '타사 고지 사항',
   'site.footer.top': '맨 위로',
   'site.meta.home': '{product} — 당신의 생각에, 날아갈 공간을.',
   'site.meta.description':

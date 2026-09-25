@@ -72,7 +72,8 @@ export const inkStrokes = (page: Page) => page.getByTestId('presentation-ink').l
 
 export async function revealControls(page: Page) {
   await page.mouse.move(10, page.viewportSize()!.height - 4)
-  await expect(presentationControls(page)).toBeVisible()
+  // Why: a bar still sliding in counts as visible, and hovering it then scrolls the whole viewport.
+  await expect(presentationControls(page)).toBeInViewport({ ratio: 1 })
 }
 
 // Why: the controls hide after an idle pause, which a slow host can spend before the first check.

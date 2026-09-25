@@ -10,9 +10,9 @@ contributors and coding agents alike. How to propose, name and submit a change i
 
 - `src/shared/canvas/` — pure domain logic: geometry, document transforms and validation, connectors,
   imports, camera math and presentation policy. No React, no Tauri; the app and the HTML player share it.
-- `src/shared/presentation/` — slideshow controls, input, ink painter and CSS shared by the editor
-  slideshow, cloud viewer and HTML player. `src/shared/media/` — linked-video players and provider
-  bridges. Neither depends on React, Zustand, Tauri, renderer code or app localization.
+- `src/shared/presentation/` — slideshow navigation, controls, input, ink painter and CSS shared by
+  the editor slideshow, cloud viewer and HTML player. `src/shared/media/` — linked-video players and
+  provider bridges. Neither depends on React, Zustand, Tauri, renderer code or app localization.
 - `src/renderer/src/` — React app. `store/` (zustand), `hooks/`, `components/{canvas,toolbar,panels,ui}`,
   `lib/` (browser-side helpers and workers), `platform/` (Tauri ↔ browser fallbacks), `i18n/`.
 - `src/player/` — vanilla standalone player inlined into HTML exports; built by `pnpm build:player` into
@@ -90,7 +90,8 @@ viewer and newly exported HTML all support it. The mechanism is described in
   hidden controls keep no focus, and compact layouts keep the tools reachable.
 - Intended host differences: the app uses its localized labels and appearance preference; HTML stays
   English and light, and never follows the author's or viewer's theme. Return-to-editor controls exist
-  only where an editor does. These differences never justify omitting a tool from HTML.
+  only where an editor does. HTML opens on its first frame instead of flying there, and shows a board
+  without frames. These differences never justify omitting a tool from HTML.
 - Test both hosts with the same scenarios: the app and an actual exported HTML opened locally, covering
   focus and auto-hide, reduced motion, narrow viewports, ink lifecycle, navigation and input conflicts,
   with core input in Chromium, Firefox and WebKit.

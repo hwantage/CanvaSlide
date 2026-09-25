@@ -4,18 +4,19 @@ import { worldLayerCssTransform } from '@shared/canvas/camera-transform'
 import { zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'
 import { contentBounds } from '@shared/canvas/element-bounds'
 import type { Camera, CanvasDocument, Size } from '@shared/canvas/element-types'
-import { cameraForOverview, fitRectToViewport } from '@shared/canvas/frame-fit'
+import { fitRectToViewport } from '@shared/canvas/frame-fit'
 import {
   LEVEL_SHOT,
-  frameShot,
-  frameShotAt,
-  shotCamera,
-  shotTween,
   spotlightMaskPath,
   stageRollStyle,
   type Shot
 } from '@shared/canvas/presentation-shot'
-import { orderedFrames, stepFrameIndex } from '@shared/canvas/presentation-sequence'
+import { orderedFrames } from '@shared/canvas/presentation-sequence'
+import {
+  createPresentationNavigator,
+  type PresentationPosition
+} from '@shared/presentation/presentation-navigator'
+import { createViewportRefit } from '@shared/presentation/viewport-refit'
 import type { FrameNode } from './player-dom'
 import { createPlayerVideos } from './player-video'
 
@@ -29,13 +30,11 @@ type Mount = {
   frameNodes: FrameNode[]
 }
 
-/** Slideshow controller for the standalone player: same math and timings as the app. */
+/** The standalone player's adapter: DOM painting, videos and resizes around the shared navigator. */
 export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
   const frames = orderedFrames(doc)
-  let flight = 0
   let camera: Camera = { x: 0, y: 0, zoom: 1 }
-  let index = 0
-  let overview = false
+  let position: PresentationPosition = { index: 0, overview: false }
   const listeners = new Set<() => void>()
   const viewListeners = new Set<() => void>()
 
@@ -64,18 +63,6 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
     mount.spotlight.style.display = ''
     mount.spotlightPath.setAttribute('d', mask)
     mount.spotlightPath.setAttribute('fill-opacity', String(shot.spotlight))
-  }
-
-  /** Runs the shot on the camera's eased clock so it lands with the move; same maths as the app. */
-  const shotProgress = (to: Shot) => {
-    const tween = shotTween(shot, to)
-    return (
-      tween &&
-      ((t: number) => {
-        shot = tween(t)
-        paintShot()
-      })
-    )
   }
 
   const paint = () => {
@@ -107,44 +94,54 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
       const element = doc.elements[id]
       return element?.type === 'video' ? element : null
     },
-    getViewport: viewportSize
+    getViewport: viewportSize,
+    onRestore: () => navigation.refit()
   })
   const videos = createPlayerVideos(doc, mount.zoomLayer, videoFocus)
 
   const notify = () => {
-    mount.viewport.classList.toggle('uc-overview', overview)
+    mount.viewport.classList.toggle('uc-overview', position.overview)
     mount.frameNodes.forEach(({ node, index: i }) =>
-      node.classList.toggle('is-current', i === index)
+      node.classList.toggle('is-current', i === position.index)
     )
     for (const listener of listeners) {
       listener()
     }
   }
 
-  const flyToFrame = (i: number, durationMs?: number) => {
-    const at = frameShotAt(doc, i)
-    if (!at) {
-      return
-    }
-    const token = ++flight
-    animator.animateTo(shotCamera(at, viewportSize()), durationMs ?? at.motion.ms, {
-      rho: at.motion.arc,
-      easing: at.motion.easing,
-      onProgress: shotProgress(frameShot(at)),
-      onDone: () => {
-        if (token === flight && !overview) {
-          videos.show(frames[i]?.id ?? null)
-        }
+  const navigation = createPresentationNavigator({
+    getDocument: () => doc,
+    getViewport: viewportSize,
+    getCamera: () => camera,
+    isAnimating: animator.isAnimating,
+    animateTo: animator.animateTo,
+    getShot: () => shot,
+    setShot: (next) => {
+      shot = next
+      paintShot()
+    },
+    getPosition: () => position,
+    setPosition: (next) => {
+      // Leaving a frame, or leaving it for the overview, stops its videos until the next landing.
+      if (next.overview || next.index !== position.index) {
+        videos.show(null)
       }
-    })
-  }
+      position = next
+      notify()
+    },
+    onFrameLanded: videos.show
+  })
+  const viewportRefit = createViewportRefit({
+    refitMedia: videoFocus.refit,
+    refit: navigation.refit
+  })
 
   const api = {
     get index() {
-      return index
+      return position.index
     },
     get overview() {
-      return overview
+      return position.overview
     },
     get count() {
       return frames.length
@@ -164,75 +161,30 @@ export function createPlayerPresentation(doc: CanvasDocument, mount: Mount) {
       }
     },
     dispose: () => {
-      flight++
+      viewportRefit.cancel()
       animator.cancel()
       videos.dispose()
       listeners.clear()
       viewListeners.clear()
     },
-    goTo: (i: number) => {
-      if (i < 0 || i >= frames.length) {
-        return
-      }
-      if (i !== index || overview) {
-        videos.show(null)
-      }
-      index = i
-      overview = false
-      notify()
-      flyToFrame(i)
-    },
-    next: () => api.step(1),
-    previous: () => api.step(-1),
-    step: (direction: 1 | -1) => {
-      const nextIndex = stepFrameIndex(index, frames.length, direction)
-      if (nextIndex === index && !overview) {
-        return
-      }
-      api.goTo(nextIndex)
-    },
-    showOverview: () => {
-      const target = cameraForOverview(doc, viewportSize())
-      if (!target) {
-        return
-      }
-      overview = true
-      flight++
-      videos.show(null)
-      notify()
-      // Why: the overview is level and lit, and the hole fades where it stands.
-      animator.animateTo(target, doc.settings.transitionMs, {
-        onProgress: shotProgress(LEVEL_SHOT)
-      })
-    },
-    toggleOverview: () => {
-      if (overview) {
-        api.goTo(index)
-      } else {
-        api.showOverview()
-      }
-    },
+    goTo: navigation.goTo,
+    next: () => navigation.step(1),
+    previous: () => navigation.step(-1),
+    toggleOverview: navigation.toggleOverview,
+    /** Opens on the first frame; a file has no earlier view to fly in from. */
     start: () => {
-      if (frames.length === 0) {
-        const bounds = contentBounds(doc)
-        if (bounds) {
-          animator.animateTo(fitRectToViewport(bounds, viewportSize(), 0.08), 0)
-        }
+      if (navigation.start()) {
+        navigation.flyToCurrent(0)
         return
       }
-      notify()
-      flyToFrame(0, 0)
+      // Why: an exported board without frames still shows its content behind the notice.
+      const bounds = contentBounds(doc)
+      if (bounds) {
+        animator.animateTo(fitRectToViewport(bounds, viewportSize(), 0.08), 0)
+      }
     },
-    refit: () => {
-      if (videoFocus.refit()) {
-        return
-      }
-      if (overview) {
-        api.showOverview()
-      } else if (frames.length > 0) {
-        flyToFrame(index, 0)
-      }
-    }
+    /** Called on every viewport resize; the refit waits for the burst to settle. */
+    resize: viewportRefit.request
   }
 
   paint()

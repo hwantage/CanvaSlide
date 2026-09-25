@@ -101,7 +101,7 @@ function mount(): void {
     empty.textContent = 'This board has no presentation frames.'
     viewport.append(empty)
   }
-  const resize = new ResizeObserver(() => presentation.refit())
+  const resize = new ResizeObserver(() => presentation.resize())
   resize.observe(viewport)
   // A bfcache restore resumes the intact session; permanent page teardown releases every binding.
   window.addEventListener('pagehide', (event) => {

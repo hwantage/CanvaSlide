@@ -1,5 +1,6 @@
 import { canvasVideoFocus } from '@/lib/video-expansion'
 import { useEffect, type RefObject } from 'react'
+import { createViewportRefit } from '@shared/presentation/viewport-refit'
 import { useCameraStore } from '@/store/camera-store'
 import { usePresentationStore } from '@/store/presentation-store'
 
@@ -16,30 +17,18 @@ export function useViewportSize(ref: RefObject<HTMLElement | null>): void {
       return
     }
     measureViewport(element)
-    // Why: fullscreen/window resizes arrive as a burst; refit once the size settles.
-    let refitTimer: ReturnType<typeof setTimeout> | null = null
+    const refit = createViewportRefit({
+      refitMedia: canvasVideoFocus.refit,
+      refit: () => usePresentationStore.getState().refitToViewport()
+    })
     const observer = new ResizeObserver(() => {
       measureViewport(element)
-      if (refitTimer !== null) {
-        clearTimeout(refitTimer)
-      }
-      // An expanded video owns the view now; do not queue a slide refit behind its return button.
-      if (canvasVideoFocus.refit()) {
-        refitTimer = null
-        return
-      }
-      refitTimer = setTimeout(() => {
-        if (!canvasVideoFocus.refit()) {
-          usePresentationStore.getState().refitToViewport()
-        }
-      }, 60)
+      refit.request()
     })
     observer.observe(element)
     return () => {
       observer.disconnect()
-      if (refitTimer !== null) {
-        clearTimeout(refitTimer)
-      }
+      refit.cancel()
     }
   }, [ref])
 }

@@ -77,8 +77,20 @@ slideshow, cloud viewer and standalone HTML. Host adapters supply state/view sub
 optional exit. Camera notifications follow existing animation/shot updates; there is no extra camera loop.
 Label updates preserve the session. View snapshots are refreshed by camera notifications, so drawing
 does not read layout on every pointer sample; the app caches ordered frames until its document changes.
-Pure command, annotation and auto-hide policy lives in `shared/canvas`; DOM bindings and CSS live in
-`shared/presentation`. The React adapter is [`PresentationOverlay`](../src/renderer/src/components/canvas/presentation-overlay.tsx).
+Pure command, annotation and auto-hide policy lives in `shared/canvas`; navigation, DOM bindings and
+CSS live in `shared/presentation`. The React adapter is [`PresentationOverlay`](../src/renderer/src/components/canvas/presentation-overlay.tsx).
+
+[`createPresentationNavigator`](../src/shared/presentation/presentation-navigator.ts) owns frame and
+overview transitions, flights, and the refit and settle policy through a camera and position port.
+A resize during a flight keeps the flight's length; otherwise the camera corrects within 250 ms, and a
+frame's media become usable once the camera holds still on it.
+[`createViewportRefit`](../src/shared/presentation/viewport-refit.ts) refits once a resize burst ends,
+and a video closing out of its expanded view refits what it hands back. The
+[presentation store](../src/renderer/src/store/presentation-store.ts) and the
+[player](../src/player/player-presentation.ts) adapt it; the store adds previews, fullscreen and the
+return to the editor. The editor slideshow and the cloud viewer fly to the first frame from the current
+camera, while exported HTML opens on it. Without frames the app's slideshow does not start and a
+slideshow share is refused, while HTML shows the board with a notice.
 
 Ink points stay in world coordinates in a session painter, with screen-width strokes; laser positions
 stay in viewport coordinates. Pointer movement updates DOM directly, without React renders or document

@@ -1,22 +1,23 @@
-# CanvaSlide 앱 아이콘
+# CanvaSlide app icons
 
-Round 07에서 확정한 **C형 Wing Smile · 흰색 배경** 아이콘을 사용합니다.
+The app uses the **Type C Wing Smile on a white background** icon chosen in design round 07.
 
-| 파일                                                                  | 용도                                                  |
-| --------------------------------------------------------------------- | ----------------------------------------------------- |
-| `icon-master.png`                                                     | 여백·둥근 모서리를 적용하기 전의 1254px 정사각 마스터 |
-| `icon-source.png`                                                     | 최종 여백·둥근 모서리를 포함한 1024px 데스크톱 원본   |
-| `32x32.png`, `64x64.png`, `128x128.png`, `128x128@2x.png`, `icon.png` | Round 07에서 검수한 크기별 RGBA PNG                   |
-| `icon.icns`                                                           | macOS용 최종 아이콘                                   |
-| `icon.ico`                                                            | Windows용 최종 아이콘, 첫 이미지 32px                 |
-| `Square*Logo.png`, `StoreLogo.png`                                    | 데스크톱 원본에서 생성한 Windows 스토어 아이콘        |
-| `ios/`, `android/`                                                    | 정사각 마스터에서 생성한 모바일 아이콘                |
+| File                                                                  | Purpose                                                           |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `icon-master.png`                                                     | 1254 px square master, before padding and rounded corners         |
+| `icon-source.png`                                                     | 1024 px desktop source with the final padding and rounded corners |
+| `32x32.png`, `64x64.png`, `128x128.png`, `128x128@2x.png`, `icon.png` | RGBA PNGs for each size, reviewed in round 07                     |
+| `icon.icns`                                                           | Final macOS icon                                                  |
+| `icon.ico`                                                            | Final Windows icon; its first image is 32 px                      |
+| `Square*Logo.png`, `StoreLogo.png`                                    | Windows Store icons generated from the desktop source             |
+| `ios/`, `android/`                                                    | Mobile icons generated from the square master                     |
 
-모바일 아이콘은 정사각 마스터에서 생성해 OS 마스크 안에 데스크톱의 둥근 판과 여백이 중복되지 않도록 합니다.
-Android hdpi 런처 이미지는 72px, adaptive foreground는 162px입니다.
+Mobile icons are generated from the square master so that the desktop icon's rounded plate and padding
+are not repeated inside the OS mask. The Android hdpi launcher image is 72 px and the adaptive
+foreground 162 px.
 
-Tauri가 사용하는 경로는 `../tauri.conf.json`의 `bundle.icon`에 등록되어 있습니다.
-macOS 번들 생성은 프로젝트 루트에서 `pnpm bundle:local --bundles app`으로 확인합니다.
+The paths Tauri uses are listed under `bundle.icon` in `../tauri.conf.json`. Check the macOS bundle
+with `pnpm bundle:local --bundles app` from the repository root.
 
-개발 모드도 아이콘을 실행 파일에 포함합니다. `../build.rs`에서 `icons/` 변경을 감지하므로,
-아이콘 교체 후 `pnpm dev`를 실행하면 개발용 실행 파일을 다시 빌드합니다.
+Development builds also embed the icon in the executable. `../build.rs` watches `icons/`, so running
+`pnpm dev` after replacing an icon rebuilds the development executable.

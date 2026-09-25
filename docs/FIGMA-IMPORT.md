@@ -1,93 +1,114 @@
-# Figma 파일 가져오기
+# Figma import
 
-[문서 목록](./README.md) · [문서 형식과 플랫폼 제약](./ARCHITECTURE.md)
+[Documentation map](./README.md) · [Document formats and platform constraints](./ARCHITECTURE.md)
 
-왼쪽 툴바 **파일 가져오기…** 또는 ⌘I / Ctrl+I에서 `.fig`를 선택한다. 캔버스에 파일을
-끌어놓아도 같은 대화상자가 열린다. Figma 계정·API 토큰 없이 로컬 파일만 처리한다.
+Choose a `.fig` file with **Import files…** in the left toolbar or ⌘I / Ctrl+I. Dropping the file on
+the canvas opens the same dialog. Only local files are read; no Figma account or API token is needed.
 
-## 사용 방법
+## Importing a file
 
-1. 가져올 페이지를 선택한다. 숨겨진 내부 페이지는 제외하며, 첫 번째 비어 있지 않은 페이지가 기본 선택된다.
-2. **텍스트·도형 편집** 또는 **원본 모양 유지**를 선택한다.
-3. 가져온 내용은 현재 문서에 추가된다. 첫 페이지를 화면에 맞추고 페이지 프레임을 선택한다.
-   페이지와 주요 디자인 프레임이 프레임 목록에 추가되어 바로 발표할 수 있다.
-4. 변환 결과에서 미지원 항목을 확인한다. 실행 취소 한 번으로 가져오기 전체를 되돌릴 수 있다.
-   일반 문서처럼 `.canvaslide`로 저장한다.
+1. Select the pages to import. Hidden internal pages are left out, and the first non-empty page is
+   selected by default.
+2. Choose **Editable text and shapes** or **Preserve appearance**.
+3. The imported content is added to the current document. The view fits the first imported page, and
+   the page frames of all imported pages are selected. Pages and their main design frames are added to
+   the frame list, ready to present.
+4. Check the conversion report for unsupported items. A single undo removes the entire import. Save
+   the result as a `.canvaslide` file like any other document.
 
-각 페이지 내부의 좌표와 쌓임 순서를 유지하며 페이지 사이에 400단위의 간격을 둔다.
-원본 `.fig`는 수정하지 않는다.
+Coordinates and stacking order within each page are kept, and pages are placed 400 units apart.
+The original `.fig` file is never modified.
 
-## 변환 범위
+## What converts to what
 
-| 원본                          | 결과                                                                 |
-| ----------------------------- | -------------------------------------------------------------------- |
-| 텍스트 레이어                 | 프레임·그룹 안에서도 편집 가능한 텍스트. 회전 유지, 부분 서식은 근사 |
-| 단색 기본 도형                | 편집 모드에서 네이티브 도형. 회전 유지                               |
-| 자르기 없는 이미지            | 원본 비트맵 자산, 같은 이미지 중복 제거. 회전 유지                   |
-| 벡터, 반전·자르기·다중 채우기 | 자체 포함 SVG 이미지                                                 |
-| 텍스트가 있는 프레임·그룹     | 배경과 자식을 분리하여 쌓임 순서 유지. 텍스트는 이미지에 합치지 않음 |
-| 텍스트 윤곽선                 | SVG 변환 시 파일 안의 글리프 경로 사용; 설치 글꼴에 의존하지 않음    |
-| 페이지·최상위 디자인 프레임   | 발표 프레임                                                          |
-| 숨김·삭제 레이어·내부 페이지  | 제외                                                                 |
+| Source                                         | Result                                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Text layers                                    | Editable text, including inside frames and groups; rotation kept, mixed styles approximated |
+| Basic shapes with a solid fill                 | Native shapes in editable mode; rotation kept                                               |
+| Uncropped images                               | The original bitmap asset, with duplicates of the same image stored once; rotation kept     |
+| Vectors; flipped, cropped or multi-fill layers | Self-contained SVG images                                                                   |
+| Frames and groups that contain text            | Background and children split to keep stacking order; text is never merged into an image    |
+| Text outlines                                  | SVG conversion uses the glyph paths in the file, not installed fonts                        |
+| Pages and top-level design frames              | Presentation frames                                                                         |
+| Hidden or deleted layers, internal pages       | Left out                                                                                    |
 
-**원본 모양 유지**는 각 최상위 레이어를 이미지로 변환한다. 이미지 내부의 텍스트는 직접 편집할 수 없다.
-이미지를 확대·이동·리사이즈하고 발표 프레임을 편집하는 것은 가능하다.
-**텍스트·도형 편집**으로 가져온 글자는 두 번 클릭하여 수정한다. 완료 창에 편집 가능한 텍스트 수를 표시한다.
-원래 스크린샷·비트맵에 포함된 글자나 벡터 윤곽선만 있는 글자는 텍스트 레이어가 아니므로 편집할 수 없다.
-이전 변환에서 이미지에 합쳐진 글자는 원본 `.fig`를 다시 가져와야 편집할 수 있다.
+**Preserve appearance** turns each top-level layer into an image, so the text inside it cannot be edited
+directly; the images can still be zoomed, moved and resized, and the presentation frames edited.
+Text imported with **Editable text and shapes** is edited by double-clicking it; the completion dialog
+shows how many text layers are editable. Lettering that was part of a screenshot or bitmap, or that exists
+only as vector outlines, is not a text layer and cannot be edited. Text that an earlier import merged into
+an image becomes editable only by importing the original `.fig` again.
 
-현재 제한:
+Current limits:
 
-- 편집 모드는 글꼴·크기·굵게·기울임·줄 간격·정렬과 회전을 옮긴다. 부분 서식은 첫 글자의 서식으로 단순화하고,
-  기울이기·반전·윤곽선·그라디언트 텍스트는 근사하여 편집을 유지한다. 회전된 텍스트를 프레임 경계가 자르면
-  회전 없이 바깥 사각 범위에 맞춰 자르고 보고한다. 줄바꿈·설치되지 않은 글꼴은 원본과 달라질 수 있다.
-- 그림자·블러 등 효과는 생략한다. 고급 그라디언트·혼합 모드는 일부 근사하거나 생략한다.
-- 컴포넌트 인스턴스의 원본 참조 확장과 오버라이드, 변수, 프로토타입 연결, 자동 레이아웃 규칙은 가져오지 않는다.
-  파일에 실제 자식 레이어가 들어 있으면 그 위치를 사용한다.
-- 이미지로 유지하는 영역의 마스크는 알파 마스크로 변환한다. 텍스트가 있는 영역의 마스크·회전 또는
-  둥근 프레임 경계는 사각 범위로 근사하고 보고한다. 사각 프레임은 텍스트·이미지 모두 경계에 맞춰 자른다.
-  잘린 텍스트를 편집하는 동안은 전체 내용을 보여주고, 편집을 끝내면 다시 자른다.
-- SVG로 변환하는 텍스트에 글리프 윤곽선이 없으면 글꼴 기반 SVG 텍스트로 대체한다.
-  누락 이미지·벡터 경로는 결과 창에서 보고한다.
-- 원본 128MiB, 압축 해제 및 결과 자산 256MiB, 노드 100,000개, 중첩 128단계를 넘는 파일은 거부한다.
-  최신 `.fig` 형식이 바뀌면 추가 대응이 필요할 수 있다.
+- Editable mode carries over font, size, bold, italic, line height, alignment and rotation. Mixed
+  styles are simplified to the first character's style; skewed, flipped, outlined and gradient text is
+  approximated so that it stays editable. When a frame boundary clips rotated text, the rotation is
+  dropped: the text is set upright in the box that enclosed the rotated text, clipped to the frame and
+  counted in the report. Line breaks and fonts that are not installed can differ from the original.
+- Effects such as shadows and blurs are omitted. Advanced gradients and blend modes are partly
+  approximated or omitted.
+- Component instances are not expanded from their main components, and overrides, variables,
+  prototype links and auto-layout rules are not imported. When the file contains an instance's child
+  layers, their positions are used.
+- Masks in areas kept as images become alpha masks. Masks, rotation or rounded frame boundaries in areas
+  that contain text are approximated by a rectangle and reported. Rectangular frames clip both text and
+  images to their boundary. While clipped text is being edited, its whole content is shown; it is clipped
+  again when editing ends.
+- Text converted to SVG falls back to font-based SVG text when the file has no glyph outlines for it.
+  Missing images and vector paths are listed in the report.
+- Files over 128 MiB, with more than 256 MiB of decompressed data or result assets, more than 100,000
+  nodes or more than 128 levels of nesting are rejected. Changes to the `.fig` format in newer Figma
+  versions may need further work.
 
-저장 형식과 공통 파일 제한은 [문서 형식](./ARCHITECTURE.md#document-formats)을 참고한다.
+For the saved format and the file limits shared by all documents, see
+[document formats](./ARCHITECTURE.md#document-formats).
 
-## 구조
+## Structure
 
-- `shared/fig/fig-file.ts`: ZIP 또는 raw `fig-kiwi`, Deflate/Zstandard 해제.
-- `fig-kiwi.ts`: 파일에 내장된 Kiwi 스키마 해석. `eval` / `new Function`을 쓰지 않아 기존 Tauri CSP를 유지한다.
-- `fig-scene.ts`: 페이지·레이어 순서, 행렬, 바운드, SVG 경로. 자동 크기 그룹의 NaN 크기는 자식으로 계산한다.
-- `fig-svg.ts`: 채우기·이미지 자르기·클리핑·마스크·글리프 렌더링.
-  글자별 채우기는 `textStyleTable`과 `styleOverrideTable`을 함께 읽으며, 같은 스타일 ID는 오버라이드를 우선한다.
-- `fig-convert.ts`: CanvaSlide 요소·자산·발표 프레임 변환.
-- `fig-text.ts`: 편집 가능한 텍스트·서식·프레임 자르기 변환. `shared/canvas/text-clip.ts`는 편집기·HTML 플레이어의 표시 범위를 공유하고 편집기의 선택 범위에도 적용한다.
-- `renderer/src/lib/workers/fig-import.worker.ts`: 해독과 변환을 메인 스레드 밖에서 실행. 취소 시 워커 종료.
-- `renderer/src/store/fig-import-store.ts`: 대화상자 상태와 단일 undo 단계 삽입. 문서가 바뀌면 이전 변환 결과를 넣지 않는다.
+- `shared/fig/fig-file.ts`: unpacks ZIP or raw `fig-kiwi` data and inflates Deflate/Zstandard.
+- `fig-kiwi.ts`: decodes with the Kiwi schema embedded in the file. It uses no `eval` or `new Function`,
+  so the existing Tauri CSP stays unchanged.
+- `fig-scene.ts`: page and layer order, matrices, bounds and SVG paths. The NaN size of an auto-sized
+  group is computed from its children.
+- `fig-svg.ts`: fills, image crops, clipping, masks and glyph rendering. Per-character fills read
+  `textStyleTable` and `styleOverrideTable` together; for the same style ID the override wins.
+- `fig-convert.ts`: conversion to CanvaSlide elements, assets and presentation frames.
+- `fig-text.ts`: conversion to editable text, its styles and frame clipping.
+  `shared/canvas/text-clip.ts` holds the visible range the editor and the HTML player share, and the
+  editor applies it to selection too.
+- `renderer/src/lib/workers/fig-import.worker.ts`: decodes and converts off the main thread; cancelling
+  terminates the worker.
+- `renderer/src/store/fig-import-store.ts`: dialog state and insertion as a single undo step. If the
+  document changed meanwhile, the earlier conversion result is not inserted.
 
-대량 삽입은 `document-mutations.insertElements`를 사용해 요소·자산 테이블을 한 번씩 복사한다.
-가져오기마다 별도 세션을 사용해 취소한 작업의 늦은 결과를 무시하고, 성공·실패·취소 시 워커를 해제한다.
-완료 창에는 개수·경고만 보관한다.
+Bulk insertion uses `document-mutations.insertElements`, which copies the element and asset tables once.
+Each import runs in its own session so that late results of a cancelled import are ignored, and the
+worker is released on success, failure and cancellation. The completion dialog keeps only counts and
+warnings.
 
-바이너리 해석 참고: [Kiwi 원본 문서](https://github.com/evanw/kiwi),
-[FIG 구조 분석](https://github.com/KwiTsukasa/figma-local-context-mcp/blob/main/FIG_DATA_STRUCTURE_ANALYSIS.md),
-[OpenFig 이미지 구조](https://github.com/OpenFig-org/openfig-core/blob/main/docs/images.md).
-외부 파서의 런타임 스키마 컴파일은 사용하지 않으며, 경로 opcode는 실제 샘플의 quadratic/cubic 경로를 검증했다.
+Binary format references: [Kiwi](https://github.com/evanw/kiwi),
+[FIG structure analysis](https://github.com/KwiTsukasa/figma-local-context-mcp/blob/main/FIG_DATA_STRUCTURE_ANALYSIS.md),
+[OpenFig image structure](https://github.com/OpenFig-org/openfig-core/blob/main/docs/images.md).
+External parsers' runtime schema compilation is not used; the path opcodes were checked against the
+quadratic and cubic paths of real sample files.
 
-## 검증
+## Verification
 
-자동 회귀용 `tests/fixtures/figma-basic.fig`와 `figma-nested-text.fig`는 직접 만든 문서다. 사용자 샘플의 내용은 저장소에 넣지 않는다.
-검증은 바이너리 해독, 행렬·클리핑·이미지 자르기, 경로·글리프, 숨김 페이지, 두 변환 모드,
-스키마 검증, 가져오기·취소·실행 취소, 중첩·부분 서식·잘린 텍스트의 실제 더블클릭 편집·저장·다시 열기,
-CSP, 잘못된 파일 처리 등을 포함한다.
+The regression fixtures `tests/fixtures/figma-basic.fig` and `figma-nested-text.fig` are documents made
+for this repository; content from users' sample files is never committed. The checks cover binary
+decoding, matrices, clipping and image crops, paths and glyphs, hidden pages, both conversion modes,
+schema validation, import, cancel and undo, real double-click editing, saving and reopening of nested,
+mixed-style and clipped text, the CSP, and invalid files.
 
-가져오기 기능만 확인하려면 다음 검사를 실행한다. 전체 검증은 [AGENTS.md의 Verify](../AGENTS.md#verify)를 따른다.
+To check only the import feature, run the following. Full verification follows
+[Verify in AGENTS.md](../AGENTS.md#verify), which also covers native bundle checks.
 
 ```bash
 pnpm exec vitest run --config config/vitest.config.ts src/shared/fig/fig-convert.test.ts
 CANVASLIDE_E2E_WEBKIT=1 pnpm exec playwright test --config tests/playwright.config.ts tests/e2e/fig-import.spec.ts
 ```
 
-검사는 저장소의 합성 파일을 사용한다. 사용자 파일을 수동 확인할 때는 결과와 로그를 Git에서 제외된
-`discuss/`에 두고 환경·제약과 함께 PR에 기록한다. 네이티브 번들 검증은 [릴리즈 가이드](./RELEASE.md#5-실패했을-때)를 따른다.
+These checks use the synthetic files in the repository. When checking a user's file by hand, keep the
+results and logs in the Git-ignored `discuss/` folder and record them in the PR with the environment
+and constraints.

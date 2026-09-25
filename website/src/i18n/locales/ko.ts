@@ -4,12 +4,12 @@ import type { SiteStrings } from '../site-strings'
 export const ko: SiteStrings = {
   'site.showcase.freefall.title': 'FREEFALL. 하나의 캔버스, 끊김 없는 장면.',
   'site.showcase.freefall.body':
-    '지구에서 도시와 작은 디테일 속으로 들어간 뒤, 콘서트 불빛의 바다와 움직이는 불꽃놀이로 이어지는 10개 프레임을 따라가세요. 약 {size}를 다운로드하는 큰 예제입니다.',
+    '지구에서 도시와 작은 디테일 속으로 들어간 뒤, 콘서트 불빛의 바다와 움직이는 불꽃놀이로 이어지는 10개 프레임을 따라가세요.',
   'site.showcase.freefall.alt': '우주에서 바라본 지구와 FREEFALL 제목, 그 안에 겹쳐진 세부 장면.',
 
   'site.showcase.inside.title': '인체 내부로 들어가다.',
   'site.showcase.inside.body':
-    '해부학 프레젠테이션의 13개 프레임을 따라 이동하세요. 겹쳐진 {svg} 일러스트와 내장 사진의 디테일이 확대할수록 드러납니다. 약 {size}를 다운로드하는 큰 예제입니다.',
+    '해부학 프레젠테이션의 13개 프레임을 따라 이동하세요. 겹쳐진 {svg} 일러스트와 내장 사진의 디테일이 확대할수록 드러납니다.',
   'site.showcase.inside.alt': '장기 세부 일러스트와 내장 사진을 포함한 해부학 프레젠테이션.',
 
   'site.docs.examples.title': '예제 둘러보기',

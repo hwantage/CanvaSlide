@@ -18,8 +18,7 @@ const exampleCopyParams = {
   app: 'CanvaSlide',
   claude: 'Claude',
   codex: 'Codex',
-  svg: 'SVG',
-  size: '25 MiB'
+  svg: 'SVG'
 }
 const showcaseIds = [
   ...exampleCatalog

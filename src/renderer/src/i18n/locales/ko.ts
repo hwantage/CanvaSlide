@@ -485,6 +485,8 @@ export const ko: UiStrings = {
   'help.pasteText': '다른 앱의 텍스트·이미지 붙여넣기',
 
   'update.current': '현재 버전',
+  'update.check': '업데이트 확인',
+  'update.checkOnLaunch': '시작할 때 업데이트 확인',
   'update.checking': '확인 중…',
   'update.upToDate': '최신 버전을 사용하고 있습니다.',
   'update.available': '새 버전 {v}을(를) 사용할 수 있습니다.',

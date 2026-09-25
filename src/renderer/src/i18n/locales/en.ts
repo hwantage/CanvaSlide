@@ -479,6 +479,8 @@ Use the skill at {skill} to create the file.`,
   'help.pasteText': 'Paste text or images from other apps',
 
   'update.current': 'Current version',
+  'update.check': 'Check for updates',
+  'update.checkOnLaunch': 'Check for updates at launch',
   'update.checking': 'Checking…',
   'update.upToDate': 'You are on the latest version.',
   'update.available': 'Version {v} is available.',

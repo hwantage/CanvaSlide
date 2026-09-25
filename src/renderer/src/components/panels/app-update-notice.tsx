@@ -39,7 +39,7 @@ export function AppUpdateNotice() {
           )}
           <TextButton
             className="self-start"
-            disabled={status === 'downloading'}
+            disabled={status === 'checking' || status === 'downloading'}
             onClick={() => void (update.installable ? install() : openReleases())}
           >
             {t(update.installable ? 'update.install' : 'update.openReleases')}

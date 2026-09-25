@@ -269,8 +269,10 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
 
 데스크톱 앱은 시작 3초 뒤 한 번 업데이트를 확인한다. **CanvaSlide 정보** 대화상자에서 현재 버전,
 릴리즈 노트 링크와 업데이트 상태를 표시하고, 새 버전이 있으면 설치 또는 다운로드 페이지 버튼을 제공한다.
-macOS 메뉴의 **Check for Updates…**는 정보 대화상자를 열고 다시 확인한다. 실행 시 확인을 끄는 설정은 없고,
-실패하면 정보 대화상자에만 표시한다. 사용자에게 알리는 내용은 README의
+같은 대화상자의 **업데이트 확인** 버튼(모든 데스크톱 플랫폼)과, 정보 대화상자를 여는 macOS 메뉴의
+**Check for Updates…**는 바로 다시 확인한다. **시작할 때 업데이트 확인**을 해제하면 실행 시 확인을
+건너뛴다. 이 선택은 사용자별로 `localStorage`의 `canvaslide.updates.checkOnLaunch`에 저장되며 기본값은
+켜짐이다. 실패하면 정보 대화상자에만 표시한다. 사용자에게 알리는 내용은 README의
 [Network and privacy](../README.md#network-and-privacy)에 있다. 동작은
 [`use-update-check.ts`](../src/renderer/src/hooks/use-update-check.ts)와
 [`app-update.ts`](../src/renderer/src/platform/app-update.ts)에서 확인한다.

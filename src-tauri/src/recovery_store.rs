@@ -1,8 +1,7 @@
 //! Owned recovery records; all commands run blocking filesystem work away from the app thread.
-use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
-use std::fs::{File, OpenOptions};
+use std::fs::{File, OpenOptions, TryLockError};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -76,7 +75,7 @@ fn open_lock(path: &Path) -> Result<File, RecoveryError> {
 fn namespace_lock(dir: &Path) -> Result<File, RecoveryError> {
     std::fs::create_dir_all(dir)?;
     let file = open_lock(&dir.join(".store.lock"))?;
-    FileExt::lock_exclusive(&file)?;
+    file.lock()?;
     Ok(file)
 }
 #[derive(Default)]
@@ -93,13 +92,13 @@ impl RecoveryFiles {
         let path = snapshot_path(dir, id, "lock")?;
         let _namespace = namespace_lock(dir)?;
         let file = open_lock(&path)?;
-        match FileExt::try_lock_exclusive(&file) {
+        match file.try_lock() {
             Ok(()) => {
                 self.claims.insert(id.to_owned(), file);
                 Ok(true)
             }
-            Err(e) if e.raw_os_error() == fs2::lock_contended_error().raw_os_error() => Ok(false),
-            Err(e) => Err(e.into()),
+            Err(TryLockError::WouldBlock) => Ok(false),
+            Err(TryLockError::Error(e)) => Err(e.into()),
         }
     }
     fn require(&self, id: &str) -> Result<(), RecoveryError> {
@@ -216,7 +215,7 @@ fn list_snapshot_sessions(dir: &Path) -> Result<Vec<String>, RecoveryError> {
                 && !snapshot_path(dir, id, "json.tmp")?.exists()
             {
                 let file = open_lock(&path)?;
-                if FileExt::try_lock_exclusive(&file).is_ok() {
+                if file.try_lock().is_ok() {
                     drop(file);
                     remove_if_present(&path)?;
                 }

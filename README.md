@@ -69,6 +69,28 @@ Save an editable `.canvaslide` using the [current JSON format](./docs/ARCHITECTU
 Press **Copy link** to upload a cloud snapshot and share it for 24 hours.
 See [cloud sharing](./docs/CLOUD-SHARE.md) for access options, limits and hosting setup.
 
+## Network and privacy
+
+CanvaSlide has no account, analytics, telemetry or crash reporting. Documents stay on your device
+until you share them; crash-recovery copies never leave it. The app contacts a service only in these
+cases:
+
+| When                                                                           | Contacted                                                           | What is sent                                                                                                                                              |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Desktop app: 3 seconds after every launch, and **Check for Updates…** on macOS | GitHub (`github.com`, `release-assets.githubusercontent.com`)       | A request for the latest release's `latest.json`, with no document content, app version or device identifier. An update downloads only if you install it. |
+| **Copy link** in the Share dialog, and opening a share link                    | The cloud share service (`canvaslide.pages.dev` in official builds) | The whole document, including embedded images, kept for 24 hours; see [cloud sharing](./docs/CLOUD-SHARE.md).                                             |
+| Adding a linked video, showing a YouTube video, or playing a video             | YouTube, Vimeo, or the server of a direct video link                | The video link when it is added, to read its size; then thumbnail, player and video requests.                                                             |
+| Using the web editor or opening a web example                                  | The web editor's host (Cloudflare Pages)                            | Ordinary page requests. Documents stay in the browser unless you share them.                                                                              |
+| Opening the repository, release notes or a video's original page               | Your default browser                                                | The page you chose.                                                                                                                                       |
+
+As with any web request, each service sees your IP address and a user agent. Linked videos play
+automatically by default when a slideshow, cloud slideshow or exported HTML reaches their frame, so
+presenting one contacts its provider without a click.
+The launch update check has no setting to turn it off. Offline or when the request is blocked, the
+app keeps working and shows the failure only in the **About CanvaSlide** dialog; nothing is installed
+without your confirmation. A managed network that must prevent the check can block the manifest URL
+listed under `plugins.updater.endpoints` in [`tauri.conf.json`](./src-tauri/tauri.conf.json).
+
 ## Develop and verify
 
 Install Node.js 22.20+ and the pinned pnpm 11 version; Rust and the OS-specific Tauri prerequisites

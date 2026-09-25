@@ -38,6 +38,17 @@ paths. Document and cloud input validation still uses the schemas in `element-ty
 This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`). The budget is raised
 only in a pull request of its own ([Presentation features](../AGENTS.md#presentation-features)).
 
+Minified bundles drop license comments, so every web, desktop and website build writes
+`THIRD-PARTY-NOTICES.txt` beside `index.html`
+([`third-party-notices.ts`](../config/third-party-notices.ts)). It lists the npm packages the
+build's chunks and workers contain, the build tools that write their own code into the output, and
+the license files among the static files (pdf.js fonts and decoders). When the Tauri CLI runs the
+build (`tauri build`, and the dev server under `tauri dev`), it also lists the Rust standard library
+and the crates the app links for its target, taken from `cargo tree`, since `cargo metadata` also
+counts crates that only build scripts and proc macros use. That needs Cargo and the crates' sources
+before compiling starts. The plain dev server lists the installed runtime dependency tree instead of
+a bundle. The About dialog and the website footer link the file.
+
 ## Document editing and presentation
 
 - [`document-store.ts`](../src/renderer/src/store/document-store.ts) owns document edits and history.

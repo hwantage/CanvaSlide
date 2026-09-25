@@ -72,6 +72,34 @@ test('toolbar orders help, repository, About and settings and opens each destina
   await expect(page.getByRole('heading', { name: 'Updates', exact: true })).toHaveCount(0)
 })
 
+test('About shows the third-party notices the build ships and retries a failed load @webkit', async ({
+  page
+}) => {
+  await page.route('**/THIRD-PARTY-NOTICES.txt', (route) => route.fulfill({ status: 503 }))
+  await page.goto('/')
+  await page.getByRole('banner').getByRole('button', { name: 'About CanvaSlide' }).click()
+  const about = page.getByRole('dialog', { name: 'About CanvaSlide' })
+  const toggle = about.getByText('Third-party notices', { exact: true })
+  await toggle.click()
+  await expect(about.getByRole('status')).toHaveText(
+    'Could not load the third-party notices. Close and reopen them to try again.'
+  )
+  await page.unroute('**/THIRD-PARTY-NOTICES.txt')
+  await toggle.click()
+  await toggle.click()
+  const notices = about.getByLabel('Third-party notices')
+  await expect(notices).toContainText(/^react \d+\.\d+\.\d+ \(MIT\)/m)
+  await expect(notices).toContainText(/^pdfjs-dist \S+ \(Apache-2\.0\)/m)
+  await expect(notices).toContainText(/^pdfjs\/wasm\/$/m)
+  await expect(notices).toContainText('Apache License')
+  expect(await notices.evaluate((pre) => pre.scrollHeight > pre.clientHeight)).toBe(true)
+  await notices.focus()
+  await page.keyboard.press('End')
+  await expect.poll(() => notices.evaluate((pre) => pre.scrollTop)).toBeGreaterThan(0)
+  await page.keyboard.press('Escape')
+  await expect(about).toBeHidden()
+})
+
 for (const [platform, userAgent, settingsShortcut] of [
   ['macOS', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '⌘,'],
   ['Windows', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Ctrl+,']

@@ -4,11 +4,14 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, type Plugin } from 'vite'
 import { exampleAssets } from './example-assets.ts'
+import { thirdPartyNotices } from './third-party-notices.ts'
 
 const repoRoot = resolve(import.meta.dirname, '..')
 const rendererRoot = resolve(repoRoot, 'src/renderer')
 const { version } = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'))
 const host = process.env.TAURI_DEV_HOST
+// Why: only the Tauri CLI sets the target, and the desktop app's notices add the Rust crates.
+const notices = thirdPartyNotices(process.env.TAURI_ENV_TARGET_TRIPLE)
 
 /**
  * Answers `/__checkout` with `{ canvaslideCheckout: <absolute path> }`.
@@ -58,6 +61,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     checkoutIdentity(),
+    notices.plugin,
     ...(process.env.TAURI_ENV_PLATFORM ? [] : [exampleAssets()])
   ],
   resolve: {
@@ -66,6 +70,7 @@ export default defineConfig({
       '@shared': resolve(repoRoot, 'src/shared')
     }
   },
+  worker: { plugins: () => [notices.worker()] },
   clearScreen: false,
   // Why: discovering pdfjs-dist on first use makes the dev server re-bundle and reload the page
   // mid-import; pre-bundling it keeps a PDF drop (and the E2E for it) uninterrupted.

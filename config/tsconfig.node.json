@@ -1,6 +1,11 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["./*.ts", "./scripts/**/*.mjs", "../src/shared/example-catalog.ts"],
+  "include": [
+    "./*.ts",
+    "./scripts/**/*.mjs",
+    "../src/shared/example-catalog.ts",
+    "../src/shared/third-party-notices.ts"
+  ],
   "compilerOptions": {
     "composite": true,
     "noEmit": true,

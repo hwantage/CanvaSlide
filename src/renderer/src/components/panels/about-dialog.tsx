@@ -1,4 +1,5 @@
 import { AppUpdateNotice } from './app-update-notice'
+import { ThirdPartyNotices } from './third-party-notices'
 import { ExternalLink } from 'lucide-react'
 import logo from '@/assets/canvaslide-light.png'
 import { ModalDialog } from '@/components/ui/modal-dialog'
@@ -47,6 +48,7 @@ export function AboutDialog() {
       >
         {t('about.releaseNotes')} <ExternalLink size={13} aria-hidden />
       </a>
+      <ThirdPartyNotices />
       {isTauriRuntime() && <UpdateControls />}
       <AppUpdateNotice />
       <div className="flex justify-end">

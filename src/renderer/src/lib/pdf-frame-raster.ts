@@ -1,5 +1,5 @@
-import { renderElement } from '@player/player-dom'
-import playerCss from '@player/player.css?raw'
+import elementCss from '@shared/render/element.css?raw'
+import { renderElement } from '@shared/render/element-dom'
 import type { CanvasDocument, FrameElement, Size, VideoElement } from '@shared/canvas/element-types'
 import { pdfPageElements } from '@shared/canvas/pdf-export-pages'
 import type { PdfImage } from '@shared/canvas/pdf-file'
@@ -9,9 +9,9 @@ import { loadImage } from './svg-raster'
 /**
  * Draws one frame as the bitmap its PDF page is made of.
  *
- * The page content is the export player's own DOM, laid out inside an SVG `<foreignObject>` and
- * rasterised through the engine's own text and layout code. Reusing `renderElement` is what keeps
- * a PDF page and the HTML export showing the same slide.
+ * The page content is the static element DOM the HTML export player also draws with, laid out
+ * inside an SVG `<foreignObject>` and rasterised through the engine's own text and layout code.
+ * Sharing `renderElement` is what keeps a PDF page and the HTML export showing the same slide.
  *
  * Why a `data:` URL rather than the `blob:` URL `svg-raster.ts` uses: Chromium and WebKit treat a
  * blob-backed SVG that contains a `foreignObject` as cross-origin and taint the canvas, so the
@@ -67,7 +67,7 @@ function framePageSvg(doc: CanvasDocument, frame: FrameElement, raster: Size): s
     background: PAGE_BACKGROUND
   })
   const style = document.createElement('style')
-  style.textContent = playerCss
+  style.textContent = elementCss
   page.append(style)
 
   // Why layout zoom rather than the SVG's own viewBox: WebKit does not scale `foreignObject`

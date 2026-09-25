@@ -5,7 +5,8 @@ import {
   defaultTextStyle,
   type ConnectorElement as ConnectorElementModel
 } from '@shared/canvas/element-types'
-import { connectorCanvasRect, connectorDashArray } from '@shared/canvas/shape-svg'
+import { connectorLabelCss, connectorPaths } from '@shared/canvas/element-style'
+import { connectorCanvasRect } from '@shared/canvas/shape-svg'
 import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
 import { EditableText } from './editable-text'
@@ -26,8 +27,8 @@ export function ConnectorElement({
   )
   const hosts = useMemo(() => hostsOf(startHost, endHost), [startHost, endHost])
   const drawing = connectorDrawing(element, hosts)
+  const { line, markers } = connectorPaths(element, drawing)
   const mid = connectorMidpoint(element, hosts)
-  const { stroke, strokeWidth } = element.style
   const box = connectorCanvasRect(element)
   const hasLabel = editing || element.label !== ''
   // Labels sit on a themed surface; resolve the default ink without changing saved colours.
@@ -51,39 +52,13 @@ export function ConnectorElement({
         height={box.height}
         viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
       >
-        <path
-          data-testid="connector-path"
-          data-route={drawing.route}
-          d={drawing.d}
-          fill="none"
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray={connectorDashArray(element)}
-        />
-        {drawing.markers.map((marker, index) => (
-          <path
-            key={index}
-            data-testid="connector-marker"
-            d={marker.d}
-            fill={marker.filled ? stroke : 'none'}
-            stroke={marker.filled ? undefined : stroke}
-            strokeWidth={marker.filled ? undefined : strokeWidth}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+        <path data-testid="connector-path" data-route={drawing.route} {...line} />
+        {markers.map((marker, index) => (
+          <path key={index} data-testid="connector-marker" {...marker} />
         ))}
       </svg>
       {hasLabel && (
-        <div
-          className="absolute min-w-6 max-w-64 rounded bg-canvas px-1.5 py-0.5"
-          style={{
-            left: mid.x - box.x,
-            top: mid.y - box.y,
-            transform: 'translate(-50%, -50%)'
-          }}
-        >
+        <div style={connectorLabelCss(mid, box, element.textStyle.fontSize)}>
           <EditableText
             elementId={element.id}
             text={element.label}

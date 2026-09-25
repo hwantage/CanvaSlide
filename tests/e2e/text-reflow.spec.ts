@@ -113,7 +113,7 @@ const measureLines = (page: Page) =>
   page.evaluate((): TextLines => {
     const lines: TextLines = {}
     for (const box of document.querySelectorAll(
-      '[data-testid="world-layer"] .whitespace-pre-wrap'
+      '[data-testid="world-layer"] [data-element-type="text"] > div'
     )) {
       const id = box.closest<HTMLElement>('[data-element-id]')!.dataset.elementId!
       const range = document.createRange()

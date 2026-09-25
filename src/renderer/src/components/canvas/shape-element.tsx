@@ -1,11 +1,10 @@
 import type { ShapeElement as ShapeElementModel } from '@shared/canvas/element-types'
-import { rotationTransform } from '@shared/canvas/element-rotation'
-import { shapeGeometry, shapeLabelRect } from '@shared/canvas/shape-svg'
+import { rotationCss, shapeLabelCss, shapePaint } from '@shared/canvas/element-style'
+import { shapeGeometry } from '@shared/canvas/shape-svg'
 import { EditableText } from './editable-text'
 
 function ShapePath({ element }: { element: ShapeElementModel }) {
-  const { style } = element
-  const paint = { fill: style.fill, stroke: style.stroke, strokeWidth: style.strokeWidth }
+  const paint = shapePaint(element)
   const geometry = shapeGeometry(element)
   switch (geometry.tag) {
     case 'rect': {
@@ -17,7 +16,7 @@ function ShapePath({ element }: { element: ShapeElementModel }) {
       return <ellipse {...ellipse} {...paint} />
     }
     case 'polygon':
-      return <polygon points={geometry.points} strokeLinejoin="round" {...paint} />
+      return <polygon points={geometry.points} {...paint} />
   }
 }
 
@@ -29,7 +28,6 @@ export function ShapeElement({
   editing: boolean
 }) {
   const hasLabel = editing || element.text !== ''
-  const label = shapeLabelRect(element)
   return (
     <div
       className="absolute"
@@ -40,7 +38,7 @@ export function ShapeElement({
         top: element.y,
         width: element.width,
         height: element.height,
-        transform: rotationTransform(element.rotation)
+        ...rotationCss(element)
       }}
     >
       <svg
@@ -52,17 +50,13 @@ export function ShapeElement({
         <ShapePath element={element} />
       </svg>
       {hasLabel && (
-        <div
-          className="absolute flex items-center justify-center p-3"
-          style={{ left: label.x, top: label.y, width: label.width, height: label.height }}
-        >
+        <div style={shapeLabelCss(element)}>
           <EditableText
             elementId={element.id}
             text={element.text}
             style={element.textStyle}
             editing={editing}
             placeholder=""
-            className="w-full"
           />
         </div>
       )}

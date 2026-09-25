@@ -16,6 +16,12 @@ easy to break:
 - In [`src/renderer/src/`](../src/renderer/src/), OS operations belong in `platform/`, with browser
   fallbacks.
 - [`src/player/`](../src/player/) has no React runtime.
+- [`src/shared/render/`](../src/shared/render/) draws elements as static DOM for the HTML player and
+  for PDF pages, which rasterise that DOM; a change there changes both exports. It and the editor's
+  React element components take their styling from
+  [`element-style.ts`](../src/shared/canvas/element-style.ts), and
+  [`element-render-parity.test.tsx`](../src/renderer/src/components/canvas/element-render-parity.test.tsx)
+  checks that both draw an element alike.
 - [`src/cloud-share/`](../src/cloud-share/) and [`functions/api/`](../functions/api/) keep snapshots
   validated and expiring; see [cloud share](./CLOUD-SHARE.md) for the API and hosting contract.
 - [`website/`](../website/) is a separate static build (`pnpm build:site`).

@@ -12,7 +12,8 @@ contributors and coding agents alike. How to propose, name and submit a change i
   imports, camera math and presentation policy. No React, no Tauri; the app and the HTML player share it.
 - `src/shared/presentation/` — slideshow navigation, controls, input, ink painter and CSS shared by
   the editor slideshow, cloud viewer and HTML player. `src/shared/media/` — linked-video players and
-  provider bridges. Neither depends on React, Zustand, Tauri, renderer code or app localization.
+  provider bridges. `src/shared/render/` — the static element DOM and CSS that HTML and PDF export
+  draw with. None of them depends on React, Zustand, Tauri, renderer code or app localization.
 - `src/renderer/src/` — React app. `store/` (zustand), `hooks/`, `components/{canvas,toolbar,panels,ui}`,
   `lib/` (browser-side helpers and workers), `platform/` (Tauri ↔ browser fallbacks), `i18n/`.
 - `src/player/` — vanilla standalone player inlined into HTML exports; built by `pnpm build:player` into
@@ -38,6 +39,9 @@ contributors and coding agents alike. How to propose, name and submit a change i
 ### Code
 
 - Keep math and document transforms in `src/shared/canvas` and unit-test them; UI files should be thin.
+- How an element looks (text style, shape and connector paint, rotation, label box) comes from
+  `src/shared/canvas/element-style.ts`, which the editor's element components and
+  `src/shared/render/` both apply; change it there, not in one renderer.
 - Anything that touches the OS (file dialogs, menus, file IO) goes through `src/renderer/src/platform/`
   with a browser fallback; the app must work in the Tauri window and in `pnpm dev:web`.
 - Tauri commands that read or write files, show dialogs or scan fonts are `async` and run that work

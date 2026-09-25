@@ -63,8 +63,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(rendererRoot, 'src'),
-      '@shared': resolve(repoRoot, 'src/shared'),
-      '@player': resolve(repoRoot, 'src/player')
+      '@shared': resolve(repoRoot, 'src/shared')
     }
   },
   clearScreen: false,

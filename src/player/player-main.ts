@@ -1,4 +1,5 @@
 import css from './player.css?inline'
+import elementCss from '@shared/render/element.css?inline'
 import videoCss from '@shared/media/linked-video.css?inline'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import presentationCss from '@shared/presentation/presentation.css?inline'
@@ -22,7 +23,7 @@ function readDocument(): CanvasDocument {
 
 function mount(): void {
   const style = document.createElement('style')
-  style.textContent = presentationTokens + css + videoCss + presentationCss
+  style.textContent = presentationTokens + elementCss + css + videoCss + presentationCss
   document.head.append(style)
 
   const doc = readDocument()

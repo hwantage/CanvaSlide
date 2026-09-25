@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { TextElement as TextElementModel } from '@shared/canvas/element-types'
 import { removeElements } from '@shared/canvas/document-mutations'
-import { rotationTransform } from '@shared/canvas/element-rotation'
+import { rotationCss } from '@shared/canvas/element-style'
 import { textClipPath } from '@shared/canvas/text-clip'
 import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
@@ -38,11 +38,7 @@ export function TextElement({ element, editing }: { element: TextElementModel; e
         top: element.y,
         width: element.width,
         minHeight: element.height,
-        transform: rotationTransform(element.rotation),
-        // Why: while typing, text outgrows its stored height; keep the pivot geometry uses.
-        transformOrigin: element.rotation
-          ? `${element.width / 2}px ${element.height / 2}px`
-          : undefined,
+        ...rotationCss(element),
         clipPath: editing ? undefined : textClipPath(element.clip)
       }}
     >

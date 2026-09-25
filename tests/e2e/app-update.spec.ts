@@ -15,6 +15,29 @@ async function offerUpdate(page: Page) {
   }, appModuleUrl('store/update-store.ts'))
 }
 
+// Why: the About controls read the runtime when they render, so a fake shell injected after load is enough.
+async function fakeDesktopUpdater(page: Page) {
+  await page.evaluate(() => {
+    const checks: unknown[] = []
+    Object.assign(window, {
+      __updateChecks: checks,
+      __TAURI_INTERNALS__: {
+        metadata: { currentWindow: { label: 'main' } },
+        invoke: async (command: string, args: unknown) => {
+          if (command === 'plugin:updater|check') {
+            checks.push(args)
+            return null
+          }
+          throw new Error(`Unexpected native command: ${command}`)
+        }
+      }
+    })
+  })
+}
+
+const updateChecks = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __updateChecks: unknown[] }).__updateChecks.length)
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
   await waitForEditor(page)
@@ -110,4 +133,39 @@ test('web startup never requests an update and Settings puts border before trans
   const transition = await settings.getByRole('slider').boundingBox()
   expect(border!.y + border!.height).toBeLessThan(transition!.y)
   expect(requests).toEqual([])
+})
+
+test('desktop About checks on demand and remembers the launch-check choice @webkit', async ({
+  page
+}) => {
+  const aboutButton = page.getByRole('button', { name: 'About CanvaSlide' })
+  const about = page.getByRole('dialog', { name: 'About CanvaSlide' })
+  const checkNow = about.getByRole('button', { name: 'Check for updates', exact: true })
+  const atLaunch = about.getByRole('checkbox', { name: 'Check for updates at launch' })
+  await aboutButton.click()
+  await expect(about).toBeVisible()
+  await expect(checkNow).toHaveCount(0)
+  await expect(atLaunch).toHaveCount(0)
+  await page.keyboard.press('Escape')
+
+  await fakeDesktopUpdater(page)
+  await aboutButton.click()
+  await expect(atLaunch).toBeChecked()
+  await checkNow.click()
+  await expect(about.getByRole('status')).toHaveText('You are on the latest version.')
+  expect(await updateChecks(page)).toBe(1)
+  await atLaunch.uncheck()
+  expect(await page.evaluate(() => localStorage.getItem('canvaslide.updates.checkOnLaunch'))).toBe(
+    'off'
+  )
+  expect(await updateChecks(page)).toBe(1)
+
+  await page.reload()
+  await waitForEditor(page)
+  await fakeDesktopUpdater(page)
+  await aboutButton.click()
+  await expect(atLaunch).not.toBeChecked()
+  await checkNow.click()
+  await expect(about.getByRole('status')).toHaveText('You are on the latest version.')
+  expect(await updateChecks(page)).toBe(1)
 })

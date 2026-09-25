@@ -8,6 +8,16 @@ import {
   type AvailableUpdate
 } from '@/platform/app-update'
 
+const CHECK_ON_LAUNCH_KEY = 'canvaslide.updates.checkOnLaunch'
+
+function readCheckOnLaunch(): boolean {
+  try {
+    return localStorage.getItem(CHECK_ON_LAUNCH_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
 export type UpdateStatus = 'idle' | 'checking' | 'upToDate' | 'available' | 'downloading' | 'error'
 
 export type UpdateStore = {
@@ -16,9 +26,12 @@ export type UpdateStore = {
   /** Download progress 0..1 while `downloading`. */
   progress: number
   error: string | null
+  /** Whether the desktop app checks once after launch; manual checks work either way. */
+  checkOnLaunch: boolean
   check: () => Promise<void>
   install: () => Promise<void>
   openReleases: () => Promise<void>
+  setCheckOnLaunch: (enabled: boolean) => void
 }
 
 export const useUpdateStore = create<UpdateStore>()((set, get) => ({
@@ -26,6 +39,7 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
   update: null,
   progress: 0,
   error: null,
+  checkOnLaunch: readCheckOnLaunch(),
   check: async () => {
     if (get().status === 'checking' || get().status === 'downloading') {
       return
@@ -40,7 +54,8 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
   },
   install: async () => {
     const { update, status } = get()
-    if (!update?.installable || status === 'downloading') {
+    // Why: a running check replaces the pending update the download would read.
+    if (!update?.installable || status === 'checking' || status === 'downloading') {
       return
     }
     set({ status: 'downloading', progress: 0, error: null })
@@ -56,8 +71,16 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
     } catch (error) {
       await showErrorMessage(t('update.openReleasesError', { message: errorText(error) }))
     }
+  },
+  setCheckOnLaunch: (checkOnLaunch) => {
+    set({ checkOnLaunch })
+    try {
+      localStorage.setItem(CHECK_ON_LAUNCH_KEY, checkOnLaunch ? 'on' : 'off')
+    } catch {
+      // Why: the preference is a convenience; blocked storage must not break the dialog.
+    }
   }
 }))
 
-export const selectUpdateAvailable = (s: UpdateStore) =>
-  s.status === 'available' || s.status === 'downloading'
+/** A found update stays offered while a later check runs or fails, as About keeps showing it. */
+export const selectUpdateAvailable = (s: UpdateStore) => s.update !== null

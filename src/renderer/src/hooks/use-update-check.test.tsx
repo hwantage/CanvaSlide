@@ -11,6 +11,7 @@ vi.mock('@/platform/app-update', () => ({ onCheckUpdatesRequested: vi.fn(() => v
 
 beforeEach(() => {
   vi.useFakeTimers()
+  useUpdateStore.setState({ checkOnLaunch: true })
   useAboutDialogStore.getState().hide()
   useSettingsDialogStore.getState().hide()
 })
@@ -33,6 +34,29 @@ test('desktop checks after launch and cleans up its timer', async () => {
   second.unmount()
   await act(() => vi.advanceTimersByTimeAsync(5000))
   expect(check).toHaveBeenCalledTimes(1)
+})
+
+test('turning off the launch check skips it but keeps the native menu check', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  useUpdateStore.setState({ checkOnLaunch: false })
+  const check = vi.spyOn(useUpdateStore.getState(), 'check').mockResolvedValue()
+  const hook = renderHook(useUpdateCheck)
+  await act(() => vi.advanceTimersByTimeAsync(5000))
+  expect(check).not.toHaveBeenCalled()
+  act(() => vi.mocked(onCheckUpdatesRequested).mock.calls[0]![0]())
+  expect(check).toHaveBeenCalledTimes(1)
+  hook.unmount()
+})
+
+test('turning off the launch check during the delay cancels this launch', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  const check = vi.spyOn(useUpdateStore.getState(), 'check').mockResolvedValue()
+  const hook = renderHook(useUpdateCheck)
+  await act(() => vi.advanceTimersByTimeAsync(1500))
+  act(() => useUpdateStore.getState().setCheckOnLaunch(false))
+  await act(() => vi.advanceTimersByTimeAsync(5000))
+  expect(check).not.toHaveBeenCalled()
+  hook.unmount()
 })
 
 test('browser startup does not schedule a check', async () => {

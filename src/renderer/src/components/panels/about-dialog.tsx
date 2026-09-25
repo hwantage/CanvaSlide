@@ -5,6 +5,7 @@ import { ModalDialog } from '@/components/ui/modal-dialog'
 import { TextButton } from '@/components/ui/text-button'
 import { t } from '@/i18n/ui-strings'
 import { currentAppVersion, RELEASES_URL } from '@/platform/app-update'
+import { isTauriRuntime } from '@/platform/tauri-runtime'
 import { useAboutDialogStore } from '@/store/modal-dialogs'
 import { useUpdateStore } from '@/store/update-store'
 
@@ -46,6 +47,7 @@ export function AboutDialog() {
       >
         {t('about.releaseNotes')} <ExternalLink size={13} aria-hidden />
       </a>
+      {isTauriRuntime() && <UpdateControls />}
       <AppUpdateNotice />
       <div className="flex justify-end">
         <TextButton variant="primary" onClick={hide}>
@@ -53,5 +55,25 @@ export function AboutDialog() {
         </TextButton>
       </div>
     </ModalDialog>
+  )
+}
+
+/** Desktop only: the browser editor is served at its current version and never checks. */
+function UpdateControls() {
+  const checkOnLaunch = useUpdateStore((s) => s.checkOnLaunch)
+  const setCheckOnLaunch = useUpdateStore((s) => s.setCheckOnLaunch)
+  const check = useUpdateStore((s) => s.check)
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+      <label className="flex cursor-pointer items-center gap-2">
+        <input
+          type="checkbox"
+          checked={checkOnLaunch}
+          onChange={(event) => setCheckOnLaunch(event.target.checked)}
+        />
+        {t('update.checkOnLaunch')}
+      </label>
+      <TextButton onClick={() => void check()}>{t('update.check')}</TextButton>
+    </div>
   )
 }

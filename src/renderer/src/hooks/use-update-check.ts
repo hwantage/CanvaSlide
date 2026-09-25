@@ -7,17 +7,22 @@ import { useUpdateStore } from '@/store/update-store'
 /** How long after launch to check, so the first paint and document load are never delayed. */
 const LAUNCH_CHECK_DELAY_MS = 3000
 
-/** Checks for updates once after launch (desktop only) and on the native menu item. */
+/** Checks for updates once after launch (desktop, unless turned off) and on the native menu item. */
 export function useUpdateCheck(): void {
   useEffect(() => {
     const disposeMenu = onCheckUpdatesRequested(() => {
       useAboutDialogStore.getState().show()
       void useUpdateStore.getState().check()
     })
-    if (!isTauriRuntime()) {
+    if (!isTauriRuntime() || !useUpdateStore.getState().checkOnLaunch) {
       return disposeMenu
     }
-    const timer = setTimeout(() => void useUpdateStore.getState().check(), LAUNCH_CHECK_DELAY_MS)
+    // Why: turning the setting off during the delay must still cancel this launch's check.
+    const timer = setTimeout(() => {
+      if (useUpdateStore.getState().checkOnLaunch) {
+        void useUpdateStore.getState().check()
+      }
+    }, LAUNCH_CHECK_DELAY_MS)
     return () => {
       clearTimeout(timer)
       disposeMenu()

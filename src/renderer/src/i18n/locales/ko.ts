@@ -100,7 +100,6 @@ export const ko: UiStrings = {
   'fig.appearance': '원본 모양 유지',
   'fig.appearanceHint':
     '최상위 레이어별로 벡터 이미지로 변환합니다. 글자 윤곽선이 있으면 그대로 사용합니다.',
-  'fig.experimental': '실험 기능',
   'fig.experimentalHint':
     '{product} 파일 형식은 공개되지 않아 새 버전에서 저장한 파일은 가져오지 못하거나 다르게 변환될 수 있습니다.',
   'fig.limitations':
@@ -188,6 +187,7 @@ export const ko: UiStrings = {
 
   'share.button': '공유',
   'share.title': '공유',
+  'share.experimental': '실험 기능',
   'share.openTitle': '공유 캔버스 열기',
   'share.description':
     '현재 캔버스의 사본을 링크로 공유합니다. 링크가 있는 모든 사용자가 열 수 있으며, 생성 후 24시간이 지나면 자동 삭제됩니다. 이후 편집 내용은 반영되지 않습니다. 최대 크기: {limit}.',

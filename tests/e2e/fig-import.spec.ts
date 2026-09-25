@@ -32,7 +32,7 @@ test('imports selected Figma pages with editable layers and one undo step @webki
   await page.getByTestId('import-files').click()
   await (await chooser).setFiles(fixture)
   const dialog = page.getByRole('dialog', { name: 'Import Figma file' })
-  await expect(dialog.getByText('Experimental', { exact: true })).toBeVisible()
+  await expect(dialog.getByText('Experimental', { exact: true })).toHaveCount(0)
   await expect(dialog).toContainText('Figma does not publish its file format')
   await expect(dialog.getByLabel(/First page/)).toBeChecked()
   await expect(dialog.getByLabel(/Second page/)).not.toBeChecked()

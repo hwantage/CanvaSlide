@@ -45,12 +45,7 @@ export function FigImportDialog() {
       onClose={hide}
       className="w-[28rem] max-w-[calc(100vw-2rem)]"
     >
-      <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold">{t('fig.title', { product: 'Figma' })}</h2>
-        <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          {t('fig.experimental')}
-        </span>
-      </div>
+      <h2 className="text-sm font-semibold">{t('fig.title', { product: 'Figma' })}</h2>
       <p className="mt-1 truncate text-xs text-muted-foreground" title={name}>
         {name}
       </p>

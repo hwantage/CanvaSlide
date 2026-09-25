@@ -204,6 +204,8 @@ export const ko: UiStrings = {
   'share.copying': '링크 복사 중…',
   'share.loading': '공유 캔버스 불러오는 중…',
   'share.exportFile': '{format} 내보내기',
+  'share.service': '이용 약관·개인정보·제한',
+  'share.serviceError': '공유 서비스 안내를 열지 못했습니다: {message}',
   'share.fallback': '현재 캔버스를 로컬 {format} 파일로 저장하여 공유할 수 있습니다.',
   'share.error.invalid':
     '공유 링크 또는 문서가 올바르지 않습니다. 공유할 이미지는 문서에 포함되어 있어야 하며, 이미지 데이터가 형식과 일치해야 합니다.',

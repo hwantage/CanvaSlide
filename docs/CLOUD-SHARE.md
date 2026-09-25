@@ -2,8 +2,8 @@
 
 [Documentation map](./README.md) · [Product overview](../README.md)
 
-Cloud sharing is [experimental](../README.md#feature-status): the hosted service's limits and
-availability depend on its Cloudflare plan.
+Cloud sharing is [experimental](../README.md#feature-status): the limits and availability of the
+[hosted service](#hosted-service) depend on its Cloudflare plan.
 
 ## Sharing a snapshot
 
@@ -21,6 +21,87 @@ Later edits do not change existing links. The app has no account or manual revoc
 operator can delete a snapshot on request ([abuse reports](#reporting-abuse-and-deleting-a-snapshot)).
 Keep private content in local files. Documents over 5 MiB (UTF-8 JSON, including embedded images)
 stay local. The dialog offers a `.canvaslide` save when sharing is unavailable, offline, or over quota.
+
+## Hosted service
+
+Official desktop releases and the web editor at <https://canvaslide.pages.dev/> share through a
+service that the CanvaSlide maintainers run on Cloudflare Pages. This section covers that service
+only; a [copy hosted by someone else](#hosting-and-desktop-builds) follows its operator's terms.
+The Share dialog links here when the app uses this service.
+
+### Terms of use
+
+- The service is free, needs no account and comes with no warranty or guaranteed availability. While
+  cloud sharing is experimental, the maintainers may change its limits, pause it or stop it.
+- Share only content you have the right to share. Do not use the service for illegal content,
+  malware, content that infringes someone else's rights, harassment, or other people's personal data
+  without their consent.
+- The maintainers may delete snapshots, and block requests, that break these terms or put the service
+  at risk.
+- A snapshot is not storage or access control: anyone with the link can open it until it expires.
+  Keep the `.canvaslide` file as your copy, and keep confidential content out of shared snapshots.
+
+### What is stored, and for how long
+
+- **The snapshot:** the document as uploaded, including its embedded images, and the access choice,
+  stored in Workers KV under the random ID in the link. Nothing else is stored with it: no account,
+  IP address, device identifier or document history. KV deletes it 24 hours after upload; the
+  maintainers can delete it earlier on request ([reporting abuse](#reporting-abuse-and-deleting-a-snapshot)).
+- **Copies outside the service:** a recipient's open tab, an edited copy they saved and anything they
+  exported stay with them after the snapshot is deleted.
+- **Logs:** the share API writes no logs. Pages Functions logs are a live stream that a maintainer can
+  watch while it is open and
+  [are not stored](https://developers.cloudflare.com/pages/functions/debugging-and-logging/).
+  The Cloudflare dashboard shows the maintainers aggregate request and error counts.
+- **Cloudflare:** Cloudflare hosts the service for the maintainers. It runs the share API, stores the
+  snapshot, and sees each request in full, including the uploaded document, the IP address, user agent
+  and headers, in order to serve and protect it. It processes this data under the
+  [Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/). Its responses ask browsers
+  that support Network Error Logging to report failed requests to Cloudflare.
+- The project adds no cookies, analytics or tracking to the web editor or the API. What the desktop
+  app and web editor send, and when, is listed under
+  [network and privacy](../README.md#network-and-privacy).
+
+### Limits and cost
+
+- One snapshot is at most 5 MiB and lasts 24 hours.
+- The service runs on Cloudflare's Workers Free plan, whose daily quotas are shared by everyone who
+  uses it and reset at 00:00 UTC: 100,000 function requests, 1,000 new snapshots (KV writes) and
+  100,000 snapshot reads. Stored snapshots are capped at 1 GB in total, and space frees as snapshots
+  expire ([Workers](https://developers.cloudflare.com/workers/platform/limits/),
+  [KV](https://developers.cloudflare.com/kv/platform/limits/),
+  [KV pricing](https://developers.cloudflare.com/kv/platform/pricing/)).
+- The Free plan also limits the CPU time of each request, and validating a large snapshot takes more,
+  so an upload can fail well below 5 MiB, especially one with many elements. Send the file instead.
+- The quotas cap the cost: once one is used up, the service refuses requests instead of charging for
+  more, until the daily quotas reset or, for the storage cap, until expiring snapshots free space.
+  The Share dialog then reports that sharing is over its limit, unavailable or unreachable, and
+  offers a local save.
+- No per-client rate limit applies yet: a [WAF rule](#rate-limiting) needs a custom domain, and the
+  service runs on `canvaslide.pages.dev`. Until then, one client can use up the daily quotas for
+  everyone.
+
+### If the service is unavailable or stops
+
+Only creating and opening share links depend on the share API. Editing, saving, crash recovery,
+presenting and HTML or PDF export keep working without it in the desktop app and in a web editor tab
+that is already open, and the Share dialog offers a `.canvaslide`, HTML or PDF file instead of a link.
+The web editor itself is served by the same Cloudflare Pages project, so an outage of that project
+also keeps it from loading.
+
+If the maintainers stop the service, they announce it in the release notes and in this guide, and
+stop both ways the app reaches it:
+
+- **Web editor:** it is published without `VITE_CLOUD_SHARE_URL` and calls the share API on its own
+  origin, so that variable does not affect it. They remove the production `SHARED_DOCUMENTS` namespace
+  from [`wrangler.toml`](../wrangler.toml) and publish; the API then answers 503, and both the web
+  editor and installed desktop releases report that sharing is unavailable.
+- **Desktop releases:** they remove the `VITE_CLOUD_SHARE_URL` repository variable, so releases built
+  afterwards have no share service configured. Installed releases keep the origin they were built
+  with, and report sharing as unavailable, or as unreachable once nothing answers there.
+
+Links stop opening; since every snapshot expires within 24 hours anyway, no long-term content is lost.
+Send files instead, or [host your own copy](#hosting-and-desktop-builds).
 
 ## Local development
 
@@ -156,8 +237,11 @@ cannot be built on eventually consistent KV. Configure a
 ### Reporting abuse and deleting a snapshot
 
 Report a share link that contains abusive or illegal content privately, through
-[GitHub's private report form](https://github.com/hwantage/CanvaSlide/security/advisories/new).
+[GitHub's private report form](https://github.com/hwantage/CanvaSlide/security/advisories/new),
+which requires a GitHub account.
 Include the share ID (the `share` value in the link) and the reason; do not post the link publicly.
+Ask the same way to delete a snapshot before it expires for any other reason, such as a link shared by
+mistake.
 
 A maintainer with access to the Cloudflare account deletes the snapshot with Wrangler:
 

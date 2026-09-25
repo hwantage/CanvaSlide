@@ -6,22 +6,23 @@ targets; the browser editor, exported HTML player and product website have diffe
 
 ## Maintained guides
 
-| Task                                                   | Start here                                                                                        |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| Understand features, get started, use shortcuts        | [English README](../README.md), [한국어 README](../README.ko.md)                                  |
-| Check which features are core or experimental          | [Feature status](../README.md#feature-status)                                                     |
-| Follow a step-by-step user guide                       | [Website documentation](https://hwantage.github.io/CanvaSlide/docs/)                              |
-| Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [code rules and checks](../AGENTS.md)                         |
-| Change rendering, history, presentation or document IO | [Architecture and constraints](./ARCHITECTURE.md)                                                 |
-| Import a local Figma file                              | [Figma import](./FIGMA-IMPORT.md)                                                                 |
-| See what the app sends over the network                | [Network and privacy](../README.md#network-and-privacy)                                           |
-| Use or host cloud snapshot sharing                     | [Cloud share](./CLOUD-SHARE.md)                                                                   |
-| Change how unsaved work is copied and offered back     | [Crash recovery](./CRASH-RECOVERY.md)                                                             |
-| Edit or author a sample document                       | [Examples](../examples/README.md)                                                                 |
-| Create a presentation with an AI assistant             | [Authoring guide](../examples/README.md#authoring-with-ai), [portable skill](../skills/README.md) |
-| Maintain the website and its user guide                | [Website contributor guide](../website/README.md)                                                 |
-| Build and publish a release                            | [Release procedure](./RELEASE.md)                                                                 |
-| Report a security vulnerability                        | [Security policy](../SECURITY.md)                                                                 |
+| Task                                                       | Start here                                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Understand features, get started, use shortcuts            | [English README](../README.md), [한국어 README](../README.ko.md)                                  |
+| Check which features are core or experimental              | [Feature status](../README.md#feature-status)                                                     |
+| Follow a step-by-step user guide                           | [Website documentation](https://hwantage.github.io/CanvaSlide/docs/)                              |
+| Set up, contribute, verify a change                        | [CONTRIBUTING](../CONTRIBUTING.md), [code rules and checks](../AGENTS.md)                         |
+| Change rendering, history, presentation or document IO     | [Architecture and constraints](./ARCHITECTURE.md)                                                 |
+| Import a local Figma file                                  | [Figma import](./FIGMA-IMPORT.md)                                                                 |
+| See what the app sends over the network                    | [Network and privacy](../README.md#network-and-privacy)                                           |
+| Use or host cloud snapshot sharing                         | [Cloud share](./CLOUD-SHARE.md)                                                                   |
+| Check the hosted share service's terms, privacy and limits | [Hosted service](./CLOUD-SHARE.md#hosted-service)                                                 |
+| Change how unsaved work is copied and offered back         | [Crash recovery](./CRASH-RECOVERY.md)                                                             |
+| Edit or author a sample document                           | [Examples](../examples/README.md)                                                                 |
+| Create a presentation with an AI assistant                 | [Authoring guide](../examples/README.md#authoring-with-ai), [portable skill](../skills/README.md) |
+| Maintain the website and its user guide                    | [Website contributor guide](../website/README.md)                                                 |
+| Build and publish a release                                | [Release procedure](./RELEASE.md)                                                                 |
+| Report a security vulnerability                            | [Security policy](../SECURITY.md)                                                                 |
 
 ## Using this map
 

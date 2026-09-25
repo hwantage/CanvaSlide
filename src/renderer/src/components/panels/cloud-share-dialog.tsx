@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, FileDown } from 'lucide-react'
+import { Copy, ExternalLink, FileDown } from 'lucide-react'
 import { MAX_SHARE_BYTES } from '@shared/cloud-share'
 import { DOCUMENT_FILE_EXTENSION } from '@shared/canvas/document-file'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
@@ -10,7 +10,8 @@ import type { DocumentCommands } from '@/hooks/use-document-commands'
 import { t } from '@/i18n/ui-strings'
 import { cn } from '@/lib/cn'
 import { exportFormatNames } from '@/lib/export-format'
-import { copyShareLink } from '@/platform/cloud-share'
+import { copyShareLink, usesHostedShareService } from '@/platform/cloud-share'
+import { HOSTED_SHARE_SERVICE_URL, openHostedShareServicePage } from '@/platform/external-links'
 import { useCloudShareStore } from '@/store/cloud-share-store'
 import { useDocumentStore } from '@/store/document-store'
 import { useExportDialogStore } from '@/store/modal-dialogs'
@@ -76,6 +77,20 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
             {t('share.description', { limit: `${MAX_SHARE_BYTES / 1024 / 1024} MiB` })}
           </p>
+          {usesHostedShareService() && (
+            <a
+              href={HOSTED_SHARE_SERVICE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="-mt-2 mb-4 flex w-fit items-center gap-1.5 rounded-sm text-xs underline underline-offset-4 hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={(event) => {
+                event.preventDefault()
+                void openHostedShareServicePage()
+              }}
+            >
+              {t('share.service')} <ExternalLink size={13} aria-hidden />
+            </a>
+          )}
           <fieldset disabled={busy || copying} className="mb-4 text-xs">
             <legend className="sr-only">{t('share.access.label')}</legend>
             <div className="grid grid-cols-2 gap-2">

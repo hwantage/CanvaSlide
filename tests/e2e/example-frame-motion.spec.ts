@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import { appModuleUrl } from './app-module'
 import type { CanvasDocument } from '../../src/shared/canvas/element-types'
 import { primaryModifier } from './canvas-gestures'
+import { storedDocuments } from './recovery-records'
 
 for (const example of [
   { id: 'inside', name: /^INSIDE\./, frames: 13, photos: 9, animatedImage: undefined },
@@ -135,8 +136,15 @@ for (const example of [
     const name = page.getByRole('textbox', { name: 'Document name' })
     await name.fill('Local edits')
     await name.press('Tab')
+    // Why: whether the recovery copy of this edit lands before the reload is a race; wait for the
+    // copy so the reload always brings its offer, and answer it.
+    await expect.poll(() => storedDocuments(page), { timeout: 15_000 }).toEqual(['Local edits'])
     await page.reload()
     await expect(name).toHaveValue(example.name, { timeout: 30_000 })
+    const recovery = page.getByRole('dialog', { name: 'Recover unsaved work' })
+    await expect(recovery).toContainText('Local edits')
+    await recovery.getByRole('button', { name: 'Discard', exact: true }).click()
+    await expect(recovery).toHaveCount(0)
     await page.keyboard.press(`${await primaryModifier(page)}+Enter`)
     expect(errors).toEqual([])
     await expect(page.getByTestId('presentation-counter')).toContainText(`1 / ${example.frames}`)

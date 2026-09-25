@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Locator } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 async function moveOnCanvas(page: Page, x: number, y: number) {
   await page.getByTestId('canvas-viewport').hover({ position: { x, y } })
@@ -29,7 +30,7 @@ async function expectPath(element: Locator, expected: number[]) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('pastes at the moved pointer and cascades until it moves again @webkit', async ({ page }) => {

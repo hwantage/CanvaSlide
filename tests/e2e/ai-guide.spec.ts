@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 for (const locale of ['en', 'ko']) {
   test(`AI guide copies the complete ${locale} prompt and offers honest failure feedback @core-interaction`, async ({
@@ -289,6 +290,7 @@ test('AI guide preserves edits, selection and undo while blocking canvas command
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   const modifier = await primaryModifier(page)
   await page.keyboard.press('t')
   await page.getByTestId('canvas-viewport').click({ position: { x: 350, y: 250 } })

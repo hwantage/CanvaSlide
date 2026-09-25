@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { waitForEditor } from './editor-ready'
 
 /** Minimal two-page PDF (Letter, then landscape) built by hand so the test needs no fixture file. */
 function twoPagePdf(): string {
@@ -46,7 +47,7 @@ async function dropPdf(page: Page, at: { x: number; y: number }) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('dropping a PDF adds one image and one frame per page, laid out as a grid', async ({

@@ -1,11 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 /** Keys pressed before the editor has mounted would miss its listeners. */
 async function openEditor(page: Page) {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 }
 
 /** Focus that falls back to the body sends keys to the window listeners instead of the dialog. */

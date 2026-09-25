@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test('shift or the primary modifier toggles objects and frames in the selection', async ({
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [100, 100], [200, 200])
   await page.keyboard.press('r')

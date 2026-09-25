@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { appModuleUrl } from './app-module'
+import { waitForEditor } from './editor-ready'
 
 test('page code reaches the running app module without Resource Timing', async ({ page }) => {
   // An empty buffer stands in for startup overflowing the default 250 entries.
   await page.addInitScript(() => performance.setResourceTimingBufferSize(0))
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
   await page.evaluate(async (url) => {
     const { useDocumentStore } = await import(url)
     const store = useDocumentStore.getState()

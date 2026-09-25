@@ -26,7 +26,8 @@ contributors and coding agents alike. How to propose, name and submit a change i
   (crash-recovery copies), `launch_document.rs` (the file the OS opens the app with),
   `system_fonts.rs` (installed font list), `font_embed.rs` (fonts embedded in HTML export),
   `video_embed.rs` (loopback video embed host), `app_menu.rs` (macOS menu).
-- `src/cloud-share/`, `functions/api/` — snapshot validation/storage and Cloudflare Pages routes.
+- `src/cloud-share/`, `functions/api/` — snapshot validation/storage and Cloudflare Pages routes;
+  `wrangler.toml` configures the Pages project, which a workflow publishes from `main` once CI passes.
   `src/shared/cloud-share.ts` holds the share limits, IDs and snapshot shape the app and API agree on;
   `src/shared/example-catalog.ts` is the example allowlist shared by the app, build and website.
 - `website/` — separately built product website and user guide; not the hosted editor build.

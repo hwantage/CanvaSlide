@@ -1,0 +1,30 @@
+# Cloudflare Pages project for the hosted editor and its share API (docs/CLOUD-SHARE.md).
+# Why: with this file Cloudflare reads the project's settings from here instead of the dashboard.
+name = "canvaslide"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-09-19"
+
+# The top level is `pnpm dev:cloud`, whose KV namespace is simulated in .wrangler/.
+[[kv_namespaces]]
+binding = "SHARED_DOCUMENTS"
+id = "local-shared-documents"
+
+# Why: the Git integration builds with these; an environment that sets its KV namespaces must set
+# its vars too, so each environment lists them.
+[env.production.vars]
+NODE_VERSION = "22"
+PNPM_VERSION = "11"
+
+[[env.production.kv_namespaces]]
+binding = "SHARED_DOCUMENTS"
+id = "473238a4164d442889037c9e8c04d9d5"
+
+# Why: previews build unreviewed branches, so they get no namespace and sharing there reports that
+# it is unavailable. Each branch builds with its own copy of this file, so this is a default that
+# holds only while everyone who can push a branch here is trusted (docs/CLOUD-SHARE.md).
+[env.preview]
+kv_namespaces = []
+
+[env.preview.vars]
+NODE_VERSION = "22"
+PNPM_VERSION = "11"

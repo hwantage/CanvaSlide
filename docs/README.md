@@ -21,7 +21,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | Edit or author a sample document                           | [Examples](../examples/README.md)                                                                 |
 | Create a presentation with an AI assistant                 | [Authoring guide](../examples/README.md#authoring-with-ai), [portable skill](../skills/README.md) |
 | Maintain the website and its user guide                    | [Website contributor guide](../website/README.md)                                                 |
-| Build and publish a release                                | [Release procedure](./RELEASE.md)                                                                 |
+| Build and publish a release                                | [Release procedure](./RELEASE.md) (Korean maintainer runbook)                                     |
 | Report a security vulnerability                            | [Security policy](../SECURITY.md)                                                                 |
 
 ## Using this map
@@ -37,6 +37,14 @@ to determine what has shipped, since a checkout can contain changes since that r
 
 Track proposed work in [issues](https://github.com/hwantage/CanvaSlide/issues). The rules for keeping
 guides current are in [AGENTS.md](../AGENTS.md#documentation).
+
+## Documentation language
+
+Repository documentation is written in English, and [`README.ko.md`](../README.ko.md) translates the
+English README. The website and the app UI are written in English first and translated into Korean.
+The one exception is the [release procedure](./RELEASE.md), a Korean runbook for the maintainers
+who publish releases. Korean text uses the terms of the app's Korean UI in
+[`ko.ts`](../src/renderer/src/i18n/locales/ko.ts), for example 릴리스 for "release".
 
 ## Historical records
 

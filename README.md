@@ -133,8 +133,8 @@ pnpm dev            # Tauri desktop window
 
 The checks to run before a pull request are listed under [Verify in AGENTS.md](./AGENTS.md#verify).
 
-For website development, use the [website guide](./website/README.md). For native bundle checks,
-installer builds, signing and publishing, use the [release guide](./docs/RELEASE.md).
+For website development, use the [website guide](./website/README.md). Maintainers build, sign and
+publish releases with the [release guide](./docs/RELEASE.md), which is written in Korean.
 
 ## Contributing
 

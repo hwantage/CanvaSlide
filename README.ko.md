@@ -130,8 +130,8 @@ pnpm dev            # Tauri 데스크톱 창
 
 PR 전에 실행할 검증 명령은 [AGENTS.md의 Verify](./AGENTS.md#verify)에 있습니다.
 
-웹사이트 개발은 [웹사이트 가이드](./website/README.md), 네이티브 번들 검증·설치 파일 빌드·서명·공개는
-[릴리스 가이드](./docs/RELEASE.md)를 참고하세요.
+웹사이트 개발은 [웹사이트 가이드](./website/README.md)를 참고하세요. 메인테이너는 한국어로 쓴
+[릴리스 가이드](./docs/RELEASE.md)에 따라 릴리스를 빌드·서명·공개합니다.
 
 ## 기여하기
 

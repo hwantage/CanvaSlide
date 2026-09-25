@@ -64,9 +64,10 @@ The website keeps its closing cards in `website/src/showcase.tsx` in the order S
 
 To add an example:
 
-1. Save a current, validated `.canvaslide` file under `examples/`. Keep each emitted file at or below the
-   [Cloudflare Pages 25 MiB limit](https://developers.cloudflare.com/pages/platform/limits/#file-size);
-   the build rejects larger assets. Verify image quality, animation, and camera-motion previews after
+1. Save a current, validated `.canvaslide` file under `examples/`. Keep it within the 8 MiB sample
+   budget in [`examples/README.md`](../examples/README.md#editing-a-sample), far below the
+   [Cloudflare Pages 25 MiB limit](https://developers.cloudflare.com/pages/platform/limits/#file-size)
+   that the build enforces. Verify image quality, animation, and camera-motion previews after
    optimizing images. Sources and deployed assets are the same bytes.
 2. Add a stable kebab-case ID and its source path to `exampleCatalog`. Keep published IDs stable.
 3. Add `site.showcase.<id>.title`, `.body`, and `.alt` in both website locale tables.

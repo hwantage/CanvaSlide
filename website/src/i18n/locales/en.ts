@@ -2,12 +2,12 @@
 export const en = {
   'site.showcase.freefall.title': 'FREEFALL. One canvas. No cuts.',
   'site.showcase.freefall.body':
-    'Follow ten camera stops from Earth to a city, into tiny details, then across a sea of concert lights and animated fireworks. This larger example downloads about {size}.',
+    'Follow ten camera stops from Earth to a city, into tiny details, then across a sea of concert lights and animated fireworks.',
   'site.showcase.freefall.alt': 'Earth seen from space with the FREEFALL title and nested details.',
 
   'site.showcase.inside.title': 'Inside the human body.',
   'site.showcase.inside.body':
-    'Travel through thirteen frames of an illustrated anatomy presentation. Layered {svg} artwork and embedded photographs reveal details as you zoom. This larger example downloads about {size}.',
+    'Travel through thirteen frames of an illustrated anatomy presentation. Layered {svg} artwork and embedded photographs reveal details as you zoom.',
   'site.showcase.inside.alt':
     'An illustrated anatomy presentation with detailed organs and embedded photographs.',
 

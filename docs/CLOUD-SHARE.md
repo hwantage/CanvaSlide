@@ -165,6 +165,7 @@ pnpm exec wrangler kv key get "share:<share-id>" --namespace-id <namespace-id> -
 pnpm exec wrangler kv key delete "share:<share-id>" --namespace-id <namespace-id> --remote
 ```
 
-Preview deployments have no namespace, so every link to the hosted editor is stored in production.
+Preview deployments have no namespace, so sharing there creates no links and opens none; every
+snapshot to delete is in the production namespace.
 Other regions can keep serving the snapshot for a minute or more after deletion because of KV
 propagation, and a recipient who already opened the link keeps the copy loaded in their tab.

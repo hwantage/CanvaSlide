@@ -44,6 +44,13 @@ test('exported HTML wraps shape and connector labels where the editor does @webk
       label,
       textStyle: id === 'large' ? { ...textStyle, fontSize: 64 } : textStyle
     })
+    // Why: measured here, not hard-coded, so the box fits the text under whatever fonts CI has.
+    const probe = document.createElement('span')
+    Object.assign(probe.style, { position: 'absolute', fontSize: '20px', whiteSpace: 'pre' })
+    probe.textContent = 'nnnnnnnnnniiiiiiiiiiiiiiii'
+    document.body.append(probe)
+    const textWidth = probe.getBoundingClientRect().width
+    probe.remove()
     const elements = {
       frame: {
         id: 'frame',
@@ -55,14 +62,14 @@ test('exported HTML wraps shape and connector labels where the editor does @webk
         name: 'F',
         order: 0
       },
-      // Room for the text only once the editor's label padding is taken off, not the export's.
+      // Fits the text inside the editor's 9.75px label padding, not the exports' former 12px.
       shape: {
         id: 'shape',
         type: 'shape',
         shape: 'rectangle',
         x: 600,
         y: 450,
-        width: 200,
+        width: Math.ceil(textWidth) + 22,
         height: 100,
         style: { fill: '#dbeafe', stroke: '#2563eb', strokeWidth: 2, cornerRadius: 8 },
         text: 'nnnnnnnnnniiiiiiiiiiiiiiii',

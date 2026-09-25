@@ -90,10 +90,18 @@ The web editor itself is served by the same Cloudflare Pages project, so an outa
 also keeps it from loading.
 
 If the maintainers stop the service, they announce it in the release notes and in this guide, and
-remove the `VITE_CLOUD_SHARE_URL` repository variable so that releases built afterwards have no share
-service configured. Installed releases report that sharing is unavailable or unreachable. Links stop opening; since every snapshot expires within
-24 hours anyway, no long-term content is lost. Send files instead, or
-[host your own copy](#hosting-and-desktop-builds).
+stop both ways the app reaches it:
+
+- **Web editor:** it is published without `VITE_CLOUD_SHARE_URL` and calls the share API on its own
+  origin, so that variable does not affect it. They remove the production `SHARED_DOCUMENTS` namespace
+  from [`wrangler.toml`](../wrangler.toml) and publish; the API then answers 503, and both the web
+  editor and installed desktop releases report that sharing is unavailable.
+- **Desktop releases:** they remove the `VITE_CLOUD_SHARE_URL` repository variable, so releases built
+  afterwards have no share service configured. Installed releases keep the origin they were built
+  with, and report sharing as unavailable, or as unreachable once nothing answers there.
+
+Links stop opening; since every snapshot expires within 24 hours anyway, no long-term content is lost.
+Send files instead, or [host your own copy](#hosting-and-desktop-builds).
 
 ## Local development
 

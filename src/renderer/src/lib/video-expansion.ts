@@ -16,5 +16,6 @@ export const canvasVideoFocus = createVideoFocus({
     const element = useDocumentStore.getState().document.elements[id]
     return element?.type === 'video' ? element : null
   },
-  getViewport: () => useCameraStore.getState().viewport
+  getViewport: () => useCameraStore.getState().viewport,
+  onRestore: () => usePresentationStore.getState().refitToViewport()
 })

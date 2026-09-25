@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 import { createVideoFocus, type VideoView } from './video-focus'
 import { LEVEL_SHOT } from './presentation-shot'
 
-function setup(width = 640, height = 406) {
+function setup(width = 640, height = 406, onRestore?: () => void) {
   let view: VideoView = {
     camera: { x: 20, y: -50, zoom: 0.5 },
     shot: { ...LEVEL_SHOT, roll: 20, spotlight: 0.5 }
@@ -19,7 +19,8 @@ function setup(width = 640, height = 406) {
       view = next
     },
     getRect: () => rect,
-    getViewport: () => viewport
+    getViewport: () => viewport,
+    ...(onRestore ? { onRestore } : {})
   })
   return {
     focus,
@@ -80,4 +81,18 @@ it('does not overwrite the next frame camera when the expanded video leaves the 
   handle.close()
   expect(state.view()).toBe(focused)
   expect(state.focus.refit()).toBe(false)
+})
+
+it('reports a restored view so the host can refit it, but not a hand-over or a dispose', () => {
+  let restored = 0
+  const state = setup(640, 406, () => restored++)
+  const first = state.focus.open('first', () => undefined, state.resizeMedia)
+  const second = state.focus.open('second', () => undefined, state.resizeMedia)
+  expect(restored).toBe(0)
+  first.close()
+  expect(restored).toBe(0)
+  second.close()
+  expect(restored).toBe(1)
+  state.focus.open('third', () => undefined, state.resizeMedia).dispose()
+  expect(restored).toBe(1)
 })

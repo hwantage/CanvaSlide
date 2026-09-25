@@ -244,6 +244,31 @@ describe('presentation refit', () => {
     expect(useCameraStore.getState().camera.zoom).toBeCloseTo(large.zoom, 6)
   })
 
+  it('keeps the opening flight at its full length when the viewport changes under it', () => {
+    const doc = useDocumentStore.getState()
+    doc.insertElement(frame('a', 1, 0))
+    doc.updateSettings({ transitionMs: 800 })
+    const animateTo = useCameraStore.getState().animateTo
+    const durations: number[] = []
+    useCameraStore.setState({
+      animateTo: (target, durationMs, options) => {
+        durations.push(durationMs)
+        animateTo(target, durationMs, options)
+      }
+    })
+    try {
+      const presentation = usePresentationStore.getState()
+      presentation.start()
+      presentation.flyToCurrent()
+      // The editor chrome hides after takeoff, which resizes the viewport mid-flight.
+      useCameraStore.getState().setViewport({ width: 1400, height: 900 })
+      presentation.refitToViewport()
+      expect(durations).toEqual([800, 800])
+    } finally {
+      useCameraStore.setState({ animateTo })
+    }
+  })
+
   it('re-fits the frame a parked preview owns after the list reorders underneath it', async () => {
     const doc = useDocumentStore.getState()
     doc.loadDocument(createEmptyDocument(), null)

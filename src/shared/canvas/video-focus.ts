@@ -10,6 +10,8 @@ export function createVideoFocus(access: {
   setView: (view: VideoView) => void
   getRect: (id: string) => Rect | null
   getViewport: () => Size
+  /** Called after a closed video hands back the view it replaced, which may no longer fit. */
+  onRestore?: () => void
 }) {
   let current: {
     id: string
@@ -17,7 +19,7 @@ export function createVideoFocus(access: {
     onClose: () => void
     resize: (height: number, zoom: number) => void
   } | null = null
-  const close = (restore: boolean) => {
+  const close = (restore: boolean, reportRestore = restore) => {
     const previous = current
     current = null
     if (previous) {
@@ -25,6 +27,9 @@ export function createVideoFocus(access: {
         access.setView(previous.before)
       }
       previous.onClose()
+      if (reportRestore) {
+        access.onRestore?.()
+      }
     }
   }
   const refit = () => {
@@ -48,7 +53,8 @@ export function createVideoFocus(access: {
       onClose: () => void,
       resize: (height: number, zoom: number) => void
     ): VideoFocusHandle => {
-      close(true)
+      // Why: the next video takes the view over at once, so nothing needs to refit in between.
+      close(true, false)
       const focus = { id, before: access.getView(), onClose, resize }
       current = focus
       if (!refit()) {

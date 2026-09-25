@@ -21,7 +21,8 @@ stay local. The dialog offers a `.canvaslide` save when sharing is unavailable, 
 
 ## Local development
 
-Run the app and Pages Functions with a local KV namespace, without a Cloudflare account:
+Run the app and Pages Functions with a local KV namespace, without a Cloudflare account. The command
+reads the top level of [`wrangler.toml`](../wrangler.toml):
 
 ```bash
 pnpm dev:cloud      # http://localhost:8788, builds the app first; KV stays in .wrangler/
@@ -34,13 +35,38 @@ local-save fallback. No upload occurs until **Copy link** is pressed.
 
 ## Hosting and desktop builds
 
-To host the editor on Cloudflare Pages, use the repository root, build command `pnpm build:web`,
-and output directory `dist`. The product website in `website/` remains a separate build.
-Create a KV namespace and bind it as **SHARED_DOCUMENTS** in the Pages project's settings for
-each production/preview environment, then redeploy. The `functions/api/share.ts` and
+The hosted editor is the Cloudflare Pages project configured in [`wrangler.toml`](../wrangler.toml):
+the output directory `dist` built by `pnpm build:web`, the compatibility date, and the KV namespace
+bound as **SHARED_DOCUMENTS** in production. Cloudflare reads these settings from the file and shows
+them read-only in the dashboard
+([Pages Wrangler configuration](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)).
+The product website in `website/` remains a separate build. The `functions/api/share.ts` and
 `functions/api/share/[id].ts` routes provide POST/GET; `src/renderer/public/_routes.json` restricts function
-invocations to those API paths. See Cloudflare's
-[Pages KV binding instructions](https://developers.cloudflare.com/pages/functions/bindings/#kv-namespaces).
+invocations to those API paths.
+
+Production is published only from commits that passed CI, by the
+[Web editor workflow](../.github/workflows/deploy-web-editor.yml):
+
+- Whenever CI finishes on `main`, it takes the newest commit of `main` whose CI passed, builds it with
+  `pnpm build:web` in a job without secrets, and publishes it with `wrangler pages deploy --branch main`.
+  After a failed run the editor and its share API stay on the last commit that passed. **Actions → Web
+  editor → Run workflow** on `main` publishes the newest passing commit again. To retry a failed
+  publication, run it that way instead of re-running the failed job, which would publish the commit
+  that older run chose.
+- The publishing job runs in the `web-editor` GitHub environment and needs its `CLOUDFLARE_API_TOKEN`
+  secret, an API token with the account's **Cloudflare Pages: Edit** permission, and its
+  `CLOUDFLARE_ACCOUNT_ID` variable. Without both it publishes nothing and ends with a warning; with
+  only one of them it fails. Only the step that runs Wrangler receives the token, after dependencies
+  are installed without install scripts.
+- Pull request previews are still built by Cloudflare's Git integration, whose automatic production
+  deployments are turned off; publishing previews from a workflow would hand the token to pull request
+  runs. Previews run unreviewed branches, so `wrangler.toml` gives them no KV namespace and sharing
+  there reports that it is unavailable.
+
+To host another copy, create a Pages project whose production branch is `main` and a KV namespace,
+put their name and id in `wrangler.toml`, give the `web-editor` environment your own token and
+account ID, and set the workflow's environment URL to your project. If the project uses the Git
+integration, turn off its automatic production deployments, or it publishes commits that failed CI.
 
 For desktop builds, set `VITE_CLOUD_SHARE_URL=https://YOUR-PAGES-PROJECT.pages.dev` when running
 `pnpm dev` or `pnpm bundle:local`. This must be the origin of the deployed editor, without a path,
@@ -127,11 +153,11 @@ A maintainer with access to the Cloudflare account deletes the snapshot with Wra
 
 ```bash
 pnpm exec wrangler login
-pnpm exec wrangler kv namespace list        # note the id of the namespace bound as SHARED_DOCUMENTS
+# <namespace-id>: the SHARED_DOCUMENTS id under [[env.production.kv_namespaces]] in wrangler.toml
 pnpm exec wrangler kv key get "share:<share-id>" --namespace-id <namespace-id> --remote   # confirm
 pnpm exec wrangler kv key delete "share:<share-id>" --namespace-id <namespace-id> --remote
 ```
 
-Links created on a preview deployment are stored in the namespace bound to the preview environment.
+Preview deployments have no namespace, so every link to the hosted editor is stored in production.
 Other regions can keep serving the snapshot for a minute or more after deletion because of KV
 propagation, and a recipient who already opened the link keeps the copy loaded in their tab.

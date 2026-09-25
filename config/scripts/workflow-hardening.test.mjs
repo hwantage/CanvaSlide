@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import {
   chmodSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -22,6 +23,7 @@ const release = workflows.find(({ name }) => name === 'release.yml').text
 const ci = workflows.find(({ name }) => name === 'ci.yml').text
 const releaseNotes = workflows.find(({ name }) => name === 'release-notes.yml').text
 const website = workflows.find(({ name }) => name === 'deploy-website.yml').text
+const webEditor = workflows.find(({ name }) => name === 'deploy-web-editor.yml').text
 const playwrightConfig = readFileSync(
   new URL('../../tests/playwright.config.ts', import.meta.url),
   'utf8'
@@ -565,6 +567,161 @@ test('the website gate stops when the GitHub API fails', { skip: shellSkip }, ()
   assert.notEqual(status, 0)
   assert.match(stderr, /gh: HTTP 502/)
   assert.equal(outputs, '')
+})
+
+const pagesConfig = readFileSync(new URL('../../wrangler.toml', import.meta.url), 'utf8')
+// A `key = "value"` of wrangler.toml's section `table` ('' for the top level), or undefined.
+function pagesSetting(table, key) {
+  const text = `\n${pagesConfig}`
+  const header = table ? `\n[${table}]\n` : '\n'
+  const start = text.indexOf(header)
+  const body = text.slice(start + header.length).split(/\n\[/)[0]
+  return start === -1 ? undefined : new RegExp(`^${key} = "([^"]*)"$`, 'm').exec(body)?.[1]
+}
+
+test('the web editor is published from main after CI, and only Wrangler gets the token', () => {
+  const ciName = /^name: (.+)$/m.exec(ci)[1]
+  assert.equal(
+    /\non:\n((?: {2}.*\n)+)/.exec(webEditor)[1],
+    `  workflow_run:\n    workflows: [${ciName}]\n    types: [completed]\n    branches: [main]\n` +
+      '  workflow_dispatch:\n'
+  )
+  assert.doesNotMatch(webEditor, /\bpaths(-ignore)?:|workflow_run\.(conclusion|head_sha)/)
+  assert.match(webEditor, /\nconcurrency:\n {2}group: web-editor\n {2}cancel-in-progress: false\n/)
+  assert.deepEqual(permissionsAt(webEditor, ''), ['contents: read'])
+  const jobs = jobsOf(webEditor)
+  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'deploy'])
+  // Why: the website's gate tests then cover this one as well.
+  assert.equal(jobs.gate, jobsOf(website).gate)
+  for (const id of ['build', 'deploy']) {
+    assert.doesNotMatch(`\n${jobs[id]}`, bypassesFailure, id)
+    assert.match(jobs[id], /\n {10}ref: \$\{\{ needs\.gate\.outputs\.sha \}\}\n/, id)
+  }
+  assert.match(`\n${jobs.build}`, /\n {4}needs: gate\n/)
+  assert.doesNotMatch(jobs.build, /permissions:|environment:|github\.token|secrets\./)
+  checkedStep(jobs.build, 'pnpm build:web')
+  const [upload] = stepsOf(jobs.build).filter((step) => step.includes('upload-artifact@'))
+  const [download] = stepsOf(jobs.deploy).filter((step) => step.includes('download-artifact@'))
+  assert.equal(artifactOf(download), artifactOf(upload))
+  // Why: Wrangler uploads the directory wrangler.toml names, which must be the one built.
+  const output = pagesSetting('', 'pages_build_output_dir').replace(/^\.\//, '')
+  assert.match(upload, new RegExp(`\\n {10}path: ${output}/\\n`))
+  assert.match(download, new RegExp(`\\n {10}path: ${output}\\n`))
+  assert.match(`\n${jobs.deploy}`, /\n {4}needs: \[gate, build\]\n/)
+  assert.match(jobs.deploy, /\n {4}environment:\n {6}name: web-editor\n/)
+  assert.doesNotMatch(jobs.deploy, /permissions:|github\.token/)
+  const readsSecrets = /\$\{\{[^}]*\bsecrets\b/
+  assert.doesNotMatch(jobs.build, readsSecrets)
+  assert.doesNotMatch(jobs.deploy.split('\n    steps:\n')[0], readsSecrets)
+  assert.equal(webEditor.match(new RegExp(readsSecrets, 'g')).length, 1)
+  const secretSteps = stepsOf(jobs.deploy).filter((step) => readsSecrets.test(step))
+  assert.equal(secretSteps.length, 1)
+  // Why: every step shares the runner with the token, so none but Wrangler may run package code.
+  assert.deepEqual(
+    stepsOf(jobs.deploy).filter((step) => !step.startsWith('      - uses: ')),
+    ['      - run: pnpm install --frozen-lockfile --ignore-scripts', secretSteps[0]]
+  )
+  assert.equal(
+    /\n {8}env:\n((?: {10}.*\n)+)/.exec(secretSteps[0])[1],
+    '          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n' +
+      '          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}\n' +
+      '          SHA: ${{ needs.gate.outputs.sha }}\n'
+  )
+  assert.doesNotMatch(secretSteps[0], /\b(pnpm|npm|npx|node) /)
+})
+
+// The web editor's publish step with a recording `wrangler` that exits with `wranglerStatus`.
+function runPublish(env, wranglerStatus = 0) {
+  const step = stepsOf(jobsOf(webEditor).deploy).find((step) => step.includes('secrets.'))
+  const temp = mkdtempSync(join(tmpdir(), 'web-editor-publish-'))
+  const recorded = join(temp, 'arguments')
+  try {
+    mkdirSync(join(temp, 'node_modules', '.bin'), { recursive: true })
+    const wrangler = join(temp, 'node_modules', '.bin', 'wrangler')
+    writeFileSync(
+      wrangler,
+      `#!/bin/sh\nprintf '%s\\n' "$@" > ${JSON.stringify(recorded)}\nexit ${wranglerStatus}\n`
+    )
+    chmodSync(wrangler, 0o755)
+    const result = runScript(step, { SHA: 'def456', ...env }, temp)
+    const args = existsSync(recorded) ? readFileSync(recorded, 'utf8').trimEnd().split('\n') : null
+    return { status: result.status, stdout: result.stdout, args }
+  } finally {
+    rmSync(temp, { recursive: true, force: true })
+  }
+}
+
+const cloudflare = { CLOUDFLARE_API_TOKEN: 'token', CLOUDFLARE_ACCOUNT_ID: 'account' }
+
+test(
+  'the web editor publishes the gated commit to production with Wrangler',
+  { skip: process.platform === 'win32' && 'runs the publish step with POSIX executables' },
+  () => {
+    const { status, args } = runPublish(cloudflare)
+    assert.equal(status, 0)
+    // Why: the Pages project's production branch is main; any other branch makes a preview.
+    assert.deepEqual(args, ['pages', 'deploy', '--branch', 'main', '--commit-hash', 'def456'])
+    assert.notEqual(runPublish(cloudflare, 1).status, 0)
+  }
+)
+
+test(
+  'the web editor skips publishing with a warning until Cloudflare credentials exist',
+  { skip: process.platform === 'win32' && 'runs the publish step with POSIX executables' },
+  () => {
+    const skipped = runPublish({ CLOUDFLARE_API_TOKEN: '', CLOUDFLARE_ACCOUNT_ID: '' })
+    assert.equal(skipped.status, 0)
+    assert.equal(skipped.args, null)
+    assert.match(skipped.stdout, /^::warning title=Web editor not published::/m)
+    // Why: one credential without the other is a broken setup, not one still to be done.
+    for (const missing of ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID']) {
+      const { status, stdout, args } = runPublish({ ...cloudflare, [missing]: '' })
+      assert.notEqual(status, 0, missing)
+      assert.equal(args, null, missing)
+      assert.match(stdout, new RegExp(`^::error title=Web editor not published::.*${missing}`, 'm'))
+    }
+  }
+)
+
+test('wrangler.toml binds production KV, keeps it from previews, and is what dev:cloud reads', () => {
+  const shareApi = readFileSync(
+    new URL('../../src/cloud-share/share-api.ts', import.meta.url),
+    'utf8'
+  )
+  const binding = /\n {2}(\w+)\?: \{\n {4}get:/.exec(shareApi)[1]
+  const namespaces = (table) =>
+    [...pagesConfig.matchAll(new RegExp(`\\n\\[\\[${table}\\]\\]\\n((?:\\w+ = .*\\n)+)`, 'g'))].map(
+      ([, body]) =>
+        Object.fromEntries(
+          body
+            .trimEnd()
+            .split('\n')
+            .map((line) => line.split(' = '))
+        )
+    )
+  const [local, ...otherLocal] = namespaces('kv_namespaces')
+  const [production, ...otherProduction] = namespaces('env\\.production\\.kv_namespaces')
+  assert.deepEqual([otherLocal, otherProduction], [[], []])
+  assert.equal(local.binding, `"${binding}"`)
+  assert.equal(production.binding, `"${binding}"`)
+  assert.match(production.id, /^"[0-9a-f]{32}"$/)
+  assert.notEqual(local.id, production.id)
+  // Why: without its own section a preview would inherit the local namespace.
+  assert.match(pagesConfig, /\n\[env\.preview\]\nkv_namespaces = \[\]\n/)
+  assert.doesNotMatch(pagesConfig, /\[\[env\.preview\.kv_namespaces\]\]/)
+  // Why: a non-inheritable key set in an environment replaces the top level's, so each lists vars.
+  const pnpmMajor = /^pnpm@(\d+)\./.exec(
+    JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).packageManager
+  )[1]
+  for (const env of ['production', 'preview']) {
+    assert.equal(pagesSetting(`env.${env}.vars`, 'NODE_VERSION'), '22', env)
+    assert.equal(pagesSetting(`env.${env}.vars`, 'PNPM_VERSION'), pnpmMajor, env)
+  }
+  assert.match(pagesSetting('', 'compatibility_date'), /^\d{4}-\d{2}-\d{2}$/)
+  const packageJson = readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
+  const devCloud = JSON.parse(packageJson).scripts['dev:cloud']
+  assert.match(devCloud, /\bwrangler pages dev\b/)
+  assert.doesNotMatch(devCloud, /--(kv|compatibility-date|d1|r2|binding)\b|\bpages dev \S*dist\b/)
 })
 
 test('the release draft starts without notes and passes the feed script only flags it accepts', () => {

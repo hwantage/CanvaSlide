@@ -4,7 +4,7 @@ import { canGroup, canUngroup } from '@shared/canvas/element-groups'
 import { clampMenuToViewport } from '@shared/canvas/menu-placement'
 import { t } from '@/i18n/ui-strings'
 import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/document/external-content'
-import { copySelection, cutSelection } from '@/lib/document/object-clipboard'
+import type { ObjectClipboard } from '@/lib/document/object-clipboard'
 import { shiftLabel, shortcutLabel } from '@/lib/platform-keys'
 import { selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import {
@@ -42,7 +42,7 @@ const item = (
   extra: { shortcut?: string; disabled?: boolean; danger?: boolean } = {}
 ): MenuItem => ({ kind: 'item', label, run, ...extra })
 
-function selectionItems(world: Point | null): MenuItem[] {
+function selectionItems(world: Point | null, clipboard: ObjectClipboard): MenuItem[] {
   const store = useDocumentStore.getState()
   const { document, selectedIds } = store
   const only = selectedIds.length === 1 ? document.elements[selectedIds[0] as string] : undefined
@@ -62,9 +62,9 @@ function selectionItems(world: Point | null): MenuItem[] {
     )
   }
   items.push(
-    item(t('edit.cut'), () => cutSelection(), { shortcut: shortcutLabel('X') }),
-    item(t('edit.copy'), () => copySelection(), { shortcut: shortcutLabel('C') }),
-    item(t('edit.paste'), () => void pasteFromSystemClipboard(world ?? undefined), {
+    item(t('edit.cut'), () => clipboard.cutSelection(), { shortcut: shortcutLabel('X') }),
+    item(t('edit.copy'), () => clipboard.copySelection(), { shortcut: shortcutLabel('C') }),
+    item(t('edit.paste'), () => void pasteFromSystemClipboard(clipboard, world ?? undefined), {
       shortcut: shortcutLabel('V')
     }),
     item(t('edit.duplicate'), store.duplicateSelected, { shortcut: shortcutLabel('D') }),
@@ -121,10 +121,10 @@ function selectionItems(world: Point | null): MenuItem[] {
   return items
 }
 
-function canvasItems(world: Point | null): MenuItem[] {
+function canvasItems(world: Point | null, clipboard: ObjectClipboard): MenuItem[] {
   const store = useDocumentStore.getState()
   return [
-    item(t('edit.paste'), () => void pasteFromSystemClipboard(world ?? undefined), {
+    item(t('edit.paste'), () => void pasteFromSystemClipboard(clipboard, world ?? undefined), {
       shortcut: shortcutLabel('V')
     }),
     item(t('edit.selectAll'), store.selectAll, { shortcut: shortcutLabel('A') }),
@@ -160,7 +160,7 @@ function MenuButton({ entry, onDone }: { entry: MenuItem; onDone: () => void }):
 }
 
 /** Right-click menu anchored inside the viewport; shifted left/up to stay fully visible near the edges. */
-export function ContextMenu() {
+export function ContextMenu({ clipboard }: { clipboard: ObjectClipboard }) {
   const position = useContextMenuStore((s) => s.position)
   const world = useContextMenuStore((s) => s.world)
   const hide = useContextMenuStore((s) => s.hide)
@@ -183,7 +183,8 @@ export function ContextMenu() {
   if (!position) {
     return null
   }
-  const items = selectedIds.length > 0 ? selectionItems(world) : canvasItems(world)
+  const items =
+    selectedIds.length > 0 ? selectionItems(world, clipboard) : canvasItems(world, clipboard)
   const at = placed ?? position
   return (
     <>

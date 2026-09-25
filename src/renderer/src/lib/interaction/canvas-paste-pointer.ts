@@ -3,15 +3,41 @@ import type { Point } from '@shared/canvas/element-types'
 import { useCameraStore } from '@/store/camera-store'
 import { isEditableTarget } from '@/lib/platform-keys'
 
-let revision = 0
-let readPointer: () => Point | null = () => null
+/** `revision` counts pointer moves over the canvas; `world` is where a paste would land now. */
+export type PastePointer = { revision: number; world: Point | null }
 
-export function canvasPastePointer(): { revision: number; world: Point | null } {
-  return { revision, world: readPointer() }
+export type CanvasPastePointer = {
+  read: () => PastePointer
+  /** Follows the pointer over `viewport` until the returned cleanup runs. */
+  track: (viewport: HTMLElement) => () => void
+}
+
+export function createCanvasPastePointer(): CanvasPastePointer {
+  let revision = 0
+  let readWorld: () => Point | null = () => null
+  return {
+    read: () => ({ revision, world: readWorld() }),
+    track: (viewport) => {
+      const tracking = trackViewport(viewport, () => {
+        revision += 1
+      })
+      readWorld = tracking.read
+      return () => {
+        tracking.dispose()
+        // Why: a viewport tracked later owns the reader now; its cleanup clears it.
+        if (readWorld === tracking.read) {
+          readWorld = () => null
+        }
+      }
+    }
+  }
 }
 
 /** Keep client coordinates so a later pan, zoom or viewport resize uses the current transform. */
-export function trackCanvasPastePointer(viewport: HTMLElement): () => void {
+function trackViewport(
+  viewport: HTMLElement,
+  onMove: () => void
+): { read: () => Point | null; dispose: () => void } {
   let client: Point | null = null
   const clear = () => {
     client = null
@@ -32,10 +58,10 @@ export function trackCanvasPastePointer(viewport: HTMLElement): () => void {
       !target.closest('[data-canvas-ui]') &&
       !isEditableTarget(target)
     ) {
-      revision += 1
+      onMove()
     }
   }
-  readPointer = () => {
+  const read = () => {
     if (!client) {
       return null
     }
@@ -71,11 +97,11 @@ export function trackCanvasPastePointer(viewport: HTMLElement): () => void {
   document.addEventListener('pointerdown', update, true)
   document.addEventListener('pointerout', leaveWindow, true)
   window.addEventListener('blur', clear)
-  return () => {
+  const dispose = () => {
     document.removeEventListener('pointermove', update, true)
     document.removeEventListener('pointerdown', update, true)
     document.removeEventListener('pointerout', leaveWindow, true)
     window.removeEventListener('blur', clear)
-    readPointer = () => null
   }
+  return { read, dispose }
 }

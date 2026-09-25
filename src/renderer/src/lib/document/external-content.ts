@@ -14,7 +14,7 @@ import { initialVideoAspectRatio, videoInsertionRect } from '@shared/canvas/vide
 import { readVideoAspectRatio } from '@/lib/video-metadata'
 import { decodeImageFile } from '@/lib/raster/clipboard-image'
 import { pickFiles } from '@/lib/file-picker'
-import { memoryPayload, objectPasteTarget, pasteObjects } from '@/lib/document/object-clipboard'
+import type { ObjectClipboard } from './object-clipboard'
 import { reportError } from '@/platform/document-file-access'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
 import { useCameraStore } from '@/store/camera-store'
@@ -73,13 +73,14 @@ export function insertPlainText(raw: string, at?: Point): boolean {
 
 /** Clipboard text: our own object payload first, otherwise plain text. */
 export function insertClipboardText(
+  clipboard: ObjectClipboard,
   text: string,
   at?: Point,
-  objectTarget = at === undefined ? objectPasteTarget() : null
+  objectTarget = at === undefined ? clipboard.objectPasteTarget() : null
 ): boolean {
   const payload = parseClipboardPayload(text)
   if (payload) {
-    pasteObjects(payload, objectTarget)
+    clipboard.pasteObjects(payload, objectTarget)
     return true
   }
   const video = parseVideoSource(text)
@@ -183,8 +184,9 @@ export async function insertFile(file: File, at?: Point): Promise<void> {
  * refuse the read (or hold nothing we understand) fall back to the last in-app copy.
  */
 export async function pasteFromSystemClipboard(
+  clipboard: ObjectClipboard,
   at?: Point,
-  objectTarget = at === undefined ? objectPasteTarget() : null,
+  objectTarget = at === undefined ? clipboard.objectPasteTarget() : null,
   valid: () => boolean = () => true
 ): Promise<void> {
   const session = useDocumentStore.getState().session
@@ -208,12 +210,12 @@ export async function pasteFromSystemClipboard(
   if (!current()) {
     return
   }
-  if (text !== '' && insertClipboardText(text, at, objectTarget)) {
+  if (text !== '' && insertClipboardText(clipboard, text, at, objectTarget)) {
     return
   }
-  const remembered = memoryPayload()
+  const remembered = clipboard.memoryPayload()
   if (remembered) {
-    pasteObjects(remembered, objectTarget)
+    clipboard.pasteObjects(remembered, objectTarget)
   }
 }
 

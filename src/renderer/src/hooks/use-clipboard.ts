@@ -6,12 +6,7 @@ import {
   isPdfFile,
   pasteFromSystemClipboard
 } from '@/lib/document/external-content'
-import {
-  copySelection,
-  cutSelection,
-  nativePasteArrived,
-  setKeyboardPasteFallback
-} from '@/lib/document/object-clipboard'
+import type { ObjectClipboard } from '@/lib/document/object-clipboard'
 import { isEditableTarget } from '@/lib/platform-keys'
 import { reportError } from '@/platform/document-file-access'
 import { isModalDialogOpen } from '@/store/modal-stack'
@@ -29,17 +24,13 @@ function ignoring(event: ClipboardEvent): boolean {
 }
 
 /** Native copy/cut/paste events: objects first (our JSON), then images, then plain text. */
-export function useClipboard(): void {
+export function useClipboard(clipboard: ObjectClipboard): void {
   useEffect(() => {
-    // Why: ⌘V without a `paste` event (WKWebView) falls back to the OS clipboard, not just memory.
-    setKeyboardPasteFallback(
-      (target, valid) => void pasteFromSystemClipboard(undefined, target, valid)
-    )
     const onCopy = (event: ClipboardEvent, cut: boolean) => {
       if (ignoring(event)) {
         return
       }
-      const payload = cut ? cutSelection() : copySelection()
+      const payload = cut ? clipboard.cutSelection() : clipboard.copySelection()
       if (payload && event.clipboardData) {
         event.clipboardData.setData('text/plain', JSON.stringify(payload))
         event.preventDefault()
@@ -51,7 +42,7 @@ export function useClipboard(): void {
       if (ignoring(event)) {
         return
       }
-      nativePasteArrived()
+      clipboard.nativePasteArrived()
       const text = event.clipboardData?.getData('text/plain') ?? ''
       const file = findImageFile(event.clipboardData) ?? findPdfFile(event.clipboardData)
       if (file) {
@@ -63,14 +54,14 @@ export function useClipboard(): void {
         }
         return
       }
-      if (text !== '' && insertClipboardText(text)) {
+      if (text !== '' && insertClipboardText(clipboard, text)) {
         event.preventDefault()
         return
       }
       if (text === '') {
         // Why: the engine fired `paste` but withheld its data; read the OS clipboard directly.
         event.preventDefault()
-        void pasteFromSystemClipboard()
+        void pasteFromSystemClipboard(clipboard)
       }
     }
     const copy = (event: ClipboardEvent) => onCopy(event, false)
@@ -83,5 +74,5 @@ export function useClipboard(): void {
       document.removeEventListener('cut', cut)
       document.removeEventListener('paste', onPaste)
     }
-  }, [])
+  }, [clipboard])
 }

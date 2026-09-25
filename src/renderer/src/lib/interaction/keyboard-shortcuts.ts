@@ -1,6 +1,6 @@
 import type { DocumentCommands } from '@/hooks/use-document-commands'
-import { importPickedFiles } from '@/lib/document/external-content'
-import { copySelection, cutSelection, requestKeyboardPaste } from '@/lib/document/object-clipboard'
+import { importPickedFiles, pasteFromSystemClipboard } from '@/lib/document/external-content'
+import type { ObjectClipboard } from '@/lib/document/object-clipboard'
 import { hasPrimaryModifier, isEditableTarget, isMacPlatform } from '@/lib/platform-keys'
 import {
   frameSelection,
@@ -22,7 +22,9 @@ import { dismissTopModalDialog, isModalDialogOpen } from '@/store/modal-stack'
 import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore, type ToolId } from '@/store/tool-store'
 
-export function handleCanvasKeyDown(event: KeyboardEvent, commands: DocumentCommands): void {
+export type ShortcutContext = { commands: DocumentCommands; clipboard: ObjectClipboard }
+
+export function handleCanvasKeyDown(event: KeyboardEvent, context: ShortcutContext): void {
   // Some WebViews report the final IME keystroke as 229 after isComposing clears.
   if (event.defaultPrevented || event.isComposing || event.keyCode === 229) {
     return
@@ -50,7 +52,7 @@ export function handleCanvasKeyDown(event: KeyboardEvent, commands: DocumentComm
     return
   }
   const handled = hasPrimaryModifier(event)
-    ? handlePrimaryShortcuts(event, commands)
+    ? handlePrimaryShortcuts(event, context)
     : handlePlainKeys(event)
   if (handled) {
     event.preventDefault()
@@ -85,7 +87,8 @@ function handlePresentationKeys(event: KeyboardEvent): boolean {
 }
 
 /** Shortcuts that need the primary modifier (⌘ / Ctrl). Returns true when handled. */
-function handlePrimaryShortcuts(event: KeyboardEvent, commands: DocumentCommands): boolean {
+function handlePrimaryShortcuts(event: KeyboardEvent, context: ShortcutContext): boolean {
+  const { commands, clipboard } = context
   const doc = useDocumentStore.getState()
   const camera = useCameraStore.getState()
   const key = event.key.toLowerCase()
@@ -119,13 +122,16 @@ function handlePrimaryShortcuts(event: KeyboardEvent, commands: DocumentCommands
       return true
     case 'c':
       // Why: the native `copy` event may not fire without a text selection; keep the payload ready.
-      copySelection()
+      clipboard.copySelection()
       return false
     case 'x':
-      cutSelection()
+      clipboard.cutSelection()
       return true
     case 'v':
-      requestKeyboardPaste()
+      // Why: ⌘V without a `paste` event (WKWebView) falls back to the OS clipboard, not just memory.
+      clipboard.requestKeyboardPaste(
+        (target, valid) => void pasteFromSystemClipboard(clipboard, undefined, target, valid)
+      )
       return false
     case 'd':
       doc.duplicateSelected()

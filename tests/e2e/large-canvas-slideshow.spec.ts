@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { appModuleUrl } from './app-module'
+import { decodeScreenshot } from './screenshot-pixels'
 import type { StoreApi } from 'zustand'
 import type { Camera, CanvasDocument } from '../../src/shared/canvas/element-types'
 
@@ -20,88 +21,73 @@ const waitForArrival = (page: Page) =>
     () => !(window as unknown as TourWindow).tour.camera.getState().isAnimating()
   )
 
-async function kidneyPixels(page: Page, screenshot: Buffer) {
-  return page.evaluate(async (base64) => {
-    const image = new Image()
-    image.src = `data:image/png;base64,${base64}`
-    await image.decode()
-    const canvas = document.createElement('canvas')
-    canvas.width = innerWidth
-    canvas.height = innerHeight
-    const ctx = canvas.getContext('2d')!
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    let whiteTiles = 0,
-      leftRed = 0,
-      rightRed = 0
-    // Sample the painted page, not DOM visibility: missing compositor tiles still have DOM boxes.
-    for (let top = 64; top < canvas.height - 96; top += 32) {
-      for (let left = 64; left < canvas.width - 96; left += 32) {
-        let white = 0
-        for (let y = top; y < top + 32; y += 2) {
-          for (let x = left; x < left + 32; x += 2) {
-            const i = (y * canvas.width + x) * 4
-            const r = data[i]!,
-              g = data[i + 1]!,
-              b = data[i + 2]!
-            if (r > 230 && g > 230 && b > 230) {
-              white++
-            }
-            if (r > 150 && r > g * 1.4 && r > b * 1.4) {
-              if (x < canvas.width / 2) {
-                leftRed++
-              } else {
-                rightRed++
-              }
+const VIEWPORT = { width: 2048, height: 1136 }
+
+/** Reads a device-pixel screenshot at CSS coordinates, as the page's own layout places them. */
+function screenshotReader(screenshot: Buffer) {
+  const { width, data } = decodeScreenshot(screenshot)
+  const scale = width / VIEWPORT.width
+  return {
+    pixelWidth: width,
+    at(x: number, y: number) {
+      const i = (Math.round(y * scale) * width + Math.round(x * scale)) * 4
+      return [data[i]!, data[i + 1]!, data[i + 2]!] as const
+    }
+  }
+}
+
+function kidneyPixels(screenshot: Buffer) {
+  const image = screenshotReader(screenshot)
+  let whiteTiles = 0,
+    leftRed = 0,
+    rightRed = 0
+  // Sample the painted page, not DOM visibility: missing compositor tiles still have DOM boxes.
+  for (let top = 64; top < VIEWPORT.height - 96; top += 32) {
+    for (let left = 64; left < VIEWPORT.width - 96; left += 32) {
+      let white = 0
+      for (let y = top; y < top + 32; y += 2) {
+        for (let x = left; x < left + 32; x += 2) {
+          const [r, g, b] = image.at(x, y)
+          if (r > 230 && g > 230 && b > 230) {
+            white++
+          }
+          if (r > 150 && r > g * 1.4 && r > b * 1.4) {
+            if (x < VIEWPORT.width / 2) {
+              leftRed++
+            } else {
+              rightRed++
             }
           }
         }
-        if (white > 250) {
-          whiteTiles++
+      }
+      if (white > 250) {
+        whiteTiles++
+      }
+    }
+  }
+  return { whiteTiles, leftRed, rightRed, pixelWidth: image.pixelWidth }
+}
+
+function missingEditorPixels(before: Buffer, after: Buffer) {
+  const reference = screenshotReader(before)
+  const restored = screenshotReader(after)
+  let dark = 0,
+    missing = 0
+  // Ignore editor chrome and compare only pixels that were dark before the tour.
+  for (let y = 100; y < VIEWPORT.height - 100; y += 2) {
+    for (let x = 100; x < VIEWPORT.width - 400; x += 2) {
+      if (reference.at(x, y).every((channel) => channel < 100)) {
+        dark++
+        if (restored.at(x, y).every((channel) => channel > 230)) {
+          missing++
         }
       }
     }
-    return { whiteTiles, leftRed, rightRed, pixelWidth: image.naturalWidth }
-  }, screenshot.toString('base64'))
+  }
+  return { dark, missing }
 }
 
-async function missingEditorPixels(page: Page, before: Buffer, after: Buffer) {
-  return page.evaluate(
-    async ({ before, after }) => {
-      const pixels = async (base64: string) => {
-        const image = new Image()
-        image.src = `data:image/png;base64,${base64}`
-        await image.decode()
-        const canvas = document.createElement('canvas')
-        canvas.width = innerWidth
-        canvas.height = innerHeight
-        const ctx = canvas.getContext('2d')!
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-        return ctx.getImageData(0, 0, canvas.width, canvas.height).data
-      }
-      const reference = await pixels(before)
-      const restored = await pixels(after)
-      let dark = 0,
-        missing = 0
-      // Ignore editor chrome and compare only pixels that were dark before the tour.
-      for (let y = 100; y < innerHeight - 100; y += 2) {
-        for (let x = 100; x < innerWidth - 400; x += 2) {
-          const i = (y * innerWidth + x) * 4
-          if (reference[i]! < 100 && reference[i + 1]! < 100 && reference[i + 2]! < 100) {
-            dark++
-            if (restored[i]! > 230 && restored[i + 1]! > 230 && restored[i + 2]! > 230) {
-              missing++
-            }
-          }
-        }
-      }
-      return { dark, missing }
-    },
-    { before: before.toString('base64'), after: after.toString('base64') }
-  )
-}
-
-test.use({ viewport: { width: 2048, height: 1136 }, deviceScaleFactor: 2 })
+test.use({ viewport: VIEWPORT, deviceScaleFactor: 2 })
 
 for (const exitFrame of [18, 20]) {
   test(`paints anatomy and restores editing after slide ${exitFrame} at Retina density @webkit`, async ({
@@ -151,7 +137,7 @@ for (const exitFrame of [18, 20]) {
         const screenshot = await page.screenshot()
         await testInfo.attach(`anatomy-${number}`, { body: screenshot, contentType: 'image/png' })
         if (number === 8) {
-          const pixels = await kidneyPixels(page, screenshot)
+          const pixels = kidneyPixels(screenshot)
           expect(pixels.pixelWidth).toBe(4096)
           expect(pixels.whiteTiles, 'no large white omission inside the dark kidney view').toBe(0)
           expect(pixels.leftRed, 'the kidney is painted').toBeGreaterThan(1000)
@@ -175,7 +161,7 @@ for (const exitFrame of [18, 20]) {
       body: editorAfter,
       contentType: 'image/png'
     })
-    const pixels = await missingEditorPixels(page, editorBefore, editorAfter)
+    const pixels = missingEditorPixels(editorBefore, editorAfter)
     expect(pixels.dark, 'the reference contains a substantial painted world').toBeGreaterThan(
       100_000
     )

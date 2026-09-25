@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { pushRecentColor } from '@shared/canvas/color-input'
+import { pushRecentColor } from '@shared/ui/color-input'
 
 const STORAGE_KEY = 'canvaslide.recentColors'
 

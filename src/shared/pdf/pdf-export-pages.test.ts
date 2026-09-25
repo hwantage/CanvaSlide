@@ -6,7 +6,7 @@ import {
   type CanvasDocument,
   type CanvasElement,
   type FrameElement
-} from './element-types'
+} from '../canvas/element-types'
 import {
   PDF_LONG_EDGE_PT,
   pdfExportPages,

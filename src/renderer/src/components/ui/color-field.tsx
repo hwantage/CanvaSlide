@@ -1,6 +1,6 @@
 import { Ban } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
-import { isNoColor, NO_COLOR, normalizeHexColor } from '@shared/canvas/color-input'
+import { isNoColor, NO_COLOR, normalizeHexColor } from '@shared/ui/color-input'
 import { popoverStyle, useAnchoredPopover } from '@/hooks/use-anchored-popover'
 import { t } from '@/i18n/ui-strings'
 import { cn } from '@/lib/cn'

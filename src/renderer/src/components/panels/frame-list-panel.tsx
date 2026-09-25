@@ -21,7 +21,7 @@ import {
 import { selectFrameInList } from '@shared/canvas/frame-selection'
 import { elementRect } from '@shared/canvas/element-bounds'
 import type { DocumentSettings, FrameElement } from '@shared/canvas/element-types'
-import { gapAtPointer } from '@shared/canvas/list-drop-gap'
+import { gapAtPointer } from '@shared/ui/list-drop-gap'
 import { frameIndexById, gapToIndex, orderedFrames } from '@shared/canvas/presentation-sequence'
 import {
   frameMotionDiff,

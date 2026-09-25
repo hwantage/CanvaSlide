@@ -6,7 +6,7 @@ import {
   readShareBody,
   shareIdFromSearch,
   unwrapShareSnapshot
-} from './cloud-share'
+} from './share-protocol'
 
 const id = 'abcdefghijklmnopqr_-1'
 

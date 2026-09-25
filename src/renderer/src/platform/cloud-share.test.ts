@@ -1,5 +1,5 @@
 import { createEmptyDocument } from '@shared/canvas/element-types'
-import { MAX_SHARE_BYTES } from '@shared/cloud-share'
+import { MAX_SHARE_BYTES } from '@shared/cloud-share/share-protocol'
 import {
   cloudShareOrigin,
   copyShareLink,

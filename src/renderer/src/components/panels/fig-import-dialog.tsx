@@ -2,7 +2,7 @@ import { ModalDialog } from '@/components/ui/modal-dialog'
 import { TextButton } from '@/components/ui/text-button'
 import { t, type UiStringKey } from '@/i18n/ui-strings'
 import { useFigImportStore } from '@/store/fig-import-store'
-import type { FigWarning } from '@shared/canvas/fig-types'
+import type { FigWarning } from '@shared/fig/fig-types'
 
 const warningLabels: Record<FigWarning, UiStringKey> = {
   unsupported: 'fig.warning.unsupported',

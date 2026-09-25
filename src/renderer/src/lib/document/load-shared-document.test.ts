@@ -9,7 +9,7 @@ import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
 import { loadSharedDocument } from './load-shared-document'
-import type { SharedSnapshot } from '@shared/cloud-share'
+import type { SharedSnapshot } from '@shared/cloud-share/share-protocol'
 
 vi.mock('@/platform/cloud-share', () => ({ fetchCloudShare: vi.fn() }))
 vi.mock('@/store/presentation-store', () => ({

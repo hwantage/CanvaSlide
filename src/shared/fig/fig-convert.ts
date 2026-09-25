@@ -1,4 +1,4 @@
-import { createImageAsset } from './document-assets'
+import { createImageAsset } from '../canvas/document-assets'
 import {
   defaultTextStyle,
   type CanvasElement,
@@ -6,8 +6,8 @@ import {
   type Point,
   type Rect,
   type ShapeElement
-} from './element-types'
-import { rectContainsRect, unionRects } from './element-bounds'
+} from '../canvas/element-types'
+import { rectContainsRect, unionRects } from '../canvas/element-bounds'
 import { clipFigText, figText } from './fig-text'
 import {
   FIG_IDENTITY,

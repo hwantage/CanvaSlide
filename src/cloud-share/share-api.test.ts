@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { onRequest as createShare } from '../../functions/api/share'
 import { onRequest as getShare } from '../../functions/api/share/[id]'
-import { MAX_SHARE_BYTES, isShareId } from '../shared/cloud-share'
+import { MAX_SHARE_BYTES, isShareId } from '../shared/cloud-share/share-protocol'
 import { createEmptyDocument } from '../shared/canvas/element-types'
 import type { ShareContext } from './share-api'
 

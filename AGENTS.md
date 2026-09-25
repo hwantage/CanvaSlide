@@ -8,8 +8,14 @@ contributors and coding agents alike. How to propose, name and submit a change i
 
 ## Layout
 
-- `src/shared/canvas/` — pure domain logic: geometry, document transforms and validation, connectors,
-  imports, camera math and presentation policy. No React, no Tauri; the app and the HTML player share it.
+- `src/shared/canvas/` — the core domain logic: element model, geometry, document transforms and
+  validation, connectors, camera math and presentation policy, plus the HTML export, clipboard, paste,
+  image, video and recovery logic built on that model. No React, no Tauri; the app and the HTML player
+  share it. Other domains sit beside it: `src/shared/fig/` (Figma `.fig` decoding and
+  conversion), `src/shared/pdf/` (PDF import layout, export pages and file writer), `src/shared/ui/`
+  (editor widget math: menu placement, panel split, list drop gaps, numeric and color input) and
+  `src/shared/cloud-share/` (the share limits, IDs and snapshot shape the app and API agree on, and
+  the image and video rules a shared document must meet).
 - `src/shared/presentation/` — slideshow navigation, controls, input, ink painter and CSS shared by
   the editor slideshow, cloud viewer and HTML player. `src/shared/media/` — linked-video players and
   provider bridges. `src/shared/render/` — the static element DOM and CSS that HTML and PDF export
@@ -32,7 +38,6 @@ contributors and coding agents alike. How to propose, name and submit a change i
   `video_embed.rs` (loopback video embed host), `app_menu.rs` (macOS menu).
 - `src/cloud-share/`, `functions/api/` — snapshot validation/storage and Cloudflare Pages routes;
   `wrangler.toml` configures the Pages project, which a workflow publishes from `main` once CI passes.
-  `src/shared/cloud-share.ts` holds the share limits, IDs and snapshot shape the app and API agree on;
   `src/shared/example-catalog.ts` is the example allowlist shared by the app, build and website.
 - `website/` — separately built product website and user guide; not the hosted editor build.
 - `examples/` — sample `.canvaslide` documents and the file contract in `examples/README.md`;
@@ -43,7 +48,8 @@ contributors and coding agents alike. How to propose, name and submit a change i
 
 ### Code
 
-- Keep math and document transforms in `src/shared/canvas` and unit-test them; UI files should be thin.
+- Keep math and document transforms in `src/shared/canvas`, or in the domain folder beside it that
+  owns them, and unit-test them; UI files should be thin.
 - How an element looks (text style, shape and connector paint, rotation, label box) comes from
   `src/shared/canvas/element-style.ts`, which the editor's element components and
   `src/shared/render/` both apply; change it there, not in one renderer.

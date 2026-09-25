@@ -7,10 +7,10 @@ import {
   unwrapShareSnapshot,
   type ShareAccess,
   type SharedSnapshot
-} from '@shared/cloud-share'
+} from '@shared/cloud-share/share-protocol'
 import { canvasDocumentSchema } from '@shared/canvas/element-types'
 import { repairDocumentOrder } from '@shared/canvas/document-file'
-import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '@shared/canvas/share-document'
+import { hasAllowedShareVideos, hasOnlyEmbeddedImages } from '@shared/cloud-share/share-document'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { isTauriRuntime } from './tauri-runtime'

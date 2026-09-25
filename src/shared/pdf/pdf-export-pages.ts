@@ -1,7 +1,7 @@
-import { elementBounds, elementRect, rectsIntersect } from './element-bounds'
-import type { CanvasDocument, CanvasElement, FrameElement, Size } from './element-types'
-import { orderedFrames } from './presentation-sequence'
-import { connectorCanvasRect } from './shape-svg'
+import { elementBounds, elementRect, rectsIntersect } from '../canvas/element-bounds'
+import type { CanvasDocument, CanvasElement, FrameElement, Size } from '../canvas/element-types'
+import { orderedFrames } from '../canvas/presentation-sequence'
+import { connectorCanvasRect } from '../canvas/shape-svg'
 
 /**
  * The page resolutions on offer, finest first so the dialog reads the same way down the list as the

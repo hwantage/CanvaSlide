@@ -1,4 +1,4 @@
-import type { Rect } from './element-types'
+import type { Rect } from '../canvas/element-types'
 import { FIG_IDENTITY, figClips, figPath, multiplyFigMatrix } from './fig-scene'
 import {
   figId,
@@ -10,7 +10,7 @@ import {
   type FigPaint,
   type FigWarnings
 } from './fig-types'
-import { rasterImageMime } from './image-signature'
+import { rasterImageMime } from '../canvas/image-signature'
 
 export function figXml(value: string): string {
   return value

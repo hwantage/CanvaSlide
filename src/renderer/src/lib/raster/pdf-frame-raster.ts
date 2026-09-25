@@ -1,8 +1,8 @@
 import elementCss from '@shared/render/element.css?raw'
 import { renderElement } from '@shared/render/element-dom'
 import type { CanvasDocument, FrameElement, Size, VideoElement } from '@shared/canvas/element-types'
-import { pdfPageElements } from '@shared/canvas/pdf-export-pages'
-import type { PdfImage } from '@shared/canvas/pdf-file'
+import { pdfPageElements } from '@shared/pdf/pdf-export-pages'
+import type { PdfImage } from '@shared/pdf/pdf-file'
 import { zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'
 import { loadImage } from './svg-raster'
 

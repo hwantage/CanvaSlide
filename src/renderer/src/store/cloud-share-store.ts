@@ -4,7 +4,7 @@ import {
   shareIdFromSearch,
   type CloudShareErrorCode,
   type ShareAccess
-} from '@shared/cloud-share'
+} from '@shared/cloud-share/share-protocol'
 import type { CanvasDocument } from '@shared/canvas/element-types'
 import { loadSharedDocument } from '@/lib/document/load-shared-document'
 import { clearShareQuery, createCloudShare } from '@/platform/cloud-share'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Copy, ExternalLink, FileDown } from 'lucide-react'
-import { MAX_SHARE_BYTES } from '@shared/cloud-share'
+import { MAX_SHARE_BYTES } from '@shared/cloud-share/share-protocol'
 import { DOCUMENT_FILE_EXTENSION } from '@shared/canvas/document-file'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { ModalDialog } from '@/components/ui/modal-dialog'

@@ -1,4 +1,4 @@
-import type { Point, Rect, Size } from './element-types'
+import type { Point, Rect, Size } from '../canvas/element-types'
 
 export const MENU_EDGE_MARGIN = 4
 

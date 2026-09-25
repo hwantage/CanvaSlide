@@ -1,4 +1,4 @@
-import type { CanvasDocument } from './canvas/element-types'
+import type { CanvasDocument } from '../canvas/element-types'
 
 export const MAX_SHARE_BYTES = 5 * 1024 * 1024
 export const SHARE_ID_LENGTH = 21

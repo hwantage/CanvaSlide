@@ -3,8 +3,8 @@ import {
   pdfExportPages,
   type PdfExportPage,
   type PdfResolution
-} from '@shared/canvas/pdf-export-pages'
-import { buildPdf, type PdfPage } from '@shared/canvas/pdf-file'
+} from '@shared/pdf/pdf-export-pages'
+import { buildPdf, type PdfPage } from '@shared/pdf/pdf-file'
 import { t } from '@/i18n/ui-strings'
 import { rasterizeFramePage } from './pdf-frame-raster'
 

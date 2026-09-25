@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState, type RefObject } from 'react'
 import type { Point } from '@shared/canvas/element-types'
-import { placePopoverBelow } from '@shared/canvas/menu-placement'
+import { placePopoverBelow } from '@shared/ui/menu-placement'
 
 export function useAnchoredPopover(
   open: boolean,

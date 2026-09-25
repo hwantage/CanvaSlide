@@ -56,13 +56,13 @@
 
 ## 구조
 
-- `shared/canvas/fig-file.ts`: ZIP 또는 raw `fig-kiwi`, Deflate/Zstandard 해제.
+- `shared/fig/fig-file.ts`: ZIP 또는 raw `fig-kiwi`, Deflate/Zstandard 해제.
 - `fig-kiwi.ts`: 파일에 내장된 Kiwi 스키마 해석. `eval` / `new Function`을 쓰지 않아 기존 Tauri CSP를 유지한다.
 - `fig-scene.ts`: 페이지·레이어 순서, 행렬, 바운드, SVG 경로. 자동 크기 그룹의 NaN 크기는 자식으로 계산한다.
 - `fig-svg.ts`: 채우기·이미지 자르기·클리핑·마스크·글리프 렌더링.
   글자별 채우기는 `textStyleTable`과 `styleOverrideTable`을 함께 읽으며, 같은 스타일 ID는 오버라이드를 우선한다.
 - `fig-convert.ts`: CanvaSlide 요소·자산·발표 프레임 변환.
-- `fig-text.ts`: 편집 가능한 텍스트·서식·프레임 자르기 변환. `text-clip.ts`는 편집기·HTML 플레이어의 표시 범위를 공유하고 편집기의 선택 범위에도 적용한다.
+- `fig-text.ts`: 편집 가능한 텍스트·서식·프레임 자르기 변환. `shared/canvas/text-clip.ts`는 편집기·HTML 플레이어의 표시 범위를 공유하고 편집기의 선택 범위에도 적용한다.
 - `renderer/src/lib/workers/fig-import.worker.ts`: 해독과 변환을 메인 스레드 밖에서 실행. 취소 시 워커 종료.
 - `renderer/src/store/fig-import-store.ts`: 대화상자 상태와 단일 undo 단계 삽입. 문서가 바뀌면 이전 변환 결과를 넣지 않는다.
 
@@ -85,7 +85,7 @@ CSP, 잘못된 파일 처리 등을 포함한다.
 가져오기 기능만 확인하려면 다음 검사를 실행한다. 전체 검증은 [AGENTS.md의 Verify](../AGENTS.md#verify)를 따른다.
 
 ```bash
-pnpm exec vitest run --config config/vitest.config.ts src/shared/canvas/fig-convert.test.ts
+pnpm exec vitest run --config config/vitest.config.ts src/shared/fig/fig-convert.test.ts
 CANVASLIDE_E2E_WEBKIT=1 pnpm exec playwright test --config tests/playwright.config.ts tests/e2e/fig-import.spec.ts
 ```
 

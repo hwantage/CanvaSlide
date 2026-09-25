@@ -87,9 +87,13 @@ viewer and newly exported HTML all support it. The mechanism is described in
 - Keep control definitions, icon geometry, state transitions, input ownership and styling in the shared
   modules; host adapters connect lifecycle, camera state, labels and supported host actions only.
 - The HTML player stays one self-contained file with inline styles and SVG icons: no added framework,
-  icon runtime or CDN dependency. Keep its module boundary and built-size budget. Linked videos keep
-  their provider scripts and protocol requirements
+  icon runtime or CDN dependency. Keep its module boundary. Linked videos keep their provider
+  scripts and protocol requirements
   ([media constraints](./docs/ARCHITECTURE.md#platform-and-media-constraints)).
+- The built player stays within `MAX_PLAYER_BYTES` in `config/scripts/check-player-size.mjs`.
+  Raising that budget is a pull request of its own, stating the sizes `pnpm build:player` reports
+  on `main` and on a branch with the change that needs the room, and why the player cannot make
+  that room itself.
 - Laser and ink are session state: they never change document contents, dirty state, undo history or
   exports. Their clearing, retention, coordinate and pointer-cancellation rules are shared across hosts.
 - Mouse, keyboard, touch and pen follow one input policy; drawing never triggers swipe navigation,

@@ -35,7 +35,8 @@ validation code; schema-derived types from `element-types.ts` must use `import t
 paths. Document and cloud input validation still uses the schemas in `element-types.ts`.
 `pnpm build:player` checks the newly built IIFE against the raw byte budget in
 [`check-player-size.mjs`](../config/scripts/check-player-size.mjs); gzip is reported for comparison.
-This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`).
+This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`). The budget is raised
+only in a pull request of its own ([Presentation features](../AGENTS.md#presentation-features)).
 
 ## Document editing and presentation
 

@@ -21,6 +21,7 @@ const workflows = readdirSync(workflowDirectory)
 const release = workflows.find(({ name }) => name === 'release.yml').text
 const ci = workflows.find(({ name }) => name === 'ci.yml').text
 const releaseNotes = workflows.find(({ name }) => name === 'release-notes.yml').text
+const website = workflows.find(({ name }) => name === 'deploy-website.yml').text
 const playwrightConfig = readFileSync(
   new URL('../../tests/playwright.config.ts', import.meta.url),
   'utf8'
@@ -281,17 +282,19 @@ test('the release builds only after the gate job, which reads CI runs and runs n
   assert.doesNotMatch(jobs.gate, /actions\/checkout@|secrets\.|\b(pnpm|npm|npx|node) /)
 })
 
-// The gate step, with `gh` answering from `responses` in order (the last one repeats; `{ error }`
-// fails like an HTTP error) and `sleep` returning at once, failing once the gate polls endlessly.
-function runGate(responses) {
-  const [step] = stepsOf(jobsOf(release).gate)
+// A gate `step` (the release's by default), with `gh` answering from `responses` in order (the last
+// one repeats; `{ error }` fails like an HTTP error) and `sleep` returning at once, failing once the
+// gate polls endlessly. `outputs` is what the step wrote to $GITHUB_OUTPUT.
+function runGate(responses, step = stepsOf(jobsOf(release).gate)[0]) {
   const bin = mkdtempSync(join(tmpdir(), 'release-gate-'))
   const calls = join(bin, 'calls.json')
   const sleeps = join(bin, 'sleeps')
+  const outputs = join(bin, 'outputs')
   try {
     writeFileSync(join(bin, 'responses.json'), JSON.stringify(responses))
     writeFileSync(calls, '[]')
     writeFileSync(sleeps, '')
+    writeFileSync(outputs, '')
     writeFileSync(
       join(bin, 'gh'),
       `#!${process.execPath}
@@ -320,14 +323,17 @@ process.stdout.write(execFileSync('jq', ['-r', jq], { input: JSON.stringify(resp
     const result = runScript(step, {
       PATH: `${bin}:${process.env.PATH}`,
       GH_REPO: 'owner/repo',
+      GITHUB_OUTPUT: outputs,
       SHA: 'abc123'
     })
     assert.equal(result.signal, null, 'the gate script did not finish')
     return {
       status: result.status,
+      stdout: result.stdout,
       stderr: result.stderr,
       calls: JSON.parse(readFileSync(calls, 'utf8')),
-      sleeps: readFileSync(sleeps, 'utf8').split('\n').filter(Boolean)
+      sleeps: readFileSync(sleeps, 'utf8').split('\n').filter(Boolean),
+      outputs: readFileSync(outputs, 'utf8')
     }
   } finally {
     rmSync(bin, { recursive: true, force: true })
@@ -405,6 +411,81 @@ test(
     assert.match(stderr, /No CI run from a push to main for abc123/)
   }
 )
+
+test('the website is published from main after CI, whatever files changed', () => {
+  const ciName = /^name: (.+)$/m.exec(ci)[1]
+  assert.equal(
+    /\non:\n((?: {2}.*\n)+)/.exec(website)[1],
+    `  workflow_run:\n    workflows: [${ciName}]\n    types: [completed]\n    branches: [main]\n` +
+      '  workflow_dispatch:\n'
+  )
+  assert.doesNotMatch(website, /\bpaths(-ignore)?:/)
+  // Why: CI already lints, formats and tests the site; the deployment only builds what it checked.
+  assert.doesNotMatch(website, /oxlint|oxfmt|playwright|test:site/)
+  // Why: cancelling a running Pages deployment can leave it half published.
+  assert.match(website, /\nconcurrency:\n {2}group: website\n {2}cancel-in-progress: false\n/)
+  assert.deepEqual(permissionsAt(website, ''), ['contents: read'])
+  const jobs = jobsOf(website)
+  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'deploy'])
+  // Why: a run whose CI failed may displace a queued one, so every run must still look for a commit.
+  assert.match(jobs.gate, /\n {4}if: github\.ref == 'refs\/heads\/main'\n/)
+  assert.doesNotMatch(website, /workflow_run\.(conclusion|head_sha)/)
+  assert.deepEqual(permissionsAt(`\n${jobs.gate}\n`, '    '), ['actions: read'])
+  assert.doesNotMatch(jobs.gate, /actions\/checkout@|secrets\.|\b(pnpm|npm|npx|node) /)
+  const [step] = stepsOf(jobs.gate)
+  const id = /\n {8}id: (\S+)\n/.exec(step)[1]
+  assert.match(
+    jobs.gate,
+    new RegExp(`\\n {6}sha: \\$\\{\\{ steps\\.${id}\\.outputs\\.sha \\}\\}\\n`)
+  )
+  assert.match(`\n${jobs.build}`, /\n {4}needs: gate\n/)
+  assert.match(jobs.build, /\n {10}ref: \$\{\{ needs\.gate\.outputs\.sha \}\}\n/)
+  assert.doesNotMatch(jobs.build, /permissions:|github\.token|secrets\./)
+  checkedStep(jobs.build, 'pnpm build:site')
+  assert.match(jobs.build, /\n\s+path: website\/dist\n/)
+  assert.match(`\n${jobs.deploy}`, /\n {4}needs: build\n/)
+  assert.doesNotMatch(`\n${jobs.deploy}`, bypassesFailure)
+  assert.deepEqual(permissionsAt(`\n${jobs.deploy}\n`, '    '), ['pages: write', 'id-token: write'])
+  assert.doesNotMatch(jobs.deploy, /actions\/checkout@|\brun:/)
+})
+
+const websiteGate = () => stepsOf(jobsOf(website).gate)[0]
+const passedOn = (sha) => ({
+  workflow_runs: [{ head_sha: sha, status: 'completed', conclusion: 'success' }]
+})
+
+test(
+  'the website gate publishes the newest commit whose CI pushed to main passed',
+  { skip: shellSkip },
+  () => {
+    const { status, stderr, calls, outputs } = runGate([passedOn('def456')], websiteGate())
+    assert.equal(status, 0, stderr)
+    assert.equal(outputs, 'sha=def456\n')
+    assert.equal(calls.length, 1)
+    const [args] = calls
+    assert.equal(args[args.indexOf('-X') + 1], 'GET')
+    assert.ok(args.includes('repos/owner/repo/actions/workflows/ci.yml/runs'))
+    // Why: the list is newest first, so its first passing run from a push to main is the one to use.
+    for (const field of ['branch=main', 'event=push', 'status=success', 'per_page=1']) {
+      assert.ok(args.includes(field), field)
+    }
+    assert.ok(!args.some((arg) => arg.startsWith('head_sha=')))
+  }
+)
+
+test('the website gate fails when no CI run on main has passed', { skip: shellSkip }, () => {
+  const { status, stderr, outputs } = runGate([noRun], websiteGate())
+  assert.notEqual(status, 0)
+  assert.match(stderr, /No CI run from a push to main has passed/)
+  assert.equal(outputs, '')
+})
+
+test('the website gate stops when the GitHub API fails', { skip: shellSkip }, () => {
+  const { status, stderr, outputs } = runGate([{ error: 'HTTP 502' }], websiteGate())
+  assert.notEqual(status, 0)
+  assert.match(stderr, /gh: HTTP 502/)
+  assert.equal(outputs, '')
+})
 
 test('the release draft starts without notes and passes the feed script only flags it accepts', () => {
   const upload = stepsOf(jobsOf(release).publish).find((step) => /gh release create/.test(step))

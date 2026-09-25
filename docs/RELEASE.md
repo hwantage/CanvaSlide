@@ -1,17 +1,17 @@
-# CanvaSlide — 릴리즈 가이드
+# CanvaSlide — 릴리스 가이드
 
 워크플로: [`.github/workflows/release.yml`](../.github/workflows/release.yml) ·
 [`.github/workflows/release-notes.yml`](../.github/workflows/release-notes.yml) · [문서 목록](./README.md)
 
 `main`에서 CI를 통과한 커밋에 붙인 git 태그 하나로 macOS·Windows 설치 파일을 빌드해 GitHub Release에 첨부하는 절차를 정리한다.
-릴리즈는 메인테이너가 수행하며, 코드 규칙과 검증은 [`AGENTS.md`](../AGENTS.md), 기여 절차는 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
+릴리스는 메인테이너가 수행하며, 코드 규칙과 검증은 [`AGENTS.md`](../AGENTS.md), 기여 절차는 [`CONTRIBUTING.md`](../CONTRIBUTING.md)를 따른다.
 
 ## 1. 한눈에 보기
 
 ```bash
 git switch -c chore/release-v0-8-0 origin/main
 pnpm version minor --no-git-tag-version      # ① package.json 버전만 올린다
-git commit -am "Prepare v0.8.0 release"      # ② 릴리즈 PR을 올리고 CI passed가 초록이면 머지
+git commit -am "Prepare v0.8.0 release"      # ② 릴리스 PR을 올리고 CI passed가 초록이면 머지
 git switch main && git pull
 git tag -a v0.8.0 -m v0.8.0 <머지 커밋>        # ③ 머지 커밋에 태그를 붙여 푸시하면
 git push origin v0.8.0                       #    release.yml 이 그 커밋의 CI를 확인한 뒤 빌드한다
@@ -19,7 +19,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
 ```
 
 `main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. 저장소 관리자는 긴급할 때 PR 머지에서만
-이 검사를 우회할 수 있고, 그래도 릴리즈는 `main` CI가 통과한 커밋만 빌드한다. `v*` 태그는 저장소 관리자만
+이 검사를 우회할 수 있고, 그래도 릴리스는 `main` CI가 통과한 커밋만 빌드한다. `v*` 태그는 저장소 관리자만
 만들고 옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다(§4).
 
 ## 2. 버전 규칙
@@ -29,24 +29,24 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
   - `pnpm version patch` → 0.1.0 → 0.1.1
   - `pnpm version minor` → 0.1.0 → 0.2.0
   - `pnpm version major` → 0.1.0 → 1.0.0
-- 릴리즈 PR에서는 `pnpm version <bump> --no-git-tag-version`으로 `package.json`만 고친다. 옵션이 없으면 커밋과
-  태그를 브랜치 커밋에 바로 만드는데, 그 커밋은 `main`의 CI가 검사한 커밋이 아니어서 릴리즈되지 않는다.
-- 태그는 릴리즈 PR이 머지된 뒤 그 머지 커밋에 `git tag -a v<버전>`으로 만든다. 태그 이름과 `package.json` 버전이
+- 릴리스 PR에서는 `pnpm version <bump> --no-git-tag-version`으로 `package.json`만 고친다. 옵션이 없으면 커밋과
+  태그를 브랜치 커밋에 바로 만드는데, 그 커밋은 `main`의 CI가 검사한 커밋이 아니어서 릴리스되지 않는다.
+- 태그는 릴리스 PR이 머지된 뒤 그 머지 커밋에 `git tag -a v<버전>`으로 만든다. 태그 이름과 `package.json` 버전이
   다르면 워크플로가 빌드 전에 실패한다.
 
-## 3. 릴리즈 절차
+## 3. 릴리스 절차
 
 1. 데스크톱 클라우드 공유를 제공할 때는 저장소 **Settings → Secrets and variables → Actions → Variables**의
    `VITE_CLOUD_SHARE_URL`을 배포된 편집기의 HTTPS origin으로 설정한다(예: `https://canvaslide.pages.dev`).
-   CI 번들과 릴리즈 빌드는 이 값을 Vite와 Rust에 함께 전달한다. 값이 없으면 데스크톱 공유가 비활성화된다.
-2. 최신 `main`에서 릴리즈 브랜치를 만들고 버전을 올린다.
+   CI 번들과 릴리스 빌드는 이 값을 Vite와 Rust에 함께 전달한다. 값이 없으면 데스크톱 공유가 비활성화된다.
+2. 최신 `main`에서 릴리스 브랜치를 만들고 버전을 올린다.
    ```bash
    git fetch origin
    git switch -c chore/release-v0-8-0 origin/main
    pnpm version minor --no-git-tag-version
    pnpm check && pnpm test:e2e     # 선택: 로컬에서 한 번 더
    ```
-3. 커밋하고 릴리즈 PR을 올린다. PR의 `CI passed` 검사가 초록이 되면 머지한다.
+3. 커밋하고 릴리스 PR을 올린다. PR의 `CI passed` 검사가 초록이 되면 머지한다.
    ```bash
    git commit -am "Prepare v0.8.0 release"
    git push -u origin chore/release-v0-8-0
@@ -66,7 +66,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    - **Generate release notes** 버튼을 눌러 지난 태그 이후 머지된 PR 제목을 불러온 뒤 사용자 관점으로 다듬는다.
    - OS 코드 서명이 없는 설치 파일은 §6의 안내 문구를 노트에 넣는다. Windows 설치 파일은 아직 서명하지 않고,
      macOS 파일은 **sign and notarize · macOS** 잡에 `No Apple credentials` 경고가 있으면 서명되지 않은 것이다.
-   - Release 본문이 릴리즈 노트의 유일한 원본이다. 공개하면 이 본문이 그대로 데스크톱 앱의 업데이트 안내에 나간다(§7).
+   - Release 본문이 릴리스 노트의 유일한 원본이다. 공개하면 이 본문이 그대로 데스크톱 앱의 업데이트 안내에 나간다(§7).
 7. **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
 8. Actions 탭에서 **Release notes** 워크플로가 성공했는지 확인한다. 이 워크플로는 공개 직후 본문을
    `latest.json`의 `notes`로 옮기고, 공개한 뒤 본문을 고치면 다시 실행되어 앱의 안내도 바꾼다.
@@ -94,7 +94,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    `aarch64-apple-darwin`, `x86_64-apple-darwin` 타깃 추가) `pnpm install --frozen-lockfile`,
    태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
-   릴리즈할 파일을 워크플로 아티팩트로 올린다.
+   릴리스할 파일을 워크플로 아티팩트로 올린다.
 2. **notarize**: 체크아웃과 macOS 빌드 아티팩트만 받고 의존성은 설치하지 않는다. Apple 자격 증명은
    [`notarize-macos-release.sh`](../config/scripts/notarize-macos-release.sh)를 실행하는 단계에만 전달되고, 이
    스크립트는 macOS와 Xcode에 들어 있는 Apple 도구(`security`, `codesign`, `notarytool`, `stapler`, `hdiutil` 등)만
@@ -104,8 +104,8 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    `tauri signer sign`만으로 `.app.tar.gz`, `-setup.exe`, `.msi`를 서명한다. 서명 키는 이 단계에만 전달된다.
    OS 코드 서명이 파일을 바꾸므로 이 잡은 notarize 잡 뒤에 실행된다.
 4. **publish**: [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 설치된 앱이 신뢰하는
-   공개키, 즉 공개된 최신 릴리즈(앱이 업데이트를 받는 `releases/latest`) 태그의 `tauri.conf.json` 공개키로
-   앱과 같은 규칙에 따라 검증하고 `latest.json`을 만든다. 공개된 릴리즈가 없거나 저장소 변수
+   공개키, 즉 공개된 최신 릴리스(앱이 업데이트를 받는 `releases/latest`) 태그의 `tauri.conf.json` 공개키로
+   앱과 같은 규칙에 따라 검증하고 `latest.json`을 만든다. 공개된 릴리스가 없거나 저장소 변수
    `UPDATER_KEY_CHANGE_TAG`가 이 태그 이름이면 이 태그의 공개키도 신뢰한다(§7 키 교체).
    notarize 잡이 공증했으면 macOS 항목에 `"notarized": true`를 붙인다(§7).
    서명이 맞지 않거나 플랫폼이 빠지면 업로드 전에 실패한다. 그다음 같은 태그의 Release 초안을 본문 없이 만들고
@@ -125,7 +125,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    피드가 사라진다. 이 순서에서는 이름 변경 API 호출 한 번 동안만 `latest.json`이 없다. 그 사이에 멈춘 실행은
    `latest.next.json`만 남기고, 다음 실행이 이 파일을 읽어 이어서 교체한다.
 
-저장소의 불변 릴리즈(immutable releases)를 켜면 공개된 Release의 파일을 바꿀 수 없으므로 이 워크플로도 동작하지 않는다.
+저장소의 불변 릴리스(immutable releases)를 켜면 공개된 Release의 파일을 바꿀 수 없으므로 이 워크플로도 동작하지 않는다.
 
 Release 이벤트는 태그 커밋에 있는 워크플로 파일로 실행되므로, 이 파일이 없는 태그(v0.7.0 이하)에서는 자동으로
 돌지 않는다. 그런 Release와 실패한 실행은 `main`의 워크플로를 수동으로 실행해 처리한다.
@@ -148,7 +148,7 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
 
 - **CI 대기 잡이 실패**: 재실행은 처음 실행과 같은 커밋을 다시 검사한다.
   - `No CI run from a push to main`: 태그가 `main`에 푸시되어 CI가 돈 커밋(PR의 머지 커밋)이 아닌 곳을
-    가리킨다. 공개하지 않은 태그이므로 메인테이너가 지우고 릴리즈 PR의 머지 커밋에 다시 만든다.
+    가리킨다. 공개하지 않은 태그이므로 메인테이너가 지우고 릴리스 PR의 머지 커밋에 다시 만든다.
   - `finished with failure` 등 CI 실패: 일시적 실패이거나 코드 밖 원인(러너, 외부 서비스, 저장소 변수)을
     고쳤으면 태그 커밋의 **CI** 실행을 재실행해 성공시킨 뒤 Release 워크플로의 **Re-run failed jobs**를 누른다.
     코드를 고쳐야 하면 수정 PR을 머지하고, 공개하지 않은 태그를 메인테이너가 지운 뒤 그 머지 커밋에 다시
@@ -164,7 +164,7 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
   - `Notarization of … finished with Invalid`: 이어서 출력된 공증 로그의 문제(서명 누락, hardened runtime 등)를 고친다.
   - `security import` 또는 `codesign` 오류: `.p12`의 암호, 인증서 종류(Developer ID Application), 만료일을 확인한다.
 - **업데이터 서명 또는 게시 잡이 실패**: `release` 환경의 서명 키와 암호를 확인한다. 게시 잡이
-  `signed with a key other than the one installed apps trust`로 실패하면 환경의 개인키가 공개된 최신 릴리즈의
+  `signed with a key other than the one installed apps trust`로 실패하면 환경의 개인키가 공개된 최신 릴리스의
   공개키와 짝이 아니다.
 - **Release notes 워크플로가 실패**: 대개 앱의 업데이트 안내에 노트가 없거나 이전 노트가 남는다. 마지막 이름 변경에서
   실패했다면 `latest.json`이 없어 업데이트 확인도 실패하므로 바로 다시 실행한다. **Re-run failed jobs**를 누르거나
@@ -173,13 +173,13 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
 - **초안을 버리고 다시**: 먼저 실패한 잡 재실행을 사용한다. 초안·태그를 재작성할 필요가 있으면
   공개 여부와 두 플랫폼의 산출물을 확인한 뒤 메인테이너가 처리한다.
 - **이미 공개한 버전에 문제**: 공개된 Release의 파일과 태그는 바꾸지 말고(노트 본문은 §3 8단계처럼 고칠 수 있다) §3 절차로 `patch` 버전을 올려 다음 버전을 낸다.
-- **로컬에서 재현**: 릴리즈 빌드는 키 없이 `pnpm bundle:local`(현재 OS용) 또는
+- **로컬에서 재현**: 릴리스 빌드는 키 없이 `pnpm bundle:local`(현재 OS용) 또는
   `pnpm bundle:local --target universal-apple-darwin`으로 재현한다. 서명까지 확인하려면 §7의 서명 키를 환경 변수로
   주고 업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.
 
 `pnpm bundle:local`은 `tauri build --no-sign`이라 업데이터 개인키도, 셸별 따옴표 처리도 필요 없다.
 업데이터 서명(`.sig`)과 OS 코드 서명을 건너뛰므로 배포할 산출물을 검증하는 것은 아니다. CI의 번들 잡과
-릴리즈 빌드 잡도 `--no-sign`을 쓰고, 서명 키는 릴리즈 워크플로의 서명 잡에만 전달한다. macOS 앱 번들만 확인할 때는
+릴리스 빌드 잡도 `--no-sign`을 쓰고, 서명 키는 릴리스 워크플로의 서명 잡에만 전달한다. macOS 앱 번들만 확인할 때는
 다음 명령을 사용한다.
 
 ```bash
@@ -188,7 +188,7 @@ pnpm bundle:local --bundles app
 
 ## 6. OS 코드 서명
 
-업데이터 서명(§7)과 OS 코드 서명은 별개다. `release` 환경에 Apple 자격 증명이 있으면 릴리즈 워크플로가 macOS 앱을
+업데이터 서명(§7)과 OS 코드 서명은 별개다. `release` 환경에 Apple 자격 증명이 있으면 릴리스 워크플로가 macOS 앱을
 Developer ID로 서명하고 Apple 공증을 받는다. 자격 증명이 없으면 macOS 앱도 서명하지 않고, Windows 설치 파일은
 아직 코드 서명하지 않는다.
 
@@ -218,12 +218,12 @@ Developer ID로 서명하고 Apple 공증을 받는다. 자격 증명이 없으�
 | `APPLE_PASSWORD`             | 그 계정의 앱 암호(account.apple.com에서 만든 app-specific password)                      |
 | `APPLE_TEAM_ID`              | 10자리 팀 ID(developer.apple.com → Membership)                                           |
 
-여섯 개가 모두 없으면 잡은 `No Apple credentials` 경고만 남기고 빌드한 파일을 그대로 넘긴다. 이때 릴리즈는
-지금까지처럼 서명 없이 나간다. 일부만 있으면 서명하기 전에 실패한다. 공증한 릴리즈의 `latest.json`에서는 macOS
+여섯 개가 모두 없으면 잡은 `No Apple credentials` 경고만 남기고 빌드한 파일을 그대로 넘긴다. 이때 릴리스는
+지금까지처럼 서명 없이 나간다. 일부만 있으면 서명하기 전에 실패한다. 공증한 릴리스의 `latest.json`에서는 macOS
 항목에 `"notarized": true`가 붙고, 이 표시가 있는 업데이트만 macOS 앱이 앱 안에서 설치한다(§7). 서명을 시작한
-뒤에는 secret을 지우지 않는다. 지우면 다음 릴리즈가 서명 없이 나가고 macOS 앱은 다시 다운로드 페이지로 안내한다.
+뒤에는 secret을 지우지 않는다. 지우면 다음 릴리스가 서명 없이 나가고 macOS 앱은 다시 다운로드 페이지로 안내한다.
 
-인증서와 계정을 확인하려면 그 인증서가 있는 Mac에서 같은 환경 변수를 주고 릴리즈 아티팩트(`.dmg`와
+인증서와 계정을 확인하려면 그 인증서가 있는 Mac에서 같은 환경 변수를 주고 릴리스 아티팩트(`.dmg`와
 `.app.tar.gz`)가 든 폴더로 `bash config/scripts/notarize-macos-release.sh <폴더>`를 실행한다. 스크립트는 폴더의
 두 파일을 서명한 파일로 바꾸고, 사용자 키체인 검색 목록에 임시 키체인을 잠시 넣었다가 되돌린다.
 
@@ -237,8 +237,8 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
 
 ### 서명 없는 배포의 안내
 
-서명 없는 설치 파일에서 나타날 수 있는 다음 경고와 설치 방법을 릴리즈 노트에 안내한다. macOS 안내는 macOS
-파일을 서명하지 못한 릴리즈에만 넣는다.
+서명 없는 설치 파일에서 나타날 수 있는 다음 경고와 설치 방법을 릴리스 노트에 안내한다. macOS 안내는 macOS
+파일을 서명하지 못한 릴리스에만 넣는다.
 
 해결 방법은 macOS 버전보다 경고 문구에 따라 다르다. 서명하지 않은 빌드의 Apple Silicon 코드는 링커가 붙인 임시 서명만 있고
 번들 리소스가 봉인되지 않아 서명 검증에 실패하므로, Apple Silicon Mac에서는 "손상" 경고가 나올 수 있다.
@@ -253,7 +253,7 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
     열 수 있다.
 - **Windows**: SmartScreen "PC 보호" 화면. **추가 정보 → 실행**.
 
-릴리즈 노트는 영어로 쓰므로 다음 문구를 그대로 쓸 수 있다.
+릴리스 노트는 영어로 쓰므로 다음 문구를 그대로 쓸 수 있다.
 
 ```markdown
 - **macOS, "CanvaSlide is damaged and can't be opened":** Finder and System Settings offer no way past
@@ -268,7 +268,7 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
 ## 7. 자동 업데이트
 
 데스크톱 앱은 기본적으로 시작 3초 뒤 한 번 업데이트를 확인한다(아래 설정으로 끌 수 있다).
-**CanvaSlide 정보** 대화상자에서 현재 버전, 릴리즈 노트 링크와 업데이트 상태를 표시하고, 새 버전이 있으면
+**CanvaSlide 정보** 대화상자에서 현재 버전, 릴리스 노트 링크와 업데이트 상태를 표시하고, 새 버전이 있으면
 설치 또는 다운로드 페이지 버튼을 제공한다.
 같은 대화상자의 **업데이트 확인** 버튼(모든 데스크톱 플랫폼)과, 정보 대화상자를 여는 macOS 메뉴의
 **Check for Updates…**는 바로 다시 확인한다. **시작할 때 업데이트 확인**을 해제하면 실행 시 확인을
@@ -281,12 +281,12 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
 | 플랫폼   | 동작                                                                                                                                                                                                                                |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Windows  | 새 버전을 앱 안에서 내려받은 뒤 앱을 닫고 설치 파일을 실행한다. 설치가 끝나면 앱이 다시 열린다.                                                                                                                                     |
-| macOS    | 공증된 업데이트(§6)는 Windows처럼 앱 안에서 내려받아 앱을 바꾸고 다시 시작한다. 앱 폴더에 쓸 권한이 없으면 macOS가 관리자 암호를 묻는다. 공증되지 않은 업데이트는 새 버전을 알리고 **다운로드 페이지 열기**로 릴리즈 페이지를 연다. |
-| 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리즈 노트 링크로 공개 버전을 확인한다.                                                                                                                                      |
+| macOS    | 공증된 업데이트(§6)는 Windows처럼 앱 안에서 내려받아 앱을 바꾸고 다시 시작한다. 앱 폴더에 쓸 권한이 없으면 macOS가 관리자 암호를 묻는다. 공증되지 않은 업데이트는 새 버전을 알리고 **다운로드 페이지 열기**로 릴리스 페이지를 연다. |
+| 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리스 노트 링크로 공개 버전을 확인한다.                                                                                                                                      |
 
 동작 원리:
 
-- 빌드가 `bundle.createUpdaterArtifacts`로 업데이터 파일을 만들고(공증한 릴리즈의 macOS 파일은 notarize 잡이
+- 빌드가 `bundle.createUpdaterArtifacts`로 업데이터 파일을 만들고(공증한 릴리스의 macOS 파일은 notarize 잡이
   서명한 앱으로 다시 만든다, §6), 서명 잡이 그 서명 파일(`.sig`)을, 게시 잡이 `latest.json`을 만들어 Release에 첨부한다(§4). 앱은 `https://github.com/hwantage/CanvaSlide/releases/latest/download/latest.json`만 본다. 그래서 **초안을 Publish 해야** 사용자에게 보인다.
 - 서명 키: 공개키는 `src-tauri/tauri.conf.json`의 `plugins.updater.pubkey`에 있다. 개인키와 암호는
   저장소 Settings → Environments → `release`의 환경 secret `TAURI_SIGNING_PRIVATE_KEY`,
@@ -296,20 +296,20 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
   관리한다. **키를 잃으면 같은 키로 후속 업데이트를 서명할 수 없다.**
 - 키 교체: 설치된 앱은 자기 `tauri.conf.json`의 공개키 하나만 신뢰한다.
   1. `pnpm tauri signer generate`로 암호가 있는 새 키를 만든다.
-  2. 새 공개키를 `tauri.conf.json`에 넣은 버전을 **기존 키로 서명해** 릴리즈한다. 이 업데이트를 받은 설치본은
+  2. 새 공개키를 `tauri.conf.json`에 넣은 버전을 **기존 키로 서명해** 릴리스한다. 이 업데이트를 받은 설치본은
      다음부터 새 키를 신뢰한다.
-  3. 그 버전을 충분히 오래 최신으로 둔 뒤 `release` 환경의 secret을 새 키로 바꾸고 다음 버전을 릴리즈한다.
-     2단계 이후의 릴리즈는 모두 새 키로 서명해야 하며, 게시 잡이 공개된 최신 릴리즈의 공개키로 이를 검사한다.
-  4. 2단계 버전을 받지 않은 설치본은 새 키로 서명된 업데이트를 받을 수 없으니 릴리즈 노트로 수동 재설치를 안내한다.
+  3. 그 버전을 충분히 오래 최신으로 둔 뒤 `release` 환경의 secret을 새 키로 바꾸고 다음 버전을 릴리스한다.
+     2단계 이후의 릴리스는 모두 새 키로 서명해야 하며, 게시 잡이 공개된 최신 릴리스의 공개키로 이를 검사한다.
+  4. 2단계 버전을 받지 않은 설치본은 새 키로 서명된 업데이트를 받을 수 없으니 릴리스 노트로 수동 재설치를 안내한다.
 
-  기존 키를 잃었거나 노출됐다면 2단계를 할 수 없다. 새 공개키를 넣은 버전을 새 키로 서명해 릴리즈하고, 모든
-  사용자에게 수동 재설치를 안내한다. 게시 잡은 기본적으로 공개된 최신 릴리즈의 공개키만 신뢰하므로, 태그를 올리기 전에
+  기존 키를 잃었거나 노출됐다면 2단계를 할 수 없다. 새 공개키를 넣은 버전을 새 키로 서명해 릴리스하고, 모든
+  사용자에게 수동 재설치를 안내한다. 게시 잡은 기본적으로 공개된 최신 릴리스의 공개키만 신뢰하므로, 태그를 올리기 전에
   `gh variable set UPDATER_KEY_CHANGE_TAG --body <태그>`로 이 태그에 한해 새 공개키를 허용하고 게시가 끝나면
   `gh variable delete UPDATER_KEY_CHANGE_TAG`로 지운다.
 
 - 로컬에서 서명까지 확인하려면 §5처럼 `pnpm bundle:local`로 빌드한 뒤, 같은 서명 키를 환경 변수로 주고
   업데이터 파일마다 `pnpm tauri signer sign <파일>`을 실행한다.
-- 릴리즈 노트: 앱의 업데이트 안내는 `latest.json`의 `notes`를 보여 준다. 이 값은 공개된 Release 본문을
+- 릴리스 노트: 앱의 업데이트 안내는 `latest.json`의 `notes`를 보여 준다. 이 값은 공개된 Release 본문을
   **Release notes** 워크플로가 옮긴 것이다(§4). 노트는 Release 본문에서만 고친다.
 - Windows 설치 방식: `tauri.conf.json`에 `plugins.updater.windows.installMode`가 없어 업데이터 플러그인의 기본값
   `passive`를 쓴다. 설치 창에는 진행 표시줄만 나온다. NSIS 설치 파일로 설치한 앱은 `-setup.exe`를 받고, 현재

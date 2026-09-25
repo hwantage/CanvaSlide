@@ -58,7 +58,7 @@ a bundle. The About dialog and the website footer link the file.
   selection changes do not represent content edits. `savedDocument` is `null` for work restored from
   a crash, where nothing on disk matches it — see [crash recovery](./CRASH-RECOVERY.md).
 - Every replacement of the open document (New, Open, a file the OS hands over, Restore, a share or
-  example link) goes through [`replaceDocument`](../src/renderer/src/lib/document-replacement.ts).
+  example link) goes through [`replaceDocument`](../src/renderer/src/lib/document/document-replacement.ts).
   It refuses while an edit gesture is in progress, guards unsaved work, cancels if authored content
   or the session changes while it waits, leaves presentation, loads, closes and clears launch links
   that no longer name the document and places the camera. Commands and Restore ask before
@@ -148,7 +148,7 @@ runtime representations share element geometry and settings, but store image dat
 UTF-8 bytes of the same format. [`document-resources.ts`](../src/shared/canvas/document-resources.ts)
 resolves resource references and builds the resource table when saving. It rejects missing resources,
 SVG-to-SVG references and oversized materialized image data. Input files are limited to 256 MiB;
-resolved asset strings are limited to 512 Mi characters. The [codec worker](../src/renderer/src/lib/document-file-codec.ts)
+resolved asset strings are limited to 512 Mi characters. The [codec worker](../src/renderer/src/lib/workers/document-file-codec.ts)
 keeps encoding/decoding off the UI thread and reuses unchanged asset recipes between saves.
 
 Earlier JSON formats and the former ZIP container are not read or migrated, even if the extension or
@@ -177,7 +177,7 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
   large for its box. [`zoom-layer-style.ts`](../src/shared/canvas/zoom-layer-style.ts) disables font
   optical sizing on WebKit so landing at a new layout zoom does not change glyph widths; Blink keeps
   its default. Do not replace this with a browser-independent font override.
-- [`prepareCameraFlight`](../src/renderer/src/lib/camera-flight-preparation.ts) prepares image leases
+- [`prepareCameraFlight`](../src/renderer/src/lib/raster/camera-flight-preparation.ts) prepares image leases
   and waits for a paint before starting the tween. Without that wait, replaying from a settled zoom
   pays the layout cost during the first animation frames. Compositing hints depend on document
   content, engine and presentation mode. WebKit dense editor/preview worlds retain
@@ -191,7 +191,7 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
   [`image-surface.ts`](../src/shared/canvas/image-surface.ts) maps pixel-sized surfaces into world
   coordinates to avoid magnifying WebKit's rounding of small output rectangles.
 - Detail tiles share a sampling grid and preserve transparency. The
-  [detail reveal coordinator](../src/renderer/src/lib/image-detail-reveal.ts) switches overlapping
+  [detail reveal coordinator](../src/renderer/src/lib/raster/image-detail-reveal.ts) switches overlapping
   images together when ready, with a deadline for slow/failed renders. Cross-fading preview and
   detail would double-composite translucent pixels. Release stale image leases when content or view changes.
 - Masked static photos use bounded previews during camera flights. Embedded WebP is recognized by

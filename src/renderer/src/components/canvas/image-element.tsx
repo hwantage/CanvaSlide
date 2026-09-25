@@ -6,7 +6,11 @@ import { svgImageLayoutScale } from '@shared/canvas/image-rendering'
 import { imageSurfaceStyle } from '@shared/canvas/image-surface'
 import { useImageSource } from '@/hooks/use-image-source'
 import { useImageDetail } from '@/hooks/use-image-detail'
-import { detailPainted, detailRevealed, subscribeDetailReveal } from '@/lib/image-detail-reveal'
+import {
+  detailPainted,
+  detailRevealed,
+  subscribeDetailReveal
+} from '@/lib/raster/image-detail-reveal'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 

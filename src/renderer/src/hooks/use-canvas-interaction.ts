@@ -10,9 +10,12 @@ import {
 } from 'react'
 import { screenToWorld } from '@shared/canvas/camera-transform'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
-import { createCanvasInteraction, type PointerInfo } from '@/lib/canvas-interaction-session'
-import { createCanvasPointerSession } from '@/lib/canvas-pointer-session'
-import { importableFilesFrom, insertFile } from '@/lib/external-content'
+import {
+  createCanvasInteraction,
+  type PointerInfo
+} from '@/lib/interaction/canvas-interaction-session'
+import { createCanvasPointerSession } from '@/lib/interaction/canvas-pointer-session'
+import { importableFilesFrom, insertFile } from '@/lib/document/external-content'
 import { hasPrimaryModifier, isEditableTarget } from '@/lib/platform-keys'
 import { hasNativeTextMenu } from '@/lib/native-context-menu'
 import { reportError } from '@/platform/document-file-access'

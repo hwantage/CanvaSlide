@@ -3,7 +3,7 @@ import { parseVideoSource } from '@shared/canvas/video-source'
 import { ModalDialog } from '@/components/ui/modal-dialog'
 import { TextButton } from '@/components/ui/text-button'
 import { t } from '@/i18n/ui-strings'
-import { insertVideoUrl } from '@/lib/external-content'
+import { insertVideoUrl } from '@/lib/document/external-content'
 import { useDocumentStore } from '@/store/document-store'
 
 export function VideoUrlDialog({

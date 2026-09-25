@@ -1,5 +1,5 @@
 import { exampleAssetPath, findExample, MAX_EXAMPLE_BYTES } from '@shared/example-catalog'
-import { decodeDocumentFile } from '@/lib/document-file-codec'
+import { decodeDocumentFile } from '@/lib/workers/document-file-codec'
 
 export type ExampleErrorCode = 'unknown' | 'missing' | 'network' | 'invalid' | 'changed'
 export class ExampleError extends Error {

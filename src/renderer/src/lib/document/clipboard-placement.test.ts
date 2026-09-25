@@ -3,9 +3,8 @@ import { createEmptyDocument } from '@shared/canvas/element-types'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
-import * as pointerTracking from './canvas-paste-pointer'
 import { insertClipboardText, pasteFromSystemClipboard } from './external-content'
-import { copySelection } from './object-clipboard'
+import { createObjectClipboard, type ObjectClipboard } from './object-clipboard'
 
 vi.mock('@/platform/native-clipboard', () => ({
   readNativeClipboardImage: vi.fn(async () => null),
@@ -14,6 +13,7 @@ vi.mock('@/platform/native-clipboard', () => ({
 
 let pointer: { revision: number; world: { x: number; y: number } | null }
 let payload: string
+let clipboard: ObjectClipboard
 const selected = () => {
   const state = useDocumentStore.getState()
   return state.document.elements[state.selectedIds[0]!]!
@@ -21,7 +21,7 @@ const selected = () => {
 
 beforeEach(() => {
   pointer = { revision: 1, world: { x: 100, y: 100 } }
-  vi.spyOn(pointerTracking, 'canvasPastePointer').mockImplementation(() => pointer)
+  clipboard = createObjectClipboard(() => pointer)
   useCameraStore.setState({
     camera: { x: 0, y: 0, zoom: 1 },
     viewport: { width: 1000, height: 800 }
@@ -37,7 +37,7 @@ beforeEach(() => {
     height: 40,
     textStyle: { color: '#000', fontSize: 20, align: 'left', bold: false }
   })
-  payload = JSON.stringify(copySelection())
+  payload = JSON.stringify(clipboard.copySelection())
   vi.mocked(readNativeClipboardText).mockResolvedValue(payload)
   pointer = { revision: 2, world: { x: 800, y: 600 } }
 })
@@ -52,23 +52,23 @@ describe('clipboard placement routes', () => {
         pointer.world = null
       }
       const firstPosition = atPointer ? { x: 750, y: 580 } : { x: 24, y: 24 }
-      insertClipboardText(payload)
+      insertClipboardText(clipboard, payload)
       expect(selected()).toMatchObject(firstPosition)
-      insertClipboardText(payload)
+      insertClipboardText(clipboard, payload)
       expect(selected()).toMatchObject({ x: firstPosition.x + 24, y: firstPosition.y + 24 })
-      insertClipboardText(payload.replace('Source', 'Edited source'))
+      insertClipboardText(clipboard, payload.replace('Source', 'Edited source'))
       expect(selected()).toMatchObject({ ...firstPosition, text: 'Edited source' })
     }
   )
 
   it('continues the cascade across repeated parsing and the same remembered payload', async () => {
-    insertClipboardText(payload)
-    await pasteFromSystemClipboard()
+    insertClipboardText(clipboard, payload)
+    await pasteFromSystemClipboard(clipboard)
     expect(selected()).toMatchObject({ x: 774, y: 604 })
     vi.mocked(readNativeClipboardText).mockResolvedValueOnce('')
     vi.stubGlobal('navigator', { clipboard: { readText: async () => '' } })
     try {
-      await pasteFromSystemClipboard()
+      await pasteFromSystemClipboard(clipboard)
       expect(selected()).toMatchObject({ x: 798, y: 628 })
     } finally {
       vi.unstubAllGlobals()
@@ -77,12 +77,12 @@ describe('clipboard placement routes', () => {
 
   it('resets placement when the remembered fallback differs from the last system payload', async () => {
     vi.mocked(readNativeClipboardText).mockResolvedValueOnce(payload.replace('Source', 'Other'))
-    await pasteFromSystemClipboard()
+    await pasteFromSystemClipboard(clipboard)
     expect(selected()).toMatchObject({ text: 'Other', x: 750, y: 580 })
     vi.mocked(readNativeClipboardText).mockResolvedValueOnce('')
     vi.stubGlobal('navigator', { clipboard: { readText: async () => '' } })
     try {
-      await pasteFromSystemClipboard()
+      await pasteFromSystemClipboard(clipboard)
       expect(selected()).toMatchObject({ text: 'Source', x: 750, y: 580 })
     } finally {
       vi.unstubAllGlobals()
@@ -95,7 +95,7 @@ describe('clipboard placement routes', () => {
       resolveText = resolve
     })
     vi.mocked(readNativeClipboardText).mockReturnValueOnce(text)
-    const paste = pasteFromSystemClipboard()
+    const paste = pasteFromSystemClipboard(clipboard)
     pointer = { revision: 3, world: { x: 100, y: 100 } }
     resolveText(payload)
     await paste
@@ -112,7 +112,7 @@ describe('clipboard placement routes', () => {
       }
     })
     try {
-      await pasteFromSystemClipboard()
+      await pasteFromSystemClipboard(clipboard)
       expect(selected()).toMatchObject({ x: 750, y: 580 })
     } finally {
       vi.unstubAllGlobals()
@@ -120,10 +120,10 @@ describe('clipboard placement routes', () => {
   })
 
   it('keeps the original object cascade for context-menu paste despite pointer movement', async () => {
-    await pasteFromSystemClipboard({ x: 300, y: 400 })
+    await pasteFromSystemClipboard(clipboard, { x: 300, y: 400 })
     expect(selected()).toMatchObject({ x: 24, y: 24 })
     pointer.world = null
-    await pasteFromSystemClipboard({ x: 300, y: 400 })
+    await pasteFromSystemClipboard(clipboard, { x: 300, y: 400 })
     expect(selected()).toMatchObject({ x: 48, y: 48 })
   })
 
@@ -131,7 +131,7 @@ describe('clipboard placement routes', () => {
     vi.mocked(readNativeClipboardText).mockResolvedValueOnce('')
     vi.stubGlobal('navigator', { clipboard: { readText: async () => '' } })
     try {
-      await pasteFromSystemClipboard({ x: 300, y: 400 })
+      await pasteFromSystemClipboard(clipboard, { x: 300, y: 400 })
       expect(selected()).toMatchObject({ x: 24, y: 24 })
     } finally {
       vi.unstubAllGlobals()
@@ -139,14 +139,14 @@ describe('clipboard placement routes', () => {
   })
 
   it('keeps context-menu plain text at its explicit destination', () => {
-    insertClipboardText('External text', { x: 300, y: 400 })
+    insertClipboardText(clipboard, 'External text', { x: 300, y: 400 })
     const element = selected()
     expect(element.x + element.width / 2).toBe(300)
     expect(element.y + element.height / 2).toBe(400)
   })
 
   it('keeps external plain text at the viewport centre despite pointer movement', () => {
-    insertClipboardText('External text')
+    insertClipboardText(clipboard, 'External text')
     const element = selected()
     expect(element.x + element.width / 2).toBe(500)
     expect(element.y + element.height / 2).toBe(400)

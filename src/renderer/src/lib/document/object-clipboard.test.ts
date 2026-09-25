@@ -1,17 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { parseClipboardPayload } from '@shared/canvas/clipboard-payload'
-import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-types'
+import { createEmptyDocument, type CanvasElement, type Point } from '@shared/canvas/element-types'
 import { useDocumentStore } from '@/store/document-store'
-import {
-  copySelection,
-  cutSelection,
-  memoryPayload,
-  nativePasteArrived,
-  pasteObjects,
-  requestKeyboardPaste
-} from './object-clipboard'
-
-import * as pointerTracking from './canvas-paste-pointer'
+import type { PastePointer } from '@/lib/interaction/canvas-paste-pointer'
+import { createObjectClipboard, type ObjectClipboard } from './object-clipboard'
 
 const text = (id: string): CanvasElement => ({
   id,
@@ -26,15 +18,23 @@ const text = (id: string): CanvasElement => ({
 
 const elementCount = () => useDocumentStore.getState().document.order.length
 
+let pointer: PastePointer
+let clipboard: ObjectClipboard
+const pasteMemory = (target: Point | null) =>
+  clipboard.pasteObjects(clipboard.memoryPayload()!, target)
+const requestKeyboardPaste = () => clipboard.requestKeyboardPaste(pasteMemory)
+
 describe('object-clipboard keyboard fallback', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    pointer = { revision: 0, world: null }
+    clipboard = createObjectClipboard(() => pointer)
     useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     useDocumentStore.getState().insertElement(text('a'))
-    copySelection()
+    clipboard.copySelection()
   })
   afterEach(() => {
-    nativePasteArrived()
+    clipboard.nativePasteArrived()
     vi.useRealTimers()
   })
 
@@ -46,7 +46,7 @@ describe('object-clipboard keyboard fallback', () => {
 
   it('is cancelled by the native paste event, whichever data it carries', () => {
     requestKeyboardPaste()
-    nativePasteArrived()
+    clipboard.nativePasteArrived()
     vi.runAllTimers()
     expect(elementCount()).toBe(1)
   })
@@ -55,9 +55,17 @@ describe('object-clipboard keyboard fallback', () => {
     requestKeyboardPaste()
     vi.advanceTimersByTime(50)
     expect(elementCount()).toBe(1)
-    nativePasteArrived()
+    clipboard.nativePasteArrived()
     vi.runAllTimers()
     expect(elementCount()).toBe(1)
+  })
+
+  it('waits 200 ms for the native event before falling back', () => {
+    requestKeyboardPaste()
+    vi.advanceTimersByTime(199)
+    expect(elementCount()).toBe(1)
+    vi.advanceTimersByTime(1)
+    expect(elementCount()).toBe(2)
   })
 
   it('keeps one fallback per keypress so rapid ⌘V ⌘V pastes twice', () => {
@@ -68,26 +76,62 @@ describe('object-clipboard keyboard fallback', () => {
     expect(elementCount()).toBe(3)
   })
 
+  it('tells a running fallback when a native paste arrives after all', () => {
+    let valid: (() => boolean) | undefined
+    clipboard.requestKeyboardPaste((_target, isValid) => {
+      valid = isValid
+    })
+    vi.runAllTimers()
+    expect(valid?.()).toBe(true)
+    clipboard.nativePasteArrived()
+    expect(valid?.()).toBe(false)
+  })
+
+  it('keeps copies and pending pastes within each clipboard', () => {
+    const other = createObjectClipboard(() => pointer)
+    expect(other.memoryPayload()).toBeNull()
+    requestKeyboardPaste()
+    other.nativePasteArrived()
+    vi.runAllTimers()
+    expect(elementCount()).toBe(2)
+    let valid: (() => boolean) | undefined
+    clipboard.requestKeyboardPaste((_target, isValid) => {
+      valid = isValid
+    })
+    vi.runAllTimers()
+    other.nativePasteArrived()
+    expect(valid?.()).toBe(true)
+  })
+
+  it('writes the copied payload to the system clipboard as JSON', () => {
+    const writeText = vi.fn(async () => undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    try {
+      const payload = clipboard.copySelection()
+      expect(writeText).toHaveBeenCalledWith(JSON.stringify(payload))
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('never substitutes the in-memory copy for foreign clipboard text', () => {
-    expect(memoryPayload()).not.toBeNull()
+    expect(clipboard.memoryPayload()).not.toBeNull()
     expect(parseClipboardPayload('')).toBeNull()
     expect(parseClipboardPayload('hello')).toBeNull()
-    expect(parseClipboardPayload(JSON.stringify(memoryPayload()))).not.toBeNull()
+    expect(parseClipboardPayload(JSON.stringify(clipboard.memoryPayload()))).not.toBeNull()
   })
 })
 
 describe('object clipboard placement', () => {
-  let pointer: { revision: number; world: { x: number; y: number } | null }
   beforeEach(() => {
     pointer = { revision: 1, world: { x: 50, y: 50 } }
-    vi.spyOn(pointerTracking, 'canvasPastePointer').mockImplementation(() => pointer)
+    clipboard = createObjectClipboard(() => pointer)
     useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     useDocumentStore.getState().insertElement(text('a'))
-    copySelection()
+    clipboard.copySelection()
   })
   afterEach(() => {
-    nativePasteArrived()
-    vi.restoreAllMocks()
+    clipboard.nativePasteArrived()
     vi.useRealTimers()
   })
   const selected = () => {
@@ -96,19 +140,44 @@ describe('object clipboard placement', () => {
   }
 
   it('resets movement and cascade on each copy, including a new copy at the same pointer', () => {
-    pasteObjects(memoryPayload()!)
+    clipboard.pasteObjects(clipboard.memoryPayload()!)
     expect(selected()).toMatchObject({ x: 24, y: 24 })
     pointer = { revision: 2, world: { x: 800, y: 600 } }
-    pasteObjects(memoryPayload()!)
+    clipboard.pasteObjects(clipboard.memoryPayload()!)
     expect(selected()).toMatchObject({ x: 795, y: 595 })
-    copySelection()
-    pasteObjects(memoryPayload()!)
+    clipboard.copySelection()
+    clipboard.pasteObjects(clipboard.memoryPayload()!)
     expect(selected()).toMatchObject({ x: 819, y: 619 })
+  })
+
+  it('restarts the cascade when the same content is copied again', () => {
+    const payload = clipboard.memoryPayload()!
+    clipboard.pasteObjects(payload, null)
+    clipboard.pasteObjects(payload, null)
+    expect(selected()).toMatchObject({ x: 48, y: 48 })
+    useDocumentStore.getState().setSelection(['a'])
+    clipboard.copySelection()
+    clipboard.pasteObjects(clipboard.memoryPayload()!, null)
+    expect(selected()).toMatchObject({ x: 24, y: 24 })
+  })
+
+  it('keeps paste targets and cascades within each clipboard', () => {
+    const other = createObjectClipboard(() => pointer)
+    pointer = { revision: 5, world: { x: 800, y: 600 } }
+    other.copySelection()
+    pointer = { revision: 3, world: { x: 1, y: 1 } }
+    expect(clipboard.objectPasteTarget()).toEqual({ x: 1, y: 1 })
+    expect(other.objectPasteTarget()).toBeNull()
+    const payload = clipboard.memoryPayload()!
+    clipboard.pasteObjects(payload, null)
+    clipboard.pasteObjects(payload, null)
+    other.pasteObjects(payload, null)
+    expect(selected()).toMatchObject({ x: 24, y: 24 })
   })
 
   it('falls back to source offsets when the pointer is outside and pastes in one undo step', () => {
     pointer = { revision: 2, world: null }
-    pasteObjects(memoryPayload()!)
+    clipboard.pasteObjects(clipboard.memoryPayload()!)
     expect(selected()).toMatchObject({ x: 24, y: 24 })
     useDocumentStore.getState().undo()
     expect(elementCount()).toBe(1)
@@ -132,10 +201,10 @@ describe('object clipboard placement', () => {
       width: 100,
       height: 100
     })
-    const payload = copySelection()!
+    const payload = clipboard.copySelection()!
     expect(payload.elements.map((element) => element.id)).toEqual(['a', 'f'])
     expect(useDocumentStore.getState().selectedIds).toEqual(['f'])
-    pasteObjects(payload, { x: 500, y: 400 })
+    clipboard.pasteObjects(payload, { x: 500, y: 400 })
     const state = useDocumentStore.getState()
     expect(state.selectedIds).toHaveLength(2)
     expect(state.document.elements[state.selectedIds[0]!]).toMatchObject({
@@ -167,7 +236,7 @@ describe('object clipboard placement', () => {
       width: 100,
       height: 100
     })
-    expect(cutSelection()!.elements.map((element) => element.id)).toEqual(['a', 'f'])
+    expect(clipboard.cutSelection()!.elements.map((element) => element.id)).toEqual(['a', 'f'])
     expect(useDocumentStore.getState().document.order).toEqual(['outside'])
     useDocumentStore.getState().undo()
     expect(useDocumentStore.getState().document.order).toEqual(['a', 'outside', 'f'])

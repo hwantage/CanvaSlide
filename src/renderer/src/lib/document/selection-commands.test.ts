@@ -55,6 +55,22 @@ describe('selection-commands', () => {
     expect(useDocumentStore.getState().document.order).toEqual(['a', 'b'])
   })
 
+  it('gives each wrapping frame its own id and the next frame number', () => {
+    const store = useDocumentStore.getState()
+    store.insertElement(shape('a', 100, 100), false)
+    store.insertElement(shape('b', 900, 100), false)
+    store.setSelection(['a'])
+    expect(frameSelection()).toBe(true)
+    store.setSelection(['b'])
+    expect(frameSelection()).toBe(true)
+    const { document } = useDocumentStore.getState()
+    const frames = Object.values(document.elements).flatMap((element) =>
+      element.type === 'frame' ? [element] : []
+    )
+    expect(new Set(frames.map((element) => element.id)).size).toBe(2)
+    expect(frames.map((element) => element.order).sort((a, b) => a - b)).toEqual([1, 2])
+  })
+
   it('refuses to wrap a selection that is nothing but frames', () => {
     const store = useDocumentStore.getState()
     store.insertElement(frame('f1', 1, 0), false)

@@ -80,7 +80,7 @@ test('retains photo colors, source alpha and nested mask pixels in cached detail
     }
     original.src = ''
     return { differences, released }
-  }, appModuleUrl('lib/svg-image-preview.ts'))
+  }, appModuleUrl('lib/raster/svg-image-preview.ts'))
   for (const difference of result.differences) {
     expect(difference.color).toBeLessThan(1)
     expect(difference.alpha).toBeLessThan(1)

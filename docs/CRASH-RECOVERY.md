@@ -31,7 +31,7 @@ The worker produces version-1 UTF-8 JSON:
 ```
 
 `contents` uses the normal document JSON codec. The envelope and document are serialized in
-[`document-file.worker.ts`](../src/renderer/src/lib/document-file.worker.ts), then returned as
+[`document-file.worker.ts`](../src/renderer/src/lib/workers/document-file.worker.ts), then returned as
 transferable bytes. Native writes pass those bytes as the IPC body, with the session id in a header,
 avoiding another large JSON serialization in the renderer. Sending the document to the worker still
 uses structured cloning, including newly changed embedded assets; this is not a zero-copy pipeline.

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { trackCanvasPastePointer } from '@/lib/canvas-paste-pointer'
+import type { ObjectClipboard } from '@/lib/document/object-clipboard'
+import type { CanvasPastePointer } from '@/lib/interaction/canvas-paste-pointer'
 import { useCanvasInteraction } from '@/hooks/use-canvas-interaction'
 import { measureViewport, useViewportSize } from '@/hooks/use-viewport-size'
 import { useSwipeNavigation } from '@/hooks/use-swipe-navigation'
@@ -34,7 +35,13 @@ const cursorByTool = {
   connector: 'crosshair'
 } as const
 
-export function CanvasViewport() {
+export function CanvasViewport({
+  clipboard,
+  pastePointer
+}: {
+  clipboard: ObjectClipboard
+  pastePointer: CanvasPastePointer
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const tool = useToolStore(selectEffectiveTool)
   const presenting = usePresentationStore(selectPresentationActive)
@@ -46,9 +53,9 @@ export function CanvasViewport() {
 
   useEffect(() => {
     if (ref.current) {
-      return trackCanvasPastePointer(ref.current)
+      return pastePointer.track(ref.current)
     }
-  }, [])
+  }, [pastePointer])
 
   // Only slide shows hide editor chrome, so only they need a new viewport before the first flight.
   useLayoutEffect(() => {
@@ -86,7 +93,7 @@ export function CanvasViewport() {
       <PresentationFramePicker />
       <PresentationOverlay />
       <PreviewControls />
-      {!presenting && <ContextMenu />}
+      {!presenting && <ContextMenu clipboard={clipboard} />}
     </div>
   )
 }

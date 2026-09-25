@@ -4,18 +4,21 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { useDocumentStore } from '@/store/document-store'
 import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
 import { useToolStore } from '@/store/tool-store'
-import { createElementForTool } from '@/lib/create-element-for-tool'
+import { createElementForTool } from '@shared/canvas/element-factory'
+import { newElementContext, useStyleMemoryStore } from '@/store/style-memory-store'
 import { useCanvasInteraction } from './use-canvas-interaction'
 
 const initialDocument = useDocumentStore.getState()
 const initialTool = useToolStore.getState()
 const initialOverlay = useInteractionOverlayStore.getState()
+const initialStyleMemory = useStyleMemoryStore.getState()
 
 afterEach(() => {
   cleanup()
   useDocumentStore.setState(initialDocument, true)
   useToolStore.setState(initialTool, true)
   useInteractionOverlayStore.setState(initialOverlay, true)
+  useStyleMemoryStore.setState(initialStyleMemory, true)
 })
 
 function Canvas() {
@@ -39,7 +42,8 @@ it('clears the idle connector hover preview when the window loses focus', () => 
       'rectangle',
       store.document,
       { x: 100, y: 100, width: 100, height: 100 },
-      { x: 100, y: 100 }
+      { x: 100, y: 100 },
+      newElementContext()
     )
   )
   useToolStore.getState().setTool('connector')
@@ -92,3 +96,36 @@ it.each(['rectangle', 'connector'] as const)(
     expect(useDocumentStore.getState().past).toEqual([])
   }
 )
+
+it('draws a new shape with the remembered style', () => {
+  const { memory } = useStyleMemoryStore.getState()
+  useStyleMemoryStore.setState({
+    memory: { ...memory, shape: { ...memory.shape, fill: '#123456' } }
+  })
+  const { getByTestId } = render(<Canvas />)
+  const canvas = getByTestId('canvas')
+  Object.assign(canvas, {
+    setPointerCapture: vi.fn(),
+    hasPointerCapture: () => true,
+    releasePointerCapture: vi.fn()
+  })
+  useToolStore.getState().setTool('rectangle')
+  const pointer = {
+    pointerId: 3,
+    isPrimary: true,
+    button: 0,
+    buttons: 1,
+    clientX: 100,
+    clientY: 100
+  }
+  fireEvent.pointerDown(canvas, pointer)
+  fireEvent.pointerMove(window, { ...pointer, button: -1, clientX: 250, clientY: 200 })
+  fireEvent.pointerUp(window, { ...pointer, buttons: 0, clientX: 250, clientY: 200 })
+  const { document } = useDocumentStore.getState()
+  expect(document.order).toHaveLength(1)
+  expect(document.elements[document.order[0]!]).toMatchObject({
+    type: 'shape',
+    shape: 'rectangle',
+    style: { fill: '#123456' }
+  })
+})

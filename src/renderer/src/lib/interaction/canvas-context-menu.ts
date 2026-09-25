@@ -4,7 +4,7 @@ import { useCameraStore } from '@/store/camera-store'
 import { useContextMenuStore } from '@/store/context-menu-store'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
-import { frameHitChromeAt } from './frame-chrome'
+import { frameHitChromeAt } from '@/lib/frame-chrome'
 
 /**
  * Right-click: the element under the cursor becomes the selection unless it is already part of

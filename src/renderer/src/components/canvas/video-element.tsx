@@ -3,7 +3,7 @@ import type { VideoElement as Video } from '@shared/canvas/element-types'
 import { mountLinkedVideo, type VideoLabels } from '@shared/media/linked-video'
 import '@shared/media/linked-video.css'
 import { currentLocale, t } from '@/i18n/ui-strings'
-import { canvasVideoFocus } from '@/lib/video-expansion'
+import { canvasVideoFocus } from '@/lib/interaction/video-expansion'
 import { videoPlaybackAccess } from '@/platform/video-playback-access'
 
 export function VideoElement({

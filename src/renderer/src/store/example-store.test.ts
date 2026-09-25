@@ -1,7 +1,7 @@
 import { useExampleStore, cancelExampleRequest } from './example-store'
-import { loadExampleDocument } from '@/lib/load-example-document'
+import { loadExampleDocument } from '@/lib/document/load-example-document'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
-vi.mock('@/lib/load-example-document', () => ({ loadExampleDocument: vi.fn() }))
+vi.mock('@/lib/document/load-example-document', () => ({ loadExampleDocument: vi.fn() }))
 vi.mock('@/platform/tauri-runtime', () => ({ isTauriRuntime: vi.fn(() => false) }))
 beforeEach(() => {
   vi.clearAllMocks()

@@ -1,4 +1,4 @@
-import { prepareCameraFlight } from '@/lib/camera-flight-preparation'
+import { prepareCameraFlight } from '@/lib/raster/camera-flight-preparation'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PREVIEW_DEPARTURE_HOLD_MS } from '@shared/canvas/departure-hold'
 import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-types'
@@ -19,7 +19,7 @@ const frame = (id: string, order: number, x: number): CanvasElement => ({
 })
 
 // Keep image preparation independent of the store's departure paint and hold clock.
-vi.mock('@/lib/camera-flight-preparation', () => ({
+vi.mock('@/lib/raster/camera-flight-preparation', () => ({
   prepareCameraFlight: vi.fn(() => ({ ready: Promise.resolve(), release: () => {} }))
 }))
 

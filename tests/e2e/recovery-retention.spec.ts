@@ -375,7 +375,7 @@ test('worker serializes bytes and rejects corrupt and future envelopes @core-int
     },
     {
       document: createEmptyDocument('Worker deck'),
-      path: appModuleUrl('lib/document-file-codec.ts')
+      path: appModuleUrl('lib/workers/document-file-codec.ts')
     }
   )
   expect(result).toEqual({

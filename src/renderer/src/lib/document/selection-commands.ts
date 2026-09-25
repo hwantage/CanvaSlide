@@ -4,12 +4,12 @@ import {
   rectContainsRect,
   selectionBounds
 } from '@shared/canvas/element-bounds'
+import { createFrameElement } from '@shared/canvas/element-factory'
 import { frameRectAround, selectionIsOnlyFrames } from '@shared/canvas/frame-from-selection'
 import { insertElement } from '@shared/canvas/document-mutations'
 import { frameIndexById, orderedFrames } from '@shared/canvas/presentation-sequence'
-import { createFrameElement } from '@/lib/element-factory'
 import { useCameraStore } from '@/store/camera-store'
-import { useDocumentStore } from '@/store/document-store'
+import { newElementId, useDocumentStore } from '@/store/document-store'
 import { usePresentationStore } from '@/store/presentation-store'
 import { useToolStore } from '@/store/tool-store'
 
@@ -46,7 +46,7 @@ export function frameSelection(): boolean {
   if (!bounds) {
     return false
   }
-  const frame = createFrameElement(store.document, frameRectAround(bounds))
+  const frame = createFrameElement(store.document, frameRectAround(bounds), newElementId())
   store.applyEdit((d) => insertElement(d, frame))
   store.setSelection([frame.id])
   return true

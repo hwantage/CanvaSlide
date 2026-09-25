@@ -3,7 +3,7 @@ import {
   encodeDocumentFile,
   decodeNativeDocumentFile,
   encodeNativeDocumentFile
-} from '@/lib/document-file-codec'
+} from '@/lib/workers/document-file-codec'
 import {
   DOCUMENT_FILE_EXTENSION,
   documentFileName,

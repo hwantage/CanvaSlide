@@ -3,9 +3,9 @@ import type { Camera, ImageAsset, ImageElement, Size } from '@shared/canvas/elem
 import { imageDetailRegions, type ImageDetailRegion } from '@shared/canvas/image-detail'
 import { imageIntersectsViewport } from '@shared/canvas/image-rendering'
 import { camerasEqual, ZOOM_SETTLE_MS } from '@shared/canvas/camera-transform'
-import type { ImagePreview } from '@/lib/svg-image-preview'
-import { expectDetail, withdrawDetail } from '@/lib/image-detail-reveal'
-import { svgDetailCache } from '@/lib/svg-preview-cache'
+import type { ImagePreview } from '@/lib/raster/svg-image-preview'
+import { expectDetail, withdrawDetail } from '@/lib/raster/image-detail-reveal'
+import { svgDetailCache } from '@/lib/raster/svg-preview-cache'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 

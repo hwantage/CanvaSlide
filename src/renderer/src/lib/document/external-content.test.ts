@@ -1,24 +1,30 @@
-import { beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import { buildClipboardPayload } from '@shared/canvas/clipboard-payload'
 import { useDocumentStore } from '@/store/document-store'
 import { useCameraStore } from '@/store/camera-store'
+import { useStyleMemoryStore } from '@/store/style-memory-store'
 import { insertClipboardText, pasteFromSystemClipboard } from './external-content'
+import { createObjectClipboard, type ObjectClipboard } from './object-clipboard'
 import { readNativeClipboardImage, readNativeClipboardText } from '@/platform/native-clipboard'
-import { readVideoAspectRatio } from './video-metadata'
-import { decodeImageFile } from './clipboard-image'
+import { readVideoAspectRatio } from '@/lib/video-metadata'
+import { decodeImageFile } from '@/lib/raster/clipboard-image'
 import { VIDEO_CHROME_HEIGHT } from '@shared/canvas/video-placement'
 
-vi.mock('./video-metadata', () => ({ readVideoAspectRatio: vi.fn(async () => null) }))
-vi.mock('./clipboard-image', () => ({ decodeImageFile: vi.fn() }))
+vi.mock('@/lib/video-metadata', () => ({ readVideoAspectRatio: vi.fn(async () => null) }))
+vi.mock('@/lib/raster/clipboard-image', () => ({ decodeImageFile: vi.fn() }))
 
 vi.mock('@/platform/native-clipboard', () => ({
   readNativeClipboardImage: vi.fn(async () => null),
   readNativeClipboardText: vi.fn(async () => '')
 }))
 
+let clipboard: ObjectClipboard
+const initialStyleMemory = useStyleMemoryStore.getState()
+
 beforeEach(() => {
   vi.clearAllMocks()
+  clipboard = createObjectClipboard(() => ({ revision: 0, world: null }))
   useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
   useCameraStore.setState({
     camera: { x: 0, y: 0, zoom: 1 },
@@ -26,8 +32,41 @@ beforeEach(() => {
   })
 })
 
+afterEach(() => useStyleMemoryStore.setState(initialStyleMemory, true))
+
+it('starts pasted plain text from the remembered text style', () => {
+  const { memory } = useStyleMemoryStore.getState()
+  useStyleMemoryStore.setState({
+    memory: { ...memory, text: { ...memory.text, color: '#123456' } }
+  })
+  insertClipboardText(clipboard, 'hello')
+  const { document } = useDocumentStore.getState()
+  expect(document.elements[document.order[0]!]).toMatchObject({
+    type: 'text',
+    text: 'hello',
+    textStyle: { color: '#123456' }
+  })
+})
+
+it('gives each pasted image its own element id', async () => {
+  vi.mocked(readNativeClipboardImage).mockResolvedValue(
+    new File([], 'clipboard.png', { type: 'image/png' })
+  )
+  vi.mocked(decodeImageFile).mockResolvedValue({
+    src: 'data:image/png;base64,aGVsbG8=',
+    width: 10,
+    height: 10
+  })
+  await pasteFromSystemClipboard(clipboard)
+  await pasteFromSystemClipboard(clipboard)
+  const { order } = useDocumentStore.getState().document
+  expect(order).toHaveLength(2)
+  expect(new Set(order).size).toBe(2)
+  vi.mocked(readNativeClipboardImage).mockResolvedValue(null)
+})
+
 it('recognizes a standalone video as one undoable element while preserving text and object priority', () => {
-  insertClipboardText('https://youtu.be/M7lc1UVf-VE')
+  insertClipboardText(clipboard, 'https://youtu.be/M7lc1UVf-VE')
   let state = useDocumentStore.getState()
   expect(state.document.order).toHaveLength(1)
   const video = state.document.elements[state.document.order[0]!]!
@@ -38,8 +77,8 @@ it('recognizes a standalone video as one undoable element while preserving text 
   expect(useDocumentStore.getState().document.order).toHaveLength(0)
   state.redo()
   const payload = buildClipboardPayload(useDocumentStore.getState().document, [video.id])!
-  insertClipboardText(JSON.stringify(payload))
-  insertClipboardText('https://example.org/page')
+  insertClipboardText(clipboard, JSON.stringify(payload))
+  insertClipboardText(clipboard, 'https://example.org/page')
   state = useDocumentStore.getState()
   expect(state.document.order.map((id) => state.document.elements[id]!.type)).toEqual([
     'video',
@@ -51,7 +90,7 @@ it('recognizes a standalone video as one undoable element while preserving text 
 
 it('routes the macOS native fallback through the same URL recognition', async () => {
   vi.mocked(readNativeClipboardText).mockResolvedValueOnce('https://vimeo.com/76979871')
-  await pasteFromSystemClipboard()
+  await pasteFromSystemClipboard(clipboard)
   const state = useDocumentStore.getState()
   expect(state.document.order).toHaveLength(1)
   expect(state.document.elements[state.document.order[0]!]).toMatchObject({
@@ -69,10 +108,10 @@ it('drops a late native read after the DOM paste owns the gesture or the documen
     })
   )
   let valid = true
-  const pending = pasteFromSystemClipboard(undefined, null, () => valid)
+  const pending = pasteFromSystemClipboard(clipboard, undefined, null, () => valid)
   await vi.waitFor(() => expect(readNativeClipboardText).toHaveBeenCalled())
   valid = false
-  insertClipboardText('https://vimeo.com/76979871')
+  insertClipboardText(clipboard, 'https://vimeo.com/76979871')
   resolve('https://vimeo.com/76979871')
   await pending
   expect(useDocumentStore.getState().document.order).toHaveLength(1)
@@ -80,7 +119,7 @@ it('drops a late native read after the DOM paste owns the gesture or the documen
     useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
     return 'https://vimeo.com/76979871'
   })
-  await pasteFromSystemClipboard()
+  await pasteFromSystemClipboard(clipboard)
   expect(useDocumentStore.getState().document.order).toHaveLength(0)
 })
 
@@ -97,7 +136,7 @@ it.each(['open', 'superseded', 'current'] as const)(
       })
     )
     let valid = true
-    const pending = pasteFromSystemClipboard(undefined, null, () => valid)
+    const pending = pasteFromSystemClipboard(clipboard, undefined, null, () => valid)
     await vi.waitFor(() => expect(decodeImageFile).toHaveBeenCalledOnce())
     if (action === 'open') {
       useDocumentStore.getState().loadDocument(createEmptyDocument(), null)
@@ -121,7 +160,7 @@ it.each(['open', 'superseded', 'current'] as const)(
 
 it('amends the initial size from metadata as one undo step and preserves the paste centre', async () => {
   vi.mocked(readVideoAspectRatio).mockResolvedValueOnce(9 / 16)
-  insertClipboardText('https://example.org/portrait.mp4')
+  insertClipboardText(clipboard, 'https://example.org/portrait.mp4')
   await vi.waitFor(() => {
     const { document } = useDocumentStore.getState()
     const video = document.elements[document.order[0]!]!
@@ -146,7 +185,7 @@ it.each(['resize', 'undo', 'new'] as const)(
         resolve = done
       })
     )
-    insertClipboardText('https://example.org/portrait.mp4')
+    insertClipboardText(clipboard, 'https://example.org/portrait.mp4')
     const state = useDocumentStore.getState()
     if (action === 'resize') {
       state.patchElements(state.selectedIds, { width: 200, height: 200 })

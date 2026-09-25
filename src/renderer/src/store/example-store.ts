@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { loadExampleDocument } from '@/lib/load-example-document'
+import { loadExampleDocument } from '@/lib/document/load-example-document'
 import { clearExampleQuery, ExampleError, type ExampleErrorCode } from '@/platform/example-document'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
 

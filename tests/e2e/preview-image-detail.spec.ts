@@ -85,7 +85,7 @@ async function openPreviewDocument(page: Page) {
       probe.requests++
       return acquire(...args)
     }
-  }, appModuleUrl('lib/svg-preview-cache.ts'))
+  }, appModuleUrl('lib/raster/svg-preview-cache.ts'))
 }
 
 async function requests(page: Page) {
@@ -182,7 +182,7 @@ test('releases detail canvases and leases after zooming out while the image stay
       useCameraStore.getState().setCamera({ ...camera, x: camera.x - 5 })
     },
     {
-      cacheUrl: appModuleUrl('lib/svg-preview-cache.ts'),
+      cacheUrl: appModuleUrl('lib/raster/svg-preview-cache.ts'),
       cameraUrl: appModuleUrl('store/camera-store.ts')
     }
   )

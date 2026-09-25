@@ -1,6 +1,6 @@
 import { MAX_SNAPSHOT_BYTES, RECOVERY_SNAPSHOT_VERSION } from '@shared/canvas/recovery-snapshot'
 import { createEmptyDocument } from '@shared/canvas/element-types'
-import { decodeRecoveryFile, encodeRecoverySnapshot } from '@/lib/document-file-codec'
+import { decodeRecoveryFile, encodeRecoverySnapshot } from '@/lib/workers/document-file-codec'
 import {
   claimRecoverySession,
   currentSessionId,
@@ -26,7 +26,7 @@ import {
   writeRecoverySnapshot
 } from './recovery-storage'
 
-vi.mock('@/lib/document-file-codec', () => ({
+vi.mock('@/lib/workers/document-file-codec', () => ({
   encodeRecoverySnapshot: vi.fn(),
   decodeRecoveryFile: vi.fn()
 }))

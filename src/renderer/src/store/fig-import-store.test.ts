@@ -3,7 +3,7 @@ import { useDocumentStore } from './document-store'
 import { MAX_FIG_BYTES, emptyFigWarnings } from '@shared/canvas/fig-types'
 import { createEmptyDocument, defaultTextStyle } from '@shared/canvas/element-types'
 import type { FigImportResult } from '@shared/canvas/fig-convert'
-import type { FigImportRequest, FigImportResponse } from '@/lib/fig-import.worker'
+import type { FigImportRequest, FigImportResponse } from '@/lib/workers/fig-import.worker'
 
 class ImportWorker {
   static instances: ImportWorker[] = []

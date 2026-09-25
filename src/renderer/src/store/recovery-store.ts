@@ -26,7 +26,7 @@ import {
   type RecoveryWriteFailure
 } from '@/platform/recovery-storage'
 import { claimSession, releaseRecoverySession } from '@/platform/recovery-session'
-import { loadReplacement, replaceDocument } from '@/lib/document-replacement'
+import { loadReplacement, replaceDocument } from '@/lib/document/document-replacement'
 import { useDocumentStore } from './document-store'
 
 const STORAGE_KEY = 'canvaslide.recovery'

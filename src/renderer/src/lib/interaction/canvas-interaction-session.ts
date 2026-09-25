@@ -6,6 +6,7 @@ import {
   selectionContainsPoint
 } from '@shared/canvas/element-bounds'
 import { expandToGroups } from '@shared/canvas/element-groups'
+import { createElementForTool, isCreateTool, type CreateTool } from '@shared/canvas/element-factory'
 import { constrainToSquare } from '@shared/canvas/drag-constraints'
 import type { ElementId, Point } from '@shared/canvas/element-types'
 import type { HandlePosition } from '@shared/canvas/resize-handles'
@@ -13,6 +14,7 @@ import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
 import { usePresentationStore } from '@/store/presentation-store'
+import { newElementContext } from '@/store/style-memory-store'
 import { selectEffectiveTool, useToolStore, type ToolId } from '@/store/tool-store'
 import {
   beginConnectorCreate,
@@ -34,8 +36,7 @@ import {
 } from './canvas-move-session'
 import { applyResizeSession, beginResizeSession, type ResizeSession } from './canvas-resize-session'
 import { applyRotateSession, beginRotateSession, type RotateSession } from './canvas-rotate-session'
-import { createElementForTool, isCreateTool, type CreateTool } from './create-element-for-tool'
-import { DRAG_THRESHOLD_PX, frameHitChromeAt } from './frame-chrome'
+import { DRAG_THRESHOLD_PX, frameHitChromeAt } from '@/lib/frame-chrome'
 
 export type PointerInfo = {
   screen: Point
@@ -94,7 +95,13 @@ export function createCanvasInteraction(): CanvasInteraction {
     const dragged = createRect(tool, startWorld, info)
     const tiny = dragged.width < 4 && dragged.height < 4
     const { document, insertElement } = docStore.getState()
-    const element = createElementForTool(tool, document, tiny ? null : dragged, startWorld)
+    const element = createElementForTool(
+      tool,
+      document,
+      tiny ? null : dragged,
+      startWorld,
+      newElementContext()
+    )
     insertElement(element, true)
     const tools = useToolStore.getState()
     tools.setTool('select')

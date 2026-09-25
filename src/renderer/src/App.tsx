@@ -24,6 +24,11 @@ import { useRecoverySnapshot } from '@/hooks/use-recovery-snapshot'
 import { useSharedDocument } from '@/hooks/use-shared-document'
 import { useSystemTheme } from '@/hooks/use-system-theme'
 import { useUpdateCheck } from '@/hooks/use-update-check'
+import { createObjectClipboard, type ObjectClipboard } from '@/lib/document/object-clipboard'
+import {
+  createCanvasPastePointer,
+  type CanvasPastePointer
+} from '@/lib/interaction/canvas-paste-pointer'
 import { preventPageContextMenu } from '@/lib/native-context-menu'
 import { selectLocale, useLanguageStore } from '@/store/language-store'
 import { isModalDialogOpen } from '@/store/modal-stack'
@@ -34,15 +39,27 @@ import { ExampleDialog } from '@/components/panels/example-dialog'
 
 export function App() {
   const presentation = useCloudShareStore((s) => s.presentation)
+  const [pastePointer] = useState(createCanvasPastePointer)
+  const [clipboard] = useState(() => createObjectClipboard(pastePointer.read))
   useSharedDocument()
   useEffect(() => {
     void useExampleStore.getState().openLink(window.location.search)
     return cancelExampleRequest
   }, [])
-  return presentation ? <SharedSlideShow document={presentation} /> : <Editor />
+  return presentation ? (
+    <SharedSlideShow document={presentation} />
+  ) : (
+    <Editor clipboard={clipboard} pastePointer={pastePointer} />
+  )
 }
 
-function Editor() {
+function Editor({
+  clipboard,
+  pastePointer
+}: {
+  clipboard: ObjectClipboard
+  pastePointer: CanvasPastePointer
+}) {
   const commands = useDocumentCommands()
   const presenting = usePresentationStore(selectSlideShowActive)
   const compact = useCompactLayout()
@@ -89,8 +106,8 @@ function Editor() {
   }, [compact, panelOpen, presenting])
   // Why: t() reads the active locale as it renders, so the tree has to re-render when it changes.
   const locale = useLanguageStore(selectLocale)
-  useKeyboardShortcuts(commands)
-  useClipboard()
+  useKeyboardShortcuts(commands, clipboard)
+  useClipboard(clipboard)
   useWindowTitle()
   useCloseGuard()
   useRecoverySnapshot()
@@ -114,7 +131,7 @@ function Editor() {
       )}
       <div className="relative flex min-h-0 flex-1">
         <main className="relative min-w-0 flex-1">
-          <CanvasViewport />
+          <CanvasViewport clipboard={clipboard} pastePointer={pastePointer} />
           {!presenting && (
             <>
               <div className="absolute left-3 top-3">

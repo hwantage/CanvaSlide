@@ -63,7 +63,7 @@
   글자별 채우기는 `textStyleTable`과 `styleOverrideTable`을 함께 읽으며, 같은 스타일 ID는 오버라이드를 우선한다.
 - `fig-convert.ts`: CanvaSlide 요소·자산·발표 프레임 변환.
 - `fig-text.ts`: 편집 가능한 텍스트·서식·프레임 자르기 변환. `text-clip.ts`는 편집기·HTML 플레이어의 표시 범위를 공유하고 편집기의 선택 범위에도 적용한다.
-- `renderer/src/lib/fig-import.worker.ts`: 해독과 변환을 메인 스레드 밖에서 실행. 취소 시 워커 종료.
+- `renderer/src/lib/workers/fig-import.worker.ts`: 해독과 변환을 메인 스레드 밖에서 실행. 취소 시 워커 종료.
 - `renderer/src/store/fig-import-store.ts`: 대화상자 상태와 단일 undo 단계 삽입. 문서가 바뀌면 이전 변환 결과를 넣지 않는다.
 
 대량 삽입은 `document-mutations.insertElements`를 사용해 요소·자산 테이블을 한 번씩 복사한다.

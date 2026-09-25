@@ -21,7 +21,7 @@ import {
   releaseRecoverySession,
   supportsSessionOwnership
 } from './recovery-session'
-import { decodeRecoveryFile, encodeRecoverySnapshot } from '@/lib/document-file-codec'
+import { decodeRecoveryFile, encodeRecoverySnapshot } from '@/lib/workers/document-file-codec'
 import {
   clearStoredSnapshots,
   listStoredSessions,

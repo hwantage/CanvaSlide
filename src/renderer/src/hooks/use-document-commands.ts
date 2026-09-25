@@ -9,7 +9,7 @@ import {
 } from '@/platform/document-file-access'
 import type { FilePath } from '@/platform/file-path'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
-import { replaceDocument } from '@/lib/document-replacement'
+import { replaceDocument } from '@/lib/document/document-replacement'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 

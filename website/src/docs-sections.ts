@@ -299,6 +299,12 @@ export function docSections(topic: TopicId): DocSection[] {
     faq: [
       { id: 'account', heading: 'site.docs.faq.accountQ', body: 'site.docs.faq.accountA' },
       { id: 'offline', heading: 'site.docs.faq.offlineQ', body: 'site.docs.faq.offlineA' },
+      {
+        id: 'network-and-privacy',
+        heading: 'site.docs.faq.networkQ',
+        body: 'site.docs.faq.networkA',
+        params: { github: 'GitHub', youtube: 'YouTube', vimeo: 'Vimeo' }
+      },
       { id: 'saved-work', heading: 'site.docs.faq.autosaveQ', body: 'site.docs.faq.autosaveA' },
       { id: 'editing-an-export', heading: 'site.docs.faq.editQ', body: 'site.docs.faq.editA' },
       { id: 'license', heading: 'site.docs.faq.priceQ', body: 'site.docs.faq.priceA' },

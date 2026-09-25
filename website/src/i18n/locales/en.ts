@@ -290,6 +290,9 @@ export const en = {
   'site.docs.faq.offlineQ': 'Can I work and present offline?',
   'site.docs.faq.offlineA':
     'The desktop editor and exported presentations with embedded content work offline. Linked videos need their provider and network. Opening a web example or a cloud snapshot also needs a connection.',
+  'site.docs.faq.networkQ': 'What does the app send over the network?',
+  'site.docs.faq.networkA':
+    'There is no analytics, telemetry, or crash reporting. The desktop app asks {github} for the latest release 3 seconds after each launch. The request carries no document content, app version, or device identifier, and an update is installed only when you confirm it. There is no setting to turn this check off; offline or when it is blocked, the app keeps working. Copy link uploads the whole document to the share service, where it stays for 24 hours. Adding or playing a linked video contacts {youtube}, {vimeo}, or the video’s server. A video set to play automatically, the default, starts loading without a click when a presentation reaches its frame; only one {youtube} video per frame does so, and the browser or provider may still ask for a click to play it. Documents that show a {youtube} video load its thumbnail from {youtube}. The web editor is a hosted page, but your documents stay in the browser until you share them.',
   'site.docs.faq.autosaveQ': 'Where is my work saved?',
   'site.docs.faq.autosaveA':
     'You choose the file location when saving. When enabled and local storage is available, recovery periodically keeps a copy on this computer and can offer the last completed copy after a restart. Recent edits may be missing, and browser reloads can also show a recovery offer. Saving schedules cleanup of the recovery copy. There is no automatic cloud sync, so keep saving your document as you work.',

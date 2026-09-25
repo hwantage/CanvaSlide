@@ -13,6 +13,7 @@ targets; the browser editor, exported HTML player and product website have diffe
 | Set up, contribute, verify a change                    | [CONTRIBUTING](../CONTRIBUTING.md), [code rules and checks](../AGENTS.md)                         |
 | Change rendering, history, presentation or document IO | [Architecture and constraints](./ARCHITECTURE.md)                                                 |
 | Import a local Figma file                              | [Figma import](./FIGMA-IMPORT.md)                                                                 |
+| See what the app sends over the network                | [Network and privacy](../README.md#network-and-privacy)                                           |
 | Use or host cloud snapshot sharing                     | [Cloud share](./CLOUD-SHARE.md)                                                                   |
 | Change how unsaved work is copied and offered back     | [Crash recovery](./CRASH-RECOVERY.md)                                                             |
 | Edit or author a sample document                       | [Examples](../examples/README.md)                                                                 |

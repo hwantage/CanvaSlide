@@ -6,8 +6,7 @@ const playerFile = fileURLToPath(
   new URL('../../src/renderer/src/generated/player.iife.js', import.meta.url)
 )
 
-// Includes shared presentation controls, annotations and rotation geometry; validation/framework
-// runtimes stay excluded.
+// Raised only in its own pull request (AGENTS.md): a limit that moves with a feature gates nothing.
 export const MAX_PLAYER_BYTES = 60_000
 
 export function checkPlayerSize(file = playerFile) {
@@ -19,7 +18,7 @@ export function checkPlayerSize(file = playerFile) {
   if (size.raw > MAX_PLAYER_BYTES) {
     throw new Error(
       `player-size: ${size.raw} B raw > ${MAX_PLAYER_BYTES} B limit (${size.gzip} B gzip); ` +
-        'inspect player dependencies before raising the budget'
+        'shrink the player, or raise the budget in a separate pull request (see AGENTS.md)'
     )
   }
   return size

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 const controls = (page: Page) => page.getByTestId('presentation-controls')
 const counter = (page: Page) => page.getByTestId('presentation-counter')
@@ -15,7 +16,7 @@ async function drawTwoFrames(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('F5 starts the slide show from the first frame @core-interaction', async ({ page }) => {

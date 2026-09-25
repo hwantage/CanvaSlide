@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { waitForEditor } from './editor-ready'
 
 test('the font popover stays in view as installed fonts arrive and search changes @webkit', async ({
   page
@@ -21,6 +22,7 @@ test('the font popover stays in view as installed fonts arrive and search change
         })
     })
   })
+  await waitForEditor(page)
   await page.keyboard.press('t')
   await page.getByTestId('canvas-viewport').click({ position: { x: 400, y: 300 } })
   await page.keyboard.type('Font menu')
@@ -55,6 +57,7 @@ test('the font picker lists presets, filters by search and remembers the last fo
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('t')
   await page.getByTestId('canvas-viewport').click({ position: { x: 400, y: 300 } })
   await page.keyboard.type('Serif me')
@@ -93,6 +96,7 @@ test('an installed family name is applied verbatim with a sans fallback', async 
       value: async () => [{ family: 'Zapfino' }, { family: 'Arial' }, { family: 'Arial' }]
     })
   })
+  await waitForEditor(page)
   await page.keyboard.press('r')
   const canvas = page.getByTestId('canvas-viewport')
   const box = (await canvas.boundingBox())!
@@ -121,6 +125,7 @@ test('the export dialog offers font embedding only where fonts can be read', asy
       value: async () => [{ family: 'Zapfino' }]
     })
   })
+  await waitForEditor(page)
   await page.keyboard.press('t')
   await page.getByTestId('canvas-viewport').click({ position: { x: 400, y: 300 } })
   await page.keyboard.type('Fancy')

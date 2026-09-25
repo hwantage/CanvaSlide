@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 async function addFrame(page: Page) {
   await page.keyboard.press('f')
@@ -85,6 +86,7 @@ test('one copy click publishes the chosen mode, reuses the link, and resets it w
     })
   })
   await page.goto('/')
+  await waitForEditor(page)
   await addFrame(page)
   await expect(
     page.getByRole('banner').getByRole('button', { name: 'Export', exact: true })

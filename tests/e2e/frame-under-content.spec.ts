@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test('a frame smaller than the shape over it stays visible and selectable by its title', async ({
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [200, 200], [800, 700])
   await page.keyboard.press('f')

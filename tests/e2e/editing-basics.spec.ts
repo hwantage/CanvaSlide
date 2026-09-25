@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 async function drawRectangle(page: Page, from: [number, number], to: [number, number]) {
   await page.keyboard.press('r')
@@ -21,7 +22,7 @@ const shapeFill = (page: Page, index: number) =>
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('pastes plain text as a text element and keeps its line breaks', async ({ page }) => {

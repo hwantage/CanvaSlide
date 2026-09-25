@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { appModuleUrl } from './app-module'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 // Keep native macOS Control-click from becoming a context menu in the Windows device preset.
 if (process.platform === 'darwin') {
@@ -250,6 +251,7 @@ test('canvas marquee exposes batch camera fields only for a frame-only selection
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [200, 200], [400, 400])
   await page.keyboard.press('f')

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 type PdfPageReport = {
   /** Page box in points. */
@@ -58,6 +59,7 @@ test('exports one PDF page per frame, sized to the frame and carrying its conten
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   // A landscape frame under a shape that overhangs it on every side, then a portrait frame of text.
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 150], [500, 375])

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 const { version } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
 const repositoryUrl = 'https://github.com/hwantage/CanvaSlide'
@@ -147,6 +148,7 @@ for (const [platform, userAgent, settingsShortcut] of [
 
 test('K leaves modal and slide show behavior intact @webkit', async ({ page }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [200, 200], [500, 400])
   const frames = page.locator('[data-element-type="frame"]')

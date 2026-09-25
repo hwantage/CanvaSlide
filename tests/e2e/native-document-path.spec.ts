@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test'
+import { waitForEditor } from './editor-ready'
 
 test('native Open, Save As and repeated Save retain the exact bridge path', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
   // Install after browser startup to exercise the real UI against a controlled native IO boundary.
   await page.evaluate(() => {
     const original = {

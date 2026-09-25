@@ -4,12 +4,14 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test('exports a self-contained HTML player that presents the frames @webkit', async ({
   page,
   browserName
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [100, 150], [400, 320])
   await page.keyboard.press('r')

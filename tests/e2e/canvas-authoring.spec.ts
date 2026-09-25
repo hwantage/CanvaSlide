@@ -1,10 +1,11 @@
 import { encodeDocumentFixture } from './saved-document'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('canvas-viewport')).toBeVisible()
+  await waitForEditor(page)
 })
 
 test('draws a rectangle by dragging and undoes it', async ({ page }) => {

@@ -4,11 +4,13 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { dragOnCanvas, primaryModifier } from './canvas-gestures'
+import { waitForEditor } from './editor-ready'
 
 test('draws a triangle whose label, ports, panel fields and HTML export follow its outline', async ({
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('f')
   await dragOnCanvas(page, [50, 200], [750, 500])
   await page.keyboard.press('r')
@@ -107,6 +109,7 @@ test('a line on a turning triangle keeps its port instead of jumping to another 
   page
 }) => {
   await page.goto('/')
+  await waitForEditor(page)
   await page.keyboard.press('r')
   await dragOnCanvas(page, [100, 300], [260, 400])
   await page.getByRole('button', { name: 'Triangle', exact: true }).click()

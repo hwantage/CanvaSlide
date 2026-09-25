@@ -54,8 +54,23 @@ export function ModalDialog({
     // Why: a native modal makes the background inert for keyboard and assistive technology.
     dialog.showModal()
     const removeFromStack = pushModalDialog({ dismiss: () => onCloseRef.current?.() })
+    // Why: browsers force-close a dialog after repeated Escape, ignoring cancel's preventDefault.
+    const onNativeClose = () => {
+      // A remount (StrictMode) reopens the dialog before its earlier close() event arrives.
+      if (dialog.open) {
+        return
+      }
+      if (onCloseRef.current) {
+        onCloseRef.current()
+        return
+      }
+      dialog.showModal()
+      panelRef.current?.focus({ preventScroll: true })
+    }
+    dialog.addEventListener('close', onNativeClose)
     panelRef.current?.focus({ preventScroll: true })
     return () => {
+      dialog.removeEventListener('close', onNativeClose)
       removeFromStack()
       dialog.close()
       for (const previous of previousDialogs) {

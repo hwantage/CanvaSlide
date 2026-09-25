@@ -26,6 +26,23 @@ async function watchEscape(dialog: Locator) {
   })
 }
 
+/** Offers one unreadable recovery copy, as a launch after a crash would. */
+async function promptRecovery(page: Page) {
+  await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .map((entry) => entry.name)
+      .filter((name) => name.includes('/src/store/recovery-store.ts'))
+      .at(-1)!
+    const { useRecoveryStore } = await import(url)
+    useRecoveryStore.setState({
+      prompting: true,
+      offers: [{ sessionId: 'crashed', quarantined: true, version: null }],
+      batchRemaining: 1
+    })
+  })
+}
+
 const escapeRecord = (page: Page) =>
   page.evaluate(() => (window as unknown as { escapeRecord: object }).escapeRecord)
 
@@ -147,24 +164,36 @@ test('a recovery prompt that arrives during a slide show waits for it to end @co
   await page.keyboard.press('F5')
   const counter = page.getByTestId('presentation-counter')
   await expect(counter).toContainText('1 / 2')
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .filter((name) => name.includes('/src/store/recovery-store.ts'))
-      .at(-1)!
-    const { useRecoveryStore } = await import(url)
-    useRecoveryStore.setState({
-      prompting: true,
-      offers: [{ sessionId: 'crashed', quarantined: true, version: null }],
-      batchRemaining: 1
-    })
-  })
+  await promptRecovery(page)
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.keyboard.press('ArrowRight')
   await expect(counter).toContainText('2 / 2')
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: 'Recover unsaved work' })).toBeVisible()
+})
+
+test('the recovery prompt stays open when repeated Escape makes the browser force-close it @core-interaction', async ({
+  page
+}) => {
+  // Why: the store's module URL is read back from resource timing, which the app outgrows.
+  await page.addInitScript(() => performance.setResourceTimingBufferSize(10_000))
+  await openEditor(page)
+  await promptRecovery(page)
+  const prompt = page.getByRole('dialog', { name: 'Recover unsaved work' })
+  await expect(prompt).toBeVisible()
+  // Chromium stops honouring cancel after repeated Escape without other user activation.
+  for (let i = 0; i < 4; i += 1) {
+    await page.keyboard.press('Escape')
+  }
+  await expect(prompt).toBeVisible()
+  expect(await prompt.evaluate((dialog) => (dialog as HTMLDialogElement).open)).toBe(true)
+  await prompt.getByRole('button', { name: 'Later', exact: true }).click()
+  await expect(prompt).toHaveCount(0)
+  await page.keyboard.press('r')
+  await expect(page.getByRole('button', { name: /^Rectangle/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
 })
 
 for (const { opener, label, close } of [

@@ -38,13 +38,19 @@ export function FigImportDialog() {
         : error === 'FIG_DOCUMENT_CHANGED'
           ? 'fig.error.changed'
           : 'fig.error.invalid'
+  const experimentalHint = t('fig.experimentalHint', { product: 'Figma' })
   return (
     <ModalDialog
       label={t('fig.title', { product: 'Figma' })}
       onClose={hide}
       className="w-[28rem] max-w-[calc(100vw-2rem)]"
     >
-      <h2 className="text-sm font-semibold">{t('fig.title', { product: 'Figma' })}</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="text-sm font-semibold">{t('fig.title', { product: 'Figma' })}</h2>
+        <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+          {t('fig.experimental')}
+        </span>
+      </div>
       <p className="mt-1 truncate text-xs text-muted-foreground" title={name}>
         {name}
       </p>
@@ -116,12 +122,18 @@ export function FigImportDialog() {
             ))}
           </fieldset>
           <p className="mt-3 text-xs text-muted-foreground">{t('fig.limitations')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{experimentalHint}</p>
         </>
       )}
       {phase === 'error' && (
-        <p className="mt-4 text-sm text-destructive" role="alert">
-          {t(errorKey)}
-        </p>
+        <>
+          <p className="mt-4 text-sm text-destructive" role="alert">
+            {t(errorKey)}
+          </p>
+          {errorKey === 'fig.error.invalid' && (
+            <p className="mt-1 text-xs text-muted-foreground">{experimentalHint}</p>
+          )}
+        </>
       )}
       {phase === 'done' && summary && (
         <div className="mt-4 text-xs" role="status">

@@ -100,6 +100,9 @@ export const ko: UiStrings = {
   'fig.appearance': '원본 모양 유지',
   'fig.appearanceHint':
     '최상위 레이어별로 벡터 이미지로 변환합니다. 글자 윤곽선이 있으면 그대로 사용합니다.',
+  'fig.experimental': '실험 기능',
+  'fig.experimentalHint':
+    '{product} 파일 형식은 공개되지 않아 새 버전에서 저장한 파일은 가져오지 못하거나 다르게 변환될 수 있습니다.',
   'fig.limitations':
     '페이지를 나란히 배치합니다. 효과·컴포넌트 인스턴스·고급 채우기는 일부 지원하며, 변환 결과에서 제한 사항을 안내합니다.',
   'fig.confirm': '선택한 페이지 가져오기',

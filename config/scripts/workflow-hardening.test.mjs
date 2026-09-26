@@ -66,8 +66,15 @@ if (response.error) {
   process.stderr.write('gh: ' + response.error + '\\n')
   process.exit(1)
 }
-const jq = process.argv[process.argv.indexOf('--jq') + 1]
-process.stdout.write(execFileSync('jq', ['-r', jq], { input: JSON.stringify(response) }))
+const pages = Array.isArray(response) ? response : [response]
+const selected = process.argv.includes('--paginate') ? pages : pages.slice(0, 1)
+const body = process.argv.includes('--slurp') ? selected : selected[0]
+if (process.argv.includes('--jq')) {
+  const jq = process.argv[process.argv.indexOf('--jq') + 1]
+  process.stdout.write(execFileSync('jq', ['-r', jq], { input: JSON.stringify(body) }))
+} else {
+  process.stdout.write(JSON.stringify(body))
+}
 `
     )
     writeFileSync(
@@ -181,6 +188,8 @@ for (const [name, source] of [
     `${name} deploys only successful CI for its own workflow revision`,
     { skip: shellSkip },
     () => {
+      // Explicit bash enables pipefail so a failed API request cannot look like an empty result.
+      assert.equal(gate().shell, 'bash')
       const { status, stderr, calls, outputs } = runGate([passedOn('abc123')], gate())
       assert.equal(status, 0, stderr)
       assert.equal(outputs, 'sha=abc123\n')
@@ -188,7 +197,14 @@ for (const [name, source] of [
       const [args] = calls
       assert.equal(args[args.indexOf('-X') + 1], 'GET')
       assert.ok(args.includes('repos/owner/repo/actions/workflows/ci.yml/runs'))
-      for (const field of ['head_sha=abc123', 'branch=main', 'event=push', 'per_page=1']) {
+      for (const field of [
+        'head_sha=abc123',
+        'branch=main',
+        'event=push',
+        'per_page=100',
+        '--paginate',
+        '--slurp'
+      ]) {
         assert.ok(args.includes(field), field)
       }
       assert.ok(!args.includes('status=success'), 'the latest attempt must succeed, not an old one')
@@ -212,6 +228,68 @@ for (const [name, source] of [
       }
     }
   )
+
+  test(
+    `${name} selects the latest matching CI run from unordered results`,
+    { skip: shellSkip },
+    () => {
+      const orders = [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0]
+      ]
+      const success = { head_sha: 'abc123', status: 'completed', conclusion: 'success' }
+      for (const latest of [
+        { id: 5, created_at: '2026-09-27T03:00:00Z' },
+        { id: 11, created_at: '2026-09-27T02:00:00Z' }
+      ]) {
+        for (const [status, conclusion] of [
+          ['in_progress', null],
+          ['completed', 'failure'],
+          ['completed', 'cancelled'],
+          ['completed', 'success']
+        ]) {
+          const older = { ...success, conclusion: conclusion === 'success' ? 'failure' : 'success' }
+          const runs = [
+            { ...older, id: 900, created_at: '2026-09-27T01:00:00Z' },
+            { ...older, id: 10, created_at: '2026-09-27T02:00:00Z' },
+            { ...success, ...latest, status, conclusion }
+          ]
+          for (const order of orders) {
+            const result = runGate([{ workflow_runs: order.map((index) => runs[index]) }], gate())
+            assert.equal(result.status, 0, result.stderr)
+            assert.equal(
+              result.outputs,
+              conclusion === 'success' ? 'sha=abc123\n' : '',
+              JSON.stringify({ latest, status, conclusion, order })
+            )
+          }
+        }
+      }
+    }
+  )
+
+  test(`${name} includes later pages when selecting the latest CI run`, { skip: shellSkip }, () => {
+    const older = {
+      head_sha: 'abc123',
+      status: 'completed',
+      conclusion: 'success',
+      id: 1,
+      created_at: '2026-09-27T01:00:00Z'
+    }
+    for (const conclusion of ['failure', 'success']) {
+      const latest = { ...older, id: 2, created_at: '2026-09-27T02:00:00Z', conclusion }
+      const pages = [{ workflow_runs: [older] }, { workflow_runs: [latest] }]
+      for (const response of [pages, pages.toReversed()]) {
+        const result = runGate([response], gate())
+        assert.equal(result.status, 0, result.stderr)
+        assert.equal(result.outputs, conclusion === 'success' ? 'sha=abc123\n' : '')
+      }
+    }
+  })
 
   test(`${name} stops on GitHub API errors`, { skip: shellSkip }, () => {
     const { status, stderr, outputs } = runGate([{ error: 'HTTP 502' }], gate())

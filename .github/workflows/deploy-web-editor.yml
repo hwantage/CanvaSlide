@@ -32,14 +32,15 @@ jobs:
     steps:
       - name: Check CI for the workflow revision
         id: revision
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           SHA: ${{ github.workflow_sha }}
         run: |
-          passed="$(gh api -X GET "repos/$GH_REPO/actions/workflows/ci.yml/runs" \
-            -f head_sha="$SHA" -f branch=main -f event=push -f per_page=1 \
-            --jq '.workflow_runs[0] | select(.status == "completed" and .conclusion == "success") | .head_sha')"
+          passed="$(gh api --paginate --slurp -X GET "repos/$GH_REPO/actions/workflows/ci.yml/runs" \
+            -f head_sha="$SHA" -f branch=main -f event=push -f per_page=100 \
+            | jq -r '[.[].workflow_runs[]] | max_by([.created_at, .id]) | select(.status == "completed" and .conclusion == "success") | .head_sha')"
           if [ "$passed" != "$SHA" ]; then
             echo "CI has not passed for workflow revision $SHA; leave the current deployment in place"
             exit 0

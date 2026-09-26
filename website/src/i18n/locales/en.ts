@@ -29,7 +29,7 @@ export const en = {
     'Choose Import file in the toolbar ({import}) or drop a file on the canvas. Images remain movable and resizable. Each imported {pdf} page becomes an image with a presentation frame; its text is not editable. You can undo the import as one action.',
   'site.docs.media.figmaHeading': 'Bring in a local design file',
   'site.docs.media.figmaBody':
-    'Import a local {figma} {format} file, choose its pages, then choose Edit text & shapes or Preserve appearance. Editable mode keeps supported text and simple shapes editable; complex artwork becomes images. Preserve appearance makes top-level layers into images. Review the conversion report: effects, layout rules, component overrides, and some masks are not preserved exactly. No account or API token is required, and the source file stays unchanged.',
+    'Import a local {figma} {format} file, choose its pages, then choose Editable text and shapes or Preserve appearance. Editable mode keeps supported text and simple shapes editable; complex artwork becomes images. Preserve appearance makes top-level layers into images. Review the conversion report: effects, layout rules, component overrides, and some masks are not preserved exactly. No account or API token is required, and the source file stays unchanged.',
   'site.docs.media.videoHeading': 'Link a video',
   'site.docs.media.videoBody':
     'Use the video tool and paste a supported {youtube}, {vimeo}, or direct video URL. The document stores the link, not the video bytes. Select the video to adjust its playback options, then test it in Slide Show. Playback needs the provider and network; browser autoplay rules may require a click. {youtube} in an exported {html} presentation needs HTTP(S) hosting. The desktop app plays direct video files only from HTTPS links. Cloud snapshots allow the supported providers and direct videos on the share service’s own origin.',
@@ -274,6 +274,7 @@ export const en = {
   'site.docs.shortcuts.saveAs': 'Save as',
   'site.docs.shortcuts.export': 'Export presentation',
   'site.docs.shortcuts.present': 'Start slideshow',
+  'site.docs.shortcuts.presentFromSelection': 'Slide show from current frame',
   'site.docs.shortcuts.copy': 'Copy / paste',
   'site.docs.shortcuts.duplicate': 'Duplicate',
   'site.docs.shortcuts.undo': 'Undo',
@@ -282,7 +283,11 @@ export const en = {
   'site.docs.shortcuts.frame': 'Frame / connector',
   'site.docs.shortcuts.fit': 'Fit all content',
   'site.docs.shortcuts.zoom': 'Zoom in / out',
+  'site.docs.shortcuts.help': 'Keyboard shortcuts (editor)',
   'site.docs.shortcuts.next': 'Next / previous frame',
+  'site.docs.shortcuts.overview': 'Toggle overview (slideshow)',
+  'site.docs.shortcuts.pointer': 'Toggle laser pointer — drag to draw (slideshow)',
+  'site.docs.shortcuts.clearInk': 'Erase all ink (slideshow)',
   'site.docs.shortcuts.exit': 'Exit slideshow',
   'site.docs.faq.accountQ': 'Do I need an account?',
   'site.docs.faq.accountA':

@@ -178,6 +178,6 @@ CanvaSlide 이름, 로고, 마스코트 아트워크는 MIT 라이선스에 포�
 GitHub 마크(`website/public/brand/github-mark-*.svg`와 `src/renderer/src/components/ui/github-icon.tsx`의
 아이콘)는 GitHub, Inc.의 상표입니다. MIT 라이선스에 포함되지 않으며 이 저장소로 연결하는 데에만 씁니다.
 
-서드파티 소프트웨어는 각자의 라이선스를 따릅니다. 빌드마다 포함한 소프트웨어와 라이선스 전문을
+타사 소프트웨어는 각자의 라이선스를 따릅니다. 빌드마다 포함한 소프트웨어와 라이선스 전문을
 `THIRD-PARTY-NOTICES.txt`에 담습니다. 앱에서는 **CanvaSlide 정보** → **타사 고지 사항**에서 보고, 웹사이트는 푸터에서
 연결합니다.

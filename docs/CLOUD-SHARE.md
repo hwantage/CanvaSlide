@@ -131,12 +131,12 @@ invocations to those API paths.
 Production is published only from commits that passed CI, by the
 [Web editor workflow](../.github/workflows/deploy-web-editor.yml):
 
-- Whenever CI finishes on `main`, it takes the newest commit of `main` whose CI passed, builds it with
-  `pnpm build:web` in a job without secrets, and publishes it with `wrangler pages deploy --branch main`.
-  After a failed run the editor and its share API stay on the last commit that passed. **Actions → Web
-  editor → Run workflow** on `main` publishes the newest passing commit again. To retry a failed
-  publication, run it that way instead of re-running the failed job, which would publish the commit
-  that older run chose.
+- Whenever CI finishes on `main`, it checks the latest CI attempt for the workflow revision
+  (`github.workflow_sha`), builds that exact commit with `pnpm build:web`, and publishes it to
+  Cloudflare Pages production. Missing, pending or unsuccessful CI leaves the current deployment
+  unchanged; the next completed CI run tries again. It never combines a newer workflow with an
+  older passing checkout. **Web editor → Run workflow** on `main` retries using current `main`;
+  re-running an old run retains its original revision.
 - The publishing job runs in the `web-editor` GitHub environment and needs its `CLOUDFLARE_API_TOKEN`
   secret, an API token with the account's **Cloudflare Pages: Edit** permission, and its
   `CLOUDFLARE_ACCOUNT_ID` variable. Without both it publishes nothing and ends with a warning; with

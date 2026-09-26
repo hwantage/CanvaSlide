@@ -134,6 +134,7 @@ jobs:
           path: release-assets/
           if-no-files-found: error
           overwrite: true
+          retention-days: 7
 
   # Why: opt in only after Apple credentials are ready; a disabled job allocates no macOS runner.
   notarize:
@@ -168,6 +169,7 @@ jobs:
           path: release-assets/
           if-no-files-found: error
           overwrite: true
+          retention-days: 7
 
   # Why: the updater key lives only in the `release` environment; this job runs no package scripts.
   sign:
@@ -209,6 +211,7 @@ jobs:
           path: release-assets/*.sig
           if-no-files-found: error
           overwrite: true
+          retention-days: 7
 
   # Why: the only job that can write to the repository; it runs no build and never sees the key.
   publish:

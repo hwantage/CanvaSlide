@@ -30,6 +30,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "test": "pnpm run test:tooling && vitest run --config config/vitest.config.ts",
+    "validate:renovate": "pnpm --package=renovate@44.112.0 --allow-build=re2 dlx renovate-config-validator --strict --no-global .github/renovate.json",
     "test:tooling": "node --test config/scripts/*.test.mjs",
     "test:watch": "vitest --config config/vitest.config.ts",
     "test:coverage": "vitest run --config config/vitest.config.ts --coverage",
@@ -88,7 +89,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.0",
-    "wrangler": "^4.134.0"
+    "wrangler": "^4.134.0",
+    "yaml": "2.9.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,mts,cts}": [

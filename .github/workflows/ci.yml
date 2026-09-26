@@ -34,6 +34,12 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Check workflow syntax with actionlint
+        if: runner.os == 'Linux'
+        run: bash config/scripts/check-actionlint.sh
+      - name: Validate hosted Renovate configuration
+        if: runner.os == 'Linux'
+        run: pnpm validate:renovate
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
@@ -209,7 +215,7 @@ jobs:
   passed:
     name: CI passed
     if: always()
-    # Why: matrix job dependencies wait for every shard, including both macOS WebKit runners.
+    # Why: required jobs wait for every shard; trial jobs are listed in .github/ci-trial-jobs.json.
     needs: [verify, e2e, e2e-webkit, website, rust, bundle]
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -400,12 +400,12 @@ describe('unmodified keys', () => {
     expect(press('Enter')).toBe(false)
   })
 
-  it('starts the slide show on F5 and from the selection on ⇧F5, ending text editing', () => {
+  it('delegates F5 and ⇧F5 to presentation entry points', () => {
     expect(press('F5')).toBe(true)
     expect(presentation.start).toHaveBeenCalledOnce()
     expect(press('F5', { shiftKey: true })).toBe(true)
     expect(presentFromSelection).toHaveBeenCalledOnce()
-    expect(tools.setEditingTextId.mock.calls).toEqual([[null], [null]])
+    expect(tools.setEditingTextId).not.toHaveBeenCalled()
     expect(press('F5', { altKey: true })).toBe(false)
     expect(press('F5', { ctrlKey: true })).toBe(false)
     useMac(false)

@@ -8,6 +8,7 @@ import { createPresentationNavigator } from '@shared/presentation/presentation-n
 import { useCameraStore } from './camera-store'
 import { setWindowFullscreen } from '@/platform/window-fullscreen'
 import { useDocumentStore } from './document-store'
+import { useToolStore } from './tool-store'
 
 export type PresentationState = {
   active: boolean
@@ -131,6 +132,8 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
     previewFrameId: null,
     previewFrameIds: [],
     start: (fromIndex = 0) => {
+      // A start request commits typing even without frames, matching F5's existing behavior.
+      useToolStore.getState().setEditingTextId(null)
       const documentStore = useDocumentStore.getState()
       if (deck().length === 0) {
         return
@@ -164,6 +167,7 @@ export const usePresentationStore = create<PresentationStore>()((set, get) => {
       if (!departure) {
         return
       }
+      useToolStore.getState().setEditingTextId(null)
       set({
         active: true,
         index: departure.index,

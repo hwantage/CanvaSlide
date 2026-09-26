@@ -344,8 +344,9 @@ gh variable set MACOS_NOTARIZE --repo hwantage/CanvaSlide --body false
 공증을 켰지만 여섯 secret이 모두 없으면 스크립트는 `No Apple credentials` 경고만 남기고 빌드한 파일을 그대로 넘긴다. 이때 릴리스는
 지금까지처럼 서명 없이 나간다. 일부만 있으면 서명하기 전에 실패한다. 공증한 릴리스의 `latest.json`에서는 macOS
 항목에 `"notarized": true`가 붙고, 이 표시가 있는 업데이트만 macOS 앱이 앱 안에서 설치한다(§7). 서명을 시작한
-뒤에는 secret을 지우거나 변수를 끄지 않는다. 둘 중 하나로 공증이 중단되면 다음 릴리스가 서명 없이 나가고
-macOS 앱은 다시 다운로드 페이지로 안내한다.
+뒤에는 secret을 지우거나 변수를 끄지 않는다. `MACOS_NOTARIZE=false`로 끄거나 여섯 secret을 모두 지우면
+다음 릴리스가 서명 없이 나가고 macOS 앱은 다시 다운로드 페이지로 안내한다. 공증이 켜진 상태에서 secret을
+일부만 지우면 공증 잡이 실패하므로 업데이터 서명과 게시도 진행되지 않는다.
 
 인증서와 계정을 확인하려면 그 인증서가 있는 Mac에서 같은 환경 변수를 주고 릴리스 아티팩트(`.dmg`와
 `.app.tar.gz`)가 든 폴더로 `bash config/scripts/notarize-macos-release.sh <폴더>`를 실행한다. 스크립트는 폴더의

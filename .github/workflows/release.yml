@@ -174,7 +174,7 @@ jobs:
     name: sign updater files
     needs: [build, notarize]
     # Why: skipped notarization must not skip signing, but failed/cancelled prerequisites must stop it.
-    if: ${{ !cancelled() && !failure() && needs.build.result == 'success' }}
+    if: ${{ !cancelled() && !failure() && needs.build.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped') }}
     runs-on: ubuntu-latest
     environment: release
     steps:
@@ -214,7 +214,7 @@ jobs:
   publish:
     name: publish draft release
     needs: [notarize, sign]
-    if: ${{ !cancelled() && !failure() && needs.sign.result == 'success' }}
+    if: ${{ !cancelled() && !failure() && needs.sign.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -49,7 +49,8 @@ function jobRuns(id, results, value, cancelled = false) {
   return evaluate(field(jobs[id], 'if', 4), contextFor(id, results, value), {
     success: () => !cancelled && upstream.every((result) => result === 'success'),
     failure: () => upstream.includes('failure'),
-    cancelled: () => cancelled || upstream.includes('cancelled')
+    // A cancelled dependency does not imply that the workflow itself was cancelled.
+    cancelled: () => cancelled
   })
 }
 
@@ -154,6 +155,19 @@ test('failed or cancelled prerequisites never reach signing or publishing', () =
     )
   }
 })
+
+for (const id of ['sign', 'publish']) {
+  test(`${id} only accepts successful or skipped notarization while the workflow remains active`, () => {
+    for (const notarize of ['success', 'skipped', 'failure', 'cancelled']) {
+      const results = { gate: 'success', build: 'success', notarize, sign: 'success' }
+      assert.equal(
+        jobRuns(id, results, 'true', false),
+        notarize === 'success' || notarize === 'skipped',
+        `${id}: notarize=${notarize}, workflow not cancelled`
+      )
+    }
+  })
+}
 
 test('both consumers select exactly one macOS artifact and keep Windows files and signatures', () => {
   for (const [value, staleArtifact] of [

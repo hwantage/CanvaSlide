@@ -60,12 +60,14 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    git push origin v0.8.0
    ```
 5. Actions 탭에서 **Release** 워크플로가 끝나기를 기다린다. 먼저 태그 커밋의 `main` CI가 성공으로 끝나기를
-   기다리고, macOS와 Windows 빌드가 병렬로 돈 뒤 macOS 서명·공증, 업데이터 서명, 게시 잡이 이어진다.
+   기다리고, macOS와 Windows 빌드가 병렬로 돈 뒤 업데이터 서명, 게시 잡이 이어진다. 저장소 변수
+   `MACOS_NOTARIZE=true`일 때만 업데이터 서명 전에 macOS 서명·공증 잡이 실행된다(§6).
 6. **Releases** 페이지에 본문이 빈 초안이 생겨 있다. 다음을 확인하고 노트를 쓴다.
    - 첨부 파일: `CanvaSlide_<버전>_universal.dmg`, `CanvaSlide_<버전>_x64-setup.exe`, `CanvaSlide_<버전>_x64_en-US.msi`
    - **Generate release notes** 버튼을 눌러 지난 태그 이후 머지된 PR 제목을 불러온 뒤 사용자 관점으로 다듬는다.
    - OS 코드 서명이 없는 설치 파일은 §6의 안내 문구를 노트에 넣는다. Windows 설치 파일은 아직 서명하지 않고,
-     macOS 파일은 **sign and notarize · macOS** 잡에 `No Apple credentials` 경고가 있으면 서명되지 않은 것이다.
+     macOS 파일은 **sign and notarize · macOS** 잡이 건너뛰어졌거나 `No Apple credentials` 경고가 있으면
+     서명되지 않은 것이다.
    - Release 본문이 릴리스 노트의 유일한 원본이다. 공개하면 이 본문이 그대로 데스크톱 앱의 업데이트 안내에 나간다(§7).
 7. 아래 [데스크톱 점검표](#desktop-release-checklist)의 공개 전 항목을 두 OS에서 확인한 뒤 **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
 8. Actions 탭에서 **Release notes** 워크플로가 성공했는지 확인한다. 이 워크플로는 공개 직후 본문을
@@ -113,14 +115,14 @@ PR마다 두 OS에서 확인하는 대신, 메인테이너가 릴리스 초안�
 `release.yml`은 `v*` 태그 푸시에서만 실행된다. 태그 커밋의 CI를 먼저 확인하고, 빌드 스크립트와 의존성이
 실행되는 잡에는 업데이터 서명 키도, Apple 자격 증명도, 저장소 쓰기 권한도 주지 않도록 잡을 나눈다.
 
-| 잡                               | 러너             | 받는 권한·비밀                   | 산출물                                                             |
-| -------------------------------- | ---------------- | -------------------------------- | ------------------------------------------------------------------ |
-| wait for CI on the tagged commit | `ubuntu-latest`  | `actions: read`                  | 없음(태그 커밋의 `main` CI 결과 확인)                              |
-| build · macOS (universal)        | `macos-latest`   | 읽기 전용, 비밀 없음             | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel)           |
-| build · Windows (x64)            | `windows-latest` | 읽기 전용, 비밀 없음             | `.exe` (NSIS 설치 파일), `.msi`                                    |
-| sign and notarize · macOS        | `macos-latest`   | `release` 환경의 Apple 자격 증명 | 서명·공증한 `.dmg`와 `.app.tar.gz`(자격 증명이 없으면 빌드 그대로) |
-| sign updater files               | `ubuntu-latest`  | `release` 환경의 서명 키         | 업데이터 파일의 서명(`.sig`)                                       |
-| publish draft release            | `ubuntu-latest`  | `contents: write`                | 노트 없는 `latest.json`, 본문이 빈 Release 초안                    |
+| 잡                               | 러너             | 받는 권한·비밀                   | 산출물                                                        |
+| -------------------------------- | ---------------- | -------------------------------- | ------------------------------------------------------------- |
+| wait for CI on the tagged commit | `ubuntu-latest`  | `actions: read`                  | 없음(태그 커밋의 `main` CI 결과 확인)                         |
+| build · macOS (universal)        | `macos-latest`   | 읽기 전용, 비밀 없음             | `.dmg`, 업데이터용 `.app.tar.gz` (Apple Silicon + Intel)      |
+| build · Windows (x64)            | `windows-latest` | 읽기 전용, 비밀 없음             | `.exe` (NSIS 설치 파일), `.msi`                               |
+| sign and notarize · macOS        | `macos-latest`   | `release` 환경의 Apple 자격 증명 | `MACOS_NOTARIZE=true`일 때 서명·공증한 `.dmg`와 `.app.tar.gz` |
+| sign updater files               | `ubuntu-latest`  | `release` 환경의 서명 키         | 업데이터 파일의 서명(`.sig`)                                  |
+| publish draft release            | `ubuntu-latest`  | `contents: write`                | 노트 없는 `latest.json`, 본문이 빈 Release 초안               |
 
 0. **wait for CI**: 태그 커밋에서 `main`에 푸시되어 실행된 **CI** 워크플로 실행을 Actions API로 찾아 끝나기를
    기다린다. 10분 안에 실행이 나타나지 않거나(태그 커밋이 `main` 푸시의 끝 커밋, 즉 PR의 머지 커밋이 아님)
@@ -132,15 +134,20 @@ PR마다 두 OS에서 확인하는 대신, 메인테이너가 릴리스 초안�
    태그 ↔ `package.json` 버전 일치 검사를 한다. 이어서
    `pnpm tauri build --no-sign`이 `pnpm build:web`(tauri.conf.json의 `beforeBuildCommand`)과 번들을 만들고,
    릴리스할 파일을 워크플로 아티팩트로 올린다.
-2. **notarize**: 체크아웃과 macOS 빌드 아티팩트만 받고 의존성은 설치하지 않는다. Apple 자격 증명은
+2. **notarize**: 저장소 변수 `MACOS_NOTARIZE`가 `true`일 때만 실행한다. 변수가 없거나 꺼져 있으면
+   이 잡의 macOS 러너를 할당하지 않는다(앱 빌드용 macOS 러너는 그대로 실행한다).
+   체크아웃과 macOS 빌드 아티팩트만 받고 의존성은 설치하지 않는다. Apple 자격 증명은
    [`notarize-macos-release.sh`](../config/scripts/notarize-macos-release.sh)를 실행하는 단계에만 전달되고, 이
    스크립트는 macOS와 Xcode에 들어 있는 Apple 도구(`security`, `codesign`, `notarytool`, `stapler`, `hdiutil` 등)만
    실행한다. 빌드 잡의 `macos-build` 아티팩트를 읽고, 서명·공증한 파일을 `release-macos-latest`로 올리며, 공증했는지를
-   게시 잡에 넘긴다(§6). 서명·게시 잡은 `release-*` 아티팩트만 읽는다.
+   게시 잡에 넘긴다(§6). 서명·게시 잡은 이 잡이 성공했으면 `release-macos-latest`, 건너뛰었으면
+   원본 `macos-build`를 선택한다. Windows 파일과 업데이터 서명은 각각 이름으로 내려받는다.
 3. **sign**: 패키지 스크립트를 실행하지 않고 의존성을 설치한 뒤(`pnpm install --ignore-scripts`)
    `tauri signer sign`만으로 `.app.tar.gz`, `-setup.exe`, `.msi`를 서명한다. 서명 키는 이 단계에만 전달된다.
-   OS 코드 서명이 파일을 바꾸므로 이 잡은 notarize 잡 뒤에 실행된다.
-4. **publish**: [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 설치된 앱이 신뢰하는
+   빌드 성공을 확인하고 notarize 잡이 끝나기를 기다린다. 공증을 건너뛰어도 실행하지만, 선행 잡이
+   실패하거나 워크플로가 취소되면 실행하지 않는다. 공증이 켜져 있으면 OS 코드 서명이 끝난 파일에 서명한다.
+4. **publish**: 서명 잡이 성공해야 실행하며, 공증 건너뛰기는 허용하되 선행 잡 실패·취소는 허용하지 않는다.
+   [`updater-feed.mjs`](../config/scripts/updater-feed.mjs)가 각 서명을 설치된 앱이 신뢰하는
    공개키, 즉 공개된 최신 릴리스(앱이 업데이트를 받는 `releases/latest`) 태그의 `tauri.conf.json` 공개키로
    앱과 같은 규칙에 따라 검증하고 `latest.json`을 만든다. 공개된 릴리스가 없거나 저장소 변수
    `UPDATER_KEY_CHANGE_TAG`가 이 태그 이름이면 이 태그의 공개키도 신뢰한다(§7 키 교체).
@@ -250,7 +257,8 @@ GitHub의 필수 검사를 사용하므로, 메인테이너가 다음을 설정�
 - **태그 불일치로 실패**: 태그와 `package.json`의 차이를 확인한다. 아직 공개하지 않은 태그만
   메인테이너가 수정하며, 이미 공개한 버전이면 새 버전·태그를 만든다.
 - **한쪽 플랫폼만 실패**: 초안은 두 빌드가 모두 성공해야 만들어진다. Actions에서 **Re-run failed jobs**를 하면
-  실패한 빌드만 다시 돌고 macOS 서명·공증, 업데이터 서명, 게시 잡이 이어서 실행된다.
+  실패한 빌드만 다시 돌고 업데이터 서명, 게시 잡이 이어서 실행된다. `MACOS_NOTARIZE=true`이면
+  업데이터 서명 전에 macOS 서명·공증 잡도 실행된다.
 - **macOS 서명·공증 잡이 실패**: 실패 메시지에 따라 고친 뒤 **Re-run failed jobs**를 누른다. 이 잡은 빌드
   아티팩트(`macos-build`)를 바꾸지 않으므로 다시 실행해도 빌드한 파일부터 시작한다.
   - `Missing Apple credentials`: `release` 환경의 Apple secret이 일부만 있다. 여섯 개를 모두 넣거나 모두 지운다(§6).
@@ -285,13 +293,14 @@ pnpm bundle:local --bundles app
 OS 코드 서명과 macOS 공증을 당분간 보류한다. 현재는 macOS와 Windows 모두 OS 코드 서명 없이 배포하며,
 macOS 업데이트 알림은 다운로드 페이지를 열도록 안내한다. 아래 서명·공증 절차는 도입을 재개할 때 참고한다.
 
-업데이터 서명(§7)은 계속 유지하며, 이번에 보류한 OS 코드 서명과는 별개다. `release` 환경에 Apple 자격 증명이 있으면 릴리스 워크플로가 macOS 앱을
-Developer ID로 서명하고 Apple 공증을 받는다. 자격 증명이 없으면 macOS 앱도 서명하지 않고, Windows 설치 파일은
+업데이터 서명(§7)은 계속 유지하며, 이번에 보류한 OS 코드 서명과는 별개다. 저장소 변수 `MACOS_NOTARIZE`를
+`true`로 켜고 `release` 환경에 Apple 자격 증명을 준비하면 릴리스 워크플로가 macOS 앱을 Developer ID로 서명하고
+Apple 공증을 받는다. 변수가 없거나 꺼져 있으면 공증 잡을 건너뛰고 원본 빌드를 배포한다. Windows 설치 파일은
 아직 코드 서명하지 않는다.
 
 ### macOS 서명과 공증
 
-빌드 잡은 서명 없이(`--no-sign`) 앱을 만들고, **sign and notarize · macOS** 잡이
+빌드 잡은 서명 없이(`--no-sign`) 앱을 만들고, 활성화된 **sign and notarize · macOS** 잡이
 [`notarize-macos-release.sh`](../config/scripts/notarize-macos-release.sh)로 다음을 한다.
 
 1. 임시 키체인에 인증서를 넣는다. 빌드한 `.dmg`를 쓰기 가능한 사본으로 열어 그 안의 앱을 hardened runtime과
@@ -315,10 +324,29 @@ Developer ID로 서명하고 Apple 공증을 받는다. 자격 증명이 없으�
 | `APPLE_PASSWORD`             | 그 계정의 앱 암호(account.apple.com에서 만든 app-specific password)                      |
 | `APPLE_TEAM_ID`              | 10자리 팀 ID(developer.apple.com → Membership)                                           |
 
-여섯 개가 모두 없으면 잡은 `No Apple credentials` 경고만 남기고 빌드한 파일을 그대로 넘긴다. 이때 릴리스는
+Apple Developer Program 가입 후 위 여섯 환경 secret을 준비하고, 저장소 **Settings → Secrets and variables →
+Actions → Variables**에 `MACOS_NOTARIZE`를 `true`로 설정한다. 이 값은 러너 할당 전에 평가하므로 `release`
+환경 변수가 아닌 **저장소 변수**로 둔다. CLI로는 다음과 같다.
+
+```bash
+gh variable set MACOS_NOTARIZE --repo hwantage/CanvaSlide --body true
+```
+
+켜기 전에는 변수를 만들지 않거나 `false`로 둔다. 끄려면 다음 명령으로 다음 릴리스부터 공증을 건너뛴다.
+
+```bash
+gh variable set MACOS_NOTARIZE --repo hwantage/CanvaSlide --body false
+```
+
+활성화 후 첫 릴리스 초안에서는 공증 잡 성공, 공증된 macOS 설치 파일과 `latest.json`의 `notarized` 표시를
+확인한 뒤 공개한다. 공증이 꺼져 있으면 이 표시는 붙지 않는다.
+
+공증을 켰지만 여섯 secret이 모두 없으면 스크립트는 `No Apple credentials` 경고만 남기고 빌드한 파일을 그대로 넘긴다. 이때 릴리스는
 지금까지처럼 서명 없이 나간다. 일부만 있으면 서명하기 전에 실패한다. 공증한 릴리스의 `latest.json`에서는 macOS
 항목에 `"notarized": true`가 붙고, 이 표시가 있는 업데이트만 macOS 앱이 앱 안에서 설치한다(§7). 서명을 시작한
-뒤에는 secret을 지우지 않는다. 지우면 다음 릴리스가 서명 없이 나가고 macOS 앱은 다시 다운로드 페이지로 안내한다.
+뒤에는 secret을 지우거나 변수를 끄지 않는다. `MACOS_NOTARIZE=false`로 끄거나 여섯 secret을 모두 지우면
+다음 릴리스가 서명 없이 나가고 macOS 앱은 다시 다운로드 페이지로 안내한다. 공증이 켜진 상태에서 secret을
+일부만 지우면 공증 잡이 실패하므로 업데이터 서명과 게시도 진행되지 않는다.
 
 인증서와 계정을 확인하려면 그 인증서가 있는 Mac에서 같은 환경 변수를 주고 릴리스 아티팩트(`.dmg`와
 `.app.tar.gz`)가 든 폴더로 `bash config/scripts/notarize-macos-release.sh <폴더>`를 실행한다. 스크립트는 폴더의

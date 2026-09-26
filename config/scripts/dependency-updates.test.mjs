@@ -215,7 +215,7 @@ const globToRegExp = (glob) =>
       .replaceAll('\u0000', '.*')}$`
   )
 
-test('Renovate updates every Tauri npm package and Rust crate in one group', () => {
+test('Renovate keeps every Tauri update together for manual review', () => {
   const rules = renovate.packageRules
   const tauri = rules.findIndex((rule) => rule.groupName === 'Tauri')
   assert.ok(tauri !== -1)
@@ -232,14 +232,78 @@ test('Renovate updates every Tauri npm package and Rust crate in one group', () 
       name
     )
   }
-  // Why: a later rule's groupName wins, and the dev tooling and Rust crate groups match these too.
-  for (const group of ['dev tooling', 'Rust crates']) {
-    assert.ok(rules.findIndex((rule) => rule.groupName === group) < tauri, group)
+  assert.equal(rules[tauri].matchUpdateTypes, undefined)
+  assert.equal(rules[tauri].groupSlug, 'tauri')
+  assert.equal(rules[tauri].automerge, false)
+  assert.equal(rules.at(-1), rules[tauri], 'Tauri stays manual after all automerge rules')
+})
+
+test('Renovate groups non-major updates before the pre-1.0 and Tauri exceptions', () => {
+  const rules = renovate.packageRules
+  const grouped = rules.filter((rule) => rule.groupName === 'non-major dependencies')
+  assert.equal(grouped.length, 1)
+  const [group] = grouped
+  assert.deepEqual(
+    [...group.matchUpdateTypes].sort((a, b) => a.localeCompare(b)),
+    ['digest', 'minor', 'patch', 'pin', 'pinDigest']
+  )
+  // Extra matchers would silently leave a manager, pre-1.0 package or Playwright outside the group.
+  assert.deepEqual(
+    Object.keys(group).filter((key) => key.startsWith('match')),
+    ['matchUpdateTypes']
+  )
+  assert.equal(group.groupSlug, 'non-major-dependencies')
+  assert.equal(renovate.separateMinorPatch, false)
+  assert.equal(group.automerge, true)
+  const groupIndex = rules.indexOf(group)
+  const preOne = rules.find((rule) => rule.matchCurrentVersion === '<1.0.0')
+  assert.ok(rules.indexOf(preOne) > groupIndex)
+  assert.deepEqual(preOne.matchUpdateTypes, ['minor'])
+  assert.equal(preOne.groupName, null)
+  assert.equal(preOne.groupSlug, null)
+  assert.equal(preOne.automerge, true)
+  const tauri = rules.find((rule) => rule.groupName === 'Tauri')
+  assert.ok(rules.indexOf(tauri) > rules.indexOf(preOne))
+  for (const rule of rules.filter((rule) => rule.groupName && rule !== group && rule !== tauri)) {
+    assert.deepEqual(rule.matchUpdateTypes, ['major'], rule.groupName)
   }
-  for (const rule of rules.slice(tauri + 1).filter((rule) => rule.groupName)) {
-    assert.ok(
-      rule.matchManagers?.length && !rule.matchManagers.some((m) => ['npm', 'cargo'].includes(m)),
-      `${rule.groupName} could take Tauri packages out of their group`
-    )
+})
+
+test('Renovate automerges eligible non-majors through PRs but keeps lock maintenance manual', () => {
+  assert.equal(renovate.automerge, false, 'major and other update types stay manual by default')
+  assert.equal(renovate.automergeType, 'pr')
+  assert.equal(renovate.platformAutomerge, true)
+  assert.equal(renovate.automergeStrategy, 'squash')
+  assert.equal(renovate.separateMajorMinor, true)
+  assert.equal(renovate.lockFileMaintenance.enabled, true)
+  assert.equal(renovate.lockFileMaintenance.automerge, false)
+  for (const rule of renovate.packageRules.filter((rule) => rule.automerge)) {
+    assert.ok(rule.groupName === 'non-major dependencies' || rule.matchCurrentVersion === '<1.0.0')
+    assert.ok(!rule.matchUpdateTypes.includes('major'))
   }
+})
+
+test('Renovate retains weekly scheduling, release-age safeguards and toolchain approval', () => {
+  assert.equal(renovate.timezone, 'Asia/Seoul')
+  for (const preset of [
+    'config:recommended',
+    'schedule:weekly',
+    ':maintainLockFilesWeekly',
+    'helpers:pinGitHubActionDigests',
+    'security:minimumReleaseAgeNpm',
+    'security:minimumReleaseAgeCrate'
+  ]) {
+    assert.ok(renovate.extends.includes(preset), preset)
+  }
+  const node = renovate.packageRules.find((rule) => rule.matchManagers?.includes('nodenv'))
+  const pnpm = renovate.packageRules.find((rule) => rule.matchDepTypes?.includes('packageManager'))
+  for (const rule of [node, pnpm]) {
+    assert.deepEqual(rule.matchUpdateTypes, ['major'])
+    assert.equal(rule.dependencyDashboardApproval, true)
+  }
+  const types = renovate.packageRules.find((rule) =>
+    rule.matchPackageNames?.includes('@types/node')
+  )
+  assert.deepEqual(types.matchUpdateTypes, ['major'])
+  assert.equal(types.enabled, false)
 })

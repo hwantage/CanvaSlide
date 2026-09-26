@@ -144,6 +144,44 @@ CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요�
 
 번들 종류는 `src-tauri/tauri.conf.json`의 `bundle.targets: "all"`이 결정한다. Linux 러너를 추가하면 `.AppImage`/`.deb`도 같은 방식으로 붙는다.
 
+<a id="dependency-updates"></a>
+
+### 의존성 업데이트
+
+[Renovate 설정](../.github/renovate.json)은 매주 월요일 00:00~04:00 KST에 새 업데이트를 제안한다.
+매니저에 관계없이 minor·patch·digest·pin(액션 SHA의 pinDigest 포함)을 한 PR로 묶는다.
+0.x minor는 호환성을 깨뜨릴 수 있으므로 공통 묶음에서 빼고 개별 PR로 만들되, CI 통과 후 자동 머지는 허용한다.
+Tauri npm 패키지와 Rust crate는 별도 묶음으로 사람이 머지한다. CI는 데스크톱 앱을 실행하지 않아 런타임 회귀를 보장하지 못한다.
+메이저도 수동 머지한다. Node.js·pnpm 메이저는 Dependency Dashboard 승인도 필요하며,
+`wrangler.toml`의 빌드 변수와 Node.js의 `@types/node`는 함께 수동 갱신한다.
+npm·crate의 `security:minimumReleaseAge*` 프리셋과 액션 SHA 고정은 유지한다.
+
+lock file maintenance는 수동 머지한다. Renovate의 공개 후 3일 유예는 lockfile 재생성에 적용되지 않는다.
+pnpm 11의 기본 유예는 1일이며, 명시하지 않으면 조건을 만족하는 버전이 없을 때 더 새 버전으로 넘어갈 수 있다.
+현재 `pnpm-workspace.yaml`에는 유예 기간이 없고 특정 버전 예외만 있으므로 3일 이상 보호를 보장하지 않는다.
+pnpm 설정은 Cargo lockfile도 보호하지 않으므로, lock 유지보수 전체를 자동 머지에서 제외한다.
+근거: [Renovate 공개 유예 프리셋](https://docs.renovatebot.com/presets-security/),
+[pnpm 공개 유예와 strict 설정](https://pnpm.io/settings/dependency-resolution#minimumreleaseage).
+
+Tauri를 제외한 비메이저 묶음과 개별 0.x minor PR에는 GitHub 자동 머지(squash)를 요청한다.
+PR 생성 일정과 달리 머지는 요일 제한 없이 필수 `CI passed`가 통과하고 나머지 ruleset 조건을 만족하면 진행된다.
+자동 머지된 변경은 main CI 통과 후 웹 편집기와 웹사이트 운영 배포로 이어진다.
+[Renovate의 platformAutomerge](https://docs.renovatebot.com/configuration-options/#platformautomerge)는
+GitHub의 필수 검사를 사용하므로, 메인테이너가 다음을 설정해야 한다.
+
+1. **Settings → General → Pull Requests → Allow auto-merge**를 켠다. CLI로는 다음과 같다.
+   ```bash
+   gh api --method PATCH repos/hwantage/CanvaSlide -F allow_auto_merge=true
+   gh api repos/hwantage/CanvaSlide --jq '.allow_auto_merge'
+   ```
+2. **Settings → Rules → Rulesets**의 main 규칙에서 PR 필수와 GitHub Actions의 `CI passed` 필수를 유지한다.
+   ```bash
+   gh api repos/hwantage/CanvaSlide/rules/branches/main
+   ```
+3. 첫 Renovate 묶음 PR에서 자동 머지 예약과 `CI passed` 대기를 확인한다. 검사가 실패하거나 대기 중이면
+   머지되지 않아야 한다. main 규칙의 현재 설정은 최신 main 반영을 필수로 요구하지 않으므로,
+   테스트를 통과한 PR이 main보다 뒤처진 상태에서도 머지될 수 있다.
+
 ## 5. 실패했을 때
 
 - **CI 대기 잡이 실패**: 재실행은 처음 실행과 같은 커밋을 다시 검사한다.

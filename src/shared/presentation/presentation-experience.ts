@@ -1,12 +1,6 @@
-import {
-  createAnnotationSession,
-  type AnnotationSession
-} from '../canvas/presentation-annotation-state'
-import {
-  resolvePresentationCommand,
-  type PresentationCommand
-} from '../canvas/presentation-controls'
-import { presentationKeyAction } from '../canvas/presentation-keys'
+import { createAnnotationSession, type AnnotationSession } from './presentation-annotation-state'
+import { resolvePresentationCommand, type PresentationCommand } from './presentation-controls'
+import { presentationKeyAction } from './presentation-keys'
 import { mountPresentationAnnotations } from './presentation-annotations'
 import { mountPresentationChrome } from './presentation-chrome'
 import type { PresentationLabels } from './presentation-control-definitions'

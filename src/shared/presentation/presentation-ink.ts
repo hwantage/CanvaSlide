@@ -1,5 +1,5 @@
-import { MIN_ZOOM, screenToWorld } from './camera-transform'
-import type { Camera, Point, Size } from './element-types'
+import { MIN_ZOOM, screenToWorld } from '../canvas/camera-transform'
+import type { Camera, Point, Size } from '../canvas/element-types'
 
 /**
  * Geometry for the temporary ink a presenter draws during a slide show. Strokes are world units so

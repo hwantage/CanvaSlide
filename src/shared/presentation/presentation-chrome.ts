@@ -1,9 +1,9 @@
-import { createChromeAutoHide } from '../canvas/presentation-chrome-auto-hide'
+import { createChromeAutoHide } from './presentation-chrome-auto-hide'
 import {
   presentationAvailability,
   type PresentationCommand,
   type PresentationState
-} from '../canvas/presentation-controls'
+} from './presentation-controls'
 import {
   controlIcon,
   PRESENTATION_CONTROLS,

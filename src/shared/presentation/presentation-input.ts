@@ -1,4 +1,4 @@
-import { SWIPE_INTERACTIVE_SELECTOR } from '../canvas/presentation-swipe'
+import { SWIPE_INTERACTIVE_SELECTOR } from './presentation-swipe'
 
 export const PRESENTATION_UI = '[data-canvas-ui], [data-presentation-ui]'
 const CONTENT_INPUT = `${SWIPE_INTERACTIVE_SELECTOR}, [role="dialog"], [data-video-id], .linked-video`

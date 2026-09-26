@@ -1,5 +1,5 @@
-import type { AnnotationSession } from '../canvas/presentation-annotation-state'
-import { inkPointSpacing, presentationWorldPoint } from '../canvas/presentation-ink'
+import type { AnnotationSession } from './presentation-annotation-state'
+import { inkPointSpacing, presentationWorldPoint } from './presentation-ink'
 import type { PresentationHost } from './presentation-host'
 import { ownsPresentationPointer } from './presentation-input'
 import { createInkPainter } from './presentation-ink-painter'

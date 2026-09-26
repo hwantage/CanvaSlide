@@ -1,6 +1,6 @@
-import type { CanvasDocument, VideoElement } from './element-types'
-import { withFrameContents } from './frame-contents'
-import { parseVideoSource } from './video-source'
+import type { CanvasDocument, VideoElement } from '../canvas/element-types'
+import { withFrameContents } from '../canvas/frame-contents'
+import { parseVideoSource } from '../canvas/video-source'
 
 /** Match frame dragging's containment and copied-frame ownership rules. */
 export function frameVideos(document: CanvasDocument, frameId: string | null): VideoElement[] {

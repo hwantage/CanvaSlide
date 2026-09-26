@@ -1,5 +1,5 @@
-import type { Camera, Rect, Size } from './element-types'
-import { LEVEL_SHOT, type Shot } from './presentation-shot'
+import type { Camera, Rect, Size } from '../canvas/element-types'
+import { LEVEL_SHOT, type Shot } from '../canvas/presentation-shot'
 
 export type VideoView = { camera: Camera; shot: Shot }
 export type VideoFocusHandle = { close: () => void; dispose: () => void }

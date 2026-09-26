@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { worldToScreen } from './camera-transform'
+import { worldToScreen } from '../canvas/camera-transform'
 import {
   INK_MIN_STEP_PX,
   inkPathData,

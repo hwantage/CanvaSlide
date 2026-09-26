@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createAnnotationSession } from '../canvas/presentation-annotation-state'
-import type { PresentationState } from '../canvas/presentation-controls'
+import { createAnnotationSession } from './presentation-annotation-state'
+import type { PresentationState } from './presentation-controls'
 import { mountPresentationExperience } from './presentation-experience'
 import type { PresentationHost } from './presentation-host'
 

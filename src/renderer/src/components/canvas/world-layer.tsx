@@ -10,7 +10,7 @@ import { usePresentationStore } from '@/store/presentation-store'
 import { selectEditingTextId, useToolStore } from '@/store/tool-store'
 import { ElementView } from './element-view'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
-import { autoplayVideoIds, frameVideos } from '@shared/canvas/video-playback'
+import { autoplayVideoIds, frameVideos } from '@shared/media/video-playback'
 
 const DENSE_VECTOR_COUNT = 256
 

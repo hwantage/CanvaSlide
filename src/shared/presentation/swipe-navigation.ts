@@ -1,4 +1,4 @@
-import { presentationSwipeAction, type SwipePoint } from '../canvas/presentation-swipe'
+import { presentationSwipeAction, type SwipePoint } from './presentation-swipe'
 import { ownsPresentationPointer } from './presentation-input'
 
 /** What a surface must tell the binder to take swipes; the app and the player both supply it. */

@@ -6,7 +6,7 @@ Keep rules here only when they apply to most work and cannot be enforced by tool
 
 ## Layout
 
-- `src/shared/` — pure domain code: `canvas/` (model, geometry, transforms, IO), `fig/`, `pdf/`, `ui/`, `cloud-share/`, `presentation/`, `media/`, `render/` (static DOM for HTML/PDF).
+- `src/shared/` — pure domain code: `canvas/` (model, geometry, transforms, IO), `fig/`, `pdf/`, `ui/`, `cloud-share/`, `presentation/` (presentation policy and controls), `media/` (video focus and playback), `render/` (static DOM for HTML/PDF).
 - `src/renderer/src/` — React app: `store/`, `hooks/`, `components/`, `platform/`, `i18n/`; `lib/` groups `interaction/`, `document/`, `raster/`, `workers/`.
 - `src/player/` — vanilla HTML player, built by `pnpm build:player` into the ignored `src/renderer/src/generated/player.iife.js`.
 - `src-tauri/src/` — Rust shell, native IO, dialogs, menus, fonts, recovery and video embed host.
@@ -17,6 +17,7 @@ Keep rules here only when they apply to most work and cannot be enforced by tool
 
 ### Code
 
+- Place modules in the domain folder that owns their use.
 - Keep math and document transforms in their owning `src/shared/` domain and unit-test them; keep UI files thin.
 - Shared modules never depend on React, Zustand, Tauri, renderer code or app localization; the player has no React runtime.
 - Element appearance comes from `src/shared/canvas/element-style.ts`, used by editor components and `src/shared/render/`; change it there.

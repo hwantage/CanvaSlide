@@ -1,6 +1,7 @@
 import type { Update } from '@tauri-apps/plugin-updater'
 import { isTauriRuntime } from './tauri-runtime'
 import { openExternalUrl } from './external-links'
+import { t } from '@/i18n/ui-strings'
 
 export const RELEASES_URL = 'https://github.com/hwantage/CanvaSlide/releases'
 
@@ -46,6 +47,7 @@ function isNotarizedForMac(platforms: unknown): boolean {
 }
 
 let pendingUpdate: Update | null = null
+let downloaded = false
 
 /** Web deployments are already served at their current version; only desktop checks the feed. */
 export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
@@ -53,7 +55,12 @@ export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
     return null
   }
   const { check } = await import('@tauri-apps/plugin-updater')
-  pendingUpdate = await check()
+  const nextUpdate = await check()
+  if (downloaded && pendingUpdate) {
+    await pendingUpdate.close()
+    downloaded = false
+  }
+  pendingUpdate = nextUpdate
   if (!pendingUpdate) {
     return null
   }
@@ -65,24 +72,60 @@ export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
 }
 
 /** Downloads and applies the pending update, then restarts. Only valid after a successful check. */
-export async function installAppUpdate(onProgress: (fraction: number) => void): Promise<void> {
+export async function installAppUpdate(
+  onProgress: (fraction: number) => void,
+  mayInstall: () => boolean,
+  prepareInstall: () => Promise<void>
+): Promise<boolean> {
   if (!pendingUpdate) {
     throw new Error('no pending update')
   }
   let total = 0
   let received = 0
-  await pendingUpdate.downloadAndInstall((event) => {
-    if (event.event === 'Started') {
-      total = event.data.contentLength ?? 0
-    } else if (event.event === 'Progress') {
-      received += event.data.chunkLength
-      onProgress(total > 0 ? Math.min(1, received / total) : 0)
-    } else {
-      onProgress(1)
-    }
-  })
+  const update = pendingUpdate
+  if (!downloaded) {
+    await update.download((event) => {
+      if (event.event === 'Started') {
+        total = event.data.contentLength ?? 0
+      } else if (event.event === 'Progress') {
+        received += event.data.chunkLength
+        onProgress(total > 0 ? Math.min(1, received / total) : 0)
+      } else {
+        onProgress(1)
+      }
+    })
+    downloaded = true
+  } else {
+    onProgress(1)
+  }
   const { relaunch } = await import('@tauri-apps/plugin-process')
+  // Windows can exit inside install(), so the final guard must run before it.
+  if (!mayInstall()) {
+    return false
+  }
+  await prepareInstall()
+  if (!mayInstall()) {
+    return false
+  }
+  downloaded = false
+  await update.install()
   await relaunch()
+  return true
+}
+
+export async function confirmUpdateChanges(): Promise<'save' | 'discard' | 'cancel'> {
+  if (!isTauriRuntime()) {
+    return 'cancel'
+  }
+  const { message } = await import('@tauri-apps/plugin-dialog')
+  const save = t('file.save')
+  const discard = t('update.discard')
+  const choice = await message(t('update.saveQuestion'), {
+    title: t('file.discardTitle'),
+    kind: 'warning',
+    buttons: { yes: save, no: discard, cancel: t('update.cancel') }
+  })
+  return choice === save ? 'save' : choice === discard ? 'discard' : 'cancel'
 }
 
 export async function openReleasesPage(): Promise<void> {

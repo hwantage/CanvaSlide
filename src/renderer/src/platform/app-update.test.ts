@@ -1,6 +1,12 @@
 import { beforeEach, afterEach, expect, test, vi } from 'vitest'
 import { isTauriRuntime } from './tauri-runtime'
-import { canInstallInApp, checkForAppUpdate, openReleasesPage } from './app-update'
+import {
+  canInstallInApp,
+  checkForAppUpdate,
+  confirmUpdateChanges,
+  installAppUpdate,
+  openReleasesPage
+} from './app-update'
 import { useUpdateStore } from '@/store/update-store'
 import {
   HOSTED_SHARE_SERVICE_URL,
@@ -8,20 +14,23 @@ import {
   openRepositoryPage
 } from './external-links'
 
-const { openUrl, message, check } = vi.hoisted(() => ({
+const { openUrl, message, check, relaunch } = vi.hoisted(() => ({
   openUrl: vi.fn(),
   message: vi.fn(),
-  check: vi.fn()
+  check: vi.fn(),
+  relaunch: vi.fn()
 }))
 vi.mock('./tauri-runtime', () => ({ isTauriRuntime: vi.fn() }))
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl }))
 vi.mock('@tauri-apps/plugin-dialog', () => ({ message }))
 vi.mock('@tauri-apps/plugin-updater', () => ({ check }))
+vi.mock('@tauri-apps/plugin-process', () => ({ relaunch }))
 
 const releasesUrl = 'https://github.com/hwantage/CanvaSlide/releases'
 const repositoryUrl = 'https://github.com/hwantage/CanvaSlide'
 
 beforeEach(() => {
+  relaunch.mockReset()
   openUrl.mockReset().mockResolvedValue(undefined)
   message.mockReset().mockResolvedValue(undefined)
 })
@@ -163,4 +172,123 @@ test('opens the hosted share terms natively and reports a rejected opener', asyn
     'Could not open the share service terms: URL is not allowed',
     { title: 'CanvaSlide', kind: 'error' }
   )
+})
+
+test.each(['Save', 'Discard changes', 'Cancel', 'unexpected'])(
+  'maps the native update choice %s safely',
+  async (choice) => {
+    vi.mocked(isTauriRuntime).mockReturnValue(true)
+    message.mockResolvedValue(choice)
+    await expect(confirmUpdateChanges()).resolves.toBe(
+      choice === 'Save' ? 'save' : choice === 'Discard changes' ? 'discard' : 'cancel'
+    )
+    expect(message).toHaveBeenCalledWith(
+      'Save your changes before installing the update and restarting?',
+      {
+        title: 'Unsaved changes',
+        kind: 'warning',
+        buttons: { yes: 'Save', no: 'Discard changes', cancel: 'Cancel' }
+      }
+    )
+  }
+)
+
+test('browser update confirmation refuses without native dialogs', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(false)
+  await expect(confirmUpdateChanges()).resolves.toBe('cancel')
+  expect(message).not.toHaveBeenCalled()
+})
+
+test.each([true, false])('guards the installer after download: allowed=%s', async (allowed) => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  const events: string[] = []
+  const download = vi.fn(async (progress) => {
+    events.push('download')
+    progress({ event: 'Started', data: { contentLength: 10 } })
+    progress({ event: 'Progress', data: { chunkLength: 5 } })
+    progress({ event: 'Finished' })
+  })
+  const install = vi.fn(async () => {
+    events.push('install')
+  })
+  check.mockResolvedValue({
+    version: '99.0.0',
+    rawJson: notarized,
+    download,
+    install,
+    close: vi.fn()
+  })
+  await checkForAppUpdate()
+  const progress = vi.fn()
+  const mayInstall = vi.fn(() => {
+    events.push('guard')
+    return allowed
+  })
+  await expect(installAppUpdate(progress, mayInstall, async () => {})).resolves.toBe(allowed)
+  expect(events).toEqual(
+    allowed ? ['download', 'guard', 'guard', 'install'] : ['download', 'guard']
+  )
+  expect(install).toHaveBeenCalledTimes(allowed ? 1 : 0)
+  expect(relaunch).toHaveBeenCalledTimes(allowed ? 1 : 0)
+  expect(progress.mock.calls).toEqual([[0.5], [1]])
+})
+
+test('reuses a canceled download on retry and releases it when checking again', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  const update = {
+    version: '99.0.0',
+    rawJson: notarized,
+    download: vi.fn(),
+    install: vi.fn(),
+    close: vi.fn()
+  }
+  check.mockResolvedValue(update)
+  await checkForAppUpdate()
+  await installAppUpdate(
+    vi.fn(),
+    () => false,
+    async () => {}
+  )
+  await installAppUpdate(
+    vi.fn(),
+    () => false,
+    async () => {}
+  )
+  expect(update.download).toHaveBeenCalledOnce()
+  expect(update.install).not.toHaveBeenCalled()
+  await checkForAppUpdate()
+  expect(update.close).toHaveBeenCalledOnce()
+})
+
+test('retains a canceled download for installation when a later check fails', async () => {
+  vi.mocked(isTauriRuntime).mockReturnValue(true)
+  const update = {
+    version: '99.0.0',
+    rawJson: notarized,
+    download: vi.fn(),
+    install: vi.fn(),
+    close: vi.fn()
+  }
+  check.mockResolvedValueOnce(update)
+  await checkForAppUpdate()
+  await expect(
+    installAppUpdate(
+      vi.fn(),
+      () => false,
+      async () => {}
+    )
+  ).resolves.toBe(false)
+  check.mockRejectedValueOnce(new Error('offline'))
+  await expect(checkForAppUpdate()).rejects.toThrow('offline')
+  expect(update.close).not.toHaveBeenCalled()
+  await expect(
+    installAppUpdate(
+      vi.fn(),
+      () => true,
+      async () => {}
+    )
+  ).resolves.toBe(true)
+  expect(update.download).toHaveBeenCalledOnce()
+  expect(update.install).toHaveBeenCalledOnce()
+  expect(relaunch).toHaveBeenCalledOnce()
 })

@@ -25,25 +25,27 @@ For navigation and drawing keys, check [`keyboard-shortcuts.ts`](../src/renderer
 
 ## Brand and motion
 
-The approved Round 07 logo artwork is copied into `public/brand/` from `discuss/round-07/`. The hero uses the original transparent Ray Master illustration from `discuss/round-02/ray/ray-master.png`, as requested. These copies are necessary because `discuss/` is ignored by Git. Wordmark geometry, the small blue S, and Wing Smile are preserved. `public/og.png` is the existing Round 07 social banner. The light wordmark PNG includes a white matte. Its matching dark asset supplies an alpha mask that removes the rectangle while retaining the approved wordmark geometry, colors, and circular symbol plate. The dark wordmark and compact icons already have transparent outer pixels. Shared palette tokens live in `src/renderer/src/assets/brand.css`.
+Use the committed logo and Ray artwork in [`public/brand/`](./public/brand/) and the social banner
+[`public/og.png`](./public/og.png). Preserve the wordmark geometry, colors, and Wing Smile. Shared palette
+tokens live in [`brand.css`](../src/renderer/src/assets/brand.css).
 
 The header and footer GitHub links use the official black and white Invertocat SVGs from the [GitHub brand toolkit](https://brand.github.com/foundations/logo), downloaded from its [official logo archive](https://brand.github.com/GitHub_Logos.zip). The artwork is unmodified; the black or white file is selected for the current theme.
 
-The canvas demonstration uses the same tested zoom/pan interpolation as the product. Playback starts only on request. The desktop story section advances frames with scroll and also has manual controls; focused controls take priority over scroll-driven changes. Small screens use a compact, manually navigable story without a long sticky section. Reduced-motion preferences disable animated camera transitions, autoplay, and entrance effects. Arrow keys and Escape work inside the focused demonstration.
-
-The hero links to ShowCase and the web editor, followed by a featured editable example, current workflows, single-file sharing, and an interactive close-up of one slide. Installation remains available in the download section and documentation. The close-up uses an actual rendered slide image and the product's camera interpolation to illustrate whole-slide and detail frames. Its chart values are sample presentation content, not product metrics. The frame guide explains how to create these views in the app.
-
-The presentation overview shows all six example slides together. Visitors can select any frame, continue through the sequence, and return to the full canvas. Its clickable regions are captured from the actual HTML player's frame positions into `src/slide-preview-frames.json`; regenerating examples refreshes both the screenshot and these regions. The frame guide also explains overview navigation in the app and exported presentation.
+Product demonstrations use real example exports and the app's zoom/pan interpolation. Keep manual
+and keyboard controls usable, honor reduced-motion preferences, and refresh screenshots and overview
+regions with the [preparation scripts below](#standalone-example-presentations).
 
 ### Ray's scroll journey
 
-The hero's original Ray illustration follows a continuous, reversible zigzag path behind the page content, then settles in the center of the footer's final illustration area. Each broad sweep spans two sections: examples and sharing, detail and overview, then story and features. The download section leads into the final central landing. Position, scale, opacity, and banking ease toward the current destination, so fast scrolling stays gentle and page jumps do not replay every turn. Waypoints follow the real section positions, with fresh measurements after resizing, font loading, or translated content changes. Its scale and opacity recede through the main content and return at the end. The decorative layer cannot intercept clicks or add horizontal overflow.
+Ray follows the page from hero to footer. The pause control stops wing motion; reduced motion keeps
+static illustrations instead. Preserve the image fallback when WebGL is unavailable and keep the
+decoration from intercepting input or causing overflow.
 
-`ray-surface.ts` renders the supplied PNG on a small WebGL mesh. Only the wings and tail deform; the face remains anchored. Texture upload and canvas compositing both use premultiplied alpha, keeping hidden RGB in transparent PNG pixels out of texture filtering and avoiding a separate straight-alpha conversion at display time. If WebKit rejects a direct image upload, `ray-texture.ts` retries through a temporary 2D canvas. Failed uploads select the original image instead of displaying an incomplete black texture. Texture draws are capped at 30 per second while scroll positioning follows animation frames. The original image remains a fallback when WebGL is unavailable or its context is lost. GPU resources and event listeners are released when the component stops.
-
-The bottom-right pause control stops automatic wing motion and remembers the choice; the scroll path still responds to the visitor. Hidden tabs stop scheduling frames. The operating system's reduced-motion preference disables the traveling layer and keeps static illustrations in the hero and footer, including when that preference changes while the page is open. The documentation pages have no traveling mascot.
-
-On CI, the Playwright test browser uses Chromium's [SwiftShader graphics driver](https://chromium.googlesource.com/chromium/src/+/HEAD/docs/gpu/swiftshader.md) to exercise wing rendering without a physical GPU.
+For the current implementation, start with [`ray-journey.tsx`](./src/ray-journey.tsx),
+[`use-ray-flight.ts`](./src/use-ray-flight.ts), and [`ray-surface.ts`](./src/ray-surface.ts).
+[`ray-journey.spec.ts`](./tests/ray-journey.spec.ts) and
+[`ray-transparency.spec.ts`](./tests/ray-transparency.spec.ts) cover motion, preferences, and rendering
+fallbacks; check [`playwright.config.ts`](./playwright.config.ts) for browser and graphics settings.
 
 ## Editable ShowCase catalog
 
@@ -122,4 +124,6 @@ For a custom domain, set `WEBSITE_BASE_PATH=/` for both building and previewing,
 
 ## Validation
 
-The browser tests exercise English-first behavior, persisted preferences, explicit language links, camera controls and playback, scroll progression, keyboard-operated example tabs, all three live exports, downloaded HTML playback with the network offline, same-slide detail zoom, full-canvas slide selection and return, the mascot's zigzag route and footer landing, pausing and resuming wing motion, graphics fallback, live reduced-motion changes, documentation links and search, installer tabs, command copying, every topic in both languages, narrow screens, and blocked browser storage. Build artifacts and test outputs are ignored by Git.
+Run `pnpm test:site` for the production website. The current scenarios live in [`tests/`](./tests/),
+with browser and server settings in [`playwright.config.ts`](./playwright.config.ts). Record commands,
+results, and platforms in the PR. Build artifacts and test outputs are ignored by Git.

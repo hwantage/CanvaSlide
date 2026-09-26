@@ -95,6 +95,10 @@ function ShortcutsTable() {
     ['site.docs.shortcuts.saveAs', p('S', { shift: true })],
     ['site.docs.shortcuts.export', p('E')],
     ['site.docs.shortcuts.present', `${p('Enter')} / F5`],
+    [
+      'site.docs.shortcuts.presentFromSelection',
+      `${p('Enter', { shift: true })} / ${shiftLabel()}F5`
+    ],
     ['site.docs.shortcuts.copy', `${p('C')} / ${p('V')}`],
     ['site.docs.shortcuts.duplicate', p('D')],
     ['site.docs.shortcuts.undo', p('Z')],
@@ -103,7 +107,11 @@ function ShortcutsTable() {
     ['site.docs.shortcuts.frame', 'F / L'],
     ['site.docs.shortcuts.fit', `${shiftLabel()}1`],
     ['site.docs.shortcuts.zoom', `${p('+')} / ${p('−')}`],
+    ['site.docs.shortcuts.help', 'K'],
     ['site.docs.shortcuts.next', '→ / ←'],
+    ['site.docs.shortcuts.overview', 'O'],
+    ['site.docs.shortcuts.pointer', 'P'],
+    ['site.docs.shortcuts.clearInk', 'E'],
     ['site.docs.shortcuts.exit', 'Esc']
   ]
   return (

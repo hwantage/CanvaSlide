@@ -181,18 +181,18 @@ export const ko: SiteStrings = {
     '세 가지 아이디어와 세 개의 프레임이면 첫 이야기를 만들 수 있습니다. 빠른 시작 문서를 따라 빈 캔버스에서 발표를 만들고 저장해 보세요.',
   'site.docs.install.availableHeading': '데스크톱 앱 받기',
   'site.docs.install.availableBody':
-    '공식 릴리스 페이지에서 운영체제에 맞는 설치 파일을 받으세요. 설치 없이 웹 편집기를 사용하거나 아래 안내에 따라 소스에서 빌드할 수도 있습니다.',
+    '공식 릴리스 페이지에서 운영체제에 맞는 설치 파일을 받으세요. 현재 빌드에는 OS 코드 서명이 없으며 macOS 빌드는 공증도 하지 않았습니다. 아래 절차는 이 페이지에서 받은 빌드에 적용됩니다. 설치 없이 웹 편집기를 사용하거나 아래 안내에 따라 소스에서 빌드할 수도 있습니다.',
   'site.docs.install.macBody':
-    '{dmg} 파일을 열어 앱을 응용 프로그램 폴더로 옮긴 뒤 실행하세요. {platform} {version} 이상이 필요합니다.',
+    '{dmg} 파일을 열어 앱을 응용 프로그램 폴더로 옮긴 뒤 실행하세요. {platform} {version} 이상이 필요합니다. “손상되었기 때문에 열 수 없습니다”가 나오면 터미널을 열어 xattr -d com.apple.quarantine /Applications/CanvaSlide.app을 실행한 뒤 앱을 다시 여세요. {platform} 15 이상에서 확인되지 않은 개발자 또는 Apple이 악성 코드 여부를 확인할 수 없다는 경고가 나오면 경고를 닫고 시스템 설정 → 개인정보 보호 및 보안의 CanvaSlide 항목에서 그래도 열기를 누르고 확인합니다. {platform} 12–14에서는 Finder에서 앱을 Control-클릭(우클릭)하고 열기를 선택합니다.',
   'site.docs.install.windowsBody':
-    '릴리스 첨부 파일의 {exe} 또는 {msi} 설치 프로그램을 실행해 안내를 따르세요. 설치가 끝나면 시작 메뉴에서 앱을 실행합니다. WebView2 설치 안내가 나오면 함께 설치해 주세요.',
+    '릴리스 첨부 파일의 {exe} 또는 {msi} 설치 프로그램을 실행하세요. SmartScreen “Windows의 PC 보호” 화면이 나오면 추가 정보 → 실행을 누르고 설치 안내를 따르세요. 설치가 끝나면 시작 메뉴에서 앱을 실행합니다. WebView2 설치 안내가 나오면 함께 설치해 주세요.',
   'site.docs.install.sourceHeading': '소스에서 빌드하기',
   'site.docs.install.sourceBody':
     '현재 앱을 소스에서 직접 실행할 수도 있습니다. Git, {node} {version} 이상, 저장소에 지정된 {packageManager} 버전과 Rust 안정 버전을 설치하고, Tauri 사전 요구사항에서 운영체제별 준비를 먼저 마치세요.',
   'site.docs.install.prerequisites': '운영체제별 사전 준비',
   'site.docs.install.buildHeading': '설치 파일 빌드',
   'site.docs.install.buildBody':
-    '배포 대상 운영체제에서 빌드하세요. 설치 파일은 해당 플랫폼의 bundle 디렉터리에 생성됩니다. 이 방법으로 생성한 파일은 로컬 빌드이며, 서명된 공개 릴리스는 아닙니다.',
+    '배포 대상 운영체제에서 빌드하세요. 설치 파일은 해당 플랫폼의 bundle 디렉터리에 생성됩니다. 이 방법은 OS 코드 서명 없는 로컬 빌드를 만듭니다.',
   'site.docs.copy': '명령어 복사',
   'site.docs.copied': '복사됨',
   'site.docs.copyFailed': '명령어를 선택해 직접 복사해 주세요.',

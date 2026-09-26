@@ -27,7 +27,8 @@ easy to break:
 - [`website/`](../website/) is a separate static build (`pnpm build:site`).
 
 Browser E2E can exercise the editor without Rust, but does not establish native menu, clipboard,
-font or window behaviour. See [Verify](../AGENTS.md#verify) for platform checks.
+font or window behaviour. PRs supply manual steps for changed desktop behavior; maintainers run the
+[macOS/Windows release checklist](./RELEASE.md#desktop-release-checklist) before publishing.
 
 The player imports shared constants, defaults and guards from
 [`element-runtime.ts`](../src/shared/canvas/element-runtime.ts). Keep its dependencies free of
@@ -36,7 +37,9 @@ paths. Document and cloud input validation still uses the schemas in `element-ty
 `pnpm build:player` checks the newly built IIFE against the raw byte budget in
 [`check-player-size.mjs`](../config/scripts/check-player-size.mjs); gzip is reported for comparison.
 This also runs through `dev:web`, `build:web` and `pnpm check` (via `tc:web`). The budget is raised
-only in a pull request of its own ([Presentation features](../AGENTS.md#presentation-features)).
+only in a pull request of its own, stating the sizes `pnpm build:player` reports on `main` and on
+the branch needing more room, and why the player cannot make that room itself
+([Presentation features](../AGENTS.md#presentation-features)).
 
 Minified bundles drop license comments, so every web, desktop and website build writes
 `THIRD-PARTY-NOTICES.txt` beside `index.html`
@@ -123,10 +126,15 @@ Editable content, dialogs and media retain their keys; IME confirmation/cancella
 
 Shared light tokens and presentation CSS are imported by the app and inlined by the player. App theme
 and localization remain device preferences; HTML stays light and English. Exports embed the runtime at
-creation, so previously distributed HTML needs regeneration. Temporary ink is never serialized.
+creation, so previously distributed HTML needs regeneration. HTML never follows the author's or viewer's theme. Return-to-editor controls exist only where an editor
+does. These host differences do not justify omitting presentation tools from HTML.
+Laser and ink never change document contents, dirty state, undo history or exports. Their clearing,
+retention, coordinate and pointer-cancellation rules are shared across hosts. Mouse, keyboard, touch
+and pen follow one input policy; hidden controls keep no focus and compact layouts keep tools reachable.
 [`presentation-contract.spec.ts`](../tests/e2e/presentation-contract.spec.ts) runs the same contract
 against the app and an actual downloaded HTML opened over `file://`, including default cross-browser
-core input, compact controls, camera/roll and maximum-zoom ink. Build output includes an ignored
+core input in Chromium, Firefox and WebKit, focus and auto-hide, reduced motion, compact controls,
+ink lifecycle, navigation/input conflicts, camera/roll and maximum-zoom ink. Build output includes an ignored
 `player.modules.json` report; the [module boundary](../config/scripts/player-module-boundary.mjs)
 rejects packages, renderer code and schema runtime before the built-byte budget check.
 

@@ -1,3 +1,5 @@
+import { hideShareDialog as hide } from '@/lib/document/launch-link-session'
+import { openSharedLink as openLink, publishShare as publish } from '@/lib/document/launch-links'
 import { useState } from 'react'
 import { Copy, ExternalLink, FileDown } from 'lucide-react'
 import { MAX_SHARE_BYTES } from '@shared/cloud-share/share-protocol'
@@ -26,9 +28,6 @@ function ShareDialogContent({ commands }: { commands: DocumentCommands }) {
   const busy = useCloudShareStore((s) => s.busy)
   const url = useCloudShareStore((s) => s.url)
   const error = useCloudShareStore((s) => s.error)
-  const hide = useCloudShareStore((s) => s.hide)
-  const publish = useCloudShareStore((s) => s.publish)
-  const openLink = useCloudShareStore((s) => s.openLink)
   const access = useCloudShareStore((s) => s.access)
   const setAccess = useCloudShareStore((s) => s.setAccess)
   const showExport = useExportDialogStore((s) => s.show)

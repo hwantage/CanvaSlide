@@ -68,6 +68,10 @@ a bundle. The About dialog and the website footer link the file.
   discarding unsaved work; a link refuses and keeps it, since nobody chose to replace it in this
   window. Restore returns to the camera its recovery copy recorded; everything else fits the board.
   A slideshow-only link loads once the editor has unmounted.
+  [`launch-links.ts`](../src/renderer/src/lib/document/launch-links.ts) owns shared and example link
+  requests; their stores hold UI state. Request cancellation and dialog dismissal live in
+  [`launch-link-session.ts`](../src/renderer/src/lib/document/launch-link-session.ts), so replacement
+  can drop a pending link without importing its loader.
 - Shapes, text and images may carry `rotation`: degrees clockwise about the centre of their unrotated
   `x`/`y`/`width`/`height` box. Every renderer applies it as a CSS `rotate()` about that centre.
   Code that measures position on the canvas (selection, snapping, alignment, frame contents, fitting)
@@ -80,7 +84,8 @@ a bundle. The About dialog and the website footer link the file.
 - Camera coordinates map `screen = world * zoom + (x, y)`. Frame fitting and
   [van Wijk/Nuij interpolation](../src/shared/canvas/zoom-pan-interpolation.ts) are shared by the app
   and player. The configured transition time starts after flight preparation; another navigation
-  input can retarget the flight from its current camera.
+  input can retarget the flight from its current camera. The app entry point injects flight preparation
+  into the camera store and passes the current document to the raster preparation function.
 - [`resolveFrameTransition`](../src/shared/canvas/frame-transition.ts) combines frame overrides with
   document defaults for duration, easing, arc and spotlight; roll defaults to zero. Motion marks
   compare resolved values with **application defaults**, so a document-wide change can mark every

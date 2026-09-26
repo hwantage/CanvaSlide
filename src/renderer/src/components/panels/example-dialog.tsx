@@ -1,3 +1,5 @@
+import { hideExampleDialog as hide } from '@/lib/document/launch-link-session'
+import { openExampleLink as openLink } from '@/lib/document/launch-links'
 import { t } from '@/i18n/ui-strings'
 import { useExampleStore } from '@/store/example-store'
 import { ModalDialog } from '@/components/ui/modal-dialog'
@@ -7,8 +9,6 @@ export function ExampleDialog() {
   const open = useExampleStore((s) => s.open)
   const busy = useExampleStore((s) => s.busy)
   const error = useExampleStore((s) => s.error)
-  const hide = useExampleStore((s) => s.hide)
-  const openLink = useExampleStore((s) => s.openLink)
   if (!open) {
     return null
   }

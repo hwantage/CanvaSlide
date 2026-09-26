@@ -1,8 +1,7 @@
-import { prepareCameraFlight } from '@/lib/raster/camera-flight-preparation'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PREVIEW_DEPARTURE_HOLD_MS } from '@shared/canvas/departure-hold'
 import { createEmptyDocument, type CanvasElement } from '@shared/canvas/element-types'
-import { useCameraStore } from './camera-store'
+import { setCameraFlightPreparation, useCameraStore } from './camera-store'
 import { useDocumentStore } from './document-store'
 import { frameCamera } from '@shared/canvas/presentation-shot'
 import { usePresentationStore } from './presentation-store'
@@ -19,9 +18,7 @@ const frame = (id: string, order: number, x: number): CanvasElement => ({
 })
 
 // Keep image preparation independent of the store's departure paint and hold clock.
-vi.mock('@/lib/raster/camera-flight-preparation', () => ({
-  prepareCameraFlight: vi.fn(() => ({ ready: Promise.resolve(), release: () => {} }))
-}))
+const prepareCameraFlight = vi.fn(() => ({ ready: Promise.resolve(), release: () => {} }))
 
 const prepare = () => vi.advanceTimersByTimeAsync(32)
 const land = async () => {
@@ -30,6 +27,7 @@ const land = async () => {
 }
 
 beforeEach(() => {
+  setCameraFlightPreparation(prepareCameraFlight)
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
     setTimeout(() => callback(performance.now()), 16)
@@ -51,6 +49,7 @@ beforeEach(() => {
 afterEach(() => {
   usePresentationStore.getState().exit()
   useCameraStore.getState().cancelAnimation()
+  setCameraFlightPreparation(undefined)
   vi.unstubAllGlobals()
   vi.useRealTimers()
 })

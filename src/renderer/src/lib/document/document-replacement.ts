@@ -8,7 +8,7 @@ import { confirmDiscardChanges, type OpenedDocument } from '@/platform/document-
 import { useCameraStore } from '@/store/camera-store'
 import { useCloudShareStore } from '@/store/cloud-share-store'
 import { useDocumentStore, watchDocumentChanges } from '@/store/document-store'
-import { useExampleStore } from '@/store/example-store'
+import { hideExampleDialog, hideShareDialog } from './launch-link-session'
 import { usePresentationStore } from '@/store/presentation-store'
 
 export type Placement = {
@@ -102,10 +102,10 @@ export function loadReplacement(
     const share = useCloudShareStore.getState()
     // A share link still loading would otherwise finish and report the new document as changed.
     if (share.open && share.mode === 'load') {
-      share.hide()
+      hideShareDialog()
     }
     clearShareQuery()
-    useExampleStore.getState().hide()
+    hideExampleDialog()
   }
   if (camera !== 'keep') {
     const current = useCameraStore.getState()

@@ -8,8 +8,11 @@ import {
   zoomAtScreenPoint,
   zoomByWheel
 } from '@shared/canvas/camera-transform'
-import { createCameraAnimator, type CameraFlightOptions } from '@shared/canvas/camera-animator'
-import { prepareCameraFlight } from '@/lib/raster/camera-flight-preparation'
+import {
+  createCameraAnimator,
+  type CameraFlightOptions,
+  type CameraAnimatorDeps
+} from '@shared/canvas/camera-animator'
 import type { Camera, Point, Rect, Size } from '@shared/canvas/element-types'
 import {
   fitContentToViewport,
@@ -48,6 +51,12 @@ export type CameraActions = {
 
 export type CameraStore = CameraState & CameraActions
 
+let prepareFlight: CameraAnimatorDeps['prepare']
+
+export function setCameraFlightPreparation(prepare: CameraAnimatorDeps['prepare']): void {
+  prepareFlight = prepare
+}
+
 export const useCameraStore = create<CameraStore>()((set, get) => {
   const animator = createCameraAnimator({
     getCamera: () => get().camera,
@@ -55,7 +64,7 @@ export const useCameraStore = create<CameraStore>()((set, get) => {
     getViewport: () => get().viewport,
     prepare: (from, target, viewport) => {
       set({ flightTarget: target, flightZoom: Math.max(from.zoom, target.zoom) })
-      return prepareCameraFlight(from, target, viewport)
+      return prepareFlight?.(from, target, viewport)
     },
     onActiveChange: (animationActive, target) =>
       set({

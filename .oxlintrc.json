@@ -126,6 +126,72 @@
       "rules": {
         "max-lines": "off"
       }
+    },
+    {
+      "files": ["src/shared/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(react|react-dom|zustand)(/|$)|^@tauri-apps(/|$)",
+                "message": "Shared modules must stay independent of React, Zustand and Tauri."
+              },
+              {
+                "regex": "^(@/|@app(/|$))|(^|/)renderer(/|$)",
+                "message": "Keep renderer dependencies in the app; use shared domain modules instead."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/player/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(@/|@app(/|$))|(^|/)renderer(/|$)",
+                "message": "Keep renderer dependencies in the app; use shared domain modules instead."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["website/src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@app",
+                  "@app/**",
+                  "!@app/i18n/translator",
+                  "!@app/i18n/ui-strings",
+                  "!@app/i18n/string-table-checks",
+                  "!@app/lib/ai-prompt",
+                  "!@app/lib/platform-keys",
+                  "@app/i18n/translator/**",
+                  "@app/i18n/ui-strings/**",
+                  "@app/i18n/string-table-checks/**",
+                  "@app/lib/ai-prompt/**",
+                  "@app/lib/platform-keys/**"
+                ],
+                "caseSensitive": true,
+                "message": "The website may only reuse app translator, ui-strings, string-table-checks, ai-prompt and platform-keys modules."
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["**/node_modules", "**/dist", "src-tauri/target", "coverage"]

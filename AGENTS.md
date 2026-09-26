@@ -20,6 +20,7 @@ Keep rules here only when they apply to most work and cannot be enforced by tool
 - Place modules in the domain folder that owns their use.
 - Keep math and document transforms in their owning `src/shared/` domain and unit-test them; keep UI files thin.
 - Shared modules never depend on React, Zustand, Tauri, renderer code or app localization; the player has no React runtime.
+  `.oxlintrc.json` enforces shared/player import boundaries and the website’s five-module `@app/` allowlist.
 - Element appearance comes from `src/shared/canvas/element-style.ts`, used by editor components and `src/shared/render/`; change it there.
 - OS operations go through `src/renderer/src/platform/` with a browser fallback.
 - Native file IO, dialogs and font scans are async and run on the blocking pool; file replacement uses `atomic_file.rs`.

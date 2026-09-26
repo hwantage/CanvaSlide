@@ -135,10 +135,10 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
-  # Why: Apple's credentials live only in the `release` environment, and this job runs only Apple's
-  # tools on the built app. Without them the macOS build passes through unsigned (docs/RELEASE.md §6).
+  # Why: opt in only after Apple credentials are ready; a disabled job allocates no macOS runner.
   notarize:
     name: sign and notarize · macOS
+    if: ${{ vars.MACOS_NOTARIZE == 'true' }}
     needs: build
     runs-on: macos-latest
     environment: release
@@ -172,7 +172,9 @@ jobs:
   # Why: the updater key lives only in the `release` environment; this job runs no package scripts.
   sign:
     name: sign updater files
-    needs: notarize
+    needs: [build, notarize]
+    # Why: skipped notarization must not skip signing, but failed/cancelled prerequisites must stop it.
+    if: ${{ !cancelled() && !failure() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     environment: release
     steps:
@@ -184,11 +186,15 @@ jobs:
         with:
           node-version-file: .node-version
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Download the macOS release files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ needs.notarize.result == 'success' && 'release-macos-latest' || 'macos-build' }}
+          path: release-assets
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          pattern: release-*
+          name: release-windows-latest
           path: release-assets
-          merge-multiple: true
       - name: Sign the updater files
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -208,6 +214,7 @@ jobs:
   publish:
     name: publish draft release
     needs: [notarize, sign]
+    if: ${{ !cancelled() && !failure() && needs.sign.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -219,11 +226,19 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
+      - name: Download the macOS release files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ needs.notarize.result == 'success' && 'release-macos-latest' || 'macos-build' }}
+          path: release-assets
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          pattern: release-*
+          name: release-windows-latest
           path: release-assets
-          merge-multiple: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-updater-signatures
+          path: release-assets
       # Why: installed apps update from the latest published release, so its key is the one they trust.
       - name: Find the latest published release
         env:

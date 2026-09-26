@@ -125,7 +125,7 @@ function artifactOf(step) {
 test('the notarize job reads the macOS build and publishes the files the later jobs read', () => {
   const jobs = jobsOf(release)
   const artifactSteps = (job) => stepsOf(job).filter((step) => /-artifact@/.test(step))
-  // Why: only files under a release-* name reach the sign and publish jobs.
+  // Why: processed macOS files stay separate from the original build artifact.
   const matrix = [...jobs.build.matchAll(/\n {12}os: (\S+)\n[^]*?\n {12}artifact: (\S+)\n/g)]
   assert.deepEqual(
     matrix.map(([, os, artifact]) => [os, artifact]),
@@ -144,11 +144,16 @@ test('the notarize job reads the macOS build and publishes the files the later j
   assert.match(upload, /\n {10}path: release-assets\/\n/)
   assert.match(upload, /\n {10}overwrite: true\n/)
   assert.deepEqual(artifactSteps(jobs.sign).map(artifactOf), [
-    'release-*',
+    "${{ needs.notarize.result == 'success' && 'release-macos-latest' || 'macos-build' }}",
+    'release-windows-latest',
     'release-updater-signatures'
   ])
-  assert.deepEqual(artifactSteps(jobs.publish).map(artifactOf), ['release-*'])
-  assert.match(jobs.sign, /\n {4}needs: notarize\n/)
+  assert.deepEqual(artifactSteps(jobs.publish).map(artifactOf), [
+    "${{ needs.notarize.result == 'success' && 'release-macos-latest' || 'macos-build' }}",
+    'release-windows-latest',
+    'release-updater-signatures'
+  ])
+  assert.match(jobs.sign, /\n {4}needs: \[build, notarize\]\n/)
   assert.match(jobs.publish, /\n {4}needs: \[notarize, sign\]\n/)
 })
 
@@ -277,9 +282,11 @@ test('a new push cancels superseded pull request checks but never a run on main'
 test('the release builds only after the gate job, which reads CI runs and runs no code', () => {
   const jobs = jobsOf(release)
   assert.match(jobs.build, /\n {4}needs: gate\n/)
-  for (const id of ['gate', 'build', 'notarize', 'sign', 'publish']) {
+  for (const id of ['gate', 'build']) {
     assert.doesNotMatch(`\n${jobs[id]}`, bypassesFailure, id)
   }
+  // Optional notarization and downstream failure propagation are exercised by release-notarization-gate.test.mjs.
+  assert.doesNotMatch(release, /\n\s+(?:-\s+)?continue-on-error:/)
   assert.deepEqual(permissionsAt(`\n${jobs.gate}\n`, '    '), ['actions: read'])
   assert.doesNotMatch(jobs.gate, /actions\/checkout@|secrets\.|\b(pnpm|npm|npx|node) /)
 })

@@ -86,8 +86,10 @@ After a tool creates a branch or worktree, check the actual Git branch name with
 
 ## Pull Requests
 
-Before opening a PR, run the applicable [Verify commands](./AGENTS.md#verify). Each PR should be small,
-focused and easy to review; the [PR template](./.github/pull_request_template.md) asks for:
+Before opening a PR, run `pnpm check` and the affected unit/spec files locally, following the
+conditional [Verify commands](./AGENTS.md#verify). Full E2E runs in CI on every PR; run it locally
+only to reproduce a CI failure. Keep each PR focused and easy to review. The
+[PR template](./.github/pull_request_template.md) asks for:
 
 - **Summary:** one plain-language paragraph on what the change does for a user.
 - **What changed and why:** the approach and any alternatives you rejected.
@@ -97,10 +99,30 @@ focused and easy to review; the [PR template](./.github/pull_request_template.md
   the PR; this requirement does not mean adding image files to the repository.
 - **Testing:** the commands you ran and their results, which platforms you actually ran it on, which
   checks you skipped and why, and which automated tests you added or why none were needed.
+- **Desktop check:** `none` with a reason, or manual steps (including keys to press) for desktop
+  behavior that changes. Report any actual desktop results separately; running both operating
+  systems is not a per-PR requirement. Maintainers perform the
+  [macOS/Windows checklist](./docs/RELEASE.md#desktop-release-checklist) before release.
 - **Platform notes:** anything macOS-only, Windows-only, or Tauri-vs-browser specific.
 
 `main` changes only through pull requests, and a PR can merge only when its `CI passed` check succeeds.
 Maintainers may ask for changes; keep the conversation on the PR so the reasoning is preserved.
+
+### Targeted browser tests
+
+Install the browsers needed for the affected specs with
+`pnpm exec playwright install chromium firefox webkit`. For example:
+
+```bash
+pnpm exec playwright test --config tests/playwright.config.ts tests/e2e/presentation-contract.spec.ts --project=chromium
+```
+
+Use the same spec with `--project=firefox` or `--project=webkit` for core input regressions in those
+engines. For additional `@webkit` scenarios, set `CANVASLIDE_E2E_WEBKIT=1` and select WebKit; tag
+rendering, font, focus, clipboard, media and CSP scenarios when they must hold on the macOS engine.
+The test server uses a checkout-derived port and verifies it is serving this checkout. If another
+checkout owns that port, wait until it is free and retry; do not stop its server.
+CI rejects committed `test.only` and runs the full suite, including tagged WebKit scenarios on macOS.
 
 ## Reporting Bugs and Requesting Features
 

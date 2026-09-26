@@ -44,7 +44,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    git fetch origin
    git switch -c chore/release-v0-8-0 origin/main
    pnpm version minor --no-git-tag-version
-   pnpm check && pnpm test:e2e     # 선택: 로컬에서 한 번 더
+   pnpm check                     # 관련 spec과 조건부 검증은 AGENTS.md의 Verify 참조
    ```
 3. 커밋하고 릴리스 PR을 올린다. PR의 `CI passed` 검사가 초록이 되면 머지한다.
    ```bash
@@ -67,9 +67,46 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    - OS 코드 서명이 없는 설치 파일은 §6의 안내 문구를 노트에 넣는다. Windows 설치 파일은 아직 서명하지 않고,
      macOS 파일은 **sign and notarize · macOS** 잡에 `No Apple credentials` 경고가 있으면 서명되지 않은 것이다.
    - Release 본문이 릴리스 노트의 유일한 원본이다. 공개하면 이 본문이 그대로 데스크톱 앱의 업데이트 안내에 나간다(§7).
-7. **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
+7. 아래 [데스크톱 점검표](#desktop-release-checklist)의 공개 전 항목을 두 OS에서 확인한 뒤 **Publish release**를 누른다. 초안은 일반 사용자에게 배포되지 않는다. 공개한 태그는 옮기지 않는다.
 8. Actions 탭에서 **Release notes** 워크플로가 성공했는지 확인한다. 이 워크플로는 공개 직후 본문을
    `latest.json`의 `notes`로 옮기고, 공개한 뒤 본문을 고치면 다시 실행되어 앱의 안내도 바꾼다.
+   이전 설치본으로 점검표의 공개 직후 업데이트 확인·설치를 마친다.
+
+<a id="desktop-release-checklist"></a>
+
+### 릴리스 전 데스크톱 수동 점검
+
+PR마다 두 OS에서 확인하는 대신, 메인테이너가 릴리스 초안의 설치 파일을 macOS와 Windows에 각각 설치하고
+아래 표를 복사해 결과를 기록한다. 버전·커밋, OS 버전·CPU, 설치 형식, 실행한 절차와 결과를 릴리스 PR에 남긴다.
+실패와 미실행은 이유 및 후속 조치와 함께 명시하고 통과로 표시하지 않는다. 각 PR의 `Desktop check` 절차도 함께 확인한다.
+테스트에는 원본 대신 예제 사본과 별도 작업 폴더를 사용한다. `기본 키`는 macOS의 ⌘, Windows의 Ctrl이다.
+
+| 항목               | 절차와 기대 결과                                                                                                                                                                                                      | macOS  | Windows |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- |
+| 열기               | 앱의 열기 명령 또는 기본 키+O로 `.canvaslide` 사본을 열고, Finder/탐색기에서 파일을 열어 전달되는지도 확인한다. 취소하면 현재 문서를 유지한다.                                                                        | 미실행 | 미실행  |
+| 저장               | 내용을 편집하고 기본 키+S로 저장한 뒤 다시 열어 변경 내용이 남았는지 확인한다.                                                                                                                                        | 미실행 | 미실행  |
+| 다른 이름으로 저장 | 기본 키+Shift+S로 새 경로에 저장하고 원본은 그대로인지 확인한다. 저장 대화상자 취소 시 문서와 경로가 유지된다.                                                                                                        | 미실행 | 미실행  |
+| HTML/PDF 내보내기  | 파일 메뉴에서 각각 내보내고 결과를 연다. HTML의 프레임 탐색·텍스트·이미지, PDF의 페이지 순서·글꼴·잘림을 확인한다.                                                                                                    | 미실행 | 미실행  |
+| 슬라이드 쇼        | 프레임이 있는 문서에서 F5로 시작하고 방향키로 이동한다. P/E/O 도구, Tab 초점, Esc 복귀와 작은 창의 도구 접근을 확인한다. Mac에서 필요하면 Fn+F5를 쓴다.                                                               | 미실행 | 미실행  |
+| 업데이트 확인·설치 | 아래 공개 전/직후 절차와 §7의 플랫폼별 동작에 따라 확인한다. 설치 뒤 앱 버전과 문서 보존을 확인한다. 저장 확인을 지원하는 설치본에서는 취소 시 설치 중단도 확인한다.                                                  | 미실행 | 미실행  |
+| 공유               | 공유가 설정된 빌드에서 문서 링크를 만들고 다른 브라우저에서 열어 보기·슬라이드 쇼를 확인한다. 비활성 빌드는 그 설정과 사유를 기록한다.                                                                                | 미실행 | 미실행  |
+| 링크 동영상        | YouTube·Vimeo·HTTPS 직접 동영상 링크를 각각 재생한다. 프레임 이동과 발표 종료 뒤 재생이 멈추는지 확인한다. HTML의 YouTube는 HTTP(S)에서 확인한다.                                                                     | 미실행 | 미실행  |
+| Figma 가져오기     | 로컬 `.fig` 사본을 가져오고 텍스트·도형·이미지를 확인한다. [변환 제약](./FIGMA-IMPORT.md) 안의 내용을 편집하고 저장·다시 열기를 확인한다.                                                                             | 미실행 | 미실행  |
+| 복구               | 사본을 편집하고 설정의 복구 저장 완료를 확인한 뒤 앱을 강제 종료한다. 다시 열어 복구를 선택하고 마지막 저장 사본이 복원되는지 확인한 뒤 다른 이름으로 저장한다. [복구 범위](./CRASH-RECOVERY.md)를 기준으로 판단한다. | 미실행 | 미실행  |
+
+업데이트 점검은 다음처럼 나눈다. 초안과 프리릴리스는 앱의 `releases/latest` 피드로 배포되지 않으므로,
+공개 전 시험만으로 새 버전의 자동 업데이트 경로가 통과했다고 기록하지 않는다.
+
+- **공개 전:** 초안 설치 파일로 직접 설치·실행을 확인하고, 정보 대화상자의 **업데이트 확인**이 현재 공개 피드를
+  조회하는지 확인한다. 새 버전으로의 실제 업데이트는 `공개 직후 확인 예정`으로 기록하고 이전 설치본을 남겨 둔다.
+- **공개 직후:** §3 8단계가 끝나면 작업 사본을 먼저 저장하고 이전 설치본의 **업데이트 확인**을 누른다.
+  수동 확인이 없는 설치본은 앱을 다시 시작해 자동 확인을 기다린다. Windows는 NSIS와 MSI 설치본에서 각각
+  설치하고 재시작 후 버전을 확인한다. macOS는 §7에 따라 앱 안 설치 또는 **다운로드 페이지 열기** 후 직접
+  설치를 확인한다. 실패 시 §5에 따라 처리한다.
+- **저장 확인을 지원하는 설치본:** 앱 안 설치 전에 예제 사본에 저장하지 않은 편집을 만들고
+  **설치 후 다시 시작 → 취소**로 설치가 중단되는지, 다시 시도해 **저장**을 선택하면 저장 후 설치되는지 확인한다.
+  이 확인은 업데이트를 받는 기존 설치본의 코드가 수행한다. 그 설치본에 저장 확인이 없으면 새 버전의 보호 동작을
+  검증할 수 없으므로 이 항목은 미검증 사유를 남긴다. 새 버전에 기능이 있다는 이유로 통과 처리하지 않는다.
 
 ## 4. 워크플로가 하는 일
 
@@ -134,13 +171,31 @@ Release 이벤트는 태그 커밋에 있는 워크플로 파일로 실행되므
 gh workflow run release-notes.yml -f tag=v0.8.0
 ```
 
-모든 잡의 체크아웃은 토큰을 작업 폴더에 남기지 않는다(`persist-credentials: false`). 모든 워크플로의 액션은 커밋
-SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
+### CI와 툴체인 유지보수
+
+[CI](../.github/workflows/ci.yml)는 PR과 main 푸시마다 `pnpm check`의 단계를 Linux·Windows에서,
+Rust 검사를 Linux·macOS·Windows에서 실행한다. 전체 E2E는 Chromium·Firefox의 Linux shard와
+`@webkit`을 포함한 macOS WebKit에서 실행하며, 러너마다 테스트를 하나씩 실행한다. 사이트 빌드·검사는
+Linux에서, 번들 빌드는 macOS·Windows에서 매번 실행한다. 로컬에서는
+[Verify](../AGENTS.md#verify)의 범위에 맞춰 실행한다.
+
+Node.js는 [`.node-version`](../.node-version), Rust는 [`rust-toolchain.toml`](../rust-toolchain.toml)에서
+고정 버전을 읽는다. [`src-tauri/Cargo.toml`](../src-tauri/Cargo.toml)의 `rust-version`은 앱을 빌드할 수 있는
+가장 오래된 Rust다. [Rust dependencies](../.github/workflows/rust-dependencies.yml)는 매주 및 Rust 코드·Cargo
+관련 파일을 바꾸는 PR에서 RustSec 보안 권고, 사용 중단(yanked) crate, 최소 Rust 버전 빌드 실패를 검사한다.
+Renovate가 제안하는 툴체인·의존성·액션 업데이트의 묶음과 승인 절차는 [의존성 업데이트](#dependency-updates)를 따른다.
+
+모든 잡의 체크아웃은 토큰을 작업 폴더에 남기지 않는다(`persist-credentials: false`). 모든 워크플로의 액션은
+전체 커밋 SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
 
 CI의 `CI passed` 잡은 다른 모든 CI 잡이 성공해야 통과한다. `main` ruleset은 PR과 이 검사 하나를 요구하므로,
 CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요가 없다. 새 잡은 `CI passed`의 `needs`에 넣으며,
 [`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs)가 이를 검사한다. `v*` 태그 ruleset은
 저장소 관리자가 아니면 태그를 만들거나 옮기거나 지우지 못하게 한다.
+
+SHA 고정과 비밀 격리는 [`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs),
+툴체인 고정은 [`dependency-updates.test.mjs`](../config/scripts/dependency-updates.test.mjs)가 `pnpm test`에서 검사한다.
+빌드·패키지 스크립트를 실행하는 잡에는 서명 비밀을 전달하지 않는 원칙을 유지한다.
 
 번들 종류는 `src-tauri/tauri.conf.json`의 `bundle.targets: "all"`이 결정한다. Linux 러너를 추가하면 `.AppImage`/`.deb`도 같은 방식으로 붙는다.
 

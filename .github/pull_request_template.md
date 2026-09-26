@@ -27,11 +27,10 @@ Fixes #
 <!-- How did you verify this? List the commands you ran with their results, the checks you skipped and
      why, and steps a reviewer can follow. -->
 
-- [ ] Ran in the Tauri window (`pnpm dev`)
-- [ ] Ran in browser mode (`pnpm dev:web`)
-- [ ] Tested on macOS
-- [ ] Tested on Windows (required for shortcut, menu, or file-dialog changes)
-- [ ] Automated tests added or updated, or explained below why not
+Desktop check: none / steps <!-- Give a reason for none, or manual steps with keys for changed desktop behavior; record actual results if run. -->
+
+<!-- Describe automated tests added/updated, or why none were needed. Routine macOS/Windows checks
+     belong to docs/RELEASE.md#desktop-release-checklist before release. -->
 
 ## Platform Notes
 
@@ -39,13 +38,12 @@ Fixes #
 
 ## Checklist
 
-- [ ] This PR is small and focused on one topic
-- [ ] The applicable [Verify commands](https://github.com/hwantage/CanvaSlide/blob/main/AGENTS.md#verify) pass (tick each one you ran):
-  - [ ] `pnpm check`
-  - [ ] `pnpm test:e2e`
-  - [ ] `pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test`
-  - [ ] `pnpm bundle:local`
-  - [ ] `pnpm test:site`
-- [ ] The change follows the [code rules](https://github.com/hwantage/CanvaSlide/blob/main/AGENTS.md#rules)
+<!-- Tick only commands you ran successfully; explain skipped or failed checks in Testing.
+     Full E2E is left to CI on every PR; run it locally only to reproduce a CI failure. -->
+
+- [ ] `pnpm check`
+- [ ] Affected unit/spec files (list exact commands in Testing)
+- [ ] `pnpm rust:fmt:check && pnpm rust:clippy && pnpm rust:test` — if `src-tauri/` changed
+- [ ] `pnpm test:site` — if `website/` or app modules it imports changed
+- [ ] `pnpm bundle:local` (`--bundles app` for macOS app only) — only if bundling configuration changed
 - [ ] Affected documentation and links are updated; new permanent docs have a stated purpose
-- [ ] Self-reviewed for correctness, undo/redo behaviour, and performance on large documents

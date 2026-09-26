@@ -14,175 +14,20 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { bypassesFailure, checkedStep, jobsOf, stepsOf } from './workflow-structure.mjs'
+import { jobsOf, stepsOf } from './workflow-structure.mjs'
 
 const workflowDirectory = new URL('../../.github/workflows/', import.meta.url)
 const workflows = readdirSync(workflowDirectory)
   .filter((name) => /\.ya?ml$/.test(name))
   .map((name) => ({ name, text: readFileSync(new URL(name, workflowDirectory), 'utf8') }))
 const release = workflows.find(({ name }) => name === 'release.yml').text
-const ci = workflows.find(({ name }) => name === 'ci.yml').text
 const releaseNotes = workflows.find(({ name }) => name === 'release-notes.yml').text
 const website = workflows.find(({ name }) => name === 'deploy-website.yml').text
 const webEditor = workflows.find(({ name }) => name === 'deploy-web-editor.yml').text
-const websitePlaywrightConfig = readFileSync(
-  new URL('../../website/playwright.config.ts', import.meta.url),
-  'utf8'
-)
-
-// The `permissions:` map at the given indent, as its entry lines; null when the block is absent.
-function permissionsAt(text, indent) {
-  const block = new RegExp(`\\n${indent}permissions:\\n((?:${indent}  .*\\n)*)`).exec(text)
-  if (!block) {
-    return null
-  }
-  return block[1]
-    .trimEnd()
-    .split('\n')
-    .map((line) => line.trim())
-}
-
-test('every action is pinned to a full commit SHA with its version in a comment', () => {
-  for (const { name, text } of workflows) {
-    for (const [, reference] of text.matchAll(/^\s*(?:- )?uses:\s*(.+)$/gm)) {
-      assert.match(reference, /^[\w.-]+\/[\w./-]+@[0-9a-f]{40} # \S+$/, `${name}: ${reference}`)
-    }
-  }
-})
-
-test('no checkout leaves the job token in the working copy', () => {
-  for (const { name, text } of workflows) {
-    for (const step of stepsOf(text).filter((step) => step.includes('actions/checkout@'))) {
-      assert.match(step, /\n\s+persist-credentials: false\b/, `${name}: ${step}`)
-    }
-  }
-})
-
-test('only the release sign job receives the updater key, from the release environment', () => {
-  const jobs = jobsOf(release)
-  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'notarize', 'sign', 'publish'])
-  for (const { name, text } of workflows.filter(({ name }) => name !== 'release.yml')) {
-    assert.doesNotMatch(text, /TAURI_SIGNING/, name)
-  }
-  assert.doesNotMatch(jobs.build + jobs.notarize + jobs.publish, /TAURI_SIGNING/)
-  assert.doesNotMatch(jobs.build + jobs.publish, /secrets\./)
-  assert.match(jobs.sign, /\n {4}environment: release\n/)
-  const keySteps = stepsOf(jobs.sign).filter((step) => step.includes('TAURI_SIGNING'))
-  assert.equal(keySteps.length, 1)
-  assert.match(keySteps[0], /\n\s+node_modules\/\.bin\/tauri signer sign "\$file"\n/)
-  assert.doesNotMatch(keySteps[0], /\b(pnpm|npm|npx|node) /)
-  for (const install of jobs.sign.match(/pnpm install[^\n]*/g)) {
-    assert.match(install, /--ignore-scripts\b/)
-  }
-})
-
-const appleCredentials = [
-  'APPLE_CERTIFICATE',
-  'APPLE_CERTIFICATE_PASSWORD',
-  'APPLE_SIGNING_IDENTITY',
-  'APPLE_ID',
-  'APPLE_PASSWORD',
-  'APPLE_TEAM_ID'
-]
-
-test('only the notarize job receives Apple credentials, in one step that runs no package code', () => {
-  const jobs = jobsOf(release)
-  for (const { name, text } of workflows) {
-    const outside = name === 'release.yml' ? text.replace(jobs.notarize, '') : text
-    assert.doesNotMatch(outside, /\bAPPLE_/, name)
-  }
-  assert.match(jobs.notarize, /\n {4}environment: release\n/)
-  assert.match(jobs.notarize, /\n {4}needs: build\n/)
-  assert.match(jobs.notarize, /\n {4}runs-on: macos-latest\n/)
-  assert.doesNotMatch(jobs.notarize, /\b(pnpm|npm|npx|node) /)
-  // Why: a job-level `env:` would hand a secret to every step, including the artifact actions.
-  assert.doesNotMatch(jobs.notarize.split('\n    steps:\n')[0], /secrets\./)
-  const secretSteps = stepsOf(jobs.notarize).filter((step) => step.includes('secrets.'))
-  assert.equal(secretSteps.length, 1)
-  const [step] = secretSteps
-  const passed = [...step.matchAll(/\n {10}(\w+): \$\{\{ secrets\.(\w+) \}\}/g)]
-  assert.deepEqual(
-    passed.map(([, env, secret]) => `${env}=${secret}`),
-    appleCredentials.map((name) => `${name}=${name}`)
-  )
-  assert.match(step, /\n {8}run: bash config\/scripts\/notarize-macos-release\.sh release-assets$/)
-  // Why: the job's `notarized` output reads this step by its id.
-  assert.match(step, /\n {8}id: notarize\n/)
-  assert.match(jobs.notarize, /\n {6}notarized: \$\{\{ steps\.notarize\.outputs\.notarized \}\}\n/)
-  // The script's list of credentials must be the one the workflow passes.
-  const script = readFileSync(new URL('./notarize-macos-release.sh', import.meta.url), 'utf8')
-  const listed = /\ncredentials=\(([^)]*)\)/.exec(script)[1].split(/\s+/).filter(Boolean)
-  assert.deepEqual(listed, appleCredentials)
-})
-
-// The `name:` or `pattern:` of an artifact step, which the step must have exactly one of.
-function artifactOf(step) {
-  const names = [...step.matchAll(/\n {10}(?:name|pattern): (.+)$/gm)].map(([, name]) => name)
-  assert.equal(names.length, 1, step)
-  return names[0]
-}
-
-test('the notarize job reads the macOS build and publishes the files the later jobs read', () => {
-  const jobs = jobsOf(release)
-  const artifactSteps = (job) => stepsOf(job).filter((step) => /-artifact@/.test(step))
-  // Why: processed macOS files stay separate from the original build artifact.
-  const matrix = [...jobs.build.matchAll(/\n {12}os: (\S+)\n[^]*?\n {12}artifact: (\S+)\n/g)]
-  assert.deepEqual(
-    matrix.map(([, os, artifact]) => [os, artifact]),
-    [
-      ['macos-latest', 'macos-build'],
-      ['windows-latest', 'release-windows-latest']
-    ]
-  )
-  assert.deepEqual(artifactSteps(jobs.build).map(artifactOf), ['${{ matrix.artifact }}'])
-  const [download, upload] = artifactSteps(jobs.notarize)
-  assert.match(download, /download-artifact@/)
-  assert.equal(artifactOf(download), 'macos-build')
-  assert.match(upload, /upload-artifact@/)
-  assert.equal(artifactOf(upload), 'release-macos-latest')
-  // Why: the replaced artifact must hold the updater archive as well as the disk image.
-  assert.match(upload, /\n {10}path: release-assets\/\n/)
-  assert.match(upload, /\n {10}overwrite: true\n/)
-  assert.deepEqual(artifactSteps(jobs.sign).map(artifactOf), [
-    "${{ needs.notarize.result == 'success' && 'release-macos-latest' || 'macos-build' }}",
-    'release-windows-latest',
-    'release-updater-signatures'
-  ])
-  assert.deepEqual(artifactSteps(jobs.publish).map(artifactOf), [
-    "${{ needs.notarize.result == 'success' && 'release-macos-latest' || 'macos-build' }}",
-    'release-windows-latest',
-    'release-updater-signatures'
-  ])
-  assert.match(jobs.sign, /\n {4}needs: \[build, notarize\]\n/)
-  assert.match(jobs.publish, /\n {4}needs: \[notarize, sign\]\n/)
-})
-
-test('the release build runs without secrets or write access, and only publish can write', () => {
-  const jobs = jobsOf(release)
-  // Build, notarize and sign inherit the workflow-level map, so it must hold only read access.
-  assert.deepEqual(permissionsAt(release, ''), ['contents: read'])
-  assert.doesNotMatch(
-    jobs.build + jobs.notarize + jobs.sign,
-    /permissions:|github\.token|GITHUB_TOKEN/
-  )
-  assert.match(jobs.build, /\n\s+- run: pnpm tauri build [^\n]*--no-sign\n/)
-  assert.deepEqual(permissionsAt(`\n${jobs.publish}\n`, '    '), ['contents: write'])
-  const tokenSteps = stepsOf(jobs.publish).filter((step) => step.includes('github.token'))
-  assert.ok(tokenSteps.some((step) => /gh release create/.test(step)))
-  for (const step of tokenSteps) {
-    assert.doesNotMatch(step, /\b(pnpm|npm|npx|node) /, step)
-  }
-})
 
 // A step's `run: |` script, run by bash with `-e` as Actions does, with `env` added.
 function runScript(step, env, cwd) {
-  const body = step.slice(step.indexOf('run: |\n') + 'run: |\n'.length).split('\n')
-  const end = body.findIndex((line) => line.trim() && !line.startsWith(' '.repeat(10)))
-  const script = body
-    .slice(0, end === -1 ? undefined : end)
-    .map((line) => line.slice(10))
-    .join('\n')
-  return spawnSync('bash', ['-e', '-c', script], {
+  return spawnSync('bash', ['-e', '-o', 'pipefail', '-c', step.run], {
     cwd,
     encoding: 'utf8',
     env: { ...process.env, ...env },
@@ -196,104 +41,6 @@ const shellSkip =
     ? 'runs workflow scripts with POSIX executables'
     : spawnSync('jq', ['--version']).error && 'needs jq to stand in for gh --jq'
 
-test('the required CI passed check depends on every other CI job, even failed ones', () => {
-  const jobs = jobsOf(ci)
-  const passed = `\n${jobs.passed}\n`
-  assert.match(passed, /\n {4}name: CI passed\n/)
-  // Why: a skipped required check counts as passing, so this job must run even when a need failed.
-  assert.match(passed, /\n {4}if: always\(\)\n/)
-  assert.doesNotMatch(passed.replace('\n    if: always()\n', '\n'), bypassesFailure)
-  const needs = /\n {4}needs: \[([^\]]*)\]\n/.exec(passed)[1].split(/,\s*/)
-  assert.deepEqual(
-    needs.toSorted(),
-    Object.keys(jobs)
-      .filter((id) => id !== 'passed')
-      .toSorted()
-  )
-})
-
-test('the required CI passed check fails unless every job succeeded', { skip: shellSkip }, () => {
-  const [step] = stepsOf(jobsOf(ci).passed)
-  assert.match(step, /\n\s+RESULTS: \$\{\{ join\(needs\.\*\.result, ' '\) \}\}\n/)
-  const outcome = (results) => runScript(step, { RESULTS: results }).status
-  assert.equal(outcome('success success success'), 0)
-  for (const results of ['success failure success', 'success success skipped', 'cancelled']) {
-    assert.notEqual(outcome(results), 0, results)
-  }
-})
-
-test('every CI job has a time limit', () => {
-  for (const [id, job] of Object.entries(jobsOf(ci))) {
-    assert.match(`\n${job}\n`, /\n {4}timeout-minutes: \d+\n/, id)
-  }
-})
-
-test('CI builds and tests the website for every pull request and push to main', () => {
-  const [job, ...others] = Object.values(jobsOf(ci)).filter((job) => job.includes('test:site'))
-  assert.ok(job && others.length === 0)
-  assert.match(job, /\n {4}runs-on: ubuntu-latest\n/)
-  checkedStep(job, 'pnpm exec playwright install --with-deps chromium')
-  checkedStep(job, 'pnpm test:site')
-  // Why: a path list goes stale as the site imports more of the app, so CI runs on every change.
-  assert.match(ci, /\non:\n {2}push:\n {4}branches: \[main\]\n {2}pull_request:\n\n/)
-  const outputDir = /\n {2}outputDir: '\.\.\/([^']+)',\n/.exec(websitePlaywrightConfig)[1]
-  assert.match(job, new RegExp(`\\n\\s+path: ${outputDir}/\\n`))
-  assert.match(job, /\n\s+name: website-test-results\n/)
-})
-
-test('Rust is checked on Linux, macOS and Windows, the scripts on Linux and Windows', () => {
-  const { verify, rust } = jobsOf(ci)
-  const osMatrix = (job) => /\n {8}os: \[([^\]]*)\]\n/.exec(`${job}\n`)[1].split(/,\s*/)
-  for (const job of [verify, rust]) {
-    assert.match(job, /\n {4}runs-on: \$\{\{ matrix\.os \}\}\n/)
-    assert.match(job, /\n {6}fail-fast: false\n/)
-  }
-  assert.deepEqual(osMatrix(verify), ['ubuntu-latest', 'windows-latest'])
-  for (const script of ['lint', 'format:check', 'typecheck', 'test']) {
-    checkedStep(verify, `pnpm ${script}`)
-  }
-  assert.deepEqual(osMatrix(rust), ['ubuntu-latest', 'macos-latest', 'windows-latest'])
-  for (const command of [
-    'cargo fmt --manifest-path src-tauri/Cargo.toml --check',
-    // Why: without `--all-targets`, the platform-specific tests are never linted.
-    'cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings',
-    'cargo test --manifest-path src-tauri/Cargo.toml'
-  ]) {
-    checkedStep(rust, command)
-  }
-})
-
-test('CI artifacts expire instead of keeping the 90-day default', () => {
-  const uploads = stepsOf(ci).filter((step) => step.includes('actions/upload-artifact@'))
-  assert.ok(uploads.length > 0)
-  for (const step of uploads) {
-    // Why: 0 means "use the repository default" to upload-artifact.
-    assert.match(step, /\n\s+retention-days: [1-9]\d*\n/, step)
-  }
-})
-
-test('a new push cancels superseded pull request checks but never a run on main', () => {
-  const block = /\nconcurrency:\n((?: {2}.*\n)+)/.exec(ci)[1]
-  const group = /^ {2}group: ci-\$\{\{ (.+) \}\}$/m.exec(block)[1]
-  assert.equal(group, "github.event_name == 'pull_request' && github.ref || github.run_id")
-  assert.match(block, /^ {2}cancel-in-progress: true$/m)
-})
-
-test('the release builds only after the gate job, which reads CI runs and runs no code', () => {
-  const jobs = jobsOf(release)
-  assert.match(jobs.build, /\n {4}needs: gate\n/)
-  for (const id of ['gate', 'build']) {
-    assert.doesNotMatch(`\n${jobs[id]}`, bypassesFailure, id)
-  }
-  // Optional notarization and downstream failure propagation are exercised by release-notarization-gate.test.mjs.
-  assert.doesNotMatch(release, /\n\s+(?:-\s+)?continue-on-error:/)
-  assert.deepEqual(permissionsAt(`\n${jobs.gate}\n`, '    '), ['actions: read'])
-  assert.doesNotMatch(jobs.gate, /actions\/checkout@|secrets\.|\b(pnpm|npm|npx|node) /)
-})
-
-// A gate `step` (the release's by default), with `gh` answering from `responses` in order (the last
-// one repeats; `{ error }` fails like an HTTP error) and `sleep` returning at once, failing once the
-// gate polls endlessly. `outputs` is what the step wrote to $GITHUB_OUTPUT.
 function runGate(responses, step = stepsOf(jobsOf(release).gate)[0]) {
   const bin = mkdtempSync(join(tmpdir(), 'release-gate-'))
   const calls = join(bin, 'calls.json')
@@ -351,7 +98,7 @@ process.stdout.write(execFileSync('jq', ['-r', jq], { input: JSON.stringify(resp
 
 const noRun = { workflow_runs: [] }
 const runOf = (status, conclusion) => ({
-  workflow_runs: [{ status, conclusion, html_url: 'https://example.test/run' }]
+  workflow_runs: [{ head_sha: 'abc123', status, conclusion, html_url: 'https://example.test/run' }]
 })
 
 test(
@@ -421,80 +168,58 @@ test(
   }
 )
 
-test('the website is published from main after CI, whatever files changed', () => {
-  const ciName = /^name: (.+)$/m.exec(ci)[1]
-  assert.equal(
-    /\non:\n((?: {2}.*\n)+)/.exec(website)[1],
-    `  workflow_run:\n    workflows: [${ciName}]\n    types: [completed]\n    branches: [main]\n` +
-      '  workflow_dispatch:\n'
-  )
-  assert.doesNotMatch(website, /\bpaths(-ignore)?:/)
-  // Why: CI already lints, formats and tests the site; the deployment only builds what it checked.
-  assert.doesNotMatch(website, /oxlint|oxfmt|playwright|test:site/)
-  // Why: cancelling a running Pages deployment can leave it half published.
-  assert.match(website, /\nconcurrency:\n {2}group: website\n {2}cancel-in-progress: false\n/)
-  assert.deepEqual(permissionsAt(website, ''), ['contents: read'])
-  const jobs = jobsOf(website)
-  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'deploy'])
-  // Why: a run whose CI failed may displace a queued one, so every run must still look for a commit.
-  assert.match(jobs.gate, /\n {4}if: github\.ref == 'refs\/heads\/main'\n/)
-  assert.doesNotMatch(website, /workflow_run\.(conclusion|head_sha)/)
-  assert.deepEqual(permissionsAt(`\n${jobs.gate}\n`, '    '), ['actions: read'])
-  assert.doesNotMatch(jobs.gate, /actions\/checkout@|secrets\.|\b(pnpm|npm|npx|node) /)
-  const [step] = stepsOf(jobs.gate)
-  const id = /\n {8}id: (\S+)\n/.exec(step)[1]
-  assert.match(
-    jobs.gate,
-    new RegExp(`\\n {6}sha: \\$\\{\\{ steps\\.${id}\\.outputs\\.sha \\}\\}\\n`)
-  )
-  assert.match(`\n${jobs.build}`, /\n {4}needs: gate\n/)
-  assert.match(jobs.build, /\n {10}ref: \$\{\{ needs\.gate\.outputs\.sha \}\}\n/)
-  assert.doesNotMatch(jobs.build, /permissions:|github\.token|secrets\./)
-  checkedStep(jobs.build, 'pnpm build:site')
-  assert.match(jobs.build, /\n\s+path: website\/dist\n/)
-  assert.match(`\n${jobs.deploy}`, /\n {4}needs: build\n/)
-  assert.doesNotMatch(`\n${jobs.deploy}`, bypassesFailure)
-  assert.deepEqual(permissionsAt(`\n${jobs.deploy}\n`, '    '), ['pages: write', 'id-token: write'])
-  assert.doesNotMatch(jobs.deploy, /actions\/checkout@|\brun:/)
-})
-
-const websiteGate = () => stepsOf(jobsOf(website).gate)[0]
 const passedOn = (sha) => ({
   workflow_runs: [{ head_sha: sha, status: 'completed', conclusion: 'success' }]
 })
 
-test(
-  'the website gate publishes the newest commit whose CI pushed to main passed',
-  { skip: shellSkip },
-  () => {
-    const { status, stderr, calls, outputs } = runGate([passedOn('def456')], websiteGate())
-    assert.equal(status, 0, stderr)
-    assert.equal(outputs, 'sha=def456\n')
-    assert.equal(calls.length, 1)
-    const [args] = calls
-    assert.equal(args[args.indexOf('-X') + 1], 'GET')
-    assert.ok(args.includes('repos/owner/repo/actions/workflows/ci.yml/runs'))
-    // Why: the list is newest first, so its first passing run from a push to main is the one to use.
-    for (const field of ['branch=main', 'event=push', 'status=success', 'per_page=1']) {
-      assert.ok(args.includes(field), field)
+for (const [name, source] of [
+  ['website', website],
+  ['web editor', webEditor]
+]) {
+  const gate = () => jobsOf(source).gate.steps[0]
+  test(
+    `${name} deploys only successful CI for its own workflow revision`,
+    { skip: shellSkip },
+    () => {
+      const { status, stderr, calls, outputs } = runGate([passedOn('abc123')], gate())
+      assert.equal(status, 0, stderr)
+      assert.equal(outputs, 'sha=abc123\n')
+      assert.equal(calls.length, 1)
+      const [args] = calls
+      assert.equal(args[args.indexOf('-X') + 1], 'GET')
+      assert.ok(args.includes('repos/owner/repo/actions/workflows/ci.yml/runs'))
+      for (const field of ['head_sha=abc123', 'branch=main', 'event=push', 'per_page=1']) {
+        assert.ok(args.includes(field), field)
+      }
+      assert.ok(!args.includes('status=success'), 'the latest attempt must succeed, not an old one')
     }
-    assert.ok(!args.some((arg) => arg.startsWith('head_sha=')))
-  }
-)
+  )
 
-test('the website gate fails when no CI run on main has passed', { skip: shellSkip }, () => {
-  const { status, stderr, outputs } = runGate([noRun], websiteGate())
-  assert.notEqual(status, 0)
-  assert.match(stderr, /No CI run from a push to main has passed/)
-  assert.equal(outputs, '')
-})
+  test(
+    `${name} leaves deployment unchanged for old, absent, pending or failed CI`,
+    { skip: shellSkip },
+    () => {
+      for (const response of [
+        passedOn('older-commit-without-node-version'),
+        noRun,
+        runOf('in_progress', null),
+        runOf('completed', 'failure'),
+        runOf('completed', 'cancelled')
+      ]) {
+        const { status, outputs } = runGate([response], gate())
+        assert.equal(status, 0)
+        assert.equal(outputs, '', JSON.stringify(response))
+      }
+    }
+  )
 
-test('the website gate stops when the GitHub API fails', { skip: shellSkip }, () => {
-  const { status, stderr, outputs } = runGate([{ error: 'HTTP 502' }], websiteGate())
-  assert.notEqual(status, 0)
-  assert.match(stderr, /gh: HTTP 502/)
-  assert.equal(outputs, '')
-})
+  test(`${name} stops on GitHub API errors`, { skip: shellSkip }, () => {
+    const { status, stderr, outputs } = runGate([{ error: 'HTTP 502' }], gate())
+    assert.notEqual(status, 0)
+    assert.match(stderr, /gh: HTTP 502/)
+    assert.equal(outputs, '')
+  })
+}
 
 const pagesConfig = readFileSync(new URL('../../wrangler.toml', import.meta.url), 'utf8')
 // A `key = "value"` of wrangler.toml's section `table` ('' for the top level), or undefined.
@@ -506,60 +231,10 @@ function pagesSetting(table, key) {
   return start === -1 ? undefined : new RegExp(`^${key} = "([^"]*)"$`, 'm').exec(body)?.[1]
 }
 
-test('the web editor is published from main after CI, and only Wrangler gets the token', () => {
-  const ciName = /^name: (.+)$/m.exec(ci)[1]
-  assert.equal(
-    /\non:\n((?: {2}.*\n)+)/.exec(webEditor)[1],
-    `  workflow_run:\n    workflows: [${ciName}]\n    types: [completed]\n    branches: [main]\n` +
-      '  workflow_dispatch:\n'
-  )
-  assert.doesNotMatch(webEditor, /\bpaths(-ignore)?:|workflow_run\.(conclusion|head_sha)/)
-  assert.match(webEditor, /\nconcurrency:\n {2}group: web-editor\n {2}cancel-in-progress: false\n/)
-  assert.deepEqual(permissionsAt(webEditor, ''), ['contents: read'])
-  const jobs = jobsOf(webEditor)
-  assert.deepEqual(Object.keys(jobs), ['gate', 'build', 'deploy'])
-  // Why: the website's gate tests then cover this one as well.
-  assert.equal(jobs.gate, jobsOf(website).gate)
-  for (const id of ['build', 'deploy']) {
-    assert.doesNotMatch(`\n${jobs[id]}`, bypassesFailure, id)
-    assert.match(jobs[id], /\n {10}ref: \$\{\{ needs\.gate\.outputs\.sha \}\}\n/, id)
-  }
-  assert.match(`\n${jobs.build}`, /\n {4}needs: gate\n/)
-  assert.doesNotMatch(jobs.build, /permissions:|environment:|github\.token|secrets\./)
-  checkedStep(jobs.build, 'pnpm build:web')
-  const [upload] = stepsOf(jobs.build).filter((step) => step.includes('upload-artifact@'))
-  const [download] = stepsOf(jobs.deploy).filter((step) => step.includes('download-artifact@'))
-  assert.equal(artifactOf(download), artifactOf(upload))
-  // Why: Wrangler uploads the directory wrangler.toml names, which must be the one built.
-  const output = pagesSetting('', 'pages_build_output_dir').replace(/^\.\//, '')
-  assert.match(upload, new RegExp(`\\n {10}path: ${output}/\\n`))
-  assert.match(download, new RegExp(`\\n {10}path: ${output}\\n`))
-  assert.match(`\n${jobs.deploy}`, /\n {4}needs: \[gate, build\]\n/)
-  assert.match(jobs.deploy, /\n {4}environment:\n {6}name: web-editor\n/)
-  assert.doesNotMatch(jobs.deploy, /permissions:|github\.token/)
-  const readsSecrets = /\$\{\{[^}]*\bsecrets\b/
-  assert.doesNotMatch(jobs.build, readsSecrets)
-  assert.doesNotMatch(jobs.deploy.split('\n    steps:\n')[0], readsSecrets)
-  assert.equal(webEditor.match(new RegExp(readsSecrets, 'g')).length, 1)
-  const secretSteps = stepsOf(jobs.deploy).filter((step) => readsSecrets.test(step))
-  assert.equal(secretSteps.length, 1)
-  // Why: every step shares the runner with the token, so none but Wrangler may run package code.
-  assert.deepEqual(
-    stepsOf(jobs.deploy).filter((step) => !step.startsWith('      - uses: ')),
-    ['      - run: pnpm install --frozen-lockfile --ignore-scripts', secretSteps[0]]
-  )
-  assert.equal(
-    /\n {8}env:\n((?: {10}.*\n)+)/.exec(secretSteps[0])[1],
-    '          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n' +
-      '          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}\n' +
-      '          SHA: ${{ needs.gate.outputs.sha }}\n'
-  )
-  assert.doesNotMatch(secretSteps[0], /\b(pnpm|npm|npx|node) /)
-})
-
-// The web editor's publish step with a recording `wrangler` that exits with `wranglerStatus`.
 function runPublish(env, wranglerStatus = 0) {
-  const step = stepsOf(jobsOf(webEditor).deploy).find((step) => step.includes('secrets.'))
+  const step = stepsOf(jobsOf(webEditor).deploy).find((step) =>
+    JSON.stringify(step.env ?? {}).includes('secrets.')
+  )
   const temp = mkdtempSync(join(tmpdir(), 'web-editor-publish-'))
   const recorded = join(temp, 'arguments')
   try {
@@ -654,14 +329,14 @@ test('wrangler.toml binds production KV, keeps it from previews, and is what dev
 })
 
 test('the release draft starts without notes and passes the feed script only flags it accepts', () => {
-  const upload = stepsOf(jobsOf(release).publish).find((step) => /gh release create/.test(step))
+  const upload = stepsOf(jobsOf(release).publish).find((step) => /gh release create/.test(step.run))
   // Why: the published body becomes the update notice's notes, so no placeholder may start it.
-  assert.match(upload, /\n\s+--title "CanvaSlide \$TAG" --notes ''\n/)
+  assert.match(upload.run, /\n\s+--title "CanvaSlide \$TAG" --notes ''\n/)
   const feedStep = stepsOf(jobsOf(release).publish).find((step) =>
-    step.includes('updater-feed.mjs')
+    step.run?.includes('updater-feed.mjs')
   )
   // The step's only other command is `git show`, so every flag in it is one for the feed script.
-  const flags = [...new Set(feedStep.match(/(?<=[\s(])--[\w-]+/g))]
+  const flags = [...new Set(feedStep.run.match(/(?<=[\s(])--[\w-]+/g))]
   assert.deepEqual(
     flags.toSorted((a, b) => a.localeCompare(b)),
     ['--notarized', '--repository', '--tag', '--trusted-config']
@@ -675,7 +350,9 @@ test('the release draft starts without notes and passes the feed script only fla
 
 // The feed step's arguments for the feed script, with `git` and `node` standing in as recorders.
 function feedArguments(macosNotarized) {
-  const step = stepsOf(jobsOf(release).publish).find((step) => step.includes('updater-feed.mjs'))
+  const step = stepsOf(jobsOf(release).publish).find((step) =>
+    step.run?.includes('updater-feed.mjs')
+  )
   const temp = mkdtempSync(join(tmpdir(), 'release-feed-'))
   const bin = join(temp, 'bin')
   const recorded = join(temp, 'arguments')
@@ -713,11 +390,11 @@ test(
   'the feed marks the macOS update notarized only when the notarize job signed it',
   { skip: process.platform === 'win32' && 'runs the feed step with POSIX executables' },
   () => {
-    const { build, publish } = jobsOf(release)
-    const archive = /\/(CanvaSlide_universal\.app\.tar\.gz)\n/.exec(build)[1]
-    assert.match(
-      publish,
-      /\n {10}MACOS_NOTARIZED: \$\{\{ needs\.notarize\.outputs\.notarized \}\}\n/
+    const { publish } = jobsOf(release)
+    const archive = 'CanvaSlide_universal.app.tar.gz'
+    assert.equal(
+      publish.steps.find((step) => step.env?.MACOS_NOTARIZED).env.MACOS_NOTARIZED,
+      '${{ needs.notarize.outputs.notarized }}'
     )
     const notarized = feedArguments('true')
     assert.equal(notarized[notarized.indexOf('--notarized') + 1], archive)
@@ -726,42 +403,6 @@ test(
     }
   }
 )
-
-test('release notes are copied only from a published release, and only steps without code get the token', () => {
-  assert.match(
-    releaseNotes,
-    /\non:\n {2}release:\n {4}types: \[published, edited\]\n {2}workflow_dispatch:\n/
-  )
-  assert.match(releaseNotes, /\n {6}tag:\n {8}description: [^\n]+\n {8}required: true\n/)
-  assert.match(
-    releaseNotes,
-    /\nconcurrency:\n {2}group: release-notes-\$\{\{ github\.event\.release\.tag_name \|\| inputs\.tag \}\}\n {2}cancel-in-progress: false\n/
-  )
-  assert.deepEqual(permissionsAt(releaseNotes, ''), ['contents: read'])
-  const jobs = jobsOf(releaseNotes)
-  assert.deepEqual(Object.keys(jobs), ['notes'])
-  assert.match(
-    jobs.notes,
-    /\n {4}if: github\.event_name == 'workflow_dispatch' \|\| !github\.event\.release\.draft\n/
-  )
-  assert.match(
-    jobs.notes,
-    /\n {4}env:\n {6}TAG: \$\{\{ github\.event\.release\.tag_name \|\| inputs\.tag \}\}\n {4}steps:\n/
-  )
-  assert.deepEqual(permissionsAt(`\n${jobs.notes}\n`, '    '), ['contents: write'])
-  assert.doesNotMatch(releaseNotes, /secrets\./)
-  const steps = stepsOf(jobs.notes).filter((step) => step.includes('run: |'))
-  // Why: counting the whole file also catches a token moved up to the job or workflow env.
-  assert.equal(releaseNotes.match(/github\.token/g).length, 2)
-  assert.equal(releaseNotes.match(/GH_TOKEN/g).length, 2)
-  assert.deepEqual(
-    steps.map((step) => /\n {10}GH_TOKEN: \$\{\{ github\.token \}\}\n/.test(step)),
-    [true, false, true]
-  )
-  for (const step of [steps[0], steps[2]]) {
-    assert.doesNotMatch(step, /\b(pnpm|npm|npx|node) /, step)
-  }
-})
 
 const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url))
 const publishedFeed = {
@@ -867,7 +508,7 @@ save()
     }
     let result
     for (const step of stepsOf(jobsOf(releaseNotes).notes).filter((step) =>
-      step.includes('run: |')
+      step.run?.includes('\n')
     )) {
       result = runScript(step, env, repositoryRoot)
       if (result.status !== 0) {

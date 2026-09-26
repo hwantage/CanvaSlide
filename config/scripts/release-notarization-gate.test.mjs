@@ -2,13 +2,12 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { runInNewContext } from 'node:vm'
-import { jobsOf, stepsOf } from './workflow-structure.mjs'
+import { jobsOf, needsOf, stepsOf } from './workflow-structure.mjs'
 
 const jobs = jobsOf(
   readFileSync(new URL('../../.github/workflows/release.yml', import.meta.url), 'utf8')
 )
-const field = (text, name, indent) => new RegExp(`^ {${indent}}${name}: (.+)$`, 'm').exec(text)?.[1]
-const dependencies = (id) => (field(jobs[id], 'needs', 4) ?? '').match(/[\w-]+/g) ?? []
+const dependencies = (id) => needsOf(jobs[id])
 
 // Model the string comparisons and status functions used here, including implicit success().
 // GitHub semantics: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
@@ -46,7 +45,7 @@ function contextFor(id, results, value) {
 function jobRuns(id, results, value, cancelled = false) {
   const upstream = ancestors(id).map((dependency) => results[dependency])
   assert.ok(upstream.every(Boolean), `${id} must wait for all prerequisites`)
-  return evaluate(field(jobs[id], 'if', 4), contextFor(id, results, value), {
+  return evaluate(jobs[id].if, contextFor(id, results, value), {
     success: () => !cancelled && upstream.every((result) => result === 'success'),
     failure: () => upstream.includes('failure'),
     // A cancelled dependency does not imply that the workflow itself was cancelled.
@@ -77,17 +76,17 @@ function releaseRun(value, outcomes = {}) {
 
 function downloadedArtifacts(id, results, value, available) {
   return stepsOf(jobs[id])
-    .filter((step) => step.includes('actions/download-artifact@'))
+    .filter((step) => step.uses?.startsWith('actions/download-artifact@'))
     .filter((step) =>
-      evaluate(field(step, 'if', 8), contextFor(id, results, value), {
+      evaluate(step.if, contextFor(id, results, value), {
         success: () => true,
         failure: () => false,
         cancelled: () => false
       })
     )
     .flatMap((step) => {
-      assert.equal(field(step, 'path', 10), 'release-assets')
-      const reference = field(step, 'name', 10)
+      assert.equal(step.with['path'], 'release-assets')
+      const reference = step.with['name']
       const name = reference?.startsWith('${{')
         ? evaluate(reference, contextFor(id, results, value), {}, false)
         : reference
@@ -95,8 +94,8 @@ function downloadedArtifacts(id, results, value, available) {
         assert.ok(available.includes(name), `missing artifact ${name}`)
         return [name]
       }
-      assert.equal(field(step, 'pattern', 10), 'release-*')
-      assert.equal(field(step, 'merge-multiple', 10), 'true')
+      assert.equal(step.with['pattern'], 'release-*')
+      assert.equal(step.with['merge-multiple'], true)
       return available.filter((artifact) => artifact.startsWith('release-'))
     })
 }

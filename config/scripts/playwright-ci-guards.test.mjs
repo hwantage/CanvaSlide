@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { checkedStep, jobsOf } from './workflow-structure.mjs'
+import { checkedStep, jobsOf, needsOf, stepsOf } from './workflow-structure.mjs'
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 const require = createRequire(import.meta.url)
@@ -80,64 +80,81 @@ const playwrightConfig = readFileSync(
   'utf8'
 )
 
-test('E2E selects each Playwright project once across the Linux and macOS jobs', () => {
-  const { e2e } = jobsOf(ci)
-  const projectsOf = (args) => [...args.matchAll(/--project=(\S+)/g)].map(([, name]) => name)
-  const runs = [...ci.matchAll(/\n {6}- run: pnpm test:e2e (.+)\n/g)].map(([, args]) => args)
-  assert.equal(runs.length, ci.match(/test:e2e/g).length)
+// Split shell invocations before collecting flags so another command cannot lend its --project.
+function e2eInvocations(script) {
+  return (
+    script
+      .replace(/\\\r?\n\s*/g, ' ')
+      .match(/\b(?:pnpm\s+(?:run\s+)?test:e2e|(?:pnpm\s+exec\s+)?playwright\s+test)\b[^\n;&|]*/g) ??
+    []
+  )
+}
+
+const projectsOf = (command) =>
+  [...command.matchAll(/--project(?:=| +)([\w-]+)/g)].map(([, name]) => name)
+
+function explicitProjects(commands) {
+  assert.ok(commands.length > 0)
+  for (const command of commands) {
+    assert.ok(projectsOf(command).length > 0, command)
+  }
+  return commands.flatMap(projectsOf)
+}
+
+test('E2E project selection is checked separately for multiline and chained commands', () => {
+  for (const separator of ['\n', '; ', ' && ', ' || ']) {
+    const script = `pnpm test:e2e --project=chromium${separator}pnpm test:e2e`
+    assert.throws(() => explicitProjects(e2eInvocations(script)), /pnpm test:e2e/)
+  }
+  assert.deepEqual(explicitProjects(e2eInvocations('pnpm test:e2e --project=chromium\n')), [
+    'chromium'
+  ])
+  const command = 'pnpm test:e2e --project=chromium\n'
+  assert.doesNotThrow(() => checkedStep({ steps: [{ run: command }] }, command))
+})
+
+test('every E2E invocation selects projects explicitly, covering each configured project once', () => {
+  const jobs = jobsOf(ci)
+  const commands = Object.values(jobs)
+    .flatMap(stepsOf)
+    .flatMap((step) => e2eInvocations(step.run ?? ''))
+  const selected = explicitProjects(commands)
   const projects = playwrightConfig.slice(playwrightConfig.indexOf('\n  projects: ['))
   const configured = [...projects.matchAll(/\bname: '([^']+)'/g)].map(([, name]) => name)
-  assert.ok(configured.length > 1)
-  const byName = (a, b) => a.localeCompare(b)
-  assert.deepEqual(runs.flatMap(projectsOf).toSorted(byName), configured.toSorted(byName))
-  const [shardRun] = runs.filter((args) => args.includes('--project=chromium'))
-  checkedStep(e2e, `pnpm test:e2e ${shardRun}`)
-  assert.match(
-    shardRun,
-    /^(--project=\S+ )+--shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ strategy\.job-total \}\}$/
-  )
-  // Why: `job-total` is the shard count only while the matrix has no other dimension.
-  const matrix = /\n {6}matrix:\n((?: {8}.*\n)+)/.exec(`${e2e}\n`)[1]
-  const keys = matrix.split('\n').filter((line) => /^ {8}[\w-]+:/.test(line))
-  assert.equal(keys.length, 1, matrix)
-  const shards = /^ {8}shard: \[([^\]]*)\]$/.exec(keys[0])[1].split(/,\s*/).map(Number)
-  assert.ok(shards.length > 1)
   assert.deepEqual(
-    shards,
-    shards.map((_, i) => i + 1)
+    selected.sort((a, b) => a.localeCompare(b)),
+    configured.sort((a, b) => a.localeCompare(b))
   )
-  // Why: a failing shard must not cancel the others, or their failures go unreported.
-  assert.match(e2e, /\n {6}fail-fast: false\n/)
-  assert.match(e2e, /\n\s+name: playwright-traces-\$\{\{ matrix\.shard \}\}\n/)
+  for (const id of ['e2e', 'e2e-webkit']) {
+    const job = jobs[id]
+    const step = job.steps.find((step) => step.run?.startsWith('pnpm test:e2e '))
+    checkedStep(job, step.run)
+    assert.ok(step.run.includes('--shard=${{ matrix.shard }}/${{ strategy.job-total }}'))
+    const { shard, ...otherDimensions } = job.strategy.matrix
+    assert.deepEqual(otherDimensions, {})
+    assert.deepEqual(
+      shard,
+      shard.map((_, index) => index + 1)
+    )
+    assert.ok(shard.length > 1)
+    assert.equal(job.strategy['fail-fast'], false)
+    const upload = job.steps.find((step) => step.uses?.startsWith('actions/upload-artifact@'))
+    assert.ok(upload.with.name.includes('${{ matrix.shard }}'))
+  }
 })
 
 test('WebKit runs in two required macOS shards with the @webkit scenarios', () => {
-  const [job, ...others] = Object.values(jobsOf(ci)).filter((job) =>
-    /\n {6}- run: pnpm test:e2e [^\n]*--project=webkit\b/.test(job)
-  )
-  assert.ok(job && others.length === 0)
-  assert.match(job, /\n {4}runs-on: macos-latest\n/)
+  const jobs = jobsOf(ci)
+  const job = jobs['e2e-webkit']
+  assert.equal(job['runs-on'], 'macos-latest')
+  assert.deepEqual(job.strategy.matrix, { shard: [1, 2] })
+  assert.ok(needsOf(jobs.passed).includes('e2e-webkit'))
   const step = checkedStep(
     job,
     'pnpm test:e2e --project=webkit --shard=${{ matrix.shard }}/${{ strategy.job-total }}'
   )
-  const matrix = /\n {6}matrix:\n((?: {8}.*\n)+)/.exec(`${job}\n`)[1]
-  assert.deepEqual(
-    matrix.split('\n').filter((line) => /^ {8}[\w-]+:/.test(line)),
-    ['        shard: [1, 2]']
-  )
-  assert.match(job, /\n {6}fail-fast: false\n/)
-  assert.doesNotMatch(job, /max-parallel:/)
-  assert.match(
-    job,
-    /name: e2e \(webkit, macOS, \$\{\{ matrix\.shard \}\}\/\$\{\{ strategy\.job-total \}\}\)/
-  )
-  assert.match(jobsOf(ci).passed, /needs: \[[^\]\n]*\be2e-webkit\b/)
-
-  // Why: the flag CI sets must be the one the config reads to add the `@webkit` scenarios.
   const flag = /process\.env\.(\w+) \? \/[^/\n]*@webkit/.exec(playwrightConfig)[1]
-  assert.match(`${step}\n`, new RegExp(`\\n {10}${flag}: '1'\\n`))
-  assert.match(job, /\n\s+name: playwright-traces-webkit-\$\{\{ matrix\.shard \}\}\n/)
+  assert.equal(step.env[flag], '1')
 })
 
 test('WebKit shards keep all selected scenarios exactly once with one CI worker', () => {

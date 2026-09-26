@@ -50,7 +50,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    git push -u origin chore/release-v0-8-0
    gh pr create --fill
    ```
-4. 머지 커밋에 태그를 붙여 푸시한다. 머지한 뒤 `main`의 CI가 끝나기 전에 푸시해도 된다.
+4. 아래 [서명 설정 점검](#태그-푸시-전-서명-설정-점검)을 마친 뒤 머지 커밋에 태그를 붙여 푸시한다. 머지한 뒤 `main`의 CI가 끝나기 전에 푸시해도 된다.
    ```bash
    git switch main && git pull
    commit="$(gh pr view chore/release-v0-8-0 --json mergeCommit --jq .mergeCommit.oid)"
@@ -71,6 +71,33 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
 8. Actions 탭에서 **Release notes** 워크플로가 성공했는지 확인한다. 이 워크플로는 공개 직후 본문을
    `latest.json`의 `notes`로 옮기고, 공개한 뒤 본문을 고치면 다시 실행되어 앱의 안내도 바꾼다.
    이전 설치본으로 점검표의 공개 직후 업데이트 확인·설치를 마친다.
+
+### 태그 푸시 전 서명 설정 점검
+
+빌드 전에 메인테이너 권한으로 다음 읽기 전용 명령을 실행한다. 비밀 **값**은 출력하지 않는다.
+
+```bash
+gh api repos/hwantage/CanvaSlide/environments/release
+gh api --paginate repos/hwantage/CanvaSlide/environments/release/deployment-branch-policies --jq '.branch_policies[] | {name, type}'
+gh secret list --repo hwantage/CanvaSlide --env release
+gh secret list --repo hwantage/CanvaSlide
+```
+
+- `release` 환경의 `deployment_branch_policy.custom_branch_policies`가 `true`이고, 별도 정책 조회 결과가
+  `type: tag`, `name: v*`만 허용하는지 확인한다. 다른 태그/브랜치 규칙이나 제한 없음도 오류로 취급한다.
+- `TAURI_SIGNING_PRIVATE_KEY`와 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`가 환경 비밀에 있고,
+  같은 이름의 저장소 비밀은 없는지 확인한다. 암호가 있는 키를 사용하며 설정 방법은 §7을 따른다.
+- `MACOS_NOTARIZE=true`이면 §6의 Apple 자격 증명도 확인한다.
+- 조회 오류·누락·범위 오류가 있으면 태그를 푸시하지 않는다. 목록 조회는 키/암호의 유효성을 검증하지 않으므로,
+  설정 후 프리릴리스에서 서명·게시를 실제로 확인한다.
+
+이 점검은 기본 `GITHUB_TOKEN`만으로 완전하게 자동화하지 않는다.
+[환경 비밀 목록 API](https://docs.github.com/en/rest/actions/secrets#list-environment-secrets)는
+`Environments: read`, 저장소 비밀 목록은 `Secrets: read` 권한이 필요한데,
+[워크플로 permissions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)로
+추가할 수 있는 권한이 아니다. `secrets` 값의 존재만 검사하면 저장소 비밀과 환경 비밀을 구별하지 못하며,
+별도 사전 점검 잡에 키를 전달하면 sign 잡에만 키를 노출하는 원칙도 깨진다.
+관리 토큰을 릴리스에 추가하는 대신 이 점검표를 사용한다. 키를 읽는 기존 sign 잡의 실패는 빌드 뒤에 발생한다.
 
 <a id="desktop-release-checklist"></a>
 
@@ -201,13 +228,33 @@ Renovate가 제안하는 툴체인·의존성·액션 업데이트의 묶음과 
 머지에서만 이 검사를 우회할 수 있다. 그래도 릴리스는 §4의 태그 커밋 CI 확인을 거친다.
 `v*` 태그는 저장소 관리자만 만들고 옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다.
 
-CI의 `CI passed` 잡은 다른 모든 CI 잡이 성공해야 통과한다. main ruleset이 요구하는 검사는 이 잡 하나이므로,
-CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요가 없다. 새 잡은 `CI passed`의 `needs`에 넣으며,
-[`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs)가 이를 검사한다.
+CI의 `CI passed` 잡은 모든 **필수** CI 잡이 성공해야 통과한다. main ruleset이 요구하는 검사는 이 잡 하나다.
+잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요가 없다.
 
-SHA 고정과 비밀 격리는 [`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs),
-툴체인 고정은 [`dependency-updates.test.mjs`](../config/scripts/dependency-updates.test.mjs)가 `pnpm test`에서 검사한다.
-빌드·패키지 스크립트를 실행하는 잡에는 서명 비밀을 전달하지 않는 원칙을 유지한다.
+새 CI 잡은 다음 순서로 편입한다.
+
+1. [시범 목록](../.github/ci-trial-jobs.json)에 잡 ID를 키로, 추적 이슈·담당자·관찰 종료 조건을 값으로 등록한다.
+   현재 목록은 비어 있으며 기존 잡은 모두 필수다.
+2. 새 잡에 `continue-on-error: true`를 설정하고 `passed.needs`에서는 제외한다. 실패한 단계와 로그는 확인할 수
+   있으면서 CI 전체 결론을 실패로 만들지 않아 릴리스·배포 게이트도 막지 않는다. 필수 잡은 시범 잡에 의존하면 안 된다.
+3. 며칠 동안 PR·main 실행에서 모든 대상 OS/매트릭스가 안정적으로 통과하는지 관찰하고 추적 이슈에 실행 링크를 남긴다.
+   장애가 있으면 수정 후 관찰한다. CI의 초록색 결론만으로 시범 단계가 통과했다고 판단하지 않는다.
+4. 승격 PR 하나에서 시범 목록 항목과 `continue-on-error`를 제거하고 `passed.needs`에 ID를 넣는다.
+   기존 필수 잡을 시범으로 내리는 변경은 별도 근거와 메인테이너 검토가 필요하다.
+
+[`workflow-policy.test.mjs`](../config/scripts/workflow-policy.test.mjs)는 YAML을 파싱해 미분류 잡, 존재하지 않는
+시범 잡, 시범·필수 중복, 필수 잡의 시범 의존, SHA 고정·비밀 격리·체크아웃 토큰 제거·아티팩트 만료를 검사한다.
+툴체인 고정은 [`dependency-updates.test.mjs`](../config/scripts/dependency-updates.test.mjs)가 검사한다.
+실제 릴리스·배포 셸의 성공·실패 경로는 [`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs)가 실행한다.
+빌드·패키지 스크립트를 실행하는 잡에는 서명 비밀을 전달하지 않는다.
+
+CI의 Linux `verify`는 `bash config/scripts/check-actionlint.sh`와 `pnpm validate:renovate`도 실행한다.
+actionlint는 스크립트에 고정한 버전과 공식 아카이브 SHA-256을 검증한 뒤 실행한다(macOS에서도 같은 명령 사용).
+워크플로 구문·표현식 검사는 actionlint가 담당하며, 선택적인 ShellCheck/Pyflakes 연동은 사용하지 않는다.
+Renovate는 `package.json`에 고정한 호스팅 호환 버전의 공식 validator를 `--strict --no-global`로 실행한다.
+`re2` 설치 스크립트만 허용해 공식 정규식 엔진을 사용할 수 있게 한다.
+로컬 `pnpm check`는 네트워크 다운로드가 필요한 두 외부 도구를 포함하지 않으므로 워크플로·Renovate 변경 시 별도로 실행한다.
+validator 버전을 올릴 때는 호스팅 서비스 버전을 확인하고 지원하지 않는 옵션이 통과하지 않는지 확인한다.
 
 번들 종류는 `src-tauri/tauri.conf.json`의 `bundle.targets: "all"`이 결정한다. Linux 러너를 추가하면 `.AppImage`/`.deb`도 같은 방식으로 붙는다.
 

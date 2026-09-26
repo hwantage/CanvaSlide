@@ -11,29 +11,10 @@
   "timezone": "Asia/Seoul",
   "packageRules": [
     {
-      "description": "Group minor and patch updates of development tools at 1.0 or later; pre-1.0 updates and Playwright get separate pull requests.",
-      "matchDepTypes": ["devDependencies"],
-      "matchPackageNames": ["!@playwright/test"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "matchCurrentVersion": ">=1.0.0",
-      "groupName": "dev tooling"
-    },
-    {
-      "description": "Group minor and patch updates of Rust crates at 1.0 or later; pre-1.0 updates get separate pull requests. The later Tauri rule keeps its packages together.",
-      "matchManagers": ["cargo"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "matchCurrentVersion": ">=1.0.0",
-      "groupName": "Rust crates"
-    },
-    {
-      "description": "The Tauri CLI refuses to build when an npm package and its Rust crate differ in major or minor version, so they update in one pull request.",
-      "matchPackageNames": ["@tauri-apps/**", "tauri", "tauri-build", "tauri-plugin-*"],
-      "groupName": "Tauri"
-    },
-    {
-      "description": "Actions stay pinned to a full commit SHA with the version in a comment.",
+      "description": "Keep GitHub Actions major upgrades together for manual review; SHA pinning is inherited from the helper preset.",
       "matchManagers": ["github-actions"],
-      "groupName": "GitHub Actions"
+      "groupName": "GitHub Actions",
+      "matchUpdateTypes": ["major"]
     },
     {
       "description": "@types/node follows the Node.js major in .node-version and is raised by hand with it.",
@@ -52,6 +33,38 @@
       "matchDepTypes": ["packageManager"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Group weekly non-major updates across managers and merge after required CI passes; later rules separate pre-1.0 minors and Tauri.",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "non-major-dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Pre-1.0 minors may break APIs, so keep each outside the shared group while allowing CI-gated automerge.",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "<1.0.0",
+      "groupName": null,
+      "groupSlug": null,
+      "automerge": true
+    },
+    {
+      "description": "Keep Tauri npm packages and Rust crates in a separate, manually merged PR because CI does not run the desktop app.",
+      "matchPackageNames": ["@tauri-apps/**", "tauri", "tauri-build", "tauri-plugin-*"],
+      "groupName": "Tauri",
+      "groupSlug": "tauri",
+      "automerge": false
     }
-  ]
+  ],
+  "automerge": false,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "platformAutomerge": true,
+  "separateMajorMinor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": false
+  },
+  "separateMinorPatch": false
 }

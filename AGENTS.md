@@ -158,7 +158,11 @@ pnpm test:site    # if website content, code or build inputs changed
 - Workflows install Node.js from `.node-version` and Rust from `rust-toolchain.toml`; `rust-version`
   in `src-tauri/Cargo.toml` is the oldest Rust that builds the app. Each week Renovate
   ([`.github/renovate.json`](./.github/renovate.json)) proposes updates to them, the dependencies
-  and the actions, with Tauri's npm packages and crates in one pull request. Node.js and pnpm majors
+  and the actions. Non-major updates share one PR across managers; pre-1.0 minors are separate.
+  Both use GitHub auto-merge after `CI passed`. Tauri's npm packages and crates stay in a separate,
+  manually merged PR; majors and lock file maintenance also need manual merging. Setup is in
+  [dependency updates](./docs/RELEASE.md#dependency-updates). Auto-merged changes deploy the production
+  web editor and website after main CI passes. Node.js and pnpm majors
   wait for approval on its Dependency Dashboard; their pull requests also need `wrangler.toml`'s
   build variables (and `@types/node`) raised by hand. The `Rust dependencies` workflow fails on
   RustSec advisories, yanked crates, or a `rust-version` that no longer builds, weekly and on pull

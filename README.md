@@ -55,7 +55,7 @@ and their fixes are best-effort.
 | --------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | Canvas editing, presentation frames and Slide Show, including laser and ink | Core         |                                                                                                                        |
 | Desktop apps for macOS and Windows, the browser editor                      | Core         |                                                                                                                        |
-| Update checks and in-app installation                                       | Core         | macOS releases are not yet notarized, so update notifications offer to open the download page                          |
+| Update checks and in-app installation                                       | Core         | See [update behavior](#update-behavior) for platform limits                                                            |
 | Opening and saving `.canvaslide` files, crash recovery                      | Core         |                                                                                                                        |
 | Image and PDF import, HTML export with its player, PDF export               | Core         |                                                                                                                        |
 | [Figma import](./docs/FIGMA-IMPORT.md)                                      | Core         | Figma does not publish the `.fig` format, so files from newer Figma versions may not import or may convert differently |
@@ -63,8 +63,7 @@ and their fixes are best-effort.
 | [Create with AI](./examples/README.md#authoring-with-ai)                    | Core         | The result depends on the assistant and model you choose                                                               |
 | [Cloud sharing](./docs/CLOUD-SHARE.md)                                      | Experimental | The hosted service's limits and availability depend on its Cloudflare plan                                             |
 
-The `.canvaslide` format is declared stable at 1.0; until then a newer version may not open older files,
-as the [compatibility policy](./AGENTS.md#code) explains.
+For document and storage format guarantees, see [file compatibility](#file-compatibility).
 
 ## Get started
 
@@ -106,6 +105,11 @@ Press **Copy link** to upload a cloud snapshot and share it for 24 hours.
 See [cloud sharing](./docs/CLOUD-SHARE.md) for access options, limits and hosting setup, and the
 [hosted service](./docs/CLOUD-SHARE.md#hosted-service) for its terms, privacy, availability and limits.
 
+### File compatibility
+
+The `.canvaslide` format is declared stable at 1.0. Before stabilization, newer versions may not open
+older files. Contributor rules for format changes are in [AGENTS.md](./AGENTS.md#code).
+
 ## Network and privacy
 
 CanvaSlide has no account, analytics, telemetry or crash reporting. Documents stay on your device
@@ -126,16 +130,27 @@ failed requests to it. A linked video set to
 play automatically, the default, starts loading when a slideshow, cloud slideshow or exported HTML
 reaches its frame, so presenting it contacts its provider without a click. Only one YouTube video per
 frame does so, and the browser or provider may still ask for a click to play it.
-To stop the launch check, clear **Check for updates at launch** in the **About CanvaSlide** dialog;
-**Check for updates** there still checks on demand. Offline or when the request is blocked, the app
-keeps working and shows the failure only in that dialog; nothing is installed without your
-confirmation. The setting is per user, so a managed network that must prevent the check for everyone
-can block the manifest URL listed under `plugins.updater.endpoints` in
-[`tauri.conf.json`](./src-tauri/tauri.conf.json).
+
+### Update behavior
+
+The launch check described above is enabled by default and can be turned off per user. Manual checks
+remain available in **About CanvaSlide** and through the macOS **Check for Updates…** menu item.
+Offline or when the request is blocked, the app keeps working and shows the failure only in the About
+dialog. Nothing is installed without your confirmation.
+
+| Platform | Behavior                                                                                                                                                                                                                          |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows  | Downloads the update in the app, closes the app to run the installer, then reopens it.                                                                                                                                            |
+| macOS    | Notarized updates install in the app and restart it; macOS may request an administrator password if the app folder is not writable. Current releases are not notarized, so notifications offer to open the release download page. |
+| Browser  | Does not check for or install app updates; the About dialog links to release notes.                                                                                                                                               |
+
+For update controls, follow the [website guide](https://hwantage.github.io/CanvaSlide/docs/?guide=faq#network-and-privacy).
+Release maintainers can find feed publication, signing and managed-network settings in
+[release operations](./docs/RELEASE.md#7-자동-업데이트).
 
 ## Develop and verify
 
-Install Node.js 22.20+ and the pinned pnpm 11 version; Rust and the OS-specific Tauri prerequisites
+Install Node.js 22.20+ and the pnpm version pinned in [`package.json`](./package.json); Rust and the OS-specific Tauri prerequisites
 are needed for desktop development. Full setup is in [CONTRIBUTING](./CONTRIBUTING.md).
 
 ```bash

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Check, Copy, Info } from 'lucide-react'
 import { t, type SiteStringKey } from './i18n/site-strings'
 import { isMacPlatform, shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
-import { asset, repositoryUrl, siteHref } from './site-preferences'
+import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 import type { TopicId } from './docs-topics'
 import { exampleEditorUrl, webAppUrl } from './example-links'
 import { DocsAiPrompt } from './docs-ai-prompt'
@@ -131,6 +131,7 @@ function ShortcutsTable() {
 }
 
 export function DocsExtra({ topic, section }: { topic: TopicId; section: string }) {
+  const locale = useSitePreferences((state) => state.locale)
   if (topic === 'examples' && section === 'open-an-example') {
     return (
       <a className="button" href={siteHref('showcase/')}>
@@ -257,6 +258,21 @@ export function DocsExtra({ topic, section }: { topic: TopicId; section: string 
   }
   if (topic === 'shortcuts') {
     return <ShortcutsTable />
+  }
+  if (topic === 'faq' && section === 'network-and-privacy') {
+    const readme =
+      locale === 'ko' ? 'README.ko.md#네트워크와-개인정보' : 'README.md#network-and-privacy'
+    return (
+      <a
+        className="doc-text-link"
+        href={`${repositoryUrl}/blob/main/${readme}`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t('site.docs.faq.networkLink')}
+        <ArrowUpRight size={14} />
+      </a>
+    )
   }
   if (topic === 'faq' && section === 'report-a-problem') {
     return (

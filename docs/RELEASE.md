@@ -11,16 +11,14 @@
 ```bash
 git switch -c chore/release-v0-8-0 origin/main
 pnpm version minor --no-git-tag-version      # ① package.json 버전만 올린다
-git commit -am "Prepare v0.8.0 release"      # ② 릴리스 PR을 올리고 CI passed가 초록이면 머지
+git commit -am "Prepare v0.8.0 release"      # ② 릴리스 PR을 올리고 아래 main·태그 규칙에 따라 머지
 git switch main && git pull
 git tag -a v0.8.0 -m v0.8.0 <머지 커밋>        # ③ 머지 커밋에 태그를 붙여 푸시하면
 git push origin v0.8.0                       #    release.yml 이 그 커밋의 CI를 확인한 뒤 빌드한다
 # ④ GitHub → Releases 에서 초안(draft)에 노트를 쓰고 Publish — 앱의 업데이트 안내에도 이 노트가 나간다
 ```
 
-`main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. 저장소 관리자는 긴급할 때 PR 머지에서만
-이 검사를 우회할 수 있고, 그래도 릴리스는 `main` CI가 통과한 커밋만 빌드한다. `v*` 태그는 저장소 관리자만
-만들고 옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다(§4).
+병합과 태그 권한은 [main·태그 규칙](#branch-and-tag-rules)을 따른다.
 
 ## 2. 버전 규칙
 
@@ -46,7 +44,7 @@ git push origin v0.8.0                       #    release.yml 이 그 커밋의 
    pnpm version minor --no-git-tag-version
    pnpm check                     # 관련 spec과 조건부 검증은 AGENTS.md의 Verify 참조
    ```
-3. 커밋하고 릴리스 PR을 올린다. PR의 `CI passed` 검사가 초록이 되면 머지한다.
+3. 커밋하고 릴리스 PR을 올린 뒤 [main·태그 규칙](#branch-and-tag-rules)에 따라 머지한다.
    ```bash
    git commit -am "Prepare v0.8.0 release"
    git push -u origin chore/release-v0-8-0
@@ -88,7 +86,7 @@ PR마다 두 OS에서 확인하는 대신, 메인테이너가 릴리스 초안�
 | 다른 이름으로 저장 | 기본 키+Shift+S로 새 경로에 저장하고 원본은 그대로인지 확인한다. 저장 대화상자 취소 시 문서와 경로가 유지된다.                                                                                                        | 미실행 | 미실행  |
 | HTML/PDF 내보내기  | 파일 메뉴에서 각각 내보내고 결과를 연다. HTML의 프레임 탐색·텍스트·이미지, PDF의 페이지 순서·글꼴·잘림을 확인한다.                                                                                                    | 미실행 | 미실행  |
 | 슬라이드 쇼        | 프레임이 있는 문서에서 F5로 시작하고 방향키로 이동한다. P/E/O 도구, Tab 초점, Esc 복귀와 작은 창의 도구 접근을 확인한다. Mac에서 필요하면 Fn+F5를 쓴다.                                                               | 미실행 | 미실행  |
-| 업데이트 확인·설치 | 아래 공개 전/직후 절차와 §7의 플랫폼별 동작에 따라 확인한다. 설치 뒤 앱 버전과 문서 보존을 확인한다. 저장 확인을 지원하는 설치본에서는 취소 시 설치 중단도 확인한다.                                                  | 미실행 | 미실행  |
+| 업데이트 확인·설치 | 아래 공개 전/직후 절차와 [플랫폼별 동작](../README.md#update-behavior)에 따라 확인한다. 설치 뒤 앱 버전과 문서 보존을 확인한다. 저장 확인을 지원하는 설치본에서는 취소 시 설치 중단도 확인한다.                       | 미실행 | 미실행  |
 | 공유               | 공유가 설정된 빌드에서 문서 링크를 만들고 다른 브라우저에서 열어 보기·슬라이드 쇼를 확인한다. 비활성 빌드는 그 설정과 사유를 기록한다.                                                                                | 미실행 | 미실행  |
 | 링크 동영상        | YouTube·Vimeo·HTTPS 직접 동영상 링크를 각각 재생한다. 프레임 이동과 발표 종료 뒤 재생이 멈추는지 확인한다. HTML의 YouTube는 HTTP(S)에서 확인한다.                                                                     | 미실행 | 미실행  |
 | Figma 가져오기     | 로컬 `.fig` 사본을 가져오고 텍스트·도형·이미지를 확인한다. [변환 제약](./FIGMA-IMPORT.md) 안의 내용을 편집하고 저장·다시 열기를 확인한다.                                                                             | 미실행 | 미실행  |
@@ -101,7 +99,7 @@ PR마다 두 OS에서 확인하는 대신, 메인테이너가 릴리스 초안�
   조회하는지 확인한다. 새 버전으로의 실제 업데이트는 `공개 직후 확인 예정`으로 기록하고 이전 설치본을 남겨 둔다.
 - **공개 직후:** §3 8단계가 끝나면 작업 사본을 먼저 저장하고 이전 설치본의 **업데이트 확인**을 누른다.
   수동 확인이 없는 설치본은 앱을 다시 시작해 자동 확인을 기다린다. Windows는 NSIS와 MSI 설치본에서 각각
-  설치하고 재시작 후 버전을 확인한다. macOS는 §7에 따라 앱 안 설치 또는 **다운로드 페이지 열기** 후 직접
+  설치하고 재시작 후 버전을 확인한다. macOS는 [플랫폼별 동작](../README.md#update-behavior)에 따라 앱 안 설치 또는 **다운로드 페이지 열기** 후 직접
   설치를 확인한다. 실패 시 §5에 따라 처리한다.
 - **저장 확인을 지원하는 설치본:** 앱 안 설치 전에 예제 사본에 저장하지 않은 편집을 만들고
   **설치 후 다시 시작 → 취소**로 설치가 중단되는지, 다시 시도해 **저장**을 선택하면 저장 후 설치되는지 확인한다.
@@ -188,10 +186,17 @@ Renovate가 제안하는 툴체인·의존성·액션 업데이트의 묶음과 
 모든 잡의 체크아웃은 토큰을 작업 폴더에 남기지 않는다(`persist-credentials: false`). 모든 워크플로의 액션은
 전체 커밋 SHA로 고정하고 주석에 버전을 적는다. 액션을 올릴 때는 새 버전 태그가 가리키는 커밋 SHA와 주석을 함께 바꾼다.
 
-CI의 `CI passed` 잡은 다른 모든 CI 잡이 성공해야 통과한다. `main` ruleset은 PR과 이 검사 하나를 요구하므로,
+<a id="branch-and-tag-rules"></a>
+
+#### main·태그 규칙
+
+`main`은 PR로만 바뀌고, PR은 `CI passed` 검사가 통과해야 머지된다. 저장소 관리자는 긴급할 때 PR
+머지에서만 이 검사를 우회할 수 있다. 그래도 릴리스는 §4의 태그 커밋 CI 확인을 거친다.
+`v*` 태그는 저장소 관리자만 만들고 옮기고 지울 수 있다. 두 규칙은 저장소 ruleset에 있다.
+
+CI의 `CI passed` 잡은 다른 모든 CI 잡이 성공해야 통과한다. main ruleset이 요구하는 검사는 이 잡 하나이므로,
 CI 잡을 추가하거나 이름을 바꿔도 저장소 설정을 고칠 필요가 없다. 새 잡은 `CI passed`의 `needs`에 넣으며,
-[`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs)가 이를 검사한다. `v*` 태그 ruleset은
-저장소 관리자가 아니면 태그를 만들거나 옮기거나 지우지 못하게 한다.
+[`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs)가 이를 검사한다.
 
 SHA 고정과 비밀 격리는 [`workflow-hardening.test.mjs`](../config/scripts/workflow-hardening.test.mjs),
 툴체인 고정은 [`dependency-updates.test.mjs`](../config/scripts/dependency-updates.test.mjs)가 `pnpm test`에서 검사한다.
@@ -212,7 +217,7 @@ Tauri npm 패키지와 Rust crate는 별도 묶음으로 사람이 머지한다.
 npm·crate의 `security:minimumReleaseAge*` 프리셋과 액션 SHA 고정은 유지한다.
 
 lock file maintenance는 수동 머지한다. Renovate의 공개 후 3일 유예는 lockfile 재생성에 적용되지 않는다.
-pnpm 11의 기본 유예는 1일이며, 명시하지 않으면 조건을 만족하는 버전이 없을 때 더 새 버전으로 넘어갈 수 있다.
+[`package.json`](../package.json)에 고정된 pnpm의 기본 유예는 1일이며, 명시하지 않으면 조건을 만족하는 버전이 없을 때 더 새 버전으로 넘어갈 수 있다.
 현재 `pnpm-workspace.yaml`에는 유예 기간이 없고 특정 버전 예외만 있으므로 3일 이상 보호를 보장하지 않는다.
 pnpm 설정은 Cargo lockfile도 보호하지 않으므로, lock 유지보수 전체를 자동 머지에서 제외한다.
 근거: [Renovate 공개 유예 프리셋](https://docs.renovatebot.com/presets-security/),
@@ -229,7 +234,7 @@ GitHub의 필수 검사를 사용하므로, 메인테이너가 다음을 설정�
    gh api --method PATCH repos/hwantage/CanvaSlide -F allow_auto_merge=true
    gh api repos/hwantage/CanvaSlide --jq '.allow_auto_merge'
    ```
-2. **Settings → Rules → Rulesets**의 main 규칙에서 PR 필수와 GitHub Actions의 `CI passed` 필수를 유지한다.
+2. **Settings → Rules → Rulesets**에서 [main·태그 규칙](#branch-and-tag-rules)이 적용되어 있는지 확인한다.
    ```bash
    gh api repos/hwantage/CanvaSlide/rules/branches/main
    ```
@@ -364,22 +369,14 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
 
 ## 7. 자동 업데이트
 
-데스크톱 앱은 기본적으로 시작 3초 뒤 한 번 업데이트를 확인한다(아래 설정으로 끌 수 있다).
-**CanvaSlide 정보** 대화상자에서 현재 버전, 릴리스 노트 링크와 업데이트 상태를 표시하고, 새 버전이 있으면
-설치 또는 다운로드 페이지 버튼을 제공한다.
-같은 대화상자의 **업데이트 확인** 버튼(모든 데스크톱 플랫폼)과, 정보 대화상자를 여는 macOS 메뉴의
-**Check for Updates…**는 바로 다시 확인한다. **시작할 때 업데이트 확인**을 해제하면 실행 시 확인을
-건너뛴다. 이 선택은 사용자별로 `localStorage`의 `canvaslide.updates.checkOnLaunch`에 저장되며 기본값은
-켜짐이다. 실패하면 정보 대화상자에만 표시한다. 사용자에게 알리는 내용은 README의
-[Network and privacy](../README.md#network-and-privacy)에 있다. 동작은
-[`use-update-check.ts`](../src/renderer/src/hooks/use-update-check.ts)와
-[`app-update.ts`](../src/renderer/src/platform/app-update.ts)에서 확인한다.
+업데이트 확인 시점·플랫폼별 동작·전송 데이터는 README의
+[Network and privacy](../README.md#network-and-privacy)를 기준으로 한다.
+설정 조작 방법은 [웹사이트 안내](https://hwantage.github.io/CanvaSlide/docs/?lang=ko&guide=faq#network-and-privacy)를 따른다.
+확인과 설치 구현은 [`use-update-check.ts`](../src/renderer/src/hooks/use-update-check.ts)와
+[`app-update.ts`](../src/renderer/src/platform/app-update.ts)에 있다.
 
-| 플랫폼   | 동작                                                                                                                                                                                                                                |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Windows  | 새 버전을 앱 안에서 내려받은 뒤 앱을 닫고 설치 파일을 실행한다. 설치가 끝나면 앱이 다시 열린다.                                                                                                                                     |
-| macOS    | 공증된 업데이트(§6)는 Windows처럼 앱 안에서 내려받아 앱을 바꾸고 다시 시작한다. 앱 폴더에 쓸 권한이 없으면 macOS가 관리자 암호를 묻는다. 공증되지 않은 업데이트는 새 버전을 알리고 **다운로드 페이지 열기**로 릴리스 페이지를 연다. |
-| 브라우저 | 자동 업데이트를 조회·설치하지 않는다. 정보 대화상자의 릴리스 노트 링크로 공개 버전을 확인한다.                                                                                                                                      |
+관리되는 네트워크에서 모든 사용자의 확인 요청을 막으려면
+[`tauri.conf.json`](../src-tauri/tauri.conf.json)의 `plugins.updater.endpoints`에 있는 매니페스트 URL을 차단한다.
 
 **설치 후 다시 시작**을 누르면 저장하지 않은 변경에 대해 **저장 / 변경 내용 버리기 / 취소**를 묻는다.
 저장 대화상자를 취소하거나 저장에 실패하면 설치하지 않는다. 확인·저장·다운로드 중 문서가 바뀌면 설치를

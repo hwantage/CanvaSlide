@@ -12,8 +12,9 @@ to get it merged.
 - Keep each change scoped to one improvement, bug fix, refactor, or documentation topic.
 - Check existing issues first. Except for a small bug fix, open an issue describing the problem and
   your proposed approach before writing code, so we can agree on direction early.
-- Until 1.0, stabilizing what exists comes before new features; 1.0 is also where the document format
-  is declared stable. The [feature status](./README.md#feature-status) lists which features are core
+- Until 1.0, stabilizing what exists comes before new features; see the
+  [compatibility rules](./AGENTS.md#code) for format changes.
+  The [feature status](./README.md#feature-status) lists which features are core
   and which are experimental; a feature changes status only when a maintainer updates that list.
 - Keep a new feature's complexity in proportion to its importance. Split a large feature into steps
   that each leave the app working, one pull request per step, so reviewers can follow it. New
@@ -24,8 +25,8 @@ to get it merged.
 
 Requirements:
 
-- Node.js 22.20+ (CI uses the version in `.node-version`) and pnpm 11 (`corepack enable` picks up
-  the pinned version from `package.json`)
+- Node.js 22.20+ (CI uses the version in `.node-version`) and the pnpm version pinned in
+  [`package.json`](./package.json) (`corepack enable` picks up that version)
 - Rust 1.89+ (only for the Tauri window and `src-tauri/` changes); with rustup, the first `cargo`
   command installs the version CI uses, pinned in `rust-toolchain.toml`
 - Tauri prerequisites for your OS: <https://v2.tauri.app/start/prerequisites/>
@@ -105,7 +106,7 @@ only to reproduce a CI failure. Keep each PR focused and easy to review. The
   [macOS/Windows checklist](./docs/RELEASE.md#desktop-release-checklist) before release.
 - **Platform notes:** anything macOS-only, Windows-only, or Tauri-vs-browser specific.
 
-`main` changes only through pull requests, and a PR can merge only when its `CI passed` check succeeds.
+Merging follows the [main and tag rules](./docs/RELEASE.md#branch-and-tag-rules).
 Maintainers may ask for changes; keep the conversation on the PR so the reasoning is preserved.
 
 ### Targeted browser tests
@@ -131,11 +132,8 @@ Report security vulnerabilities privately instead, as described in [`SECURITY.md
 
 ## Releases
 
-Releases are maintainer-managed and driven by git tags: a version bump is merged through a pull
-request, and pushing a `v*` tag on its merge commit builds macOS and Windows installers into a draft
-GitHub Release once that commit's CI on `main` has passed.
-The full procedure, troubleshooting and the current OS code-signing policy are in [`docs/RELEASE.md`](./docs/RELEASE.md),
-a maintainer runbook written in Korean.
+For release preparation, CI gates, publishing, troubleshooting and the current OS code-signing
+policy, follow [`docs/RELEASE.md`](./docs/RELEASE.md), a maintainer runbook written in Korean.
 
 ## License
 

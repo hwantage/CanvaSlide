@@ -38,6 +38,12 @@ to determine what has shipped, since a checkout can contain changes since that r
 Track proposed work in [issues](https://github.com/hwantage/CanvaSlide/issues). The rules for keeping
 guides current are in [AGENTS.md](../AGENTS.md#documentation).
 
+Maintain feature behavior, transmitted data and user-facing file compatibility guarantees in the
+[English README](../README.md) (and its Korean translation), user instructions in the
+[website guide](https://hwantage.github.io/CanvaSlide/docs/), and operational rules in [RELEASE.md](./RELEASE.md).
+Contributor rules for format changes belong in [AGENTS.md](../AGENTS.md#code).
+Other guides link to the owning section instead of copying the same facts.
+
 ## Documentation language
 
 Repository documentation is written in English, and [`README.ko.md`](../README.ko.md) translates the

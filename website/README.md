@@ -113,7 +113,7 @@ node website/scripts/prepare-screenshots.ts
 ## GitHub Pages
 
 1. On `hwantage/CanvaSlide`, select **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-2. Merge into `main`. The site imports app modules, locales, and examples, so every change can affect it: the **CI** workflow builds and tests it on every pull request and every push to `main`, and its `CI passed` check includes that job.
+2. Merge into `main` following the [main and tag rules](../docs/RELEASE.md#branch-and-tag-rules). See [CI maintenance](../docs/RELEASE.md#ci와-툴체인-유지보수) for the website build and test gate.
 3. Each time CI finishes on `main`, the **Website** workflow builds the newest commit of `main` whose CI passed and publishes only `website/dist` to `https://hwantage.github.io/CanvaSlide/`. A commit whose CI failed is never published; the site keeps the newest passing commit until a later one passes. Running **Website** manually on `main` publishes the newest passing commit again. To retry a failed publication, run it manually instead of re-running the failed job, which would publish the commit that older run chose.
 
 The app build and website output are separate. The Pages workflow does not build a desktop installer. The site uses static files and requires no backend, secrets, or paid hosting services.

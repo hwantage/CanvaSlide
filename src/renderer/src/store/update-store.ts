@@ -3,10 +3,15 @@ import { t } from '@/i18n/ui-strings'
 import { errorText, showErrorMessage } from '@/platform/document-file-access'
 import {
   checkForAppUpdate,
+  confirmUpdateChanges,
   installAppUpdate,
   openReleasesPage,
   type AvailableUpdate
 } from '@/platform/app-update'
+import { CLEAN_EXIT_TIMEOUT_MS } from '@/platform/window-lifecycle'
+import { useRecoveryStore } from './recovery-store'
+import { saveCurrentDocument } from '@/lib/document/save-document'
+import { useDocumentStore, watchDocumentChanges } from '@/store/document-store'
 
 const CHECK_ON_LAUNCH_KEY = 'canvaslide.updates.checkOnLaunch'
 
@@ -18,7 +23,14 @@ function readCheckOnLaunch(): boolean {
   }
 }
 
-export type UpdateStatus = 'idle' | 'checking' | 'upToDate' | 'available' | 'downloading' | 'error'
+export type UpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'upToDate'
+  | 'available'
+  | 'confirming'
+  | 'downloading'
+  | 'error'
 
 export type UpdateStore = {
   status: UpdateStatus
@@ -41,7 +53,7 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
   error: null,
   checkOnLaunch: readCheckOnLaunch(),
   check: async () => {
-    if (get().status === 'checking' || get().status === 'downloading') {
+    if (['checking', 'confirming', 'downloading'].includes(get().status)) {
       return
     }
     set({ status: 'checking', error: null })
@@ -55,14 +67,76 @@ export const useUpdateStore = create<UpdateStore>()((set, get) => ({
   install: async () => {
     const { update, status } = get()
     // Why: a running check replaces the pending update the download would read.
-    if (!update?.installable || status === 'checking' || status === 'downloading') {
+    if (!update?.installable || ['checking', 'confirming', 'downloading'].includes(status)) {
       return
     }
-    set({ status: 'downloading', progress: 0, error: null })
+    if (useDocumentStore.getState().editBaseline) {
+      return
+    }
+    set({ status: 'confirming', progress: 0, error: null })
+    let changed = false
+    let notifyChange!: () => void
+    const change = new Promise<void>((resolve) => {
+      notifyChange = resolve
+    })
+    const unwatch = watchDocumentChanges(() => {
+      changed = true
+      notifyChange()
+    })
+    const mayInstall = () => !changed && !useDocumentStore.getState().editBaseline
+    let preparing = false
+    let installed = false
+    const prepareInstall = async () => {
+      preparing = true
+      let timeout: ReturnType<typeof setTimeout> | undefined
+      try {
+        // Match normal quit: stalled cleanup is bounded, and new edits cancel the exit.
+        await Promise.race([
+          useRecoveryStore
+            .getState()
+            .prepareExit()
+            .catch(() => {}),
+          new Promise((resolve) => {
+            timeout = setTimeout(resolve, CLEAN_EXIT_TIMEOUT_MS)
+          }),
+          change
+        ])
+      } finally {
+        clearTimeout(timeout)
+      }
+    }
     try {
-      await installAppUpdate((progress) => set({ progress }))
+      if (useDocumentStore.getState().dirty) {
+        const choice = await confirmUpdateChanges()
+        if (choice === 'cancel' || !mayInstall()) {
+          set({ status: 'available' })
+          return
+        }
+        if (choice === 'save' && !(await saveCurrentDocument())) {
+          set({ status: 'available' })
+          return
+        }
+      }
+      if (!mayInstall()) {
+        set({ status: 'available' })
+        return
+      }
+      set({ status: 'downloading' })
+      installed = await installAppUpdate(
+        (progress) => set({ progress }),
+        mayInstall,
+        prepareInstall
+      )
+      if (!installed) {
+        set({ status: 'available', progress: 0 })
+      }
     } catch (error) {
       set({ status: 'error', error: errorText(error) })
+    } finally {
+      if (preparing && !installed) {
+        useRecoveryStore.getState().cancelExit()
+      }
+      unwatch()
     }
   },
   openReleases: async () => {

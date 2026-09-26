@@ -1,16 +1,15 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { createEmptyDocument } from '@shared/canvas/element-types'
 import {
   openDocumentAtPath,
   openDocumentFile,
   reportError,
-  saveDocumentFile,
   type OpenedDocument
 } from '@/platform/document-file-access'
 import type { FilePath } from '@/platform/file-path'
 import { isTauriRuntime } from '@/platform/tauri-runtime'
 import { replaceDocument } from '@/lib/document/document-replacement'
-import { useCameraStore } from '@/store/camera-store'
+import { saveCurrentDocument } from '@/lib/document/save-document'
 import { useDocumentStore } from '@/store/document-store'
 
 export type DocumentCommands = {
@@ -36,40 +35,23 @@ function replaceWith(read: () => Promise<OpenedDocument | null>): Promise<void> 
   })
 }
 
-// Saves share a queue across hook instances so slow compression cannot overwrite a newer save.
-let pendingSave = Promise.resolve()
-
 export function useDocumentCommands(): DocumentCommands {
-  const save = useCallback((forcePrompt: boolean) => {
-    const session = useDocumentStore.getState().session
-    const task = pendingSave.then(() =>
-      guarded(async () => {
-        const state = useDocumentStore.getState()
-        if (state.session !== session) {
-          return
-        }
-        const snapshot = state.takeSaveSnapshot()
-        const withCamera = { ...snapshot.document, camera: useCameraStore.getState().camera }
-        const result = await saveDocumentFile(withCamera, state.filePath, forcePrompt)
-        if (result) {
-          useDocumentStore.getState().completeSave(snapshot, result.filePath)
-        }
-      })
-    )
-    pendingSave = task.catch(() => {})
-    return task
-  }, [])
-
   return useMemo<DocumentCommands>(
     () => ({
-      saveDocument: () => save(false),
-      saveDocumentAs: () => save(true),
+      saveDocument: () =>
+        guarded(async () => {
+          await saveCurrentDocument()
+        }),
+      saveDocumentAs: () =>
+        guarded(async () => {
+          await saveCurrentDocument(true)
+        }),
       newDocument: () =>
         replaceWith(async () => ({ document: createEmptyDocument(), filePath: null })),
       openDocument: () => replaceWith(openDocumentFile),
       openDocumentPath: (path: FilePath) => replaceWith(() => openDocumentAtPath(path))
     }),
-    [save]
+    []
   )
 }
 

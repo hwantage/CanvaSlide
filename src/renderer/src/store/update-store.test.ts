@@ -3,6 +3,7 @@ import { checkForAppUpdate, installAppUpdate } from '@/platform/app-update'
 
 vi.mock('@/platform/app-update', () => ({
   checkForAppUpdate: vi.fn(),
+  confirmUpdateChanges: vi.fn(),
   installAppUpdate: vi.fn(),
   openReleasesPage: vi.fn()
 }))

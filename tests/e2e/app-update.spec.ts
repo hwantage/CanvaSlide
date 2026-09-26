@@ -169,3 +169,49 @@ test('desktop About checks on demand and remembers the launch-check choice @webk
   await expect(about.getByRole('status')).toHaveText('You are on the latest version.')
   expect(await updateChecks(page)).toBe(1)
 })
+
+test('disables installation while unsaved changes await a native decision @webkit', async ({
+  page
+}) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await offerUpdate(page)
+  await page.evaluate(
+    async ({ documentUrl, updateUrl }) => {
+      const { useDocumentStore } = await import(documentUrl)
+      const { useUpdateStore } = await import(updateUrl)
+      useDocumentStore.getState().renameDocument('Unsaved update work')
+      useUpdateStore.setState({ update: { version: '99.0.0', notes: null, installable: true } })
+      Object.assign(window, {
+        __TAURI_INTERNALS__: {
+          metadata: { currentWindow: { label: 'main' } },
+          invoke: (command: string) => {
+            if (command === 'plugin:window|set_title') {
+              return Promise.resolve()
+            }
+            if (command === 'plugin:dialog|message') {
+              return new Promise((resolve) => {
+                Object.assign(window, { cancelUpdate: () => resolve('Cancel') })
+              })
+            }
+            return Promise.reject(new Error(`Unexpected native command: ${command}`))
+          }
+        }
+      })
+    },
+    {
+      documentUrl: appModuleUrl('store/document-store.ts'),
+      updateUrl: appModuleUrl('store/update-store.ts')
+    }
+  )
+  await page.getByRole('button', { name: /About CanvaSlide/ }).click()
+  const button = page.getByRole('button', { name: 'Install and restart' })
+  await expect(button).toBeEnabled()
+  await button.click()
+  await expect(button).toBeDisabled()
+  await page.waitForFunction(() => 'cancelUpdate' in window)
+  await page.evaluate(() => (window as unknown as { cancelUpdate: () => void }).cancelUpdate())
+  await expect(button).toBeEnabled()
+  await expect(page.getByRole('status')).toHaveText('Version 99.0.0 is available.')
+  expect(errors).toEqual([])
+})

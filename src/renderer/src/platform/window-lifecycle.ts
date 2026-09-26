@@ -4,7 +4,7 @@ import { isTauriRuntime } from './tauri-runtime'
 const QUIT_REQUESTED_EVENT = 'quit-requested'
 
 /** How long the exit waits on `onCleanExit` before leaving anyway. */
-const CLEAN_EXIT_TIMEOUT_MS = 2000
+export const CLEAN_EXIT_TIMEOUT_MS = 2000
 
 export type CloseGuard = {
   hasUnsavedWork: () => boolean

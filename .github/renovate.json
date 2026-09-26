@@ -11,18 +11,19 @@
   "timezone": "Asia/Seoul",
   "packageRules": [
     {
-      "description": "Development tools update together unless an update is breaking; Playwright changes the test browsers, so it gets its own pull request.",
+      "description": "Group minor and patch updates of development tools at 1.0 or later; pre-1.0 updates and Playwright get separate pull requests.",
       "matchDepTypes": ["devDependencies"],
       "matchPackageNames": ["!@playwright/test"],
-      "groupName": "dev tooling",
-      "matchIsBreaking": false
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": ">=1.0.0",
+      "groupName": "dev tooling"
     },
     {
-      "description": "Rust crates other than Tauri's update together unless an update is breaking, which for 0.x crates includes a minor version.",
+      "description": "Group minor and patch updates of Rust crates at 1.0 or later; pre-1.0 updates get separate pull requests. The later Tauri rule keeps its packages together.",
       "matchManagers": ["cargo"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "Rust crates",
-      "matchIsBreaking": false
+      "matchCurrentVersion": ">=1.0.0",
+      "groupName": "Rust crates"
     },
     {
       "description": "The Tauri CLI refuses to build when an npm package and its Rust crate differ in major or minor version, so they update in one pull request.",

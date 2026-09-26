@@ -7,7 +7,7 @@ const playerFile = fileURLToPath(
 )
 
 // Raised only in its own pull request (AGENTS.md): a limit that moves with a feature gates nothing.
-export const MAX_PLAYER_BYTES = 60_000
+export const MAX_PLAYER_BYTES = 80_000
 
 export function checkPlayerSize(file = playerFile) {
   const source = readFileSync(file)

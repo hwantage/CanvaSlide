@@ -34,7 +34,8 @@ import { selectLocale, useLanguageStore } from '@/store/language-store'
 import { isModalDialogOpen } from '@/store/modal-stack'
 import { selectSlideShowActive, usePresentationStore } from '@/store/presentation-store'
 import { useCloudShareStore } from '@/store/cloud-share-store'
-import { cancelExampleRequest, useExampleStore } from '@/store/example-store'
+import { cancelExampleRequest } from '@/lib/document/launch-link-session'
+import { openExampleLink } from '@/lib/document/launch-links'
 import { ExampleDialog } from '@/components/panels/example-dialog'
 
 export function App() {
@@ -43,7 +44,7 @@ export function App() {
   const [clipboard] = useState(() => createObjectClipboard(pastePointer.read))
   useSharedDocument()
   useEffect(() => {
-    void useExampleStore.getState().openLink(window.location.search)
+    void openExampleLink(window.location.search)
     return cancelExampleRequest
   }, [])
   return presentation ? (

@@ -1,7 +1,6 @@
 import type { CameraPreparation } from '@shared/canvas/camera-animator'
-import type { Camera, ImageElement, Size } from '@shared/canvas/element-types'
+import type { Camera, CanvasDocument, ImageElement, Size } from '@shared/canvas/element-types'
 import { imagesAlongCameraPath } from '@shared/canvas/image-rendering'
-import { useDocumentStore } from '@/store/document-store'
 import { svgPreviewCache } from './svg-preview-cache'
 
 /**
@@ -18,11 +17,11 @@ function afterNextPaint(): Promise<void> {
 
 /** Everything a flight wants in place before it starts moving: raster caches, and a settled layout. */
 export function prepareCameraFlight(
+  document: CanvasDocument,
   from: Camera,
   target: Camera,
   viewport: Size
 ): CameraPreparation {
-  const { document } = useDocumentStore.getState()
   const images = Object.values(document.elements).filter(
     (element): element is ImageElement =>
       element.type === 'image' && document.assets[element.assetId]?.mime === 'image/svg+xml'

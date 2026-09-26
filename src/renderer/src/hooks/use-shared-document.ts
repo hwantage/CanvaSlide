@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { cancelShareRequest, useCloudShareStore } from '@/store/cloud-share-store'
+import { cancelShareRequest } from '@/lib/document/launch-link-session'
+import { openSharedLink } from '@/lib/document/launch-links'
 
 export function useSharedDocument(): void {
   useEffect(() => {
-    void useCloudShareStore.getState().openLink(window.location.search)
+    void openSharedLink(window.location.search)
     return cancelShareRequest
   }, [])
 }

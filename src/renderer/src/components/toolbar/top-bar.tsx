@@ -40,7 +40,7 @@ import {
 import { selectRecoveryFailed, useRecoveryStore } from '@/store/recovery-store'
 import { selectUpdateAvailable, useUpdateStore } from '@/store/update-store'
 import { usePresentationStore } from '@/store/presentation-store'
-import { useCloudShareStore } from '@/store/cloud-share-store'
+import { showShareDialog as showShare } from '@/lib/document/launch-links'
 
 function ShortcutHelpIcon() {
   return (
@@ -79,7 +79,6 @@ export function TopBar({
   const redo = useDocumentStore((s) => s.redo)
   const renameDocument = useDocumentStore((s) => s.renameDocument)
   const start = usePresentationStore((s) => s.start)
-  const showShare = useCloudShareStore((s) => s.show)
   const showSettings = useSettingsDialogStore((s) => s.show)
   const showHelp = useShortcutHelpStore((s) => s.show)
   const showAbout = useAboutDialogStore((s) => s.show)

@@ -266,8 +266,6 @@ function handlePlainKeys(event: KeyboardEvent): boolean {
   }
   // Why: PowerPoint's F5 / ⇧F5 aliases; ⌘⏎ stays primary because Apple keyboards need fn+F5.
   if (key === 'F5' && !event.altKey && !event.ctrlKey && !event.metaKey) {
-    // Leaving the editor commits the typed text as one undo step, the way Escape does.
-    tools.setEditingTextId(null)
     if (event.shiftKey) {
       presentFromSelection()
     } else {

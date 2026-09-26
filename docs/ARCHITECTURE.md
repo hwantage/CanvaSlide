@@ -91,6 +91,8 @@ a bundle. The About dialog and the website footer link the file.
   compare resolved values with **application defaults**, so a document-wide change can mark every
   affected frame. Preview keeps the editor controls visible and identifies its frame by ID, so
   reordering cannot silently redirect it. See [presentation store](../src/renderer/src/store/presentation-store.ts).
+  Slideshow start requests and valid transition previews end text editing; the text editor's cleanup
+  commits the typing session as one undo step, including entry paths that do not blur the editor.
 - Theme and language are device preferences; document settings such as background and transition
   timing travel with the file. Keep platform shortcuts and labels in
   [`platform-keys.ts`](../src/renderer/src/lib/platform-keys.ts).

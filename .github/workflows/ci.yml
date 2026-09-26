@@ -69,9 +69,13 @@ jobs:
 
   # Why: WebKit is the macOS app's engine, and its fonts and rendering follow the host system.
   e2e-webkit:
-    name: e2e (webkit, macOS)
+    name: e2e (webkit, macOS, ${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: macos-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -83,13 +87,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install webkit
-      - run: pnpm test:e2e --project=webkit
+      - run: pnpm test:e2e --project=webkit --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
           CANVASLIDE_E2E_WEBKIT: '1'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
-          name: playwright-traces-webkit
+          name: playwright-traces-webkit-${{ matrix.shard }}
           path: test-results/
           retention-days: 14
 
@@ -205,6 +209,7 @@ jobs:
   passed:
     name: CI passed
     if: always()
+    # Why: matrix job dependencies wait for every shard, including both macOS WebKit runners.
     needs: [verify, e2e, e2e-webkit, website, rust, bundle]
     runs-on: ubuntu-latest
     timeout-minutes: 5

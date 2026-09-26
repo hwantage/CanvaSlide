@@ -175,7 +175,7 @@ gh workflow run release-notes.yml -f tag=v0.8.0
 
 [CI](../.github/workflows/ci.yml)는 PR과 main 푸시마다 `pnpm check`의 단계를 Linux·Windows에서,
 Rust 검사를 Linux·macOS·Windows에서 실행한다. 전체 E2E는 Chromium·Firefox의 Linux shard와
-`@webkit`을 포함한 macOS WebKit에서 실행하며, 러너마다 테스트를 하나씩 실행한다. 사이트 빌드·검사는
+`@webkit`을 포함한 macOS WebKit의 2개 shard에서 실행하며, 러너마다 테스트를 하나씩 실행한다. 사이트 빌드·검사는
 Linux에서, 번들 빌드는 macOS·Windows에서 매번 실행한다. 로컬에서는
 [Verify](../AGENTS.md#verify)의 범위에 맞춰 실행한다.
 

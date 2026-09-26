@@ -165,11 +165,9 @@ SVG-to-SVG references and oversized materialized image data. Input files are lim
 resolved asset strings are limited to 512 Mi characters. The [codec worker](../src/renderer/src/lib/workers/document-file-codec.ts)
 keeps encoding/decoding off the UI thread and reuses unchanged asset recipes between saves.
 
-Earlier JSON formats and the former ZIP container are not read or migrated, even if the extension or
-version number looks familiar; see the
-[pre-stabilization compatibility policy](../AGENTS.md#code). Use the complete current
-file schema. JSON preserves readable SVG markup and shared image resources without ZIP compression;
-disk size, runtime memory, HTML size and the
+Use the complete current file schema and follow the
+[compatibility rules](../AGENTS.md#code). JSON preserves readable SVG markup and
+shared image resources without ZIP compression; disk size, runtime memory, HTML size and the
 [cloud payload limit](./CLOUD-SHARE.md#api-contract-and-limits) measure different representations.
 
 Repository [examples and AI authoring guidance](../examples/README.md) use the same file format as

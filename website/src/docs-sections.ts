@@ -302,8 +302,7 @@ export function docSections(topic: TopicId): DocSection[] {
       {
         id: 'network-and-privacy',
         heading: 'site.docs.faq.networkQ',
-        body: 'site.docs.faq.networkA',
-        params: { github: 'GitHub', youtube: 'YouTube', vimeo: 'Vimeo' }
+        body: 'site.docs.faq.networkA'
       },
       { id: 'saved-work', heading: 'site.docs.faq.autosaveQ', body: 'site.docs.faq.autosaveA' },
       { id: 'editing-an-export', heading: 'site.docs.faq.editQ', body: 'site.docs.faq.editA' },

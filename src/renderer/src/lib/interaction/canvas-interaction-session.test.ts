@@ -72,6 +72,58 @@ describe('canvas interaction lifecycle', () => {
     expect(doc().selectedIds).toEqual([])
   })
 
+  it('duplicates from Alt at pointerDown even when it is released before moving', () => {
+    const before = loadElements([shape('a')], ['a'])
+    const interaction = createCanvasInteraction()
+    interaction.pointerDown(pointer(20, 20, { altKey: true }))
+    interaction.pointerMove(pointer(100, 100))
+    expect(doc().document.order).toHaveLength(2)
+    expect(doc().selectedIds).toHaveLength(1)
+    const duplicateId = doc().selectedIds[0]!
+    expect(duplicateId).not.toBe('a')
+    expect(doc().document.elements[duplicateId]).toMatchObject({ x: 80, y: 80 })
+    interaction.pointerMove(pointer(160, 150))
+    expect(doc().document.elements[duplicateId]).toMatchObject({ x: 140, y: 130 })
+    expect(doc().document.elements.a).toEqual(before.elements.a)
+    expect(doc().past).toEqual([])
+    interaction.pointerUp(pointer(160, 150))
+    expectSingleUndo(before)
+  })
+
+  it('uses Shift from each pointerMove to lock and release the drag axis', () => {
+    const before = loadElements([shape('a')], ['a'])
+    const interaction = createCanvasInteraction()
+    interaction.pointerDown(pointer(20, 20))
+    interaction.pointerMove(pointer(50, 30, { shiftKey: true }))
+    expect(doc().document.elements.a).toMatchObject({ x: 30, y: 0 })
+    interaction.pointerMove(pointer(60, 35, { shiftKey: true }))
+    expect(doc().document.elements.a).toMatchObject({ x: 40, y: 0 })
+    interaction.pointerMove(pointer(70, 40))
+    expect(doc().document.elements.a).toMatchObject({ x: 50, y: 20 })
+    expect(doc().past).toEqual([])
+    interaction.pointerUp(pointer(70, 40))
+    expectSingleUndo(before)
+  })
+
+  it('uses the primary key from each pointerMove to disable and restore snapping', () => {
+    const before = loadElements([shape('a'), shape('target', { x: 200, y: 300 })], ['a'])
+    const interaction = createCanvasInteraction()
+    interaction.pointerDown(pointer(20, 20))
+    interaction.pointerMove(pointer(215, 100, { primaryKey: true }))
+    expect(doc().document.elements.a).toMatchObject({ x: 195, y: 80 })
+    expect(overlay().snapGuides).toEqual([])
+    interaction.pointerMove(pointer(215, 100))
+    expect(doc().document.elements.a).toMatchObject({ x: 200, y: 80 })
+    expect(overlay().snapGuides.length).toBeGreaterThan(0)
+    interaction.pointerMove(pointer(215, 100, { primaryKey: true }))
+    expect(doc().document.elements.a).toMatchObject({ x: 195, y: 80 })
+    expect(overlay().snapGuides).toEqual([])
+    expect(doc().document.elements.target).toEqual(before.elements.target)
+    expect(doc().past).toEqual([])
+    interaction.pointerUp(pointer(215, 100, { primaryKey: true }))
+    expectSingleUndo(before)
+  })
+
   it.each([{ shiftKey: true }, { primaryKey: true }])(
     'toggles selection on modifier release: %j',
     (modifiers) => {

@@ -7,6 +7,9 @@ test('keeps packages, schema validation and renderer code out of the built playb
     assertPlayerModules([
       '/repo/src/player/player-main.ts',
       '/repo/src/shared/canvas/element-runtime.ts',
+      '/repo/src/shared/presentation/presentation-controls.ts',
+      '/repo/src/shared/media/video-focus.ts',
+      '/repo/src/shared/media/video-playback.ts',
       '/repo/src/shared/presentation/presentation.css?inline'
     ])
   )

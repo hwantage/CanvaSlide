@@ -1,5 +1,5 @@
 import type { Camera, Size } from '../canvas/element-types'
-import type { PresentationState } from '../canvas/presentation-controls'
+import type { PresentationState } from './presentation-controls'
 
 export type PresentationView = { camera: Camera; viewport: Size; roll: number }
 export type PresentationHost = {

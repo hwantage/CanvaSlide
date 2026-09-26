@@ -1,4 +1,4 @@
-import { createVideoFocus } from '@shared/canvas/video-focus'
+import { createVideoFocus } from '@shared/media/video-focus'
 import { createCameraAnimator } from '@shared/canvas/camera-animator'
 import { worldLayerCssTransform } from '@shared/canvas/camera-transform'
 import { zoomLayerCssStyle } from '@shared/canvas/zoom-layer-style'

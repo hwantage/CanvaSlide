@@ -1,4 +1,4 @@
-import type { PresentationCommand } from '../canvas/presentation-controls'
+import type { PresentationCommand } from './presentation-controls'
 
 export type ControlId = Exclude<PresentationCommand, 'escape'> | 'tools'
 export type PresentationLabels = Record<ControlId, string> & { controls: string }

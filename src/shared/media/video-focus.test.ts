@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { createVideoFocus, type VideoView } from './video-focus'
-import { LEVEL_SHOT } from './presentation-shot'
+import { LEVEL_SHOT } from '../canvas/presentation-shot'
 
 function setup(width = 640, height = 406, onRestore?: () => void) {
   let view: VideoView = {

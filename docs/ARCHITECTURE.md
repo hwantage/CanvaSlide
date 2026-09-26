@@ -103,8 +103,9 @@ slideshow, cloud viewer and standalone HTML. Host adapters supply state/view sub
 optional exit. Camera notifications follow existing animation/shot updates; there is no extra camera loop.
 Label updates preserve the session. View snapshots are refreshed by camera notifications, so drawing
 does not read layout on every pointer sample; the app caches ordered frames until its document changes.
-Pure command, annotation and auto-hide policy lives in `shared/canvas`; navigation, DOM bindings and
-CSS live in `shared/presentation`. The React adapter is [`PresentationOverlay`](../src/renderer/src/components/canvas/presentation-overlay.tsx).
+Command, annotation, auto-hide, keyboard and swipe policy lives with navigation, DOM bindings and
+CSS in `shared/presentation`. Video focus and playback policy lives in `shared/media` and consumes
+canvas geometry and document types. The React adapter is [`PresentationOverlay`](../src/renderer/src/components/canvas/presentation-overlay.tsx).
 
 [`createPresentationNavigator`](../src/shared/presentation/presentation-navigator.ts) owns frame and
 overview transitions, flights, and the refit and settle policy through a camera and position port.

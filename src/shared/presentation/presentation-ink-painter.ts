@@ -1,5 +1,5 @@
 import type { Point } from '../canvas/element-types'
-import { inkPathData, shouldAppendInkPoint } from '../canvas/presentation-ink'
+import { inkPathData, shouldAppendInkPoint } from './presentation-ink'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 /** Screen px: `non-scaling-stroke` keeps the nib that width however far the camera flies. */

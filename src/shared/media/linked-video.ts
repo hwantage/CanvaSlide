@@ -8,7 +8,7 @@ import {
 import { attachVideoEmbedBridge } from './video-embed-bridge'
 import { labelVideoControl, type VideoControlIcon } from './video-control-icons'
 import { showYouTubeThumbnail } from './video-thumbnail'
-import type { VideoFocusHandle } from '../canvas/video-focus'
+import type { VideoFocusHandle } from './video-focus'
 
 export type VideoLabels = Record<
   | 'play'

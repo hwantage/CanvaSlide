@@ -1,4 +1,4 @@
-import { createVideoFocus } from '@shared/canvas/video-focus'
+import { createVideoFocus } from '@shared/media/video-focus'
 import { useCameraStore } from '@/store/camera-store'
 import { useDocumentStore } from '@/store/document-store'
 import { selectPresentationShot, usePresentationStore } from '@/store/presentation-store'

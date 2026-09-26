@@ -1,4 +1,4 @@
-/** The export contains only our playback modules, never an editor or package runtime. */
+/** Canvas, presentation and media modules share playback without an editor or package runtime. */
 export function assertPlayerModules(ids) {
   const forbidden = ids.filter((id) => {
     const path = id.replaceAll('\\', '/')

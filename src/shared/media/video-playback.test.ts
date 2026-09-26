@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { createEmptyDocument, type VideoElement } from './element-types'
+import { createEmptyDocument, type VideoElement } from '../canvas/element-types'
 import { autoplayVideoIds, frameVideos } from './video-playback'
 
 const video = (id: string, url = 'https://example.org/v.mp4'): VideoElement => ({

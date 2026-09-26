@@ -1,6 +1,6 @@
-import type { createVideoFocus } from '@shared/canvas/video-focus'
+import type { createVideoFocus } from '@shared/media/video-focus'
 import type { CanvasDocument } from '@shared/canvas/element-types'
-import { autoplayVideoIds, frameVideos } from '@shared/canvas/video-playback'
+import { autoplayVideoIds, frameVideos } from '@shared/media/video-playback'
 import { mountLinkedVideo, type VideoLabels } from '@shared/media/linked-video'
 
 const labels: VideoLabels = {

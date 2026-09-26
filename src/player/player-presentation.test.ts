@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { createVideoFocus } from '@shared/canvas/video-focus'
+import type { createVideoFocus } from '@shared/media/video-focus'
 import { contentBounds } from '@shared/canvas/element-bounds'
 import {
   createEmptyDocument,

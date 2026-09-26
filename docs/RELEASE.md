@@ -281,7 +281,11 @@ pnpm bundle:local --bundles app
 
 ## 6. OS 코드 서명
 
-업데이터 서명(§7)과 OS 코드 서명은 별개다. `release` 환경에 Apple 자격 증명이 있으면 릴리스 워크플로가 macOS 앱을
+**2026-09-26 결정:** 비용 부담, Apple Developer Program 미가입, Windows 서명 방식 미정으로
+OS 코드 서명과 macOS 공증을 당분간 보류한다. 현재는 macOS와 Windows 모두 OS 코드 서명 없이 배포하며,
+macOS 업데이트 알림은 다운로드 페이지를 열도록 안내한다. 아래 서명·공증 절차는 도입을 재개할 때 참고한다.
+
+업데이터 서명(§7)은 계속 유지하며, 이번에 보류한 OS 코드 서명과는 별개다. `release` 환경에 Apple 자격 증명이 있으면 릴리스 워크플로가 macOS 앱을
 Developer ID로 서명하고 Apple 공증을 받는다. 자격 증명이 없으면 macOS 앱도 서명하지 않고, Windows 설치 파일은
 아직 코드 서명하지 않는다.
 

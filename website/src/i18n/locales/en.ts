@@ -186,18 +186,18 @@ export const en = {
     'Three ideas and three frames are enough for your first story. The quick-start guide walks you through it, from an empty canvas to a saved presentation.',
   'site.docs.install.availableHeading': 'Get the desktop app',
   'site.docs.install.availableBody':
-    'Download the installer for your operating system from the official Releases page. You can also try the web editor without installing anything, or build the app from source below.',
+    'Download the installer for your operating system from the official Releases page. Current builds are not OS code-signed, and macOS builds are not notarized. The steps below apply to builds downloaded from that page. You can also try the web editor without installing anything, or build the app from source below.',
   'site.docs.install.macBody':
-    'Open the {dmg} file, then drag the app into Applications. Launch it from Applications. The app requires {platform} {version} or later.',
+    'Open the {dmg} file, then drag the app into Applications. Launch it from Applications. The app requires {platform} {version} or later. If you see “CanvaSlide is damaged and can’t be opened”, open Terminal and run xattr -d com.apple.quarantine /Applications/CanvaSlide.app, then reopen the app. For an unidentified-developer or Apple-cannot-check-for-malware warning on {platform} 15 or later, close the alert, open System Settings → Privacy & Security, click Open Anyway next to CanvaSlide and confirm. On {platform} 12–14, Control-click (right-click) the app in Finder and choose Open.',
   'site.docs.install.windowsBody':
-    'Run the {exe} or {msi} installer from the release assets and follow the setup steps. Launch the app from the Start menu. If the installer asks to install WebView2, complete that step.',
+    'Run the {exe} or {msi} installer from the release assets. If SmartScreen shows “Windows protected your PC”, click More info → Run anyway, then follow the setup steps. Launch the app from the Start menu. If the installer asks to install WebView2, complete that step.',
   'site.docs.install.sourceHeading': 'Build from source',
   'site.docs.install.sourceBody':
     'You can also run the current app from source. Install Git, {node} {version} or later, the repository’s pinned {packageManager}, and the stable Rust toolchain. Complete the platform setup in the Tauri prerequisites guide first.',
   'site.docs.install.prerequisites': 'Platform prerequisites',
   'site.docs.install.buildHeading': 'Create an installer',
   'site.docs.install.buildBody':
-    'Build on the operating system you want to distribute for. The installer is written into the platform’s bundle directory. This is a local build, not a signed public release.',
+    'Build on the operating system you want to distribute for. The installer is written into the platform’s bundle directory. This creates a local build without OS code signing.',
   'site.docs.copy': 'Copy command',
   'site.docs.copied': 'Copied',
   'site.docs.copyFailed': 'Select the command and copy it manually.',

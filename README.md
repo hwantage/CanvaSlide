@@ -55,7 +55,7 @@ and their fixes are best-effort.
 | --------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | Canvas editing, presentation frames and Slide Show, including laser and ink | Core         |                                                                                                                        |
 | Desktop apps for macOS and Windows, the browser editor                      | Core         |                                                                                                                        |
-| Update checks and in-app installation                                       | Core         | On macOS, only notarized releases install in the app; otherwise the app opens the download page                        |
+| Update checks and in-app installation                                       | Core         | macOS releases are not yet notarized, so update notifications offer to open the download page                          |
 | Opening and saving `.canvaslide` files, crash recovery                      | Core         |                                                                                                                        |
 | Image and PDF import, HTML export with its player, PDF export               | Core         |                                                                                                                        |
 | [Figma import](./docs/FIGMA-IMPORT.md)                                      | Core         | Figma does not publish the `.fig` format, so files from newer Figma versions may not import or may convert differently |
@@ -67,6 +67,19 @@ The `.canvaslide` format is declared stable at 1.0; until then a newer version m
 as the [compatibility policy](./AGENTS.md#code) explains.
 
 ## Get started
+
+Download an installer from the [official Releases page](https://github.com/hwantage/CanvaSlide/releases).
+Current builds are not OS code-signed; macOS builds are also not notarized. For a build downloaded
+from that page:
+
+- **macOS:** Open the `.dmg` and drag CanvaSlide into Applications, then launch it there.
+  If you see **“CanvaSlide is damaged and can't be opened”**, open Terminal and run
+  `xattr -d com.apple.quarantine /Applications/CanvaSlide.app`, then reopen the app.
+  For an unidentified-developer or Apple-cannot-check-for-malware warning on **macOS 15 or later**,
+  close the alert, open **System Settings → Privacy & Security**, click **Open Anyway** next to
+  CanvaSlide and confirm. On **macOS 12–14**, Control-click (right-click) the app in Finder and choose **Open**.
+- **Windows:** Run the `.exe` or `.msi` installer. If SmartScreen shows **“Windows protected your PC”**,
+  click **More info → Run anyway**, then finish setup and launch CanvaSlide from the Start menu.
 
 1. Create content with the text or shape tools, paste an image, or import a file.
 2. Draw frames with **F** and arrange their sequence in the frame list.

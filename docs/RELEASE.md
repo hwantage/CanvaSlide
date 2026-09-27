@@ -446,7 +446,7 @@ Foundation 같은 오픈소스 프로그램)는 메인테이너가 정한다(#14
 
 업데이트 확인 시점·플랫폼별 동작·전송 데이터는 README의
 [Network and privacy](../README.md#network-and-privacy)를 기준으로 한다.
-설정 조작 방법은 [웹사이트 안내](https://hwantage.github.io/CanvaSlide/docs/?lang=ko&guide=faq#network-and-privacy)를 따른다.
+설정 조작 방법은 [웹사이트 안내](https://hwantage.github.io/CanvaSlide/ko/docs/faq/#network-and-privacy)를 따른다.
 확인과 설치 구현은 [`use-update-check.ts`](../src/renderer/src/hooks/use-update-check.ts)와
 [`app-update.ts`](../src/renderer/src/platform/app-update.ts)에 있다.
 

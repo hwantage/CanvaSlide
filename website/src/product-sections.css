@@ -133,30 +133,47 @@
   line-height: 1.85;
   max-width: 480px;
 }
-.editor-preview {
+.inside-preview {
   margin: 32px 0 0;
   border: 1px solid var(--border);
   overflow: hidden;
   border-radius: 10px;
   background: var(--muted);
 }
-.editor-preview img {
+.inside-preview img {
   width: 100%;
   height: auto;
 }
-.editor-preview figcaption {
+.inside-preview figcaption {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 15px;
   padding: 14px 16px;
   color: var(--muted-foreground);
   font-size: 11px;
 }
-.editor-preview figcaption a {
+.inside-preview figcaption a {
   display: flex;
   gap: 9px;
   align-items: center;
   color: var(--site-blue);
+}
+.inside-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.inside-preview-actions button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 6px 0;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
 }
 .feature-secondary {
   padding-left: 50px;

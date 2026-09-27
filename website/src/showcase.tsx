@@ -1,10 +1,8 @@
-import { useEffect } from 'react'
 import { ArrowUpRight, Download, Play } from 'lucide-react'
 import { exampleAssetPath, exampleCatalog, type ExampleId } from '@shared/example-catalog'
 import { t } from './i18n/site-strings'
-import { asset, siteHref, useSitePreferences } from './site-preferences'
+import { asset, siteHref } from './site-preferences'
 import { exampleEditorUrl } from './example-links'
-import { updateMetadata } from './site-metadata'
 
 const closingExamples: readonly ExampleId[] = [
   'swing',
@@ -97,15 +95,6 @@ export function ShowcasePreview() {
 }
 
 export function Showcase() {
-  const locale = useSitePreferences((s) => s.locale)
-  useEffect(() => {
-    updateMetadata(
-      t('site.showcase.meta', { product: 'CanvaSlide' }),
-      t('site.showcase.description'),
-      `showcase/?lang=${locale}`,
-      'og.png'
-    )
-  }, [locale])
   return (
     <main id="main" className="showcase-page container">
       <div className="showcase-intro">

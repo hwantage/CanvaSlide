@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUpRight, FileCode2 } from 'lucide-react'
 import { t } from './i18n/site-strings'
+import { HomeFaq } from './home-faq'
 import { ScrollStory } from './scroll-story'
 import { DownloadSection, ProductFeatures, SharingSection } from './product-sections'
 import { useSectionReveal } from './use-section-reveal'
@@ -19,7 +20,7 @@ export function Landing() {
         <div className="hero-copy">
           <p className="hero-eyebrow">{t('site.hero.eyebrow')}</p>
           <h1>{t('site.hero.title')}</h1>
-          <p className="hero-description">{t('site.hero.description')}</p>
+          <p className="hero-description">{t('site.hero.description', { html: 'HTML' })}</p>
           <div className="hero-actions">
             <a className="button" href={siteHref('showcase/')}>
               {t('site.hero.try')}
@@ -74,6 +75,7 @@ export function Landing() {
       </div>
       <ProductFeatures />
       <DownloadSection />
+      <HomeFaq />
     </main>
   )
 }

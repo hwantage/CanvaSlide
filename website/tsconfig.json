@@ -6,6 +6,7 @@
     "tests",
     "vite.config.ts",
     "example-exports.ts",
+    "static-pages.ts",
     "playwright.config.ts"
   ],
   "compilerOptions": {

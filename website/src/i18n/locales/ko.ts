@@ -2,6 +2,36 @@ import type { SiteStrings } from '../site-strings'
 
 // Terms follow the Korean editions of Figma / PowerPoint / Keynote where a standard exists.
 export const ko: SiteStrings = {
+  'site.faq.productQ': '{app}는 어떤 앱인가요?',
+  'site.faq.productA':
+    '{app}는 무한 캔버스를 기반으로 한 무료 오픈 소스 프레젠테이션 프로그램입니다. 텍스트, 도형, 이미지, 다이어그램을 한 공간에 배치하고 보여줄 영역에 프레임을 그리세요. 카메라가 프레임 사이를 이동하고 확대하며 발표합니다. 편집 가능한 예제로 시작하거나 나만의 캔버스를 만들 수 있습니다.',
+  'site.faq.framesQ': '프레임 안의 프레임은 어떻게 발표하나요?',
+  'site.faq.framesA':
+    '슬라이드 전체에 프레임을 그리고, 그 안의 차트나 표, 세부 영역에 더 작은 프레임을 그리세요. 발표 순서에서 작은 프레임을 다음에 놓으면 같은 캔버스 안에서 해당 영역으로 카메라가 확대됩니다. 이전 프레임으로 돌아가면 전체가 다시 보입니다. 내보낸 {html} 발표에서도 같은 방식으로 동작합니다.',
+  'site.faq.figmaA':
+    '네. 로컬 {fig} 파일을 가져와 편집 가능한 텍스트와 도형 또는 모양 유지 방식을 선택하세요. 지원하는 텍스트와 단순 도형은 편집할 수 있고 복잡한 그림은 이미지가 될 수 있습니다. 일부 효과, 레이아웃 규칙, 마스크는 정확히 유지되지 않으므로 변환 보고서를 확인하세요. 이미지와 {pdf}도 가져올 수 있으며, {pdf}의 각 페이지는 이미지가 됩니다.',
+  'site.faq.platformQ': '{mac}, {windows}, 웹에서 사용할 수 있나요?',
+  'site.faq.platformA':
+    '네. 릴리스 페이지에서 {mac}와 {windows} 설치 파일을 받을 수 있습니다. 설치 없이 브라우저의 웹 편집기로 시작해도 됩니다. 브라우저에서 저장하면 편집 가능한 {format} 파일을 다운로드합니다. 데스크톱 내보내기는 설치된 글꼴의 일부를 포함할 수 있고, 브라우저 내보내기는 사용 가능한 글꼴에 따라 달라집니다.',
+  'site.faq.viewersQ': '발표를 보는 사람도 {app}를 설치해야 하나요?',
+  'site.faq.viewersA':
+    '아니요. 발표를 {html} 파일 하나로 내보내면 브라우저에서 열 수 있습니다. 플레이어, 캔버스 콘텐츠, 내장 이미지가 파일에 포함됩니다. 내보낸 발표는 보기용이므로 나중에 편집할 {format} 원본도 보관하세요. 연결된 동영상은 제공 서비스와 네트워크가 필요합니다.',
+  'site.faq.freeQ': '무료인가요? 계정이 필요한가요?',
+  'site.faq.freeA':
+    '네. {app}는 무료 오픈 소스 앱입니다. 데스크톱 앱은 계정 없이 사용할 수 있고, 문서는 내 컴퓨터에 파일로 저장합니다. 웹 편집기의 예제도 로그인 없이 열고 편집할 수 있습니다.',
+  'site.faq.title': '자주 묻는 질문',
+  'site.faq.description': '어떤 앱인지, 어떻게 발표하는지, 시작에 필요한 정보를 확인하세요.',
+  'site.faq.nestedQ': '일반 슬라이드 방식과 무엇이 다른가요?',
+  'site.faq.nestedA':
+    '콘텐츠를 슬라이드마다 나누는 대신 하나의 캔버스에 함께 배치합니다. 프레임으로 보여줄 영역과 순서를 정하므로 콘텐츠를 복제하지 않고 전체에서 세부로 확대할 수 있습니다. 익숙한 슬라이드 형식으로 프레임을 배열하는 것도 가능합니다.',
+  'site.faq.figmaQ': '{design} 디자인을 가져올 수 있나요?',
+  'site.faq.aiQ': 'AI로 프레젠테이션을 어떻게 만드나요?',
+  'site.faq.aiA':
+    '파일을 만들 수 있는 외부 AI 도우미에 프롬프트를 복사하세요. 편집 가능한 {format} 파일을 요청해 {app}에서 열고, 결과를 확인한 뒤 발표하거나 {html}로 내보내세요. 웹사이트와 편집기는 프롬프트를 준비하며 AI 서비스에 직접 요청을 보내지 않습니다.',
+  'site.faq.cloudQ': '공유 링크에 이후 수정 내용도 반영되나요?',
+  'site.faq.cloudA':
+    '아니요. 실험적 클라우드 공유는 실시간 협업이 아닌 스냅샷을 만듭니다. 이후 수정 내용은 링크에 반영되지 않습니다. 링크를 가진 사람은 24시간 동안 접근할 수 있으며 수동 철회 기능은 없습니다. 편집 가능한 원본을 로컬에 보관하거나 휴대 가능한 발표용 {html}로 내보내세요.',
+  'site.story.example': '이 예제를 열어 편집하기',
   'site.showcase.freefall.title': 'FREEFALL. 하나의 캔버스, 끊김 없는 장면.',
   'site.showcase.freefall.body':
     '지구에서 도시와 작은 디테일 속으로 들어간 뒤, 콘서트 불빛의 바다와 움직이는 불꽃놀이로 이어지는 10개 프레임을 따라가세요.',
@@ -23,12 +53,14 @@ export const ko: SiteStrings = {
   'site.docs.examples.linksHeading': '예제 바로 열기 링크',
   'site.docs.examples.linksBody':
     '편집기 주소에 {query}를 붙이면 새로고침하거나 직접 접속해도 해당 예제가 열립니다. 카탈로그 ID만 사용할 수 있으며 파일 경로나 다른 웹사이트 주소는 허용되지 않습니다. 공유 링크와 예제 ID가 함께 있으면 공유 링크가 우선합니다. 불러오기를 취소할 수 있으며, 알 수 없는 ID나 잘못된 파일은 현재 캔버스를 바꾸지 않습니다. 다운로드 실패 시 다시 시도할 수 있습니다.',
+  'site.docs.media.headline': '{design} 프레젠테이션: 디자인과 {pdf} 가져오기',
   'site.docs.media.title': '가져오기와 동영상',
-  'site.docs.media.summary': '디자인, 페이지 이미지와 동영상 링크를 캔버스에 추가하세요.',
+  'site.docs.media.summary':
+    '로컬 {design} 파일로 프레젠테이션을 만드세요. 지원하는 텍스트와 도형, {pdf} 페이지와 동영상 링크를 가져오고 발표 전에 변환 한계를 확인하세요.',
   'site.docs.media.filesHeading': '이미지와 페이지 가져오기',
   'site.docs.media.filesBody':
     '툴바의 파일 가져오기({import})를 선택하거나 캔버스에 파일을 놓으세요. 이미지는 이동하고 크기를 조절할 수 있습니다. {pdf}는 페이지마다 이미지와 발표 프레임으로 변환되므로 내부 텍스트는 직접 편집할 수 없습니다. 가져오기 전체를 한 번에 실행 취소할 수 있습니다.',
-  'site.docs.media.figmaHeading': '로컬 디자인 파일 가져오기',
+  'site.docs.media.figmaHeading': '로컬 디자인 파일로 프레젠테이션 만들기',
   'site.docs.media.figmaBody':
     '로컬 {figma} {format} 파일을 가져와 페이지를 선택한 뒤 텍스트·도형 편집 또는 원본 모양 유지를 고르세요. 편집 모드는 지원하는 텍스트와 기본 도형을 편집 가능하게 유지하며 복잡한 디자인은 이미지로 변환합니다. 원본 모양 유지는 최상위 레이어를 이미지로 만듭니다. 효과, 레이아웃 규칙, 컴포넌트 오버라이드와 일부 마스크는 정확히 유지되지 않으므로 변환 보고서를 확인하세요. 계정이나 API 토큰이 필요 없고 원본 파일은 변경되지 않습니다.',
   'site.docs.media.videoHeading': '동영상 링크 추가하기',
@@ -36,7 +68,8 @@ export const ko: SiteStrings = {
     '동영상 도구에서 지원되는 {youtube}, {vimeo} 또는 직접 동영상 URL을 붙여넣으세요. 문서에는 영상 데이터 대신 링크가 저장됩니다. 동영상을 선택해 재생 옵션을 조절하고 슬라이드 쇼에서 확인하세요. 제공 서비스와 네트워크가 필요하며 브라우저 자동 재생 정책에 따라 클릭해야 할 수 있습니다. 내보낸 {html}에서 {youtube}를 재생하려면 HTTP(S) 호스팅이 필요합니다. 데스크톱 앱은 직접 동영상 파일을 HTTPS 링크에서만 재생합니다. 클라우드 공유는 지원 제공 서비스와 공유 서버 자체 출처의 직접 동영상만 허용합니다.',
   'site.docs.media.details': '디자인 가져오기 제한 자세히 보기',
   'site.docs.ai.title': 'AI와 함께 만들기',
-  'site.docs.ai.summary': 'AI 도우미에 전달할 프롬프트를 준비하고 편집 가능한 결과를 여세요.',
+  'site.docs.ai.summary':
+    '외부 AI 도우미에 프롬프트를 복사해 프레젠테이션을 만들고, 편집 가능한 파일을 열어 검토·내보내기 하세요. 이 페이지는 AI 서비스에 직접 요청하지 않습니다.',
   'site.docs.ai.promptHeading': 'AI 도우미에 프롬프트 전달하기',
   'site.docs.ai.promptBody':
     '앱을 소개하는 예시로 바로 시작해 보세요. 일반은 차분한 배치와 절제된 카메라 이동으로 8장을 구성하고, 다이나믹은 다양한 카메라 시점과 내부 확대 프레임을 포함해 8장면을 구성합니다. 편집기 상단의 AI와 함께 만들기에서도 같은 프롬프트를 사용할 수 있습니다.',
@@ -64,7 +97,7 @@ export const ko: SiteStrings = {
   'site.docs.sharing.fontBody':
     '데스크톱 내보내기는 설치된 글꼴의 일부를 포함할 수 있습니다. 브라우저 내보내기는 사용 가능한 글꼴에 따라 달라지므로 받는 기기에서 확인하세요. 내장 이미지와 플레이어는 {html} 파일에 포함되지만 연결된 동영상은 호스트와 네트워크가 필요합니다. 나중에 수정할 수 있도록 {format} 원본을 보관하세요.',
   'site.hero.editor': '웹 편집기 열기',
-  'site.showcase.meta': 'ShowCase — {product}',
+  'site.showcase.meta': '{product} ShowCase — 프레젠테이션 예제',
   'site.showcase.description':
     '프레젠테이션 안으로 들어가 보세요. 프레임을 따라 이동하고 전체 캔버스를 살펴본 뒤 브라우저에서 직접 편집할 수 있습니다. 설치나 계정은 필요 없습니다.',
   'site.showcase.homeTitle': '캔버스로 어디까지 갈 수 있을까요?',
@@ -121,7 +154,7 @@ export const ko: SiteStrings = {
     '전체 보기를 연 다음 결제 재시도로 확대해 보세요. 모든 도형과 연결선을 편집할 수 있습니다.',
   'site.workflows.title': '이야기에 더 많은 것을 담으세요.',
   'site.workflows.description': '첫 아이디어부터 최종 발표까지, 디테일과 맥락을 함께 유지하세요.',
-  'site.workflows.motion.title': '카메라를 연출하세요.',
+  'site.workflows.motion.title': '줌 프레젠테이션을 만드세요.',
   'site.workflows.motion.body':
     '프레임마다 속도, 이동 곡선, 회전과 스포트라이트를 설정하고 미리 보거나 여러 프레임을 함께 조절하세요.',
   'site.workflows.import.title': '가지고 있는 자료부터.',
@@ -154,18 +187,24 @@ export const ko: SiteStrings = {
   'site.docs.time': '약 {minutes}분',
   'site.docs.overview.title': '시작 안내',
   'site.docs.overview.summary': '캔버스와 프레임, 발표 흐름을 한눈에 알아보세요.',
+  'site.docs.installation.headline': '{mac}·{windows}용 무료 프레젠테이션 프로그램 설치',
   'site.docs.installation.title': '설치',
-  'site.docs.installation.summary': '컴퓨터에 앱을 설치하거나 소스에서 빌드하세요.',
+  'site.docs.installation.summary':
+    '{mac}과 {windows}용 무료 프레젠테이션 프로그램을 다운로드하거나 설치 없이 웹 편집기를 사용하세요. 로컬 파일로 편집하고 발표할 데스크톱 앱의 설치 방법을 안내합니다.',
   'site.docs.quick-start.title': '첫 프레젠테이션',
   'site.docs.quick-start.summary': '여섯 단계로 빈 캔버스에서 첫 발표까지 완성하세요.',
   'site.docs.canvas.title': '캔버스 탐색',
   'site.docs.canvas.summary': '화면을 이동하고 확대하며 전체 아이디어를 살펴보세요.',
   'site.docs.editing.title': '만들기와 편집',
   'site.docs.editing.summary': '텍스트, 도형, 이미지와 연결선을 다루는 방법입니다.',
+  'site.docs.frames.headline': '중첩 프레임으로 줌 프레젠테이션 만들기',
   'site.docs.frames.title': '프레임과 발표',
-  'site.docs.frames.summary': '보여줄 순간과 순서를 정하고 발표를 시작하세요.',
+  'site.docs.frames.summary':
+    '무한 캔버스에서 줌 프레젠테이션을 만드세요. 중첩 프레임으로 전체에서 세부까지 확대하고, 슬라이드를 복제하지 않고 카메라 이동과 발표 순서를 정하세요.',
+  'site.docs.sharing.headline': '{html} 프레젠테이션과 오프라인 발표',
   'site.docs.sharing.title': '저장과 공유',
-  'site.docs.sharing.summary': '편집 가능한 원본을 보관하고 발표 파일을 내보내세요.',
+  'site.docs.sharing.summary':
+    '플레이어가 포함된 {html} 프레젠테이션을 내보내고 브라우저에서 내장 콘텐츠를 오프라인으로 발표하세요. 편집 가능한 원본 보관, 글꼴·동영상 조건과 공유 방법도 안내합니다.',
   'site.docs.shortcuts.title': '키보드 단축키',
   'site.docs.shortcuts.summary': '키보드로 빠르게 작업 흐름을 이어가세요.',
   'site.docs.faq.title': '자주 묻는 질문',
@@ -253,7 +292,7 @@ export const ko: SiteStrings = {
   'site.docs.sharing.exportHeading': '발표 파일 내보내기',
   'site.docs.sharing.exportBody':
     '{export}로 내보내기 대화상자를 열고 형식을 선택하세요. {html}은 이미지 품질 옵션과 예상 파일 크기를 확인한 뒤 저장하면 발표 내용과 플레이어가 포함된 단일 파일이 됩니다. {pdf}는 발표 순서대로 프레임 하나당 한 페이지씩, 각 페이지를 해당 프레임 비율로 만들며 페이지 해상도를 선택할 수 있습니다. 페이지는 이미지로 렌더링하므로 텍스트를 선택할 수 없고 동영상은 정지 화면으로 표시됩니다.',
-  'site.docs.sharing.playHeading': '발표할 곳에서 열기',
+  'site.docs.sharing.playHeading': '브라우저에서 오프라인 발표하기',
   'site.docs.sharing.playBody':
     '내보낸 파일을 브라우저에서 여세요. 내장 콘텐츠는 오프라인에서 작동하며 보는 사람에게 데스크톱 앱이 필요하지 않습니다. 연결된 동영상은 네트워크와 HTTP(S) 호스팅이 필요할 수 있습니다. 플레이어 버튼이나 방향키로 이동하고 전체 보기에서 원하는 프레임으로 이동하세요. HTML은 밝은 테마와 영어를 유지하며 동일한 자동 숨김 컨트롤·레이저·잉크 도구를 제공합니다. 이미 배포한 파일에 플레이어 변경을 적용하려면 다시 내보내야 합니다.',
   'site.docs.sharing.tip':
@@ -289,7 +328,7 @@ export const ko: SiteStrings = {
     '아니요. 데스크톱 앱은 로그인 없이 사용할 수 있습니다. 문서는 내 컴퓨터에 파일로 저장합니다.',
   'site.docs.faq.offlineQ': '오프라인에서도 작업하고 발표할 수 있나요?',
   'site.docs.faq.offlineA':
-    '데스크톱 편집기와 콘텐츠가 내장된 내보내기 파일은 오프라인에서 작동합니다. 연결된 동영상은 제공 서비스와 네트워크가 필요하며 웹 예제와 클라우드 스냅샷을 여는 데도 연결이 필요합니다.',
+    '네. 데스크톱 편집기에서 콘텐츠가 내장된 {format} 파일로 오프라인 편집과 발표를 할 수 있습니다. 수정 없이 발표만 진행한다면 단일 {html} 파일로 내보내 브라우저에서 오프라인으로 발표할 수 있습니다. 이미지와 재생 기능이 파일에 포함되며, 데스크톱에서 내보낼 때는 설치된 폰트의 사용 글자도 포함할 수 있습니다. 웹 편집기에서 내보낸 파일의 폰트는 재생 환경에 따라 달라집니다. 단, 연결된 동영상은 네트워크 연결이 필요합니다.',
   'site.docs.faq.networkQ': '앱은 네트워크로 무엇을 보내나요?',
   'site.docs.faq.networkA':
     '업데이트 동작과 전송 데이터는 아래 README 링크에서 확인하세요. 업데이트 확인을 설정하려면 데스크톱 앱의 CanvaSlide 정보 대화상자를 여세요. 시작할 때 업데이트 확인을 해제하면 실행 시 확인을 끄고, 업데이트 확인을 누르면 바로 확인할 수 있습니다.',
@@ -323,34 +362,31 @@ export const ko: SiteStrings = {
   'site.ray.play': '마스코트 애니메이션 다시 재생',
   'site.overview.title': '전체를 조망하고,\n흐름을 이어가세요.',
   'site.overview.description':
-    '모든 슬라이드를 한눈에 펼쳐 보면 생각과 생각이 어떻게 이어지는지 보입니다. 청중에게 필요한 장면으로 이동하고, 다시 전체 캔버스로 돌아와 이야기의 흐름을 자연스럽게 이어가세요.',
+    '사용자, 서비스, 데이터가 어떻게 연결되는지 실제 시스템 구성도로 살펴보세요. 설명할 영역으로 이동한 뒤 전체 캔버스로 돌아오면 요청이 흘러가는 경로를 놓치지 않고 이야기를 이어갈 수 있습니다.',
   'site.overview.hint':
-    '슬라이드를 고르고, 이야기를 이어가세요. 필요할 때마다 전체 흐름으로 돌아올 수 있습니다.',
-  'site.overview.all': '슬라이드 전체 보기',
-  'site.overview.previous': '이전 슬라이드',
-  'site.overview.next': '다음 슬라이드',
+    '영역을 고르고 연결을 따라가세요. 필요할 때마다 전체 시스템으로 돌아올 수 있습니다.',
+  'site.overview.all': '전체 시스템 보기',
+  'site.overview.previous': '이전 영역',
+  'site.overview.next': '다음 영역',
   'site.overview.region':
-    '프레젠테이션 전체 조망 체험. 슬라이드를 선택하고 방향키로 이동하거나 Esc 키로 전체 슬라이드를 봅니다.',
-  'site.overview.open': '슬라이드 {n} 보기: {name}',
+    '시스템 구성도 전체 조망 체험. 영역을 선택하고 방향키로 이동하거나 Esc 키로 전체 시스템을 봅니다.',
+  'site.overview.open': '영역 {n} 보기: {name}',
   'site.overview.caption':
-    '여섯 장의 슬라이드, 하나로 이어지는 이야기. 예제 내용은 영어로 제공됩니다.',
+    '쇼핑 플랫폼 구성도: 사용자와 접점, 서비스, 데이터. 예제 내용은 영어로 제공됩니다.',
+  'site.overview.edgeFrame': '사용자와 접점',
+  'site.overview.servicesFrame': '서비스',
+  'site.overview.dataFrame': '데이터',
   'site.overview.link': '전체 흐름을 보며 발표하는 방법',
-  'site.overview.titleSlide': '표지',
-  'site.overview.agendaSlide': '목차',
-  'site.overview.problemSlide': '문제 정의',
-  'site.overview.processSlide': '작동 방식',
-  'site.overview.resultsSlide': '성과',
-  'site.overview.roadmapSlide': '로드맵',
   'site.docs.frames.overviewHeading': '슬라이드 전체를 조망하며 발표 이어가기',
   'site.docs.frames.overviewBody':
     '발표 중 전체 보기 컨트롤을 사용하면 모든 슬라이드를 캔버스 위에서 한눈에 볼 수 있습니다. 프레임을 클릭해 원하는 장면으로 바로 이동한 뒤 이전·다음 컨트롤로 발표를 이어가세요. 각 장면의 관계를 설명하고 싶을 때는 다시 전체 보기로 돌아올 수 있습니다. 내보낸 브라우저 프레젠테이션에서도 전체 조망과 프레임 선택을 사용할 수 있습니다.',
   'site.hero.title': '무한 Canvas + Slide Show',
   'site.hero.description':
-    '아이디어를 연결하고 디자인을 가져와 전체 흐름에서 작은 디테일까지 안내하세요. 실제 프레젠테이션을 열고 나만의 이야기로 바꿔보세요.',
+    '하나의 무한 캔버스에서 줌 프레젠테이션을 만드세요. 아이디어를 연결하고 전체에서 프레임 안의 작은 디테일까지 확대하세요. 콘텐츠를 내장한 {html} 파일 하나로 오프라인 발표도 할 수 있습니다.',
   'site.hero.try': 'ShowCase 둘러보기',
-  'site.hero.note': '무료 오픈 소스. 오프라인에서도 자유롭게.',
+  'site.hero.note': '무료 오픈 소스. 데스크톱 편집은 오프라인으로.',
   'site.hero.scroll': '캔버스의 가능성을 만나보세요',
-  'site.hero.eyebrow': '생각을 펼치는 캔버스, 시선을 이끄는 이야기.',
+  'site.hero.eyebrow': '무료 프레젠테이션 프로그램 · 무한 캔버스',
   'site.hero.ray': '푸른 날개를 활짝 펴고 자유롭게 활공하는 {product} 마스코트 레이.',
   'site.hero.file': '어디로든 떠날 준비 완료.',
   'site.possibilities.eyebrow': '생각마다 어울리는 표현으로',
@@ -399,39 +435,37 @@ export const ko: SiteStrings = {
   'site.docs.frames.detailHeading': '같은 슬라이드 안에서 부분 확대하기',
   'site.docs.frames.detailBody':
     '슬라이드 전체를 담는 프레임을 만든 다음, 프레임 도구로 그 안의 차트나 표, 설명할 세부 영역에 작은 프레임을 추가하세요. 프레임 목록에서 전체 프레임 다음에 세부 프레임이 오도록 배치합니다. 발표를 진행하면 해당 부분으로 카메라가 확대되고, 이전 프레임으로 이동하면 슬라이드 전체로 돌아옵니다. 같은 캔버스 내용을 바라보므로 슬라이드를 복제할 필요가 없습니다. 이 전환은 {format} 내보내기에도 그대로 포함됩니다.',
-  'site.demo.document': '작은 생각에서 시작된 이야기',
+  'site.demo.document': '예제 · {name}',
   'site.demo.label':
-    '인터랙티브 캔버스 예시. 좌우 방향키로 장면을 이동하고 Escape로 전체를 볼 수 있습니다.',
+    '중첩 발표 프레임. 방향키로 전체 캔버스, 결과 슬라이드, 내부 상세를 이동하세요. Escape는 전체 보기로 돌아갑니다.',
   'site.demo.all': '전체 보기',
-  'site.demo.idea': '아이디어',
-  'site.demo.frame': '프레임',
-  'site.demo.story': '이야기',
-  'site.demo.ideaTitle': '여기서\n시작해 볼까요?',
-  'site.demo.ideaNote': '펼쳐 보고 싶은 작은 생각.',
-  'site.demo.frameTitle': '생각 사이의\n연결을 찾다.',
-  'site.demo.frameNote': '생각이 자라날 공간을 주세요.',
-  'site.demo.storyTitle': '이야기가\n날아오르다.',
-  'site.demo.storyNote': '하나의 캔버스, 새로운 시선.',
-  'site.demo.note': '어디서 시작해도 괜찮아요.',
-  'site.demo.noteTwo': '다음 아이디어를 위한 빈자리.',
+  'site.demo.idea': '전체 캔버스',
+  'site.demo.frame': '결과 프레임',
+  'site.demo.story': '내부 상세',
   'site.demo.play': '발표 재생',
   'site.demo.stop': '일시 정지',
   'site.demo.previous': '이전 프레임',
   'site.demo.next': '다음 프레임',
-  'site.demo.hint': '프레임을 눌러 더 큰 그림을 만나보세요.',
+  'site.demo.hint': '하나의 캔버스에서 프레임 안의 세부로 들어가 보세요.',
   'site.demo.scene': '{total}개 중 {n}번째 프레임',
   'site.story.title': '생각할 공간이 생기면,\n발표의 방식도 달라집니다.',
-  'site.story.description': '빈 캔버스 위 작은 생각이 하나의 발표가 되는 순간을 따라가세요.',
-  'site.story.step1Title': '어디든 자유롭게 놓으세요.',
+  'site.story.description': '이야기 전체에서 프레임으로, 프레임 안의 세부로 자연스럽게 들어가세요.',
+  'site.story.step1Title': '이야기를 한눈에 보세요.',
   'site.story.step1Body':
-    '메모, 이미지, 다이어그램을 생각의 흐름대로 배치하세요. 다음 아이디어를 위한 공간은 언제나 충분합니다.',
-  'site.story.step2Title': '중요한 순간을 담으세요.',
+    '모든 슬라이드가 같은 공간에 놓여 있습니다. 직접 열어 편집할 수 있는 실제 예제입니다.',
+  'site.story.step2Title': '결과 프레임으로 들어가세요.',
   'site.story.step2Body':
-    '보여주고 싶은 영역에 프레임을 그리고 순서를 정하세요. 캔버스에 이야기의 길이 생깁니다.',
-  'site.story.step3Title': '함께 이야기를 따라가세요.',
+    '카메라가 결과 프레임으로 다가갑니다. 주변 슬라이드는 제자리를 지키고, 숫자가 선명해집니다.',
+  'site.story.step3Title': '끊김 없이 더 깊이 들어가세요.',
   'site.story.step3Body':
-    '전체에서 세부로 자연스럽게 이동하세요. 카메라가 프레임을 따라 움직이며 생각의 흐름을 전합니다.',
+    '결과 슬라이드 안에 더 작은 프레임이 있습니다. 그 안으로 확대하며 전체와 세부의 연결을 보여주세요.',
   'site.story.controls': '이야기 단계',
+  'site.features.previewAlt':
+    '{name} 예제의 {first}~{last}번 프레임을 따라 신체 내부의 세부에서 인체 전체로 이동하는 발표.',
+  'site.features.previewCaption': '{name} · {first}~{last}번 프레임',
+  'site.features.previewPlay': '다시 재생',
+  'site.features.previewStop': '재생 멈추기',
+  'site.features.previewOpen': '예제 열기',
   'site.features.title': '다음 아이디어에\n필요한 것들.',
   'site.features.description': '꼭 필요한 도구와 넓은 캔버스. 보여주고 싶은 생각에 집중하세요.',
   'site.features.canvasTitle': '모든 방향으로 생각하세요.',
@@ -440,13 +474,13 @@ export const ko: SiteStrings = {
   'site.features.controlTitle': '익숙해서 더 편하게.',
   'site.features.controlBody':
     '맞추고, 복제하고, 되돌리세요. 익숙한 단축키와 정밀한 편집 도구가 함께합니다.',
-  'site.features.offlineTitle': '작업은 내 곁에.',
+  'site.features.offlineTitle': '오프라인에서도 만들고 발표하세요.',
   'site.features.offlineBody':
-    '캔버스를 내 컴퓨터에 저장하세요. 계정이나 인터넷 연결 없이 만들고 발표할 수 있습니다.',
+    '캔버스를 내 컴퓨터에 저장하세요. 데스크톱 앱에서는 계정이나 인터넷 연결 없이 편집하고 내장 콘텐츠를 발표할 수 있습니다.',
   'site.share.title': '이야기 전체를,\n{format} 하나에.',
   'site.share.body':
-    '캔버스, 이미지, 발표 프레임과 확대 전환까지 {format} 파일 하나에 담깁니다. 파일만 전달하세요. 받는 사람은 앱 설치 없이 브라우저에서, 오프라인으로도 볼 수 있습니다.',
-  'site.share.link': '공유 방법 알아보기',
+    '캔버스, 내장 이미지, 발표 프레임과 확대 전환을 {format} 파일 하나에 담습니다. 앱 설치 없이 브라우저에서 열 수 있습니다. 내장 콘텐츠는 오프라인으로 볼 수 있고, 연결된 동영상은 제공 서비스와 네트워크가 필요합니다.',
+  'site.share.link': '오프라인 발표 파일 내보내기 안내',
   'site.share.source': '편집 가능한 캔버스',
   'site.share.export': '발표할 준비 완료',
   'site.share.note': '이미지와 플레이어까지 하나의 파일에.',
@@ -465,9 +499,9 @@ export const ko: SiteStrings = {
   'site.footer.licenseLink': '라이선스',
   'site.footer.thirdPartyNotices': '타사 고지 사항',
   'site.footer.top': '맨 위로',
-  'site.meta.home': '{product} — 당신의 생각에, 날아갈 공간을.',
+  'site.meta.home': '{product} — 무료 프레젠테이션 프로그램 · 무한 캔버스 줌',
   'site.meta.description':
-    '아이디어 연결, 카메라 연출, {design}·{pdf} 가져오기와 공유를 위한 무한 캔버스. 브라우저에서 편집 가능한 예제를 만나보세요.',
+    '{mac}, {windows}, 웹에서 쓰는 무료 오픈 소스 프레젠테이션 프로그램. 중첩 프레임을 확대하며 발표하고, {design}·{pdf}를 가져와 오프라인 발표용 {html}로 내보내세요.',
   'site.screenshot.editor': '도형, 텍스트, 발표 프레임이 배치된 캔버스 편집기',
   'site.screenshot.present': '전체 화면으로 표시된 발표 프레임'
 }

@@ -1,52 +1,49 @@
 import { create } from 'zustand'
 import type { Locale } from '@app/i18n/translator'
+import type { TopicId } from './docs-topics'
+import { routePath, type SiteRoute } from './site-routes'
 
 type Theme = 'light' | 'dark'
 type Preferences = {
+  route: SiteRoute
   locale: Locale
   theme: Theme
-  changeLocale: (locale: Locale) => void
+  enhanced: boolean
   changeTheme: () => void
 }
 
-function remember(key: string, value: string) {
-  try {
-    localStorage.setItem(`canvaslide-site-${key}`, value)
-  } catch {
-    // Device preferences should not block the website in restricted browsers.
-  }
+function createPreferences(route: SiteRoute) {
+  return create<Preferences>((set, get) => ({
+    route,
+    locale: route.locale,
+    theme: 'light',
+    enhanced: false,
+    changeTheme: () => {
+      const next = get().theme === 'light' ? 'dark' : 'light'
+      document.documentElement.dataset.theme = next
+      document.documentElement.style.colorScheme = next
+      try {
+        localStorage.setItem('canvaslide-site-theme', next)
+      } catch {
+        // Preferences are optional in restricted browsers.
+      }
+      set({ theme: next })
+    }
+  }))
 }
 
-const locale: Locale = document.documentElement.lang === 'ko' ? 'ko' : 'en'
-const theme: Theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
+export let useSitePreferences = createPreferences({ locale: 'en', page: 'product' })
 
-export const useSitePreferences = create<Preferences>((set, get) => ({
-  locale,
-  theme,
-  changeLocale: (next) => {
-    document.documentElement.lang = next
-    remember('language', next)
-    const url = new URL(location.href)
-    url.searchParams.set('lang', next)
-    history.replaceState(null, '', url)
-    set({ locale: next })
-  },
-  changeTheme: () => {
-    const next = get().theme === 'light' ? 'dark' : 'light'
-    document.documentElement.dataset.theme = next
-    document.documentElement.style.colorScheme = next
-    remember('theme', next)
-    set({ theme: next })
-  }
-}))
+// Each static page is rendered sequentially with its own store and matching hydration snapshot.
+export function initializeSite(route: SiteRoute) {
+  useSitePreferences = createPreferences(route)
+}
 
 export const repositoryUrl = 'https://github.com/hwantage/CanvaSlide'
 export const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`
 
-export function siteHref(path = '', guide?: string) {
-  const params = new URLSearchParams({ lang: useSitePreferences.getState().locale })
-  if (guide) {
-    params.set('guide', guide)
-  }
-  return `${asset(path)}?${params}`
+export function siteHref(path: '' | 'docs/' | 'showcase/' = '', guide?: TopicId) {
+  const locale = useSitePreferences.getState().locale
+  const page = path === 'docs/' ? 'docs' : path === 'showcase/' ? 'showcase' : 'product'
+  return asset(routePath({ locale, page, topic: guide }))
 }

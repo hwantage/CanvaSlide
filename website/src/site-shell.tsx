@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ArrowUp, Menu, Moon, Sun, X } from 'lucide-react'
+import { routePath } from './site-routes'
 import { THIRD_PARTY_NOTICES_FILE } from '@shared/third-party-notices'
 import { t } from './i18n/site-strings'
 import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
@@ -47,7 +48,7 @@ export function SiteShell({
 }) {
   const locale = useSitePreferences((s) => s.locale)
   const theme = useSitePreferences((s) => s.theme)
-  const changeLocale = useSitePreferences((s) => s.changeLocale)
+  const route = useSitePreferences((s) => s.route)
   const changeTheme = useSitePreferences((s) => s.changeTheme)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -94,23 +95,23 @@ export function SiteShell({
           </nav>
           <div className="header-actions">
             <div className="language-switch" role="group" aria-label={t('site.language')}>
-              <button
-                type="button"
+              <a
+                href={asset(routePath({ ...route, locale: 'en' }))}
                 lang="en"
-                aria-pressed={locale === 'en'}
-                onClick={() => changeLocale('en')}
+                hrefLang="en"
+                aria-current={locale === 'en' ? 'page' : undefined}
               >
                 EN
-              </button>
+              </a>
               <span aria-hidden="true">/</span>
-              <button
-                type="button"
+              <a
+                href={asset(routePath({ ...route, locale: 'ko' }))}
                 lang="ko"
-                aria-pressed={locale === 'ko'}
-                onClick={() => changeLocale('ko')}
+                hrefLang="ko"
+                aria-current={locale === 'ko' ? 'page' : undefined}
               >
                 한국어
-              </button>
+              </a>
             </div>
             <button
               className="icon-button theme-switch"
@@ -151,7 +152,7 @@ export function SiteShell({
           <a href={asset(THIRD_PARTY_NOTICES_FILE)}>{t('site.footer.thirdPartyNotices')}</a>
         </nav>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} CanvaSlide</span>
+          <span>© CanvaSlide</span>
           <span>{t('site.footer.license')}</span>
           <GitHubLink />
           <a href="#top" aria-label={t('site.footer.top')}>

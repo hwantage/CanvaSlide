@@ -1,29 +1,27 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { createZoomPanInterpolator } from '@shared/canvas/zoom-pan-interpolation'
 
-const scenes = [
-  { cx: 540, cy: 340, w: 1160, height: 730 },
-  { cx: 240, cy: 335, w: 415, height: 270 },
-  { cx: 780, cy: 155, w: 445, height: 280 },
-  { cx: 825, cy: 525, w: 415, height: 280 }
-]
+type CameraView = { cx: number; cy: number; w: number; height: number }
 
-export function useDemoCamera(scene: number, views = scenes) {
+export function useDemoCamera(scene: number, views: CameraView[]) {
   const viewport = useRef<HTMLDivElement>(null)
   const world = useRef<HTMLDivElement>(null)
   const camera = useRef(views[0]!)
   const ready = useRef(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = viewport.current
     const content = world.current
     if (!canvas || !content) {
       return
     }
+    // The global reduced-motion rule must not introduce CSS transitions on this RAF-driven surface.
+    content.style.transitionProperty = 'none'
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
     let animation = 0
     const paint = () => {
       const scale = canvas.clientWidth / camera.current.w
+      content.style.setProperty('--camera-scale', String(scale))
       content.style.transform = `translate(${canvas.clientWidth / 2 - camera.current.cx * scale}px, ${canvas.clientHeight / 2 - camera.current.cy * scale}px) scale(${scale})`
     }
     const target = () => {

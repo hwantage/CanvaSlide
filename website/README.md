@@ -9,11 +9,70 @@ pnpm preview:site  # http://127.0.0.1:1422/CanvaSlide/
 pnpm test:site     # builds and tests the production output
 ```
 
-The home page is `/`, ShowCase is `/showcase/`, and documentation is `/docs/`. Documentation topics use `?guide=installation`, `?guide=quick-start`, and the other IDs in `src/docs-topics.ts`. All three are real HTML entry points, so direct links and reloads work on GitHub Pages without a SPA rewrite or a custom 404 redirect.
+## Static pages and search discovery
+
+The English home page is `/`, ShowCase is `/showcase/`, and the guide overview is `/docs/`.
+Guide topics use paths such as `/docs/installation/` and `/docs/ai/`. Korean equivalents add
+`/ko/`, for example `/ko/docs/ai/`. These paths are relative to the production `/CanvaSlide/` base.
+[`site-routes.ts`](./src/site-routes.ts) owns the route list; each route gets a real `index.html`,
+so direct navigation and reload work on GitHub Pages without a SPA rewrite or custom 404 redirect.
+
+[`static-pages.ts`](./static-pages.ts) prerenders the same React components used by the browser,
+using the client build's asset links. It renders pages sequentially with a fresh preference store
+for each route. Initial HTML includes the home content and FAQ answers, ShowCase cards, guide text,
+links, localized metadata, reciprocal `en`/`ko`/`x-default` alternates and JSON-LD.
+[`entry-server.tsx`](./src/entry-server.tsx) also generates `sitemap.xml` from the same routes.
+No guessed modification dates, ratings or reviews are emitted. The browser hydrates this HTML;
+OS-specific shortcut labels, theme-dependent artwork and mascot motion enhance it afterward.
+Development uses the same routes and components with client rendering.
+
+Old `?guide=installation` and `?lang=ko` links remain usable: JavaScript navigates to the equivalent
+path with `location.replace`, keeping anchors and unrelated query parameters. A valid legacy language
+parameter overrides the path for that migration; invalid values fall back to the requested page.
+This is a client redirect, not a server 301. Without JavaScript, old query URLs display the underlying
+path's static page, whose navigation links reach all languages and guide topics. Canonical metadata
+always describes that static path and is never rewritten to another URL during hydration.
+
+Submit `https://hwantage.github.io/CanvaSlide/sitemap.xml` through the owner's Search Console and
+Bing Webmaster Tools properties after publication. The origin-root `https://hwantage.github.io/robots.txt`
+is controlled by the root site, outside this project; a project-level `/CanvaSlide/robots.txt` would
+not control crawling. Hosting remains GitHub Pages. No tracking scripts or special AI crawler files
+are required by this implementation. Search coverage, rankings and AI citations must be measured
+separately; static HTML and structured data do not guarantee them. See Google's
+[JavaScript SEO guidance](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)
+and [AI search guidance](https://developers.google.com/search/docs/appearance/ai-features).
+
+### Search intent and page ownership
+
+Keep each guide focused on the workflow it actually supports. Page headings and metadata use the
+same localized copy; guide navigation retains shorter labels. The home page introduces the product,
+while linked guides answer specific tasks:
+
+| Page (and `/ko/` equivalent) | Search intent                                          | Visible evidence                                                             |
+| ---------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `/`                          | Free presentation software; 무료 프레젠테이션 프로그램 | Product introduction, working zoom demo, open-source and offline FAQ         |
+| `/docs/frames/`              | Zooming presentations; 무한 캔버스·줌 프레젠테이션     | Nested-frame setup, camera controls and overview navigation                  |
+| `/docs/sharing/`             | HTML presentation; 오프라인 발표                       | Export steps, browser playback, editable originals and media/font conditions |
+| `/docs/installation/`        | Presentation software for Mac and Windows              | Actual installers, requirements and browser alternative                      |
+| `/docs/media/`               | Figma presentation; 피그마 파일 가져오기               | Local `.fig` conversion, editable content and conversion limits              |
+| `/docs/ai/`                  | AI-assisted presentation workflow                      | External-assistant prompt, editable output and review steps                  |
+
+Use measured demand, search-result competition and feature fit together when revising this mapping.
+Keep dated research, provider exports, country/device settings and uncertainty in PR evidence under
+ignored `discuss/`, rather than publishing search-volume claims in product copy. Advertising
+competition is not organic ranking difficulty; provider difficulty scores are estimates. Reject
+malformed or unsupported-language results instead of treating them as zero demand. Do not target
+PPT/PPTX conversion or a built-in AI generator: these are not supported workflows.
+
+After publication and sitemap submission, compare Search Console queries and landing pages by
+country/language over consistent 28-day periods. Record impressions, clicks, CTR and average position;
+review index coverage before interpreting missing traffic as missing demand. Use owner-authorized
+Google Keyword Planner or Naver keyword-tool exports to validate market-specific demand. Do not add
+hidden keyword lists, keyword-density targets, or thin pages for spelling variants.
 
 ## Content and preferences
 
-- English is the first-visit default, regardless of browser language. `?lang=ko` and `?lang=en` explicitly select a language. Language and theme choices persist on the current device, independently of desktop app settings.
+- The URL selects the language: English paths always show English and `/ko/` paths always show Korean, regardless of browser language or a previously saved language preference. Language controls are links to the equivalent page; navigating them starts fresh page interactions. Theme choices persist on the device, independently of desktop app settings.
 - The initial theme follows the operating system. `public/appearance.js` applies preferences before the page renders; storage failures are nonfatal.
 - Visible copy uses `t()` from `src/i18n/site-strings.ts`, with its `site.*` keys in `src/i18n/locales/{en,ko}.ts`, separate from the app's tables. Add English keys first; the type then requires the Korean equivalents. The translator itself is shared with the app ([`translator.ts`](../src/renderer/src/i18n/translator.ts)), and the site's language never changes the app's. The AI guide's controls and prompt are the editor's own strings, shown in the site's language.
 - Documentation covers installation, first steps, examples, navigation, editing, connectors, Figma/PDF/image imports, linked video, AI-assisted authoring, frame camera direction and batch editing, saving, cloud snapshots, HTML export, shortcuts, and common questions, including what the app sends over the network.
@@ -34,6 +93,12 @@ The header and footer GitHub links use the official black and white Invertocat S
 Product demonstrations use real example exports and the app's zoom/pan interpolation. Keep manual
 and keyboard controls usable, honor reduced-motion preferences, and refresh screenshots and overview
 regions with the [preparation scripts below](#standalone-example-presentations).
+The home story moves from the Northwind deck overview into its Pilot results frame and then the
+nested 91% frame. Both images stay on one camera surface throughout the transition; the high-resolution
+results crop keeps the close-up legible. The app's shared zoom/pan interpolator drives the movement,
+without changing app presentation policy. Scroll, buttons and arrow keys select views; Escape returns
+to the overview, and reduced motion changes views immediately. The home FAQ uses native disclosures
+with all answers in the initial HTML and links to the relevant guide topics.
 
 ### Ray's scroll journey
 
@@ -96,14 +161,33 @@ The home page offers standalone HTML exports of the repository's order flowchart
 
 The HTML is not committed. [`example-exports.ts`](./example-exports.ts) builds `examples/<id>.html` from the `.canvaslide` source in the shared catalog and the current player, the way the browser editor exports it at original image quality: the document is parsed, its attached connector ends are re-resolved with `syncConnectorGeometry`, and no fonts are embedded. It serves the files in development and emits them in the build; `pnpm dev:site` and `pnpm build:site` rebuild the player first. The IDs are listed in [`src/exported-examples.ts`](./src/exported-examples.ts). The website tests compare each served file, from the build and from the dev server, with a fresh export.
 
-The preview images in `public/examples/` (`flowchart.png`, `erd.png`, `slides.png`, `slide-detail.png`) and the overview's clickable regions in `src/slide-preview-frames.json` are committed. Refresh them when the player or those examples change:
+The preview images in `public/examples/` (`flowchart.png`, `erd.png`, `slides.png`, `slide-detail.png`, `architecture.png`) and frame coordinates in `src/architecture-preview-frames.json` and `src/slide-story-frames.json` are committed. Refresh them when the player or those examples change:
 
 ```bash
 pnpm build:player
 node website/scripts/prepare-examples.ts
 ```
 
-The preparation script uses Playwright Chromium to capture the same exports, including a full-resolution crop of the results slide for the detail demonstration. It waits for camera motion to settle before capturing and records only whole slides, not detail frames nested inside them, as overview regions.
+The preparation script uses Playwright Chromium to capture the same exports. It renders the results slide from the original DOM at 6× pixel density for the nested detail demonstration, preserving sharp text on high-density displays without upscaling an existing image. It waits for camera motion to settle before capturing. The overview demonstration uses a separate shop architecture example, captured at 4× density, with selectable edge, services and data regions; story regions record the results frame and its nested detail from the same overview coordinates. The nested-demo browser spec checks that the results image has enough source pixels at the deepest zoom on a 2× display.
+
+The product-features preview uses `inside-8-13.webp`, an animated capture of the Inside example's
+frames 8 through 13, plus `inside-preview.webp` as its static fallback. It loads the animation
+only while visible, stops when the tab is hidden, and offers stop/replay controls. Reduced-motion
+and JavaScript-disabled visitors see the static preview and a working example link.
+
+Regenerate it with Playwright Chromium and the `cwebp`/`img2webp` tools from libwebp installed locally
+(the site build and CI use the committed files and do not need these tools):
+
+```bash
+pnpm build:player
+node website/scripts/prepare-inside-preview.ts
+```
+
+The script captures the original exported player's camera at 960×540, approximately 15 fps, with
+a short hold on each frame and a longer hold at the end of the loop. Encoded durations play the
+sequence at 1.5× speed (about 9.6 seconds per loop). Playwright's controlled clock
+keeps camera timing independent of screenshot speed. Only presentation controls are hidden; the
+canvas content, frame sequence and shared interpolation remain unchanged.
 
 The editor and slideshow screenshots in `public/images/` (`editor.png`, `present.png`) come from the web editor with the Northwind launch deck open. Refresh them when the editor or presentation UI changes:
 
@@ -120,7 +204,7 @@ node website/scripts/prepare-screenshots.ts
 
 The app build and website output are separate. The Pages workflow does not build a desktop installer. The site uses static files and requires no backend, secrets, or paid hosting services.
 
-For a custom domain, set `WEBSITE_BASE_PATH=/` for both building and previewing, update the canonical/social URLs in all three HTML entry points, and configure the domain and DNS in GitHub Pages settings. The test configuration currently validates the default `/CanvaSlide/` deployment path.
+The test configuration validates the current `/CanvaSlide/` deployment path. `WEBSITE_BASE_PATH` controls local/build asset paths; public canonical URLs are owned by `siteOrigin` in `src/site-routes.ts`. Changing asset paths alone does not migrate the public site.
 
 ## Validation
 

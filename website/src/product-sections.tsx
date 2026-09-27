@@ -8,12 +8,12 @@ import {
   FileCode2,
   FileJson2,
   HardDrive,
-  MoveUpRight,
   Scan,
   SlidersHorizontal
 } from 'lucide-react'
+import { InsidePreview } from './inside-preview'
 import { t } from './i18n/site-strings'
-import { shortcutLabel } from '@app/lib/platform-keys'
+import { shortcutLabel } from './site-shortcuts'
 import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 
 export function ProductFeatures() {
@@ -30,22 +30,7 @@ export function ProductFeatures() {
             <h3>{t('site.features.canvasTitle')}</h3>
             <p>{t('site.features.canvasBody')}</p>
           </div>
-          <figure className="editor-preview">
-            <img
-              src={asset('images/editor.png')}
-              width="1440"
-              height="900"
-              loading="lazy"
-              alt={t('site.screenshot.editor')}
-            />
-            <figcaption>
-              <span>CanvaSlide</span>
-              <a href={siteHref('docs/', 'editing')}>
-                {t('site.docs.editing.title')}
-                <MoveUpRight size={13} />
-              </a>
-            </figcaption>
-          </figure>
+          <InsidePreview />
         </div>
         <div className="feature-secondary">
           <article>

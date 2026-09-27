@@ -178,7 +178,7 @@ test('mobile resize and translated content preserve the final landing position',
   await page.goto('./')
   await page.getByRole('button', { name: 'Pause mascot animation', exact: true }).click()
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.getByRole('button', { name: '한국어', exact: true }).click()
+  await page.getByRole('link', { name: '한국어', exact: true }).click()
   await page.evaluate(() =>
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })
   )

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Check, Copy, Info } from 'lucide-react'
 import { t, type SiteStringKey } from './i18n/site-strings'
-import { isMacPlatform, shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
+import { isMacPlatform } from '@app/lib/platform-keys'
+import { shortcutLabel, shiftLabel } from './site-shortcuts'
 import { asset, repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
 import type { TopicId } from './docs-topics'
 import { exampleEditorUrl, webAppUrl } from './example-links'
@@ -43,7 +44,9 @@ export function CommandBlock({ command }: { command: string }) {
 }
 
 function InstallPlatforms() {
-  const [platform, setPlatform] = useState(isMacPlatform() ? 'mac' : 'windows')
+  const enhanced = useSitePreferences((s) => s.enhanced)
+  const [selected, setPlatform] = useState<string | null>(null)
+  const platform = selected ?? (enhanced && isMacPlatform() ? 'mac' : 'windows')
   return (
     <>
       <aside className="docs-callout">
@@ -67,11 +70,13 @@ function InstallPlatforms() {
             Windows
           </button>
         </div>
-        <p>
-          {platform === 'mac'
-            ? t('site.docs.install.macBody', { dmg: '.dmg', platform: 'macOS', version: '12' })
-            : t('site.docs.install.windowsBody', { exe: '.exe', msi: '.msi' })}
-        </p>
+        {(['mac', 'windows'] as const).map((value) => (
+          <p key={value} hidden={enhanced && platform !== value}>
+            {value === 'mac'
+              ? t('site.docs.install.macBody', { dmg: '.dmg', platform: 'macOS', version: '12' })
+              : t('site.docs.install.windowsBody', { exe: '.exe', msi: '.msi' })}
+          </p>
+        ))}
         <a
           className="text-button"
           href={`${repositoryUrl}/releases`}

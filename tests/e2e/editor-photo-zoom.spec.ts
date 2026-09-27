@@ -26,33 +26,41 @@ test('bounds Retina photo surfaces after extreme-zoom frame-list navigation @web
       .first()
       .click()
     await expect
-      .poll(async () => {
-        return page.evaluate(async (url) => {
-          const { useCameraStore } = await import(url)
-          const state = useCameraStore.getState()
-          const world = document.querySelector<HTMLElement>('[data-testid="world-layer"] > div')!
-          const zoom = Number(world.style.zoom)
-          const surfaces = [
-            ...document.querySelectorAll<HTMLCanvasElement>('[data-image-detail-id]')
-          ].filter((canvas) => getComputedStyle(canvas).visibility === 'visible')
-          return {
-            // CSSOM serializes fewer decimal places than the camera stores.
-            settled: !state.isAnimating() && Math.abs(zoom - state.camera.zoom) < 0.001,
-            hasDetail: surfaces.length > 0,
-            bounded: surfaces.every((canvas) => {
-              const style = getComputedStyle(canvas)
-              return (
-                Math.abs(Number.parseFloat(style.width) * zoom - canvas.width) < 1 &&
-                Math.abs(Number.parseFloat(style.height) * zoom - canvas.height) < 1
-              )
-            }),
-            crisp: surfaces.every((canvas) => {
-              const rect = canvas.getBoundingClientRect()
-              return Math.abs(canvas.width / rect.width - devicePixelRatio) < 0.1
-            })
-          }
-        }, appModuleUrl('store/camera-store.ts'))
-      })
+      .poll(
+        async () => {
+          return page.evaluate(async (url) => {
+            const { useCameraStore } = await import(url)
+            const state = useCameraStore.getState()
+            const world = document.querySelector<HTMLElement>('[data-testid="world-layer"] > div')!
+            const zoom = Number(world.style.zoom)
+            const surfaces = [
+              ...document.querySelectorAll<HTMLCanvasElement>('[data-image-detail-id]')
+            ].filter((canvas) => getComputedStyle(canvas).visibility === 'visible')
+            return {
+              // CSSOM serializes fewer decimal places than the camera stores.
+              settled: !state.isAnimating() && Math.abs(zoom - state.camera.zoom) < 0.001,
+              hasDetail: surfaces.length > 0,
+              bounded: surfaces.every((canvas) => {
+                const style = getComputedStyle(canvas)
+                return (
+                  Math.abs(Number.parseFloat(style.width) * zoom - canvas.width) < 1 &&
+                  Math.abs(Number.parseFloat(style.height) * zoom - canvas.height) < 1
+                )
+              }),
+              crisp: surfaces.every((canvas) => {
+                const rect = canvas.getBoundingClientRect()
+                return Math.abs(canvas.width / rect.width - devicePixelRatio) < 0.1
+              })
+            }
+          }, appModuleUrl('store/camera-store.ts'))
+        },
+        {
+          // Tracing the first Retina navigation can exceed the default wait on macOS CI.
+          // Surface geometry and painted output, rather than elapsed time, are the contract.
+          timeout: 15_000,
+          message: `frame ${number} should settle with bounded, sharp photo detail`
+        }
+      )
       .toEqual({ settled: true, hasDetail: true, bounded: true, crisp: true })
 
     // DOM visibility alone misses WebKit compositor omissions. Inspect the painted canvas area.

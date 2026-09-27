@@ -17,11 +17,13 @@ import { useDocumentStore } from '@/store/document-store'
 export function ImageElement({
   element,
   selected,
-  layoutScale
+  layoutScale,
+  layoutZoom = 1
 }: {
   element: ImageElementModel
   selected: boolean
   layoutScale: number
+  layoutZoom?: number
 }) {
   const asset = useDocumentStore((s) => s.document.assets[element.assetId])
   const scale = Math.max(svgImageLayoutScale(element), layoutScale)
@@ -40,8 +42,8 @@ export function ImageElement({
       if (!canvas || detail.some((tile) => !tile.canvas.width)) {
         return
       }
-      // Keep the surface painted through its transform, without a separate accelerated layer.
-      const context = canvas.getContext('2d', { willReadFrequently: true })
+      // This surface only displays pixels; a readback hint makes WebKit's reveal expensive.
+      const context = canvas.getContext('2d')
       if (!context) {
         return
       }
@@ -97,7 +99,7 @@ export function ImageElement({
           data-image-detail-id={element.id}
           className="absolute left-0 top-0 max-w-none select-none"
           style={{
-            ...imageSurfaceStyle(element, merged.pixels, merged.crop),
+            ...imageSurfaceStyle(element, merged.pixels, merged.crop, layoutZoom),
             visibility: showDetail ? 'visible' : 'hidden'
           }}
         />

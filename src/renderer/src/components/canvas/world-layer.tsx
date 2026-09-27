@@ -96,6 +96,7 @@ export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
         layoutScale={
           element.type === 'image' ? imageLayoutScale(element, baseZoom, flightZoom ?? baseZoom) : 1
         }
+        layoutZoom={element.type === 'image' ? baseZoom : 1}
       />
     )
   }

@@ -12,6 +12,7 @@ type ElementViewProps = {
   editing: boolean
   selected: boolean
   layoutScale: number
+  layoutZoom?: number
   videoMode?: 'editor' | 'passive' | 'manual' | 'auto'
 }
 
@@ -20,6 +21,7 @@ export const ElementView = memo(function ElementView({
   editing,
   selected,
   layoutScale,
+  layoutZoom = 1,
   videoMode = 'editor'
 }: ElementViewProps) {
   switch (element.type) {
@@ -28,7 +30,14 @@ export const ElementView = memo(function ElementView({
     case 'text':
       return <TextElement element={element} editing={editing} />
     case 'image':
-      return <ImageElement element={element} selected={selected} layoutScale={layoutScale} />
+      return (
+        <ImageElement
+          element={element}
+          selected={selected}
+          layoutScale={layoutScale}
+          layoutZoom={layoutZoom}
+        />
+      )
     case 'video':
       return <VideoElement element={element} mode={videoMode} />
     case 'frame':

@@ -74,9 +74,10 @@ for (const lang of ['en', 'ko'] as const) {
     await expect(status).toContainText(text.copied)
 
     const nextLang = lang === 'en' ? 'ko' : 'en'
-    await page.locator(`.language-switch button[lang="${nextLang}"]`).click()
+    await page.locator(`.language-switch a[lang="${nextLang}"]`).click()
     const translatedPrompt = page.getByRole('textbox', { name: labels[nextLang].example })
-    await expect(translatedPrompt).toHaveValue(new RegExp(labels[nextLang].zoom))
+    // Locale links navigate to a fresh, directly addressable guide.
+    await expect(translatedPrompt).toHaveValue(new RegExp(labels[nextLang].calm))
     await expect(status).toBeEmpty()
     await page.getByRole('button', { name: labels[nextLang].copy, exact: true }).click()
     await expect(status).toContainText(labels[nextLang].copied)

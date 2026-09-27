@@ -3,20 +3,15 @@ import { ArrowUpRight, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-reac
 import { t } from './i18n/site-strings'
 import { asset, siteHref } from './site-preferences'
 import { useDemoCamera } from './use-demo-camera'
-import frames from './slide-preview-frames.json'
+import frames from './architecture-preview-frames.json'
 
 const names = [
-  'site.overview.titleSlide',
-  'site.overview.agendaSlide',
-  'site.overview.problemSlide',
-  'site.overview.processSlide',
-  'site.overview.resultsSlide',
-  'site.overview.roadmapSlide'
+  'site.overview.edgeFrame',
+  'site.overview.servicesFrame',
+  'site.overview.dataFrame'
 ] as const
-const top = Math.min(...frames.map((frame) => frame.y))
-const bottom = Math.max(...frames.map((frame) => frame.y + frame.height))
 const views = [
-  { cx: 700, cy: (top + bottom) / 2, w: 1400, height: 630 },
+  { cx: 700, cy: 450, w: 1400, height: 820 },
   ...frames.map((frame) => ({
     cx: frame.x + frame.width / 2,
     cy: frame.y + frame.height / 2,
@@ -60,10 +55,10 @@ export function PresentationOverview() {
         >
           <div className="overview-world" ref={world}>
             <img
-              src={asset('examples/slides.png')}
+              src={asset('examples/architecture.png')}
               width="1400"
               height="1000"
-              alt={t('site.possibilities.slidesAlt')}
+              alt={t('site.showcase.architecture.alt')}
               loading="lazy"
             />
             {frames.map((frame, index) => (

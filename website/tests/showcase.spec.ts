@@ -7,29 +7,29 @@ import { syncConnectorGeometry } from '../../src/shared/canvas/connector-geometr
 import { exampleExportHtml, exampleExportPath } from '../example-exports'
 import { exportedExampleIds } from '../src/exported-examples'
 
-test('the overview opens any slide, continues the sequence, and returns to the whole story', async ({
+test('the overview opens any system region, continues the sequence, and returns to the whole story', async ({
   page
 }) => {
   await page.goto('./')
   const demo = page.locator('.overview-demo')
-  await demo.getByRole('button', { name: 'View slide 3: The problem', exact: true }).click()
+  await demo.getByRole('button', { name: 'View region 2: Services', exact: true }).click()
+  await expect(demo).toHaveAttribute('data-scene', '2')
+  await expect(demo.locator('.overview-current')).toContainText('2 / 3')
+  await demo.getByRole('button', { name: 'Next region', exact: true }).click()
   await expect(demo).toHaveAttribute('data-scene', '3')
-  await expect(demo.locator('.overview-current')).toContainText('3 / 6')
-  await demo.getByRole('button', { name: 'Next slide', exact: true }).click()
-  await expect(demo).toHaveAttribute('data-scene', '4')
   await demo.getByRole('region').focus()
   await page.keyboard.press('Escape')
   await expect(demo).toHaveAttribute('data-scene', '0')
-  await expect(demo.getByRole('button', { name: 'All slides', exact: true })).toHaveAttribute(
+  await expect(demo.getByRole('button', { name: 'Whole system', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true'
   )
-  await demo.getByRole('button', { name: 'View slide 6: Roadmap', exact: true }).click()
-  await expect(demo.getByRole('button', { name: 'Next slide', exact: true })).toBeDisabled()
-  await demo.getByRole('button', { name: 'All slides', exact: true }).click()
-  await expect(demo.getByRole('button', { name: /View slide/ })).toHaveCount(6)
+  await demo.getByRole('button', { name: 'View region 3: Data', exact: true }).click()
+  await expect(demo.getByRole('button', { name: 'Next region', exact: true })).toBeDisabled()
+  await demo.getByRole('button', { name: 'Whole system', exact: true }).click()
+  await expect(demo.getByRole('button', { name: /View region/ })).toHaveCount(3)
   await page.locator('.overview-copy').getByRole('link').click()
-  await expect(page).toHaveURL(/guide=frames#whole-story/)
+  await expect(page).toHaveURL(/docs\/frames\/#whole-story/)
   await expect(page.locator('#whole-story')).toContainText('Click a frame')
 })
 
@@ -172,6 +172,6 @@ test('one slide zooms into a detail and returns to the whole slide', async ({ pa
   )
   await demo.getByRole('region').press('Tab')
   await page.locator('.detail-copy').getByRole('link').click()
-  await expect(page).toHaveURL(/guide=frames#detail-frames/)
+  await expect(page).toHaveURL(/docs\/frames\/#detail-frames/)
   await expect(page.locator('#detail-frames')).toContainText('no need to duplicate the slide')
 })

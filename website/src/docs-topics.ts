@@ -20,13 +20,22 @@ export type TopicId = Topic['id']
 export const topicTitle = (id: TopicId): SiteStringKey => `site.docs.${id}.title`
 export const topicSummary = (id: TopicId): SiteStringKey => `site.docs.${id}.summary`
 
+// Keep navigation short while the page heading names the workflow it teaches.
+export const topicHeading = (id: TopicId): SiteStringKey =>
+  id === 'installation' || id === 'frames' || id === 'sharing' || id === 'media'
+    ? `site.docs.${id}.headline`
+    : topicTitle(id)
+
+export const topicCopyParams = {
+  mac: 'Mac',
+  windows: 'Windows',
+  design: 'Figma',
+  pdf: 'PDF',
+  html: 'HTML'
+}
+
 export const topicGroups = [
   { id: 'start', title: 'site.docs.startGroup' },
   { id: 'create', title: 'site.docs.createGroup' },
   { id: 'reference', title: 'site.docs.referenceGroup' }
 ] as const
-
-export function currentTopic(): Topic {
-  const requested = new URLSearchParams(location.search).get('guide')
-  return topics.find((topic) => topic.id === requested) ?? topics[0]
-}

@@ -13,7 +13,7 @@ macOS와 Windows용 무한 캔버스 프레젠테이션 앱입니다. 하나의 
 [ShowCase](https://hwantage.github.io/CanvaSlide/showcase/) ·
 [웹 편집기 열기](https://canvaslide.pages.dev/) ·
 [릴리스 다운로드](https://github.com/hwantage/CanvaSlide/releases) ·
-[사용 안내](https://hwantage.github.io/CanvaSlide/docs/?lang=ko) ·
+[사용 안내](https://hwantage.github.io/CanvaSlide/ko/docs/) ·
 [문서 목록](./docs/README.md)
 
 ## 왜 CanvaSlide인가?
@@ -87,7 +87,7 @@ macOS와 Windows용 무한 캔버스 프레젠테이션 앱입니다. 하나의 
 
 바로 열어볼 수 있는 플로차트·다이어그램·프레젠테이션은 [예제](./examples/README.md)에 있습니다.
 예제를 열고 슬라이드 쇼를 시작해 보세요.
-전체 단축키는 편집기에서 **K**를 누르거나 [단축키 안내](https://hwantage.github.io/CanvaSlide/docs/?guide=shortcuts&lang=ko)에서 확인하세요.
+전체 단축키는 편집기에서 **K**를 누르거나 [단축키 안내](https://hwantage.github.io/CanvaSlide/ko/docs/shortcuts/)에서 확인하세요.
 
 ## AI와 함께 만들기
 
@@ -140,7 +140,7 @@ macOS 메뉴의 **Check for Updates…**에서 직접 확인할 수도 있습니
 | macOS    | 공증된 업데이트는 앱 안에서 설치하고 다시 시작합니다. 앱 폴더에 쓸 권한이 없으면 관리자 암호를 요청할 수 있습니다. 현재 릴리스는 공증하지 않아 알림에서 릴리스 다운로드 페이지를 열도록 안내합니다. |
 | 브라우저 | 앱 업데이트를 확인하거나 설치하지 않으며, 정보 대화상자에서 릴리스 노트로 연결합니다.                                                                                                               |
 
-업데이트 조작 방법은 [웹사이트 안내](https://hwantage.github.io/CanvaSlide/docs/?lang=ko&guide=faq#network-and-privacy)를 참고하세요.
+업데이트 조작 방법은 [웹사이트 안내](https://hwantage.github.io/CanvaSlide/ko/docs/faq/#network-and-privacy)를 참고하세요.
 릴리스 메인테이너를 위한 피드 게시·서명·관리 네트워크 설정은 [릴리스 운영](./docs/RELEASE.md#7-자동-업데이트)에 있습니다.
 
 ## 개발과 검증

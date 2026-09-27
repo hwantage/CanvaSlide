@@ -11,7 +11,7 @@ test('starts in English even when the browser language is Korean', async ({ brow
 
 test('language and theme survive navigation and reload', async ({ page }) => {
   await page.goto('./')
-  await page.getByRole('button', { name: '한국어', exact: true }).click()
+  await page.getByRole('link', { name: '한국어', exact: true }).click()
   await page.getByRole('button', { name: '다크 테마로 전환' }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
@@ -23,7 +23,9 @@ test('language and theme survive navigation and reload', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
   await page.goto('./docs/?guide=installation&lang=en')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Installation')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Free presentation software for Mac and Windows'
+  )
 })
 
 test('canvas frames respond to buttons, keyboard, and playback', async ({ page }) => {
@@ -34,7 +36,7 @@ test('canvas frames respond to buttons, keyboard, and playback', async ({ page }
   const overviewTransform = await demo
     .locator('.demo-world')
     .evaluate((el) => getComputedStyle(el).transform)
-  await demo.getByRole('button', { name: '2 A frame', exact: true }).click()
+  await demo.getByRole('button', { name: '2 Results', exact: true }).click()
   await expect(demo).toHaveAttribute('data-scene', '2')
   await expect
     .poll(() => demo.locator('.demo-world').evaluate((el) => getComputedStyle(el).transform))
@@ -68,7 +70,7 @@ test('scroll advances the story and its stage stays visible', async ({ page }) =
   const bounds = await story.locator('.story-sticky').boundingBox()
   expect(bounds?.y).toBeGreaterThanOrEqual(80)
   expect(bounds?.y).toBeLessThan(100)
-  await expect(story.getByRole('button', { name: /03 Bring everyone along/ })).toHaveAttribute(
+  await expect(story.getByRole('button', { name: /03 Go deeper, without a cut/ })).toHaveAttribute(
     'aria-pressed',
     'true'
   )
@@ -184,7 +186,7 @@ test('optional preferences still work when storage is blocked', async ({ page })
     }
   })
   await page.goto('./')
-  await page.getByRole('button', { name: '한국어', exact: true }).click()
+  await page.getByRole('link', { name: '한국어', exact: true }).click()
   await page.getByRole('button', { name: '다크 테마로 전환' }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')

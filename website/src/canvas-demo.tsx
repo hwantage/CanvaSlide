@@ -1,10 +1,23 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Maximize2, MousePointer2, Pause, Play } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2, Pause, Play } from 'lucide-react'
 import { t } from './i18n/site-strings'
 import { asset } from './site-preferences'
 import { useDemoCamera } from './use-demo-camera'
+import storyFrames from './slide-story-frames.json'
 
 const labels = ['site.demo.all', 'site.demo.idea', 'site.demo.frame', 'site.demo.story'] as const
+const [results, detail] = storyFrames
+const overview = { cx: 700, cy: 500, w: 1400, height: 630 }
+const views = [
+  overview,
+  overview,
+  ...storyFrames.map((frame) => ({
+    cx: frame.x + frame.width / 2,
+    cy: frame.y + frame.height / 2,
+    w: frame.width * 1.12,
+    height: frame.height * 1.12
+  }))
+]
 
 export function CanvasDemo({
   controlledScene,
@@ -18,7 +31,7 @@ export function CanvasDemo({
   const [selected, setSelected] = useState(0)
   const [playing, setPlaying] = useState(false)
   const scene = controlledScene ?? selected
-  const { viewport, world } = useDemoCamera(scene)
+  const { viewport, world } = useDemoCamera(scene, views)
   const choose = (next: number) => {
     setPlaying(false)
     setSelected(next)
@@ -59,7 +72,7 @@ export function CanvasDemo({
           <i />
           <i />
         </span>
-        <span>{t('site.demo.document')}</span>
+        <span>{t('site.demo.document', { name: 'Northwind Launch Deck' })}</span>
         <Maximize2 size={14} aria-hidden="true" />
       </div>
       <div
@@ -80,37 +93,36 @@ export function CanvasDemo({
         }}
       >
         <div className="demo-world" ref={world}>
-          <svg className="demo-connections" viewBox="0 0 1080 700" aria-hidden="true">
-            <path d="M390 335 C520 335 470 155 620 155 M780 255 C780 340 825 320 825 425" />
-            <circle cx="390" cy="335" r="5" />
-            <circle cx="620" cy="155" r="5" />
-            <circle cx="780" cy="255" r="5" />
-            <circle cx="825" cy="425" r="5" />
-          </svg>
-          <p className="canvas-thought">{t('site.demo.note')}</p>
-          <article className="sample-frame frame-idea">
-            <span className="frame-tab">1 / {t('site.demo.idea')}</span>
-            <h3>{t('site.demo.ideaTitle')}</h3>
-            <p>{t('site.demo.ideaNote')}</p>
-            <span className="sample-cursor" aria-hidden="true">
-              <MousePointer2 size={22} fill="currentColor" />
-            </span>
-          </article>
-          <article className="sample-frame frame-connect">
-            <span className="frame-tab">2 / {t('site.demo.frame')}</span>
-            <h3>{t('site.demo.frameTitle')}</h3>
-            <p>{t('site.demo.frameNote')}</p>
-          </article>
-          <article className="sample-frame frame-story">
-            <span className="frame-tab">3 / {t('site.demo.story')}</span>
-            <h3>{t('site.demo.storyTitle')}</h3>
-            <img src={asset('brand/wing-smile-light-256.png')} width="108" height="108" alt="" />
-            <p>{t('site.demo.storyNote')}</p>
-          </article>
-          <div className="empty-frame">
-            <span>+</span>
-            <p>{t('site.demo.noteTwo')}</p>
-          </div>
+          <img
+            className="demo-canvas-image"
+            src={asset('examples/slides.png')}
+            width="1400"
+            height="1000"
+            alt={t('site.possibilities.slidesAlt')}
+            loading="lazy"
+          />
+          <img
+            className="demo-results-image"
+            src={asset('examples/slide-detail.png')}
+            style={{
+              left: results!.x,
+              top: results!.y,
+              width: results!.width,
+              height: results!.height
+            }}
+            alt=""
+            loading="lazy"
+          />
+          <div
+            className="demo-nested-frame"
+            aria-hidden="true"
+            style={{
+              left: detail!.x,
+              top: detail!.y,
+              width: detail!.width,
+              height: detail!.height
+            }}
+          />
         </div>
       </div>
       <div className="demo-toolbar">

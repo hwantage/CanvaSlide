@@ -33,6 +33,23 @@ async function settleCamera(page: Page) {
   )
 }
 
+async function namedFrames(page: Page, names: string[]) {
+  return page.locator('.uc-frame').evaluateAll(
+    (elements, names) =>
+      names.map((name) => {
+        const frame = elements.find(
+          (element) => element.querySelector('.uc-frame-label span')?.textContent === name
+        )
+        if (!frame) {
+          throw new Error(`Missing example frame: ${name}`)
+        }
+        const { x, y, width, height } = frame.getBoundingClientRect()
+        return { x, y, width, height }
+      }),
+    names
+  )
+}
+
 await mkdir(temporary, { recursive: true })
 const browser = await chromium.launch()
 try {
@@ -50,44 +67,50 @@ try {
     await settleCamera(page)
     await page.screenshot({ path: resolve(output, `${id}.png`), animations: 'disabled' })
     if (id === 'slides') {
-      // Why nested frames are dropped: the site's overview offers whole slides, not detail views.
-      const frames = await page.locator('.uc-frame').evaluateAll((elements) => {
-        const rects = elements.map((element) => {
-          const { x, y, width, height } = element.getBoundingClientRect()
-          return { x, y, width, height }
-        })
-        const contains = (outer: (typeof rects)[number], inner: (typeof rects)[number]) =>
-          outer.x <= inner.x &&
-          outer.y <= inner.y &&
-          outer.x + outer.width >= inner.x + inner.width &&
-          outer.y + outer.height >= inner.y + inner.height
-        // Why the index order: of two identical frames (a revisited slide) the first one stays.
-        return rects.filter(
-          (rect, index) =>
-            !rects.some(
-              (outer, other) =>
-                other !== index &&
-                contains(outer, rect) &&
-                (!contains(rect, outer) || other < index)
-            )
-        )
-      })
+      const storyFrames = await namedFrames(page, ['Pilot results', '91%'])
       await writeFile(
-        resolve(root, 'website/src/slide-preview-frames.json'),
-        `${JSON.stringify(frames, null, 2)}\n`
+        resolve(root, 'website/src/slide-story-frames.json'),
+        `${JSON.stringify(storyFrames, null, 2)}\n`
       )
-      await page.getByRole('button', { name: 'Overview (O)' }).click()
+      // Render the original DOM at 6× density: this slide fills more than 2,000 CSS pixels
+      // when the website zooms into its nested frame, including on Retina displays.
+      const detailPage = await browser.newPage({
+        viewport: { width: 1400, height: 1000 },
+        deviceScaleFactor: 6,
+        reducedMotion: 'reduce'
+      })
+      await detailPage.goto(pathToFileURL(file).href)
       for (let index = 0; index < 4; index++) {
-        await page.getByRole('button', { name: 'Next frame (→)' }).click()
+        await detailPage.getByRole('button', { name: 'Next frame (→)' }).click()
       }
-      await expect(page.getByTestId('presentation-counter')).toContainText('Pilot results')
-      await settleCamera(page)
-      await page.locator('.uc-frame.is-current').screenshot({
+      await expect(detailPage.getByTestId('presentation-counter')).toContainText('Pilot results')
+      await settleCamera(detailPage)
+      await detailPage.locator('.uc-frame.is-current').screenshot({
         path: resolve(output, 'slide-detail.png'),
         animations: 'disabled'
       })
+      await detailPage.close()
     }
   }
+  const architectureFile = resolve(temporary, 'architecture.html')
+  await writeFile(architectureFile, await exampleExportHtml('architecture'))
+  const architecturePage = await browser.newPage({
+    viewport: { width: 1400, height: 1000 },
+    deviceScaleFactor: 4,
+    reducedMotion: 'reduce'
+  })
+  await architecturePage.goto(pathToFileURL(architectureFile).href)
+  await architecturePage.getByRole('button', { name: 'Overview (O)' }).click()
+  await settleCamera(architecturePage)
+  await architecturePage.screenshot({
+    path: resolve(output, 'architecture.png'),
+    animations: 'disabled'
+  })
+  await writeFile(
+    resolve(root, 'website/src/architecture-preview-frames.json'),
+    `${JSON.stringify(await namedFrames(architecturePage, ['Edge', 'Services', 'Data']), null, 2)}\n`
+  )
+  await architecturePage.close()
 } finally {
   await browser.close()
 }

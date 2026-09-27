@@ -45,122 +45,23 @@
 }
 .demo-world {
   position: absolute;
-  width: 1080px;
-  height: 700px;
+  width: 1400px;
+  height: 1000px;
   transform-origin: 0 0;
-  will-change: transform;
 }
-.demo-connections {
+.demo-canvas-image {
+  display: block;
+  width: 1400px;
+  height: 1000px;
+  max-width: none;
+}
+.demo-results-image,
+.demo-nested-frame {
   position: absolute;
-  inset: 0;
-  width: 1080px;
-  height: 700px;
-  fill: var(--canvas);
-  stroke: var(--site-blue);
-  stroke-width: 1.4;
+  max-width: none;
 }
-.demo-connections path {
-  fill: none;
-  stroke-dasharray: 5 7;
-  opacity: 0.55;
-}
-.sample-frame {
-  position: absolute;
-  padding: 31px 26px;
-  border: 1px solid color-mix(in srgb, var(--site-blue) 28%, var(--border));
-  box-shadow: 0 7px 20px var(--site-shadow);
-  background: var(--card);
-  color: var(--site-frame-text);
-}
-.sample-frame h3 {
-  font-size: 32px;
-  line-height: 1.1;
-  white-space: pre-line;
-  letter-spacing: -0.055em;
-}
-.sample-frame p {
-  font-size: 10px;
-  margin-top: 23px;
-  color: var(--muted-foreground);
-}
-.frame-tab {
-  position: absolute;
-  top: -24px;
-  left: -1px;
-  font-size: 10px;
-  color: var(--site-blue);
-}
-.frame-idea {
-  left: 90px;
-  top: 240px;
-  width: 300px;
-  height: 190px;
-}
-.frame-connect {
-  left: 620px;
-  top: 55px;
-  width: 320px;
-  height: 200px;
-  background: var(--site-soft-blue);
-}
-.frame-story {
-  left: 680px;
-  top: 425px;
-  width: 290px;
-  height: 200px;
-  background: var(--site-cream);
-}
-.frame-story h3 {
-  position: relative;
-  z-index: 1;
-}
-.frame-story img {
-  position: absolute;
-  right: -10px;
-  top: 25px;
-  width: 120px;
-  height: 120px;
-  transform: rotate(10deg);
-}
-.frame-story p {
-  position: relative;
-  z-index: 1;
-}
-.sample-cursor {
-  position: absolute;
-  right: -14px;
-  bottom: 15px;
-  color: var(--site-blue);
-  transform: rotate(-15deg);
-}
-.canvas-thought {
-  position: absolute;
-  left: 110px;
-  top: 104px;
-  font-size: 17px;
-  color: var(--muted-foreground);
-  transform: rotate(-7deg);
-  letter-spacing: -0.02em;
-}
-.empty-frame {
-  position: absolute;
-  left: 210px;
-  top: 515px;
-  width: 235px;
-  height: 108px;
-  border: 1px dashed var(--canvas-grid);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted-foreground);
-}
-.empty-frame > span {
-  font-size: 22px;
-  font-weight: 300;
-}
-.empty-frame p {
-  font-size: 11px;
+.demo-nested-frame {
+  border: calc(1.5px / var(--camera-scale, 1)) solid var(--site-blue);
 }
 .demo-toolbar {
   display: flex;

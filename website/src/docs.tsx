@@ -11,14 +11,20 @@ import {
 } from 'lucide-react'
 import { t } from './i18n/site-strings'
 import { repositoryUrl, siteHref, useSitePreferences } from './site-preferences'
-import { currentTopic, topics, topicGroups, topicSummary, topicTitle } from './docs-topics'
+import {
+  topics,
+  topicGroups,
+  topicSummary,
+  topicTitle,
+  topicHeading,
+  topicCopyParams
+} from './docs-topics'
 import { docSections } from './docs-sections'
 import { DocsExtra } from './docs-extras'
-import { updateMetadata } from './site-metadata'
 
 export function Documentation() {
-  const locale = useSitePreferences((s) => s.locale)
-  const topic = currentTopic()
+  const topicId = useSitePreferences((s) => s.route.topic)
+  const topic = topics.find(({ id }) => id === topicId) ?? topics[0]
   const sections = docSections(topic.id)
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState(false)
@@ -26,7 +32,8 @@ export function Documentation() {
   const matches = topics.filter((item) => {
     const text = [
       t(topicTitle(item.id)),
-      t(topicSummary(item.id)),
+      t(topicHeading(item.id), topicCopyParams),
+      t(topicSummary(item.id), topicCopyParams),
       ...docSections(item.id).flatMap((section) => [t(section.heading), t(section.body)])
     ]
       .join(' ')
@@ -36,18 +43,6 @@ export function Documentation() {
   const index = topics.findIndex((item) => item.id === topic.id)
   const previous = topics[index - 1]
   const next = topics[index + 1]
-
-  useEffect(() => {
-    const title = `${t(topicTitle(topic.id))} — CanvaSlide ${t('site.docs.title')}`
-    const description = t(topicSummary(topic.id))
-    const image =
-      topic.id === 'overview'
-        ? 'images/editor.png'
-        : topic.id === 'frames'
-          ? 'images/present.png'
-          : undefined
-    updateMetadata(title, description, `docs/?guide=${topic.id}&lang=${locale}`, image)
-  }, [locale, topic.id])
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -155,8 +150,16 @@ export function Documentation() {
           <span>{t(topicTitle(topic.id))}</span>
         </div>
         <header className="doc-heading">
-          <h1>{topic.id === 'overview' ? t('site.docs.intro') : t(topicTitle(topic.id))}</h1>
-          <p>{topic.id === 'overview' ? t('site.docs.description') : t(topicSummary(topic.id))}</p>
+          <h1>
+            {topic.id === 'overview'
+              ? t('site.docs.intro')
+              : t(topicHeading(topic.id), topicCopyParams)}
+          </h1>
+          <p>
+            {topic.id === 'overview'
+              ? t('site.docs.description')
+              : t(topicSummary(topic.id), topicCopyParams)}
+          </p>
           <span className="reading-time">{t('site.docs.time', { minutes: topic.minutes })}</span>
         </header>
         {topic.id === 'overview' && (
@@ -165,7 +168,7 @@ export function Documentation() {
               <a key={id} href={siteHref('docs/', id)}>
                 <span>
                   <strong>{t(topicTitle(id))}</strong>
-                  <small>{t(topicSummary(id))}</small>
+                  <small>{t(topicSummary(id), topicCopyParams)}</small>
                 </span>
                 <ArrowUpRight size={18} />
               </a>

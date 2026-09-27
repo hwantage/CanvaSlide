@@ -1,6 +1,6 @@
 import { ROTATION_SNAP_DEGREES } from '@shared/canvas/element-rotation'
 import type { SiteStringKey } from './i18n/site-strings'
-import { shortcutLabel, shiftLabel } from '@app/lib/platform-keys'
+import { shortcutLabel, shiftLabel } from './site-shortcuts'
 import type { TopicId } from './docs-topics'
 
 export type DocSection = {
@@ -298,7 +298,12 @@ export function docSections(topic: TopicId): DocSection[] {
     ],
     faq: [
       { id: 'account', heading: 'site.docs.faq.accountQ', body: 'site.docs.faq.accountA' },
-      { id: 'offline', heading: 'site.docs.faq.offlineQ', body: 'site.docs.faq.offlineA' },
+      {
+        id: 'offline',
+        heading: 'site.docs.faq.offlineQ',
+        body: 'site.docs.faq.offlineA',
+        params: { format: '.canvaslide', html: 'HTML' }
+      },
       {
         id: 'network-and-privacy',
         heading: 'site.docs.faq.networkQ',

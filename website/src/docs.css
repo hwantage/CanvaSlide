@@ -125,6 +125,8 @@
 .doc-heading h1 {
   font-size: clamp(35px, 3.1vw, 46px);
   white-space: pre-line;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   line-height: 1.14;
 }
 .doc-heading > p {

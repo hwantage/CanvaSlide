@@ -1,3 +1,4 @@
+import { staticPages } from './static-pages.ts'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -14,6 +15,7 @@ export default defineConfig(({ command, isPreview }) => ({
   base: process.env.WEBSITE_BASE_PATH ?? (command === 'serve' && !isPreview ? '/' : '/CanvaSlide/'),
   plugins: [
     react(),
+    staticPages(),
     tailwindcss(),
     exampleAssets(),
     exampleExports(exportedExampleIds),
@@ -33,9 +35,7 @@ export default defineConfig(({ command, isPreview }) => ({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        home: resolve(import.meta.dirname, 'index.html'),
-        docs: resolve(import.meta.dirname, 'docs/index.html'),
-        showcase: resolve(import.meta.dirname, 'showcase/index.html')
+        home: resolve(import.meta.dirname, 'index.html')
       }
     }
   }

@@ -1,5 +1,35 @@
 // Source language: every other locale must define exactly these keys (enforced by the type).
 export const en = {
+  'site.faq.productQ': 'What is {app}?',
+  'site.faq.productA':
+    '{app} is free, open-source presentation software built around an infinite canvas. Arrange text, shapes, images and diagrams in one space, draw frames around the views you want to show, and present by zooming between them. You can start from an editable example or create your own canvas.',
+  'site.faq.framesQ': 'How do nested frames work?',
+  'site.faq.framesA':
+    'Draw a frame around a whole slide, then a smaller frame around a chart, table or detail inside it. Put the smaller frame next in the presentation order. The camera zooms into that area on the same canvas; the previous-frame control takes you back. This also works in exported {html} presentations.',
+  'site.faq.figmaA':
+    'Yes. Import a local {fig} file and choose editable text and shapes or preserved appearance. Supported text and simple shapes stay editable; complex artwork may become images. Some effects, layout rules and masks are not preserved exactly, so review the conversion report. You can also import images and {pdf} pages; each {pdf} page becomes an image.',
+  'site.faq.platformQ': 'Does it work on {mac}, {windows} and the web?',
+  'site.faq.platformA':
+    'Yes. Desktop installers for {mac} and {windows} are available on the Releases page. You can also open the web editor in a browser without installing the app. Browser saving downloads an editable {format} file; desktop export can embed subsets of installed fonts, while browser export depends on available fonts.',
+  'site.faq.viewersQ': 'Do viewers need to install {app}?',
+  'site.faq.viewersA':
+    'No. Export your presentation as one {html} file and viewers can open it in a browser. The file contains the player, canvas content and embedded images. Keep the original {format} file for further editing; the exported presentation is for viewing. Linked videos still need their provider and network.',
+  'site.faq.freeQ': 'Is it free? Do I need an account?',
+  'site.faq.freeA':
+    'Yes, {app} is free and open source. The desktop app works without an account, and your documents are files you save on your computer. You can try editable examples in the web editor without signing in, too.',
+  'site.faq.title': 'Frequently asked questions',
+  'site.faq.description': 'What it is, how it works, and what you need to get started.',
+  'site.faq.nestedQ': 'How is it different from a slide-based presentation?',
+  'site.faq.nestedA':
+    'Your content stays together on one canvas instead of being split across separate slides. Frames define the views and their order, so you can show the big picture and zoom into a detail without duplicating content. You can also arrange frames like a familiar slide deck.',
+  'site.faq.figmaQ': 'Can I bring in my {design} designs?',
+  'site.faq.aiQ': 'How do I create a presentation with AI?',
+  'site.faq.aiA':
+    'Copy a prompt to an external AI assistant that can create files. Ask for an editable {format} file, open it in {app}, check the result and present or export {html}. The website and editor prepare the prompt; they do not send requests to an AI service.',
+  'site.faq.cloudQ': 'Does a share link update as I edit?',
+  'site.faq.cloudA':
+    'No. Experimental cloud sharing creates a snapshot, not live collaboration. Later edits do not update the link. Anyone with the link can access it for 24 hours; there is no manual revocation. Keep a local editable copy or export {html} for a portable presentation.',
+  'site.story.example': 'Open this editable example',
   'site.showcase.freefall.title': 'FREEFALL. One canvas. No cuts.',
   'site.showcase.freefall.body':
     'Follow ten camera stops from Earth to a city, into tiny details, then across a sea of concert lights and animated fireworks.',
@@ -22,12 +52,14 @@ export const en = {
   'site.docs.examples.linksHeading': 'Direct example links',
   'site.docs.examples.linksBody':
     'An editor URL with {query} opens the named example directly, including on refresh. Only catalog IDs work; a file path or another website URL cannot be used. If both a share link and an example ID are present, the share link takes priority. Loading can be cancelled. Unknown IDs and invalid files leave the current canvas unchanged; download failures offer a retry.',
+  'site.docs.media.headline': '{design} presentations: import designs and {pdf}',
   'site.docs.media.title': 'Import & video',
-  'site.docs.media.summary': 'Bring designs, page images, and linked video onto your canvas.',
+  'site.docs.media.summary':
+    'Build a presentation from a local {design} file. Import supported text and shapes, add {pdf} pages and linked videos, and check conversion limits before presenting.',
   'site.docs.media.filesHeading': 'Import images and pages',
   'site.docs.media.filesBody':
     'Choose Import file in the toolbar ({import}) or drop a file on the canvas. Images remain movable and resizable. Each imported {pdf} page becomes an image with a presentation frame; its text is not editable. You can undo the import as one action.',
-  'site.docs.media.figmaHeading': 'Bring in a local design file',
+  'site.docs.media.figmaHeading': 'Turn a local design file into a presentation',
   'site.docs.media.figmaBody':
     'Import a local {figma} {format} file, choose its pages, then choose Editable text and shapes or Preserve appearance. Editable mode keeps supported text and simple shapes editable; complex artwork becomes images. Preserve appearance makes top-level layers into images. Review the conversion report: effects, layout rules, component overrides, and some masks are not preserved exactly. No account or API token is required, and the source file stays unchanged.',
   'site.docs.media.videoHeading': 'Link a video',
@@ -35,7 +67,8 @@ export const en = {
     'Use the video tool and paste a supported {youtube}, {vimeo}, or direct video URL. The document stores the link, not the video bytes. Select the video to adjust its playback options, then test it in Slide Show. Playback needs the provider and network; browser autoplay rules may require a click. {youtube} in an exported {html} presentation needs HTTP(S) hosting. The desktop app plays direct video files only from HTTPS links. Cloud snapshots allow the supported providers and direct videos on the share service’s own origin.',
   'site.docs.media.details': 'Read the design import limits',
   'site.docs.ai.title': 'Create with AI',
-  'site.docs.ai.summary': 'Prepare a prompt for your assistant and open its editable result.',
+  'site.docs.ai.summary':
+    'Create an AI-assisted presentation: copy a prompt to your external assistant, open its editable file, then review and export. No AI service is called by this page.',
   'site.docs.ai.promptHeading': 'Copy a brief to your assistant',
   'site.docs.ai.promptBody':
     'Start here with an introduction to the app. Choose General for eight slides with calm layouts and restrained camera movement, or Dynamic for eight scenes with varied camera views and nested zoom frames. The same prompt is available from Create with AI in the editor’s top bar.',
@@ -63,7 +96,7 @@ export const en = {
   'site.docs.sharing.fontBody':
     'Desktop export can embed subsets of installed fonts. Browser export depends on available fonts; check the presentation on the receiving device. Embedded images and the player travel with the {html} file, but linked videos still need their host and network. Keep an editable {format} original for later changes.',
   'site.hero.editor': 'Open the web editor',
-  'site.showcase.meta': 'ShowCase — {product}',
+  'site.showcase.meta': 'Presentation Examples — {product} ShowCase',
   'site.showcase.description':
     'Step inside a presentation. Follow its frames, explore the whole canvas, and edit a copy in your browser. No installation or account needed.',
   'site.showcase.homeTitle': 'See where a canvas can take you.',
@@ -126,7 +159,7 @@ export const en = {
   'site.workflows.title': 'Bring more into your story.',
   'site.workflows.description':
     'From the first idea to the final presentation, keep the detail and the context together.',
-  'site.workflows.motion.title': 'Direct the camera.',
+  'site.workflows.motion.title': 'Make a zooming presentation.',
   'site.workflows.motion.body':
     'Set the pace, arc, roll, and spotlight for each frame. Preview a move or adjust several frames together.',
   'site.workflows.import.title': 'Start with what you have.',
@@ -159,18 +192,24 @@ export const en = {
   'site.docs.time': '{minutes} min read',
   'site.docs.overview.title': 'Welcome',
   'site.docs.overview.summary': 'A quick introduction to the canvas, frames, and your next story.',
+  'site.docs.installation.headline': 'Free presentation software for {mac} and {windows}',
   'site.docs.installation.title': 'Installation',
-  'site.docs.installation.summary': 'Set up the app on your computer or build it from source.',
+  'site.docs.installation.summary':
+    'Download free presentation software for {mac} and {windows}, or try the web editor without installing. Set up desktop editing and presenting with local files.',
   'site.docs.quick-start.title': 'Your first presentation',
   'site.docs.quick-start.summary': 'Go from a blank canvas to a short presentation in six steps.',
   'site.docs.canvas.title': 'Explore the canvas',
   'site.docs.canvas.summary': 'Move around, zoom in, and keep your whole idea in view.',
   'site.docs.editing.title': 'Create & edit',
   'site.docs.editing.summary': 'Work with text, shapes, images, and connections.',
+  'site.docs.frames.headline': 'Zooming presentations with nested frames',
   'site.docs.frames.title': 'Frames & presenting',
-  'site.docs.frames.summary': 'Choose your moments, arrange their order, and take the stage.',
+  'site.docs.frames.summary':
+    'Create a zooming presentation on an infinite canvas: arrange nested frames, move from overview to detail, and control the camera without duplicating slides.',
+  'site.docs.sharing.headline': '{html} presentations and offline sharing',
   'site.docs.sharing.title': 'Save & share',
-  'site.docs.sharing.summary': 'Keep an editable copy and export a portable presentation.',
+  'site.docs.sharing.summary':
+    'Export an {html} presentation with a built-in player, present embedded content offline in a browser, and keep an editable original. Learn the font, video and sharing limits.',
   'site.docs.shortcuts.title': 'Keyboard shortcuts',
   'site.docs.shortcuts.summary': 'Keep your hands on the keyboard and stay in your flow.',
   'site.docs.faq.title': 'Common questions',
@@ -258,7 +297,7 @@ export const en = {
   'site.docs.sharing.exportHeading': 'Export a presentation',
   'site.docs.sharing.exportBody':
     'Open the export dialog with {export} and choose a format. {html} gives one self-contained file with your presentation and a built-in player, after you review the image quality options and estimated file size. {pdf} gives one page per frame in presentation order, each page shaped like its frame, at the page resolution you pick. Pages are rendered as images, so their text is not selectable and videos appear as a still.',
-  'site.docs.sharing.playHeading': 'Open it anywhere you present',
+  'site.docs.sharing.playHeading': 'Present offline in a browser',
   'site.docs.sharing.playBody':
     'Open the exported file in a browser. Embedded content works offline, and the viewer does not need the desktop app. Linked videos need a network connection and may require HTTP(S) hosting. Use the player navigation or arrow keys, and open its overview to jump to a frame. HTML keeps its light theme and English interface, with the same auto-hiding controls, laser and ink tools. Existing distributed files need regeneration to receive player updates.',
   'site.docs.sharing.tip':
@@ -294,7 +333,7 @@ export const en = {
     'No. The desktop app works without signing in. Your documents are files you save on your computer.',
   'site.docs.faq.offlineQ': 'Can I work and present offline?',
   'site.docs.faq.offlineA':
-    'The desktop editor and exported presentations with embedded content work offline. Linked videos need their provider and network. Opening a web example or a cloud snapshot also needs a connection.',
+    'Yes. You can edit and present offline in the desktop app using a {format} file with embedded content. If you only need to present, export a single {html} file that plays offline in a browser. Images and the player are included; desktop export can also embed subsets of installed fonts. Browser export depends on available fonts. Linked videos still need a network connection.',
   'site.docs.faq.networkQ': 'What does the app send over the network?',
   'site.docs.faq.networkA':
     'For update behavior and transmitted data, follow the README link below. To change update checks, open About CanvaSlide in the desktop app: clear Check for updates at launch to disable the launch check, or choose Check for updates to check now.',
@@ -328,33 +367,31 @@ export const en = {
   'site.ray.play': 'Resume mascot animation',
   'site.overview.title': 'See the whole story.\nKeep the thread.',
   'site.overview.description':
-    'With every slide in view, you can see how one idea leads to the next. Jump to the moment your audience needs, then pull back to the whole canvas without losing the thread.',
+    'See how clients, services and data connect across a real system diagram. Choose a region to explain, then return to the whole canvas to keep the request flow in view.',
   'site.overview.hint':
-    'Choose a slide. Follow the story. Return to the big picture whenever you need it.',
-  'site.overview.all': 'All slides',
-  'site.overview.previous': 'Previous slide',
-  'site.overview.next': 'Next slide',
+    'Choose a region. Follow its connections. Return to the whole system whenever you need it.',
+  'site.overview.all': 'Whole system',
+  'site.overview.previous': 'Previous region',
+  'site.overview.next': 'Next region',
   'site.overview.region':
-    'Presentation overview. Select a slide, use the arrow keys to continue, or press Escape to see all slides.',
-  'site.overview.open': 'View slide {n}: {name}',
-  'site.overview.caption': 'Six slides, one connected story. Sample content in English.',
+    'System architecture overview. Select a region, use the arrow keys to continue, or press Escape to see the whole system.',
+  'site.overview.open': 'View region {n}: {name}',
+  'site.overview.caption':
+    'Shop platform architecture: clients and edge, services, and data. Sample content in English.',
+  'site.overview.edgeFrame': 'Clients and edge',
+  'site.overview.servicesFrame': 'Services',
+  'site.overview.dataFrame': 'Data',
   'site.overview.link': 'Present with the whole picture in mind',
-  'site.overview.titleSlide': 'Title',
-  'site.overview.agendaSlide': 'Agenda',
-  'site.overview.problemSlide': 'The problem',
-  'site.overview.processSlide': 'How it works',
-  'site.overview.resultsSlide': 'Results',
-  'site.overview.roadmapSlide': 'Roadmap',
   'site.docs.frames.overviewHeading': 'See every slide and keep the story moving',
   'site.docs.frames.overviewBody':
     'During a presentation, use the overview control to see all your slides together on the canvas. Click a frame to move directly to that moment, then continue with the previous and next controls. Return to the overview whenever you want to show how the parts connect. The overview and frame selection are also available in the exported browser presentation.',
   'site.hero.title': 'One canvas.\nEvery perspective.',
   'site.hero.description':
-    'Connect ideas, bring in your designs, and guide your audience from the big picture to the smallest detail. Try a real presentation, then make it yours.',
+    'Build a zooming presentation on one infinite canvas. Connect ideas, move from the big picture into nested details, and export a single {html} file to present offline with embedded content.',
   'site.hero.try': 'Explore ShowCase',
-  'site.hero.note': 'Free & open source. Yours, offline.',
+  'site.hero.note': 'Free & open source. Desktop editing works offline.',
   'site.hero.scroll': 'A canvas full of possibilities',
-  'site.hero.eyebrow': 'A canvas to think on. A story to move through.',
+  'site.hero.eyebrow': 'Free presentation software. Infinite canvas.',
   'site.hero.ray': 'Ray, the blue {product} mascot, gliding freely with outstretched wings.',
   'site.hero.file': 'Your story, ready to go.',
   'site.possibilities.eyebrow': 'MAKE ROOM FOR EVERY KIND OF IDEA',
@@ -405,39 +442,38 @@ export const en = {
   'site.docs.frames.detailHeading': 'Zoom into part of the same slide',
   'site.docs.frames.detailBody':
     'Create a frame for the whole slide, then use the frame tool to draw a smaller frame around a chart, table, or other detail inside it. Place the detail frame after the full-slide frame in the frame list. Presenting moves the camera into that area; the previous-frame control takes you back to the full slide. Both views use the same canvas content, so there is no need to duplicate the slide. These frame transitions also work in an {format} export.',
-  'site.demo.document': 'A little idea, a bigger story',
+  'site.demo.document': 'Example · {name}',
   'site.demo.label':
-    'Interactive canvas demo. Use the left and right arrow keys to explore, or Escape for the overview.',
+    'Nested presentation frames. Use arrow keys to zoom between the canvas, results slide and its detail. Escape returns to the overview.',
   'site.demo.all': 'Overview',
-  'site.demo.idea': 'An idea',
-  'site.demo.frame': 'A frame',
-  'site.demo.story': 'A story',
-  'site.demo.ideaTitle': 'What if we\nstarted here?',
-  'site.demo.ideaNote': 'A thought worth exploring.',
-  'site.demo.frameTitle': 'Find the\nconnection.',
-  'site.demo.frameNote': 'Give your ideas a little space.',
-  'site.demo.storyTitle': 'Let the\nstory fly.',
-  'site.demo.storyNote': 'One canvas. A new perspective.',
-  'site.demo.note': 'There is no wrong place to start.',
-  'site.demo.noteTwo': 'Room for your next big idea.',
+  'site.demo.idea': 'The canvas',
+  'site.demo.frame': 'Results',
+  'site.demo.story': 'The detail',
   'site.demo.play': 'Play the story',
   'site.demo.stop': 'Pause',
   'site.demo.previous': 'Previous frame',
   'site.demo.next': 'Next frame',
-  'site.demo.hint': 'Choose a frame. See the bigger picture.',
+  'site.demo.hint': 'One canvas. Follow the frames into the detail.',
   'site.demo.scene': 'Frame {n} of {total}',
   'site.story.title': 'A little space.\nA whole new way to present.',
-  'site.story.description': 'Follow a thought from a blank canvas to the next big moment.',
-  'site.story.step1Title': 'Put your ideas anywhere.',
+  'site.story.description':
+    'Start with the whole story, enter a frame, then zoom into the detail inside it.',
+  'site.story.step1Title': 'See the whole canvas.',
   'site.story.step1Body':
-    'A note, an image, a diagram. Arrange everything the way you think, with room to keep going.',
-  'site.story.step2Title': 'Frame what matters.',
+    'Every slide lives in the same space. This is a real example you can open and edit.',
+  'site.story.step2Title': 'Move into the results.',
   'site.story.step2Body':
-    'Draw a frame around a moment. Set the order. Your canvas becomes a path through your story.',
-  'site.story.step3Title': 'Bring everyone along.',
+    'The camera approaches the results frame. The surrounding slides stay in place as the numbers come into view.',
+  'site.story.step3Title': 'Go deeper, without a cut.',
   'site.story.step3Body':
-    'Move smoothly between the big picture and the details. The camera follows your frames, so everyone follows your thought.',
+    'A smaller frame sits inside the results slide. Zoom into it and keep the connection between the detail and the whole.',
   'site.story.controls': 'Story chapters',
+  'site.features.previewAlt':
+    '{name} presentation moving from anatomical details to the whole human body through frames {first}–{last}.',
+  'site.features.previewCaption': '{name} · Frames {first}–{last}',
+  'site.features.previewPlay': 'Replay preview',
+  'site.features.previewStop': 'Stop preview',
+  'site.features.previewOpen': 'Open example',
   'site.features.title': 'Everything your\nnext idea needs.',
   'site.features.description':
     'Thoughtful tools. A clear canvas. Less between you and what you want to say.',
@@ -447,13 +483,13 @@ export const en = {
   'site.features.controlTitle': 'A familiar feeling.',
   'site.features.controlBody':
     'Align, duplicate, undo. The shortcuts you already know, with the precision your ideas deserve.',
-  'site.features.offlineTitle': 'Keep your work close.',
+  'site.features.offlineTitle': 'Create and present offline.',
   'site.features.offlineBody':
-    'Save your canvas on your computer. Create and present without an account or an internet connection.',
+    'Save your canvas on your computer. The desktop app edits and presents embedded content without an account or an internet connection.',
   'site.share.title': 'Your whole story.\nOne {format} file.',
   'site.share.body':
-    'Your canvas, images, presentation frames, and zoom transitions travel together in a single {format} file. Just send it. Your audience opens it in a browser, even offline.',
-  'site.share.link': 'Learn how to share',
+    'Your canvas, embedded images, presentation frames, and zoom transitions travel together in one {format} file. Open it in a browser without installing the app. Embedded content works offline; linked videos need their provider and network.',
+  'site.share.link': 'Learn to export an offline presentation',
   'site.share.source': 'Your editable canvas',
   'site.share.export': 'Ready to present',
   'site.share.note': 'Images and the player, all included.',
@@ -472,9 +508,9 @@ export const en = {
   'site.footer.licenseLink': 'License',
   'site.footer.thirdPartyNotices': 'Third-party notices',
   'site.footer.top': 'Back to top',
-  'site.meta.home': '{product} — Your ideas. Room to fly.',
+  'site.meta.home': '{product} — Free Presentation Software with Canvas Zoom',
   'site.meta.description':
-    'An infinite canvas for connected ideas, expressive camera motion, {design} and {pdf} imports, and portable presentations. Explore editable examples in your browser.',
+    'Free, open-source presentation software for {mac}, {windows} and the web. Zoom into nested frames, import {design} and {pdf}, and export {html} for offline playback.',
   'site.screenshot.editor': 'The canvas editor with shapes, text, and presentation frames',
   'site.screenshot.present': 'A presentation frame in full-screen view'
 } as const

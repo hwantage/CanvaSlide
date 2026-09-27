@@ -88,7 +88,7 @@ from that page:
 
 Ready-made flowcharts, diagrams and presentations are in [examples](./examples/README.md).
 Open one and start Slide Show to explore it.
-For the full shortcut list, press **K** in the editor or visit the [shortcut guide](https://hwantage.github.io/CanvaSlide/docs/?guide=shortcuts).
+For the full shortcut list, press **K** in the editor or visit the [shortcut guide](https://hwantage.github.io/CanvaSlide/docs/shortcuts/).
 
 ## AI-assisted authoring
 
@@ -144,7 +144,7 @@ dialog. Nothing is installed without your confirmation.
 | macOS    | Notarized updates install in the app and restart it; macOS may request an administrator password if the app folder is not writable. Current releases are not notarized, so notifications offer to open the release download page. |
 | Browser  | Does not check for or install app updates; the About dialog links to release notes.                                                                                                                                               |
 
-For update controls, follow the [website guide](https://hwantage.github.io/CanvaSlide/docs/?guide=faq#network-and-privacy).
+For update controls, follow the [website guide](https://hwantage.github.io/CanvaSlide/docs/faq/#network-and-privacy).
 Release maintainers can find feed publication, signing and managed-network settings in
 [release operations](./docs/RELEASE.md#7-자동-업데이트).
 

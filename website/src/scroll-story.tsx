@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { t } from './i18n/site-strings'
+import { exampleEditorUrl } from './example-links'
 import { CanvasDemo } from './canvas-demo'
 
 const chapters = [
@@ -75,6 +76,14 @@ export function ScrollStory() {
           </div>
           <div className="story-stage">
             <CanvasDemo controlledScene={scene} onSceneChange={setScene} compact />
+            <a
+              className="text-button"
+              href={exampleEditorUrl('slides')}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t('site.story.example')}
+            </a>
             <div className="story-progress" aria-hidden="true">
               {chapters.map((chapter, index) => (
                 <span key={chapter.title} className={scene >= index + 1 ? 'passed' : ''} />

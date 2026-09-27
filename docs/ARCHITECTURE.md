@@ -203,7 +203,10 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
 - WKWebView rasterizes SVG images at layout size. SVG layout scaling and visible detail rendering
   preserve sharpness at high zoom; see [`image-rendering.ts`](../src/shared/canvas/image-rendering.ts).
   [`image-surface.ts`](../src/shared/canvas/image-surface.ts) maps pixel-sized surfaces into world
-  coordinates to avoid magnifying WebKit's rounding of small output rectangles.
+  coordinates to avoid magnifying WebKit's rounding of small output rectangles. Detail canvases
+  compensate for the world's layout zoom so their paint size stays bounded by their raster size;
+  their display contexts leave the readback hint unset. This avoids expensive WebKit painting
+  when editing extreme-zoom photo frames without lowering image or text resolution.
 - Detail tiles share a sampling grid and preserve transparency. The
   [detail reveal coordinator](../src/renderer/src/lib/raster/image-detail-reveal.ts) switches overlapping
   images together when ready, with a deadline for slow/failed renders. Cross-fading preview and

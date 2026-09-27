@@ -79,6 +79,31 @@ test('bounds Retina photo surfaces after extreme-zoom frame-list navigation @web
     }
     await testInfo.attach(`editor-frame-${number}`, { body: screenshot, contentType: 'image/png' })
     expect(white / samples, 'the dark photo view must not become a white surface').toBeLessThan(0.1)
+
+    const imageId = number === 12 ? 'image-21' : 'image-19'
+    const photo = page.locator(`[data-image-detail-id="${imageId}"]`)
+    await expect(photo).toBeVisible()
+    // Hide other photos while capturing this surface so an underlying preview cannot mask a blank.
+    const isolated = await photo.screenshot({
+      style: `[data-element-type="image"], [data-image-detail-id]:not([data-image-detail-id="${imageId}"]) { visibility: hidden !important; }`
+    })
+    const pixels = decodeScreenshot(isolated)
+    let colored = 0
+    let photoSamples = 0
+    for (let y = 0; y < pixels.height; y += 8) {
+      for (let x = 0; x < pixels.width; x += 8) {
+        const offset = (y * pixels.width + x) * 4
+        const rgb = [pixels.data[offset]!, pixels.data[offset + 1]!, pixels.data[offset + 2]!]
+        if (Math.max(...rgb) - Math.min(...rgb) > 20) {
+          colored++
+        }
+        photoSamples++
+      }
+    }
+    await testInfo.attach(`photo-${number}`, { body: isolated, contentType: 'image/png' })
+    expect(colored / photoSamples, `${imageId} must paint its own photo pixels`).toBeGreaterThan(
+      0.1
+    )
   }
   expect(
     await page.evaluate(

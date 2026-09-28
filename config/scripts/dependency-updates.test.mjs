@@ -182,7 +182,7 @@ test('the weekly audit checks the app crate for advisories', () => {
 })
 
 // These assert maintainer policy only; Renovate's own pinned validator checks the schema/presets.
-test('Tauri stays manual after all automerge rules', () => {
+test('Tauri stays in a separate manually merged group', () => {
   const tauri = renovate.packageRules.at(-1)
   assert.equal(tauri.groupName, 'Tauri')
   assert.equal(tauri.automerge, false)
@@ -210,14 +210,14 @@ test('Renovate groups non-major updates before the pre-1.0 and Tauri exceptions'
   )
   assert.equal(group.groupSlug, 'non-major-dependencies')
   assert.equal(renovate.separateMinorPatch, false)
-  assert.equal(group.automerge, true)
+  assert.equal(group.automerge, false)
   const groupIndex = rules.indexOf(group)
   const preOne = rules.find((rule) => rule.matchCurrentVersion === '<1.0.0')
   assert.ok(rules.indexOf(preOne) > groupIndex)
   assert.deepEqual(preOne.matchUpdateTypes, ['minor'])
   assert.equal(preOne.groupName, null)
   assert.equal(preOne.groupSlug, null)
-  assert.equal(preOne.automerge, true)
+  assert.equal(preOne.automerge, false)
   const tauri = rules.find((rule) => rule.groupName === 'Tauri')
   assert.ok(rules.indexOf(tauri) > rules.indexOf(preOne))
   for (const rule of rules.filter((rule) => rule.groupName && rule !== group && rule !== tauri)) {
@@ -225,17 +225,20 @@ test('Renovate groups non-major updates before the pre-1.0 and Tauri exceptions'
   }
 })
 
-test('Renovate automerges eligible non-majors through PRs but keeps lock maintenance manual', () => {
-  assert.equal(renovate.automerge, false, 'major and other update types stay manual by default')
-  assert.equal(renovate.automergeType, 'pr')
-  assert.equal(renovate.platformAutomerge, true)
-  assert.equal(renovate.automergeStrategy, 'squash')
+test('Renovate update notifications always require manual merging', () => {
+  assert.equal(renovate.automerge, false)
+  assert.equal(renovate.platformAutomerge, false)
+  assert.equal(renovate.vulnerabilityAlerts.automerge, false)
   assert.equal(renovate.separateMajorMinor, true)
   assert.equal(renovate.lockFileMaintenance.enabled, true)
   assert.equal(renovate.lockFileMaintenance.automerge, false)
-  for (const rule of renovate.packageRules.filter((rule) => rule.automerge)) {
-    assert.ok(rule.groupName === 'non-major dependencies' || rule.matchCurrentVersion === '<1.0.0')
-    assert.ok(!rule.matchUpdateTypes.includes('major'))
+  assert.notEqual(
+    renovate.dependencyDashboardApproval,
+    true,
+    'ordinary PR notifications stay enabled'
+  )
+  for (const rule of renovate.packageRules) {
+    assert.notEqual(rule.automerge, true, rule.description)
   }
 })
 

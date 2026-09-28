@@ -262,12 +262,20 @@ validator 버전을 올릴 때는 호스팅 서비스 버전을 확인하고 지
 
 ### 의존성 업데이트
 
-[Renovate 설정](../.github/renovate.json)은 매주 월요일 00:00~04:00 KST에 새 업데이트를 제안한다.
+현재 고정된 개발 환경을 유지하는 것이 기본이다. 최신 버전이라는 이유나 CI 통과만으로 업데이트하지 않는다.
+실제로 영향을 받는 취약점, 재현한 버그의 수정, 지원 종료, 필요한 기능·플랫폼의 호환성 요구가 있을 때
+변경 이유와 영향을 받는 범위를 확인하고 필요한 업데이트를 선택한다. CI 통과는 검토 근거이며,
+모든 개발 환경과 데스크톱 동작의 호환성을 보장하지 않는다.
+
+[Renovate 설정](../.github/renovate.json)은 매주 월요일 00:00~04:00 KST에 새 업데이트를 PR로 제안한다.
+PR은 새 버전 알림이며 머지 의무가 아니다. 필요성이 없으면 보류할 수 있다.
 매니저에 관계없이 minor·patch·digest·pin(액션 SHA의 pinDigest 포함)을 한 PR로 묶는다.
-0.x minor는 호환성을 깨뜨릴 수 있으므로 공통 묶음에서 빼고 개별 PR로 만들되, CI 통과 후 자동 머지는 허용한다.
-Tauri npm 패키지와 Rust crate는 별도 묶음으로 사람이 머지한다. CI는 데스크톱 앱을 실행하지 않아 런타임 회귀를 보장하지 못한다.
-메이저도 수동 머지한다. Node.js·pnpm 메이저는 Dependency Dashboard 승인도 필요하며,
+0.x minor는 호환성을 깨뜨릴 수 있으므로 공통 묶음에서 빼고 개별 PR로 만든다.
+Tauri npm 패키지와 Rust crate는 별도 묶음으로 검토한다. CI는 데스크톱 앱을 실행하지 않아 런타임 회귀를 보장하지 못한다.
+모든 PR은 사람이 검토하고 머지하며, 보안 수정도 자동 머지하지 않는다.
+Node.js·pnpm 메이저는 기존처럼 Dependency Dashboard 승인 후 PR을 생성하고,
 `wrangler.toml`의 빌드 변수와 Node.js의 `@types/node`는 함께 수동 갱신한다.
+묶음에 일부 필요한 업데이트만 있으면 다른 패키지·툴체인까지 함께 올리지 말고 변경 범위를 줄여 검토한다.
 npm·crate의 `security:minimumReleaseAge*` 프리셋과 액션 SHA 고정은 유지한다.
 
 lock file maintenance는 수동 머지한다. Renovate의 공개 후 3일 유예는 lockfile 재생성에 적용되지 않는다.
@@ -277,24 +285,21 @@ pnpm 설정은 Cargo lockfile도 보호하지 않으므로, lock 유지보수 �
 근거: [Renovate 공개 유예 프리셋](https://docs.renovatebot.com/presets-security/),
 [pnpm 공개 유예와 strict 설정](https://pnpm.io/settings/dependency-resolution#minimumreleaseage).
 
-Tauri를 제외한 비메이저 묶음과 개별 0.x minor PR에는 GitHub 자동 머지(squash)를 요청한다.
-PR 생성 일정과 달리 머지는 요일 제한 없이 필수 `CI passed`가 통과하고 나머지 ruleset 조건을 만족하면 진행된다.
-자동 머지된 변경은 main CI 통과 후 웹 편집기와 웹사이트 운영 배포로 이어진다.
-[Renovate의 platformAutomerge](https://docs.renovatebot.com/configuration-options/#platformautomerge)는
-GitHub의 필수 검사를 사용하므로, 메인테이너가 다음을 설정해야 한다.
+Renovate의 전역 설정과 개별 패키지 규칙에서 `automerge`를 끄고, `platformAutomerge`도 끈다.
+GitHub 자동 머지가 없으면 Renovate 자체 병합으로 전환될 수 있으므로 저장소 설정만 끄는 것으로 대체하지 않는다.
+근거: [Renovate의 platformAutomerge](https://docs.renovatebot.com/configuration-options/#platformautomerge).
 
-1. **Settings → General → Pull Requests → Allow auto-merge**를 켠다. CLI로는 다음과 같다.
-   ```bash
-   gh api --method PATCH repos/hwantage/CanvaSlide -F allow_auto_merge=true
-   gh api repos/hwantage/CanvaSlide --jq '.allow_auto_merge'
-   ```
-2. **Settings → Rules → Rulesets**에서 [main·태그 규칙](#branch-and-tag-rules)이 적용되어 있는지 확인한다.
-   ```bash
-   gh api repos/hwantage/CanvaSlide/rules/branches/main
-   ```
-3. 첫 Renovate 묶음 PR에서 자동 머지 예약과 `CI passed` 대기를 확인한다. 검사가 실패하거나 대기 중이면
-   머지되지 않아야 한다. main 규칙의 현재 설정은 최신 main 반영을 필수로 요구하지 않으므로,
-   테스트를 통과한 PR이 main보다 뒤처진 상태에서도 머지될 수 있다.
+저장소의 **Settings → General → Pull Requests → Allow auto-merge**도 꺼 둔다.
+CLI로 설정하고 확인할 수 있다.
+
+```bash
+gh api --method PATCH repos/hwantage/CanvaSlide -F allow_auto_merge=false
+gh api repos/hwantage/CanvaSlide --jq '.allow_auto_merge'
+```
+
+이미 열린 PR의 자동 머지 예약은 `gh pr merge <번호> --disable-auto`로 해제한다.
+[main·태그 규칙](#branch-and-tag-rules)의 필수 `CI passed`와 나머지 ruleset 조건은 그대로 적용된다.
+수동 머지한 변경은 main CI 통과 후 웹 편집기와 웹사이트 운영 배포로 이어진다.
 
 ## 5. 실패했을 때
 

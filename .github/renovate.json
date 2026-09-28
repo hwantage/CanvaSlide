@@ -35,19 +35,19 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Group weekly non-major updates across managers and merge after required CI passes; later rules separate pre-1.0 minors and Tauri.",
+      "description": "Group weekly non-major update notifications for manual review; later rules separate pre-1.0 minors and Tauri.",
       "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
       "groupName": "non-major dependencies",
       "groupSlug": "non-major-dependencies",
-      "automerge": true
+      "automerge": false
     },
     {
-      "description": "Pre-1.0 minors may break APIs, so keep each outside the shared group while allowing CI-gated automerge.",
+      "description": "Pre-1.0 minors may break APIs, so keep each outside the shared group for manual review.",
       "matchUpdateTypes": ["minor"],
       "matchCurrentVersion": "<1.0.0",
       "groupName": null,
       "groupSlug": null,
-      "automerge": true
+      "automerge": false
     },
     {
       "description": "Keep Tauri npm packages and Rust crates in a separate, manually merged PR because CI does not run the desktop app.",
@@ -58,13 +58,14 @@
     }
   ],
   "automerge": false,
-  "automergeType": "pr",
-  "automergeStrategy": "squash",
-  "platformAutomerge": true,
+  "platformAutomerge": false,
   "separateMajorMinor": true,
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": false
   },
-  "separateMinorPatch": false
+  "separateMinorPatch": false,
+  "vulnerabilityAlerts": {
+    "automerge": false
+  }
 }

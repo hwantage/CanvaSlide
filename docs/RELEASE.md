@@ -267,18 +267,26 @@ validator 버전을 올릴 때는 호스팅 서비스 버전을 확인하고 지
 변경 이유와 영향을 받는 범위를 확인하고 필요한 업데이트를 선택한다. CI 통과는 검토 근거이며,
 모든 개발 환경과 데스크톱 동작의 호환성을 보장하지 않는다.
 
-[Renovate 설정](../.github/renovate.json)은 매주 월요일 00:00~04:00 KST에 새 업데이트를 PR로 제안한다.
-PR은 새 버전 알림이며 머지 의무가 아니다. 필요성이 없으면 보류할 수 있다.
-매니저에 관계없이 minor·patch·digest·pin(액션 SHA의 pinDigest 포함)을 한 PR로 묶는다.
-0.x minor는 호환성을 깨뜨릴 수 있으므로 공통 묶음에서 빼고 개별 PR로 만든다.
-Tauri npm 패키지와 Rust crate는 별도 묶음으로 검토한다. CI는 데스크톱 앱을 실행하지 않아 런타임 회귀를 보장하지 못한다.
-모든 PR은 사람이 검토하고 머지하며, 보안 수정도 자동 머지하지 않는다.
-Node.js·pnpm 메이저는 기존처럼 Dependency Dashboard 승인 후 PR을 생성하고,
-`wrangler.toml`의 빌드 변수와 Node.js의 `@types/node`는 함께 수동 갱신한다.
-묶음에 일부 필요한 업데이트만 있으면 다른 패키지·툴체인까지 함께 올리지 말고 변경 범위를 줄여 검토한다.
+[Renovate 설정](../.github/renovate.json)은 모든 업데이트에 `dependencyDashboardApproval`을 적용한다.
+일반 패키지의 minor·patch, Node.js·pnpm의 모든 버전 변경, 액션 SHA 갱신도 승인 전에는 새 브랜치와 PR을 만들지 않는다.
+보안 수정과 lock file maintenance도 명시적으로 승인을 요구하며, 어떤 업데이트도 자동 머지하지 않는다.
+
+GitHub **Issues → [Dependency Dashboard #207](https://github.com/hwantage/CanvaSlide/issues/207)**에서 선택한다.
+
+1. **Pending Approval**의 필요한 항목만 체크한다. 이 선택은 PR 생성 요청이며 코드나 개발 환경을 바꾸지 않는다.
+2. Renovate가 다음 실행에서 승인한 항목의 PR을 만든다. 일반 PR 생성 일정은 매주 월요일 00:00~04:00 KST다.
+3. PR의 변경 범위와 CI 결과를 검토하고 필요할 때 직접 머지한다. PR 생성 승인과 머지 승인은 별개다.
+
+여러 매니저의 비메이저 업데이트와 GitHub Actions 메이저를 한꺼번에 묶지 않는다.
+Tauri npm 패키지와 Rust crate는 함께 검토할 수 있도록 묶고, Renovate 기본 프리셋의 관련 패키지 묶음도 유지한다.
+따라서 체크박스 하나에 관련 패키지 여러 개가 포함될 수 있으므로 승인 전 목록을 확인한다.
+Node.js·pnpm은 작은 버전 변경도 별도로 선택한다. 필요하면 `wrangler.toml`의 빌드 변수를 함께 갱신하고,
+Node.js 메이저 변경 시 `@types/node` 메이저는 수동으로 맞춘다.
+기존에 열린 PR은 이 설정만으로 닫히거나 승인 대기 목록으로 되돌아가지 않으므로 필요성을 별도로 판단한다.
+근거: [Renovate Dashboard 승인](https://docs.renovatebot.com/configuration-options/#dependencydashboardapproval).
 npm·crate의 `security:minimumReleaseAge*` 프리셋과 액션 SHA 고정은 유지한다.
 
-lock file maintenance는 수동 머지한다. Renovate의 공개 후 3일 유예는 lockfile 재생성에 적용되지 않는다.
+lock file maintenance는 Dashboard 승인 후 PR을 만들고 수동 머지한다. Renovate의 공개 후 3일 유예는 lockfile 재생성에 적용되지 않는다.
 [`package.json`](../package.json)에 고정된 pnpm의 기본 유예는 1일이며, 명시하지 않으면 조건을 만족하는 버전이 없을 때 더 새 버전으로 넘어갈 수 있다.
 현재 `pnpm-workspace.yaml`에는 유예 기간이 없고 특정 버전 예외만 있으므로 3일 이상 보호를 보장하지 않는다.
 pnpm 설정은 Cargo lockfile도 보호하지 않으므로, lock 유지보수 전체를 자동 머지에서 제외한다.

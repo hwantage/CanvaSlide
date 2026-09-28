@@ -11,43 +11,24 @@
   "timezone": "Asia/Seoul",
   "packageRules": [
     {
-      "description": "Keep GitHub Actions major upgrades together for manual review; SHA pinning is inherited from the helper preset.",
-      "matchManagers": ["github-actions"],
-      "groupName": "GitHub Actions",
-      "matchUpdateTypes": ["major"]
-    },
-    {
       "description": "@types/node follows the Node.js major in .node-version and is raised by hand with it.",
       "matchPackageNames": ["@types/node"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     },
     {
-      "description": "Node.js and pnpm majors also change NODE_VERSION or PNPM_VERSION in wrangler.toml, and @types/node for Node.js, by hand, so their pull requests open only when approved on the Dependency Dashboard.",
+      "description": "Review every Node.js update separately because it changes the contributor toolchain; coordinate wrangler.toml and @types/node when needed.",
       "matchManagers": ["nodenv"],
-      "matchUpdateTypes": ["major"],
-      "dependencyDashboardApproval": true
-    },
-    {
-      "description": "See the Node.js rule above.",
-      "matchDepTypes": ["packageManager"],
-      "matchUpdateTypes": ["major"],
-      "dependencyDashboardApproval": true
-    },
-    {
-      "description": "Group weekly non-major update notifications for manual review; later rules separate pre-1.0 minors and Tauri.",
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
-      "groupName": "non-major dependencies",
-      "groupSlug": "non-major-dependencies",
-      "automerge": false
-    },
-    {
-      "description": "Pre-1.0 minors may break APIs, so keep each outside the shared group for manual review.",
-      "matchUpdateTypes": ["minor"],
-      "matchCurrentVersion": "<1.0.0",
+      "dependencyDashboardApproval": true,
       "groupName": null,
-      "groupSlug": null,
-      "automerge": false
+      "groupSlug": null
+    },
+    {
+      "description": "Review every pnpm update separately because it changes the contributor toolchain; coordinate wrangler.toml when needed.",
+      "matchDepTypes": ["packageManager"],
+      "dependencyDashboardApproval": true,
+      "groupName": null,
+      "groupSlug": null
     },
     {
       "description": "Keep Tauri npm packages and Rust crates in a separate, manually merged PR because CI does not run the desktop app.",
@@ -62,10 +43,13 @@
   "separateMajorMinor": true,
   "lockFileMaintenance": {
     "enabled": true,
-    "automerge": false
+    "automerge": false,
+    "dependencyDashboardApproval": true
   },
   "separateMinorPatch": false,
   "vulnerabilityAlerts": {
-    "automerge": false
-  }
+    "automerge": false,
+    "dependencyDashboardApproval": true
+  },
+  "dependencyDashboardApproval": true
 }

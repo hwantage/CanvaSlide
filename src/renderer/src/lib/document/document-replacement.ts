@@ -88,7 +88,7 @@ export async function replaceDocument({
 
 /** Loads a replacement that already passed `replaceDocument`'s guard. */
 export function loadReplacement(
-  { document, filePath }: OpenedDocument,
+  { document, filePath, fileHandle }: OpenedDocument,
   { camera, recovered = false, keepLink = false }: Placement
 ): void {
   usePresentationStore.getState().exit()
@@ -96,7 +96,7 @@ export function loadReplacement(
   if (recovered) {
     store.restoreDocument(document, filePath)
   } else {
-    store.loadDocument(document, filePath)
+    store.loadDocument(document, filePath, fileHandle)
   }
   if (!keepLink) {
     const share = useCloudShareStore.getState()

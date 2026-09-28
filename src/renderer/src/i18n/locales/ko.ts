@@ -150,6 +150,7 @@ export const ko: UiStrings = {
   'file.save': '저장',
   'file.saveAs': '다른 이름으로 저장…',
   'file.documentName': '문서 이름',
+  'file.documentType': '{app} 문서',
   'file.unsaved': '저장되지 않음',
   'file.discardTitle': '저장되지 않은 변경 사항',
   'file.discardQuestion': '저장하지 않은 변경 사항이 있습니다. 버리시겠습니까?',

@@ -15,10 +15,23 @@ test('passes Save As through and records the selected path', async () => {
   await expect(saveCurrentDocument(true)).resolves.toBe(true)
   expect(saveDocumentFile).toHaveBeenCalledWith(
     expect.any(Object),
-    '/tmp/original.canvaslide',
+    { filePath: '/tmp/original.canvaslide', fileHandle: null },
     true
   )
   expect(useDocumentStore.getState().filePath).toBe('/tmp/copy.canvaslide')
+})
+
+test('records the handle a browser save wrote to, and hands it to the next save', async () => {
+  const handle = { name: 'copy.canvaslide' } as unknown as FileSystemFileHandle
+  vi.mocked(saveDocumentFile).mockResolvedValue({ filePath: null, fileHandle: handle })
+  await expect(saveCurrentDocument(true)).resolves.toBe(true)
+  expect(useDocumentStore.getState()).toMatchObject({ filePath: null, fileHandle: handle })
+  await expect(saveCurrentDocument()).resolves.toBe(true)
+  expect(saveDocumentFile).toHaveBeenLastCalledWith(
+    expect.any(Object),
+    { filePath: null, fileHandle: handle },
+    false
+  )
 })
 
 test('a failed save does not block the next save', async () => {

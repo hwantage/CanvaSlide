@@ -192,4 +192,12 @@ describe('restoreDocument', () => {
     useDocumentStore.getState().restoreDocument(createEmptyDocument('Recovered'), null)
     expect(useDocumentStore.getState().session).toBe(before + 1)
   })
+
+  it('drops the previous browser file handle, so Save cannot overwrite the file it came from', () => {
+    const handle = { name: 'deck.canvaslide' } as unknown as FileSystemFileHandle
+    useDocumentStore.getState().loadDocument(createEmptyDocument('Opened'), null, handle)
+    expect(useDocumentStore.getState().fileHandle).toBe(handle)
+    useDocumentStore.getState().restoreDocument(createEmptyDocument('Recovered'), null)
+    expect(useDocumentStore.getState()).toMatchObject({ fileHandle: null, filePath: null })
+  })
 })

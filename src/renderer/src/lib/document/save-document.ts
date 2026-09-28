@@ -15,12 +15,13 @@ export function saveCurrentDocument(forcePrompt = false): Promise<boolean> {
     }
     const snapshot = state.takeSaveSnapshot()
     const withCamera = { ...snapshot.document, camera: useCameraStore.getState().camera }
-    const result = await saveDocumentFile(withCamera, state.filePath, forcePrompt)
+    const target = { filePath: state.filePath, fileHandle: state.fileHandle }
+    const result = await saveDocumentFile(withCamera, target, forcePrompt)
     if (!result) {
       return false
     }
     const current = useDocumentStore.getState()
-    current.completeSave(snapshot, result.filePath)
+    current.completeSave(snapshot, result.filePath, result.fileHandle)
     return current.session === session
   })
   pendingSave = task.catch(() => {})

@@ -218,7 +218,11 @@ chrome/selection overlays. Preserve the distinction between camera zoom and layo
   This is header inspection, not full compressed-bitstream validation; decoding remains the browser's job.
 
 Relevant regressions live beside the shared modules and in
-[`tests/e2e/`](../tests/e2e/). `CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e` adds the `@webkit` scenarios,
+[`tests/e2e/`](../tests/e2e/). The [Playwright config](../tests/playwright.config.ts) launches
+Chromium without the File System Access pickers, which Playwright cannot drive, so specs exercise
+the file input and download fallback;
+[`browser-save-in-place.spec.ts`](../tests/e2e/browser-save-in-place.spec.ts) fakes the pickers to
+cover in-place saving. `CANVASLIDE_E2E_WEBKIT=1 pnpm test:e2e` adds the `@webkit` scenarios,
 which CI runs on macOS, to WebKit's default core interaction coverage. Headless timing depends on
 document, viewport, DPR, browser and hardware; it cannot promise a native frame rate. For profiling, see
 [`profile-camera-transitions.mjs`](../config/scripts/profile-camera-transitions.mjs) and its usage text.
@@ -231,8 +235,13 @@ document, viewport, DPR, browser and hardware; it cannot promise a native frame 
   Windows renames with write-through, falling back to the standard rename when that is refused (a
   long path or a target another program holds open). Documents, exports and recovery copies share
   this path.
-  Browser mode uses upload/download fallbacks. Keep failures from replacing the current document or a
-  previously saved file.
+  The browser editor opens and saves through the
+  [File System Access API](../src/renderer/src/platform/file-system-access.ts) where the engine has
+  it (Chromium, over HTTPS or localhost): Save writes back to the opened file's handle, which the
+  [document store](../src/renderer/src/store/document-store.ts) keeps for the session only, never in
+  documents, recovery copies, shares or exports. Safari and Firefox keep the file input and download
+  fallback, where every save hands the browser a copy. Keep failures from replacing the current
+  document or a previously saved file.
 - Commands fail with a [code and a detail](../src-tauri/src/command_error.rs); the webview shows the
   [localized message](../src/renderer/src/platform/native-command.ts) for the code, followed by the
   detail, and branches on the code (a full disk reads as a recovery quota problem, for example).

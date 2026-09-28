@@ -56,7 +56,7 @@ and their fixes are best-effort.
 | Canvas editing, presentation frames and Slide Show, including laser and ink | Core         |                                                                                                                        |
 | Desktop apps for macOS and Windows, the browser editor                      | Core         |                                                                                                                        |
 | Update checks and in-app installation                                       | Core         | See [update behavior](#update-behavior) for platform limits                                                            |
-| Opening and saving `.canvaslide` files, crash recovery                      | Core         |                                                                                                                        |
+| Opening and saving `.canvaslide` files, crash recovery                      | Core         | Over HTTPS or localhost, Chromium-based browsers save back to the opened file; Safari and Firefox download a copy      |
 | Image and PDF import, HTML export with its player, PDF export               | Core         |                                                                                                                        |
 | [Figma import](./docs/FIGMA-IMPORT.md)                                      | Core         | Figma does not publish the `.fig` format, so files from newer Figma versions may not import or may convert differently |
 | Linked videos, including YouTube and Vimeo                                  | Core         | Playback depends on YouTube, Vimeo or the video's server, the network and browser codecs                               |

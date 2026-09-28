@@ -10,7 +10,7 @@ export const en = {
     'Yes. Import a local {fig} file and choose editable text and shapes or preserved appearance. Supported text and simple shapes stay editable; complex artwork may become images. Some effects, layout rules and masks are not preserved exactly, so review the conversion report. You can also import images and {pdf} pages; each {pdf} page becomes an image.',
   'site.faq.platformQ': 'Does it work on {mac}, {windows} and the web?',
   'site.faq.platformA':
-    'Yes. Desktop installers for {mac} and {windows} are available on the Releases page. You can also open the web editor in a browser without installing the app. Browser saving downloads an editable {format} file; desktop export can embed subsets of installed fonts, while browser export depends on available fonts.',
+    'Yes. Desktop installers for {mac} and {windows} are available on the Releases page. You can also open the web editor in a browser without installing the app. In the browser, Chromium-based browsers save back to the opened {format} file, while Safari and Firefox download a copy; desktop export can embed subsets of installed fonts, while browser export depends on available fonts.',
   'site.faq.viewersQ': 'Do viewers need to install {app}?',
   'site.faq.viewersA':
     'No. Export your presentation as one {html} file and viewers can open it in a browser. The file contains the player, canvas content and embedded images. Keep the original {format} file for further editing; the exported presentation is for viewing. Linked videos still need their provider and network.',
@@ -48,7 +48,7 @@ export const en = {
     'Choose a presentation in ShowCase and select Open in web editor. A new tab opens an editable copy. Select Slide Show ({present}) to follow its frames; use {overview} for the full canvas and {escape} to return to editing. On a small screen, open the panels from the top bar to see the frame list.',
   'site.docs.examples.saveHeading': 'Make it yours and save',
   'site.docs.examples.saveBody':
-    'Edit text, move shapes, or change frame order without changing the original on the server. Use {save} to download an editable {format} copy in the browser, or download the source from ShowCase and open it in the desktop app. Browser edits are not saved automatically. Reloading an example link opens the original again.',
+    'Edit text, move shapes, or change frame order without changing the original on the server. Use {save} to keep an editable {format} copy: Chromium-based browsers ask where to save it and write later saves to that file, while Safari and Firefox download a copy each time. You can also download the source from ShowCase and open it in the desktop app. Browser edits are not saved automatically. Reloading an example link opens the original again.',
   'site.docs.examples.linksHeading': 'Direct example links',
   'site.docs.examples.linksBody':
     'An editor URL with {query} opens the named example directly, including on refresh. Only catalog IDs work; a file path or another website URL cannot be used. If both a share link and an example ID are present, the share link takes priority. Loading can be cancelled. Unknown IDs and invalid files leave the current canvas unchanged; download failures offer a retry.',

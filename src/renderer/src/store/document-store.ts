@@ -47,6 +47,11 @@ export type DocumentState = HistoryStacks & {
   document: CanvasDocument
   selectedIds: ElementId[]
   filePath: FilePath | null
+  /**
+   * Browser only: the File System Access handle Save writes back to. Session state that a new
+   * document drops; it never enters documents, recovery copies, shares or exports.
+   */
+  fileHandle: FileSystemFileHandle | null
   dirty: boolean
   /** The content last written to or read from disk; null after a crash recovery, where none is known. */
   savedDocument: CanvasDocument | null
@@ -56,12 +61,20 @@ export type DocumentState = HistoryStacks & {
   editBaseline: CanvasDocument | null
 }
 export type DocumentActions = {
-  loadDocument: (document: CanvasDocument, filePath: FilePath | null) => void
+  loadDocument: (
+    document: CanvasDocument,
+    filePath: FilePath | null,
+    fileHandle?: FileSystemFileHandle | null
+  ) => void
   /** Loads a crash-recovery snapshot: the work is unsaved until the author writes it out. */
   restoreDocument: (document: CanvasDocument, filePath: FilePath | null) => void
   takeSaveSnapshot: () => SaveSnapshot
-  /** Applies a finished save: path + baseline, preserving any content that differs from the saved snapshot. */
-  completeSave: (snapshot: SaveSnapshot, filePath: FilePath | null) => void
+  /** Applies a finished save: path or handle + baseline, preserving any content that differs from the saved snapshot. */
+  completeSave: (
+    snapshot: SaveSnapshot,
+    filePath: FilePath | null,
+    fileHandle?: FileSystemFileHandle | null
+  ) => void
   setSelection: (ids: ElementId[]) => void
   toggleSelected: (id: ElementId) => void
   selectAll: () => void
@@ -107,6 +120,7 @@ const initialState: DocumentState = {
   savedDocument: emptyDocument,
   selectedIds: [],
   filePath: null,
+  fileHandle: null,
   dirty: false,
   session: 0,
   past: [],
@@ -159,7 +173,12 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
   }
 
   /** Replaces the open document; `recovered` work has no baseline on disk, so it starts dirty. */
-  const replace = (document: CanvasDocument, filePath: FilePath | null, recovered: boolean) => {
+  const replace = (
+    document: CanvasDocument,
+    filePath: FilePath | null,
+    recovered: boolean,
+    fileHandle: FileSystemFileHandle | null = null
+  ) => {
     const loaded = syncConnectorGeometry(document)
     set((s) => ({
       ...initialState,
@@ -167,6 +186,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
       savedDocument: recovered ? null : loaded,
       dirty: recovered,
       filePath,
+      fileHandle,
       session: s.session + 1
     }))
   }
@@ -174,7 +194,8 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
   return {
     ...initialState,
 
-    loadDocument: (document, filePath) => replace(document, filePath, false),
+    loadDocument: (document, filePath, fileHandle = null) =>
+      replace(document, filePath, false, fileHandle),
     // Why one update and not `loadDocument` plus a correction: the recovery scheduler reacts to
     // every store update, and a single clean frame would tell it this work is saved and make it
     // delete the very copy it was restored from.
@@ -183,13 +204,14 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => {
       document: get().document,
       session: get().session
     }),
-    completeSave: (snapshot, filePath) =>
+    completeSave: (snapshot, filePath, fileHandle = null) =>
       set((s) => {
         if (s.session !== snapshot.session) {
           return s
         }
         return {
           filePath,
+          fileHandle,
           savedDocument: snapshot.document,
           dirty: isDirty(s.document, snapshot.document)
         }

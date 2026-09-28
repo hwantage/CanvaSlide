@@ -29,7 +29,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1400, height: 900 } }
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1400, height: 900 },
+        // Why: Playwright cannot drive the File System Access pickers (under automation they
+        // reject with AbortError at once, with or without a `filechooser` listener), so Chromium
+        // runs the file input and download fallback that Firefox and WebKit always use. A spec that
+        // covers the handle path fakes the pickers itself (browser-save-in-place.spec.ts).
+        launchOptions: { args: ['--disable-blink-features=FileSystemAccessLocal'] }
+      }
     },
     {
       name: 'firefox',

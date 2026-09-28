@@ -217,7 +217,7 @@ describe('native path transport', () => {
 
   it('cancels open and Save As without reading or writing', async () => {
     expect(await openDocumentFile()).toBeNull()
-    expect(await saveDocumentFile(createEmptyDocument(), native, true)).toBeNull()
+    expect(await saveDocumentFile(createEmptyDocument(), { filePath: native }, true)).toBeNull()
     expect(invoke.mock.calls.map(([command]) => command)).toEqual([
       'pick_document_path',
       'pick_document_save_path'

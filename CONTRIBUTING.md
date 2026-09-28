@@ -33,6 +33,14 @@ Requirements:
 
 Exact commands and dependency versions are maintained in [`package.json`](./package.json).
 
+Keep the pinned toolchain unless an applicable security fix, a reproduced bug, an upstream support
+deadline or required compatibility change justifies an update. A newer release or passing CI alone
+is not a reason to change contributors' environments. Select needed updates in the
+[Dependency Dashboard](https://github.com/hwantage/CanvaSlide/issues/207) before Renovate creates PRs,
+including security fixes and lockfile maintenance. Selecting an item only requests a PR; all merges
+are manual. See the
+[dependency update policy](./docs/RELEASE.md#dependency-updates).
+
 ```bash
 pnpm install
 pnpm dev            # Tauri window (needs Rust)

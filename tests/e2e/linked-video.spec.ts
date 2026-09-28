@@ -434,9 +434,12 @@ test('pause/resume and expand/return preserve the current video, timestamp and d
   await expectExpanded(a, page.getByTestId('canvas-viewport'))
   await page.keyboard.press('Escape')
   await expect(a).not.toHaveAttribute('data-expanded', 'true')
+  // Resizing can outlast the control bar's idle timer on a busy runner.
+  await page.mouse.move(550, 739)
   await expect(page.getByRole('button', { name: /^Next frame/ })).toBeVisible()
   await expandVideo(page, a, page.getByTestId('canvas-viewport'))
   const old = await a.locator('video').elementHandle()
+  await page.mouse.move(550, 739)
   await page.getByRole('button', { name: /^Next frame/ }).click()
   await expect(page.locator('[data-element-id="c"]')).toHaveAttribute('data-playback', 'playing')
   expect(

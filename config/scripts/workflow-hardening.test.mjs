@@ -105,7 +105,9 @@ if (process.argv.includes('--jq')) {
 
 const noRun = { workflow_runs: [] }
 const runOf = (status, conclusion) => ({
-  workflow_runs: [{ head_sha: 'abc123', status, conclusion, html_url: 'https://example.test/run' }]
+  workflow_runs: [
+    { head_sha: 'abc123', event: 'push', status, conclusion, html_url: 'https://example.test/run' }
+  ]
 })
 
 test(
@@ -175,8 +177,8 @@ test(
   }
 )
 
-const passedOn = (sha) => ({
-  workflow_runs: [{ head_sha: sha, status: 'completed', conclusion: 'success' }]
+const passedOn = (sha, event = 'push') => ({
+  workflow_runs: [{ head_sha: sha, event, status: 'completed', conclusion: 'success' }]
 })
 
 for (const [name, source] of [
@@ -200,7 +202,6 @@ for (const [name, source] of [
       for (const field of [
         'head_sha=abc123',
         'branch=main',
-        'event=push',
         'per_page=100',
         '--paginate',
         '--slurp'
@@ -208,6 +209,58 @@ for (const [name, source] of [
         assert.ok(args.includes(field), field)
       }
       assert.ok(!args.includes('status=success'), 'the latest attempt must succeed, not an old one')
+      // The event is filtered in jq, since a CI run started by hand on main also counts.
+      assert.ok(!args.some((arg) => arg.startsWith('event=')))
+    }
+  )
+
+  test(
+    `${name} counts CI pushed to or started by hand on main, never other events`,
+    { skip: shellSkip },
+    () => {
+      for (const [event, deploys] of [
+        ['push', true],
+        ['workflow_dispatch', true],
+        ['pull_request', false]
+      ]) {
+        const { status, outputs } = runGate([passedOn('abc123', event)], gate())
+        assert.equal(status, 0)
+        assert.equal(outputs, deploys ? 'sha=abc123\n' : '', String(event))
+      }
+    }
+  )
+
+  test(
+    `${name} judges the latest push or hand-started CI run, ignoring later other events`,
+    { skip: shellSkip },
+    () => {
+      const run = (id, event, conclusion, rerunAt) => ({
+        id,
+        event,
+        head_sha: 'abc123',
+        status: 'completed',
+        conclusion,
+        created_at: `2026-09-29T0${id}:00:00Z`,
+        run_started_at: `2026-09-29T0${rerunAt ?? id}:00:00Z`
+      })
+      for (const [runs, deploys] of [
+        // A missing or failed push run is recovered by a later successful run started by hand.
+        [[run(1, 'push', 'failure'), run(2, 'workflow_dispatch', 'success')], true],
+        // A later failed run started by hand withdraws an earlier passing push.
+        [[run(1, 'push', 'success'), run(2, 'workflow_dispatch', 'failure')], false],
+        // A re-run keeps its created_at; the attempt started last decides.
+        [[run(1, 'push', 'success', 3), run(2, 'workflow_dispatch', 'failure')], true],
+        [[run(1, 'push', 'failure', 3), run(2, 'workflow_dispatch', 'success')], false],
+        // Runs of other events neither pass nor block the revision.
+        [[run(1, 'push', 'success'), run(2, 'pull_request', 'failure')], true],
+        [[run(1, 'push', 'failure'), run(2, 'pull_request', 'success')], false]
+      ]) {
+        for (const order of [runs, runs.toReversed()]) {
+          const result = runGate([{ workflow_runs: order }], gate())
+          assert.equal(result.status, 0, result.stderr)
+          assert.equal(result.outputs, deploys ? 'sha=abc123\n' : '', JSON.stringify(order))
+        }
+      }
     }
   )
 
@@ -241,7 +294,12 @@ for (const [name, source] of [
         [2, 0, 1],
         [2, 1, 0]
       ]
-      const success = { head_sha: 'abc123', status: 'completed', conclusion: 'success' }
+      const success = {
+        head_sha: 'abc123',
+        event: 'push',
+        status: 'completed',
+        conclusion: 'success'
+      }
       for (const latest of [
         { id: 5, created_at: '2026-09-27T03:00:00Z' },
         { id: 11, created_at: '2026-09-27T02:00:00Z' }
@@ -275,6 +333,7 @@ for (const [name, source] of [
   test(`${name} includes later pages when selecting the latest CI run`, { skip: shellSkip }, () => {
     const older = {
       head_sha: 'abc123',
+      event: 'push',
       status: 'completed',
       conclusion: 'success',
       id: 1,

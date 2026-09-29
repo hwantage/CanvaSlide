@@ -133,10 +133,14 @@ Production is published only from commits that passed CI, by the
 
 - Whenever CI finishes on `main`, it checks the latest CI attempt for the workflow revision
   (`github.workflow_sha`), builds that exact commit with `pnpm build:web`, and publishes it to
-  Cloudflare Pages production. Missing, pending or unsuccessful CI leaves the current deployment
-  unchanged; the next completed CI run tries again. It never combines a newer workflow with an
-  older passing checkout. **Web editor → Run workflow** on `main` retries using current `main`;
-  re-running an old run retains its original revision.
+  Cloudflare Pages production. The attempt counts when it ran for a push to `main` or was started
+  by hand on `main`; pull request runs never do. Missing, pending or unsuccessful CI leaves the
+  current deployment unchanged; the next completed CI run tries again. It never combines a newer
+  workflow with an older passing checkout. **Web editor → Run workflow** on `main` retries using
+  current `main`; re-running an old run retains its original revision.
+- If a merge started no CI run on `main`, run **CI → Run workflow** on `main`
+  (`gh workflow run ci.yml --ref main`). When it passes, the web editor and the website deploy as
+  after any other CI run on `main`.
 - The publishing job runs in the `web-editor` GitHub environment and needs its `CLOUDFLARE_API_TOKEN`
   secret, an API token with the account's **Cloudflare Pages: Edit** permission, and its
   `CLOUDFLARE_ACCOUNT_ID` variable. Without both it publishes nothing and ends with a warning; with

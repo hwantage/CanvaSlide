@@ -30,6 +30,8 @@ jobs:
     outputs:
       sha: ${{ steps.revision.outputs.sha }}
     steps:
+      # Why: CI → Run workflow on main recovers a merge whose push started no CI run. A re-run keeps
+      # its created_at, so the attempt started last decides among several runs of the revision.
       - name: Check CI for the workflow revision
         id: revision
         shell: bash
@@ -39,8 +41,8 @@ jobs:
           SHA: ${{ github.workflow_sha }}
         run: |
           passed="$(gh api --paginate --slurp -X GET "repos/$GH_REPO/actions/workflows/ci.yml/runs" \
-            -f head_sha="$SHA" -f branch=main -f event=push -f per_page=100 \
-            | jq -r '[.[].workflow_runs[]] | max_by([.created_at, .id]) | select(.status == "completed" and .conclusion == "success") | .head_sha')"
+            -f head_sha="$SHA" -f branch=main -f per_page=100 \
+            | jq -r '[.[].workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch")] | max_by([(.run_started_at // .created_at), .id]) | select(.status == "completed" and .conclusion == "success") | .head_sha')"
           if [ "$passed" != "$SHA" ]; then
             echo "CI has not passed for workflow revision $SHA; leave the current deployment in place"
             exit 0

@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Why: GitHub can skip the push run of a merge; running CI on main lets the deployments follow.
+  workflow_dispatch:
 
 permissions:
   contents: read

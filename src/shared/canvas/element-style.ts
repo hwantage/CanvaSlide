@@ -37,6 +37,22 @@ export function textCss(style: TextStyle): TextCss {
   }
 }
 
+export type TextLinkCss = {
+  color: 'inherit'
+  textDecoration: 'underline' | 'none'
+  display?: 'block'
+}
+
+/**
+ * A link keeps its text's colour. A URL in the text is underlined; an element's own link spans the
+ * whole text box and leaves its look to the author, as when text on a shape forms a button.
+ */
+export function textLinkCss(wholeElement: boolean): TextLinkCss {
+  return wholeElement
+    ? { color: 'inherit', textDecoration: 'none', display: 'block' }
+    : { color: 'inherit', textDecoration: 'underline' }
+}
+
 /** Turn about the unrotated box's centre, even when text renders taller than its stored box. */
 export function rotationCss(element: {
   width: number

@@ -5,7 +5,14 @@ import { pathToFileURL } from 'node:url'
 import { expect, type Locator, type Page } from '@playwright/test'
 
 export type PresentationSurface = 'app' | 'html'
-export type DeckOptions = { count?: number; tiny?: boolean; roll?: number; transitionMs?: number }
+export type DeckOptions = {
+  count?: number
+  tiny?: boolean
+  roll?: number
+  transitionMs?: number
+  /** Content drawn above the frames, such as text elements. */
+  content?: { id: string }[]
+}
 
 export async function openPresentation(
   page: Page,
@@ -35,8 +42,10 @@ export async function openPresentation(
       JSON.stringify({
         version: 1,
         name: 'Shared presentation contract',
-        elements: Object.fromEntries(frames.map((frame) => [frame.id, frame])),
-        order: frames.map((frame) => frame.id),
+        elements: Object.fromEntries(
+          [...frames, ...(options.content ?? [])].map((element) => [element.id, element])
+        ),
+        order: [...frames, ...(options.content ?? [])].map((element) => element.id),
         settings: { transitionMs: options.transitionMs ?? 120 },
         assets: {},
         resources: {}

@@ -7,7 +7,16 @@ import { t } from '@/i18n/ui-strings'
 import { useDocumentStore } from '@/store/document-store'
 import { EditableText } from './editable-text'
 
-export function TextElement({ element, editing }: { element: TextElementModel; editing: boolean }) {
+export function TextElement({
+  element,
+  editing,
+  linksActive = false
+}: {
+  element: TextElementModel
+  editing: boolean
+  /** Presenting a frame: text links open on click. */
+  linksActive?: boolean
+}) {
   const onHeightChange = useCallback(
     (height: number) => {
       if (height !== element.height) {
@@ -49,6 +58,7 @@ export function TextElement({ element, editing }: { element: TextElementModel; e
         editing={editing}
         placeholder={t('text.placeholder')}
         onHeightChange={onHeightChange}
+        links={{ link: element.link, active: linksActive }}
       />
     </div>
   )

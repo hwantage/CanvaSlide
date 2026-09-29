@@ -4,6 +4,7 @@ import type {
   ConnectorElement,
   Rect,
   ShapeElement,
+  TextElement,
   TextStyle
 } from '../canvas/element-types'
 import { connectorHosts, connectorMidpoint } from '../canvas/connector-geometry'
@@ -15,10 +16,12 @@ import {
   shapeLabelCss,
   shapePaint,
   textCss,
+  textLinkCss,
   type SvgPaint
 } from '../canvas/element-style'
 import { connectorCanvasRect, shapeGeometry } from '../canvas/shape-svg'
 import { textClipPath } from '../canvas/text-clip'
+import { TEXT_LINK_CLASS, textElementSegments } from '../canvas/text-links'
 
 /**
  * Static DOM for one element, without React: the HTML export player and PDF export draw with it.
@@ -65,6 +68,37 @@ function textNode(className: string, text: string, style: TextStyle, box: Css = 
   const node = el('div', className, { ...box, ...textCss(style) })
   node.textContent = text
   return node
+}
+
+/**
+ * Replaces a text node's content with its runs, the links opening a new browsing context. Links
+ * never take focus, as in the editor: a focused one would own the slide keys.
+ */
+function linkText(node: HTMLElement, element: TextElement): void {
+  const whole = element.link !== undefined
+  const segments = textElementSegments(element.text, element.link)
+  if (!segments.some((segment) => segment.url !== undefined)) {
+    return
+  }
+  node.replaceChildren(
+    ...segments.map((segment) => {
+      if (segment.url === undefined) {
+        return segment.text
+      }
+      const anchor = el('a', TEXT_LINK_CLASS, textLinkCss(whole))
+      anchor.href = segment.url
+      anchor.target = '_blank'
+      anchor.rel = 'noopener noreferrer'
+      anchor.setAttribute('draggable', 'false')
+      anchor.tabIndex = -1
+      anchor.addEventListener('mousedown', (event) => event.preventDefault())
+      if (whole) {
+        anchor.title = segment.url
+      }
+      anchor.textContent = segment.text
+      return anchor
+    })
+  )
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -116,6 +150,7 @@ function elementNode(element: CanvasElement, doc: CanvasDocument): HTMLElement |
     }
     case 'text': {
       const node = textNode('uc-el uc-text', element.text, element.textStyle)
+      linkText(node, element)
       place(node, element)
       applyCss(node, {
         height: 'auto',

@@ -32,7 +32,8 @@ the editor also runs in a browser.
 - **Editing:** text, shapes, images and connectors; pan/zoom, multi-select, grouping, rotation, alignment,
   distribution, snapping, clipboard operations and undo/redo. Choose light/dark/system theme and English/Korean.
 - **Presenting:** order and preview frames, move them with their contents, and edit transitions together.
-  Set duration, easing, arc, roll and spotlight; navigate through the overview and play linked videos.
+  Set duration, easing, arc, roll and spotlight; navigate through the overview, play linked videos and
+  open web links in text: URLs you type, or a link set on a text element.
   The app, cloud slideshow and newly exported HTML share auto-hiding controls, a laser pointer and
   temporary ink that is never saved: press P, drag to draw, and E to erase.
 - **Import & export:** import images, PDF pages and [local Figma files](./docs/FIGMA-IMPORT.md);
@@ -122,7 +123,7 @@ cases:
 | **Copy link** in the Share dialog, and opening a share link                           | The cloud share service (`canvaslide.pages.dev` in official builds) | The whole document, including embedded images, kept for 24 hours; see [hosted service](./docs/CLOUD-SHARE.md#hosted-service).                             |
 | Adding a linked video, showing a YouTube video, or playing a video                    | YouTube, Vimeo, or the server of a direct video link                | The video link when it is added, to read its size; then thumbnail, player and video requests.                                                             |
 | Using the web editor or opening a web example                                         | The web editor's host (Cloudflare Pages)                            | Ordinary page requests. Documents stay in the browser unless you share them.                                                                              |
-| Opening the repository, release notes or a video's original page                      | Your default browser                                                | The page you chose.                                                                                                                                       |
+| Opening the repository, release notes, a video's original page or a text link         | Your default browser                                                | The page you chose.                                                                                                                                       |
 
 As with any web request, each service sees your IP address and a user agent, and Cloudflare, which hosts
 the web editor and the share service, asks browsers that support Network Error Logging to report

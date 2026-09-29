@@ -35,6 +35,7 @@ import { AlignmentToolbar } from './alignment-toolbar'
 import { ConnectorFields } from './connector-fields'
 import { FrameTransitionFields } from './frame-transition-fields'
 import { NumberInput, ShapeStyleFields, TextStyleFields } from './style-fields'
+import { TextLinkField } from './text-link-field'
 
 function firstOfType<T extends CanvasElement['type']>(
   elements: CanvasElement[],
@@ -164,6 +165,9 @@ export function PropertiesPanel() {
         />
       )}
       {textStyle && <TextStyleFields ids={selectedIds} style={textStyle} />}
+      {first.type === 'text' && elements.length === 1 && (
+        <TextLinkField key={first.id} id={first.id} link={first.link} />
+      )}
       {!onlyFrames && (
         <div className="mt-2 flex flex-wrap gap-1">
           <TextButton

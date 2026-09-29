@@ -74,6 +74,11 @@ body {
   color: #fff;
   font-weight: 600;
 }
+/* The overview picks frames, so text links stay inert there. */
+.uc-overview .uc-link {
+  pointer-events: none;
+  cursor: default;
+}
 .uc-overview .uc-frame {
   pointer-events: auto;
   cursor: pointer;

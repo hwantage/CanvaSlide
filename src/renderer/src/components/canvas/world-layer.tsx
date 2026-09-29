@@ -11,6 +11,7 @@ import { selectEditingTextId, useToolStore } from '@/store/tool-store'
 import { ElementView } from './element-view'
 import { orderedFrames } from '@shared/canvas/presentation-sequence'
 import { autoplayVideoIds, frameVideos } from '@shared/media/video-playback'
+import { mayHaveTextLinks } from '@shared/canvas/text-links'
 
 const DENSE_VECTOR_COUNT = 256
 
@@ -25,8 +26,8 @@ export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
   const overview = usePresentationStore((s) => s.overview)
   const index = usePresentationStore((s) => s.index)
   const animating = useCameraStore((s) => s.animationActive)
-  const frameId =
-    active && !previewing && !overview ? (orderedFrames(document)[index]?.id ?? null) : null
+  const presentingFrame = active && !previewing && !overview
+  const frameId = presentingFrame ? (orderedFrames(document)[index]?.id ?? null) : null
   const videos = useMemo(() => frameVideos(document, frameId), [document, frameId])
   const autoplayIds = useMemo(() => new Set(autoplayVideoIds(videos)), [videos])
   const memberIds = useMemo(() => new Set(videos.map((video) => video.id)), [videos])
@@ -97,6 +98,9 @@ export function WorldLayer({ readOnly = false }: { readOnly?: boolean }) {
           element.type === 'image' ? imageLayoutScale(element, baseZoom, flightZoom ?? baseZoom) : 1
         }
         layoutZoom={element.type === 'image' ? baseZoom : 1}
+        linksActive={
+          presentingFrame && element.type === 'text' && mayHaveTextLinks(element.text, element.link)
+        }
       />
     )
   }

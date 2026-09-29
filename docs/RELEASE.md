@@ -308,6 +308,8 @@ gh api repos/hwantage/CanvaSlide --jq '.allow_auto_merge'
 이미 열린 PR의 자동 머지 예약은 `gh pr merge <번호> --disable-auto`로 해제한다.
 [main·태그 규칙](#branch-and-tag-rules)의 필수 `CI passed`와 나머지 ruleset 조건은 그대로 적용된다.
 수동 머지한 변경은 main CI 통과 후 웹 편집기와 웹사이트 운영 배포로 이어진다.
+머지 커밋에 CI 실행이 생기지 않으면 `main`에서 **CI → Run workflow**(`gh workflow run ci.yml --ref main`)를
+실행한다. 성공하면 두 배포가 이어진다. 릴리스 태그 확인은 여전히 푸시로 실행된 CI만 인정한다.
 
 ## 5. 실패했을 때
 

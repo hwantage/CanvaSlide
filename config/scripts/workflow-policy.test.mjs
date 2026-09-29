@@ -124,7 +124,11 @@ test('build jobs keep read-only permissions and releases propagate every failure
 })
 
 test('CI keeps complete platform coverage and mandatory checks', () => {
-  assert.deepEqual(ci.on, { push: { branches: ['main'] }, pull_request: null })
+  assert.deepEqual(ci.on, {
+    push: { branches: ['main'] },
+    pull_request: null,
+    workflow_dispatch: null
+  })
   checkCiPlatforms(ci)
   const wrongHost = structuredClone(ci)
   wrongHost.jobs.verify['runs-on'] = 'ubuntu-latest'

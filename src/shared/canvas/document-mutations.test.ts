@@ -8,9 +8,10 @@ import {
   patchElements,
   removeElements,
   reorderZ,
+  setTextLink,
   translateElements
 } from './document-mutations'
-import { createEmptyDocument, type CanvasElement } from './element-types'
+import { canvasDocumentSchema, createEmptyDocument, type CanvasElement } from './element-types'
 
 const text = (id: string, x = 0): CanvasElement => ({
   id,
@@ -222,5 +223,38 @@ describe('document-mutations', () => {
     const applied = applyFrameOrders(frameDoc, { f: 7, a: 9 })
     expect(applied.elements.f).toMatchObject({ order: 7 })
     expect(applied.elements.a).toEqual(frameDoc.elements.a)
+  })
+
+  it("sets and removes only a text element's link, leaving the input untouched", () => {
+    const shape: CanvasElement = {
+      id: 's',
+      type: 'shape',
+      shape: 'rectangle',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+      style: { fill: '#fff', stroke: '#000', strokeWidth: 1, cornerRadius: 0 },
+      text: '',
+      textStyle: { color: '#000', fontSize: 16, align: 'left', bold: false }
+    }
+    const doc = insertElements(createEmptyDocument(), [text('t'), shape])
+    const linked = setTextLink(doc, 't', 'https://example.com/')
+    expect(linked.elements.t).toMatchObject({ link: 'https://example.com/' })
+    expect(doc.elements.t).not.toHaveProperty('link')
+    expect(canvasDocumentSchema.safeParse(linked).success).toBe(true)
+    expect(setTextLink(linked, 't', 'https://example.com/')).toBe(linked)
+    const unlinked = setTextLink(linked, 't', undefined)
+    expect(unlinked.elements.t).not.toHaveProperty('link')
+    expect(unlinked.elements.t).toEqual(doc.elements.t)
+    expect(setTextLink(doc, 's', 'https://example.com/')).toBe(doc)
+    expect(setTextLink(doc, 'missing', 'https://example.com/')).toBe(doc)
+  })
+
+  it('rejects a document whose text links anywhere but the web', () => {
+    for (const link of ['javascript:alert(1)', 'mailto:a@b.c', 'file:///x', 'example.com']) {
+      const doc = insertElement(createEmptyDocument(), { ...text('t'), link } as CanvasElement)
+      expect(canvasDocumentSchema.safeParse(doc).success, link).toBe(false)
+    }
   })
 })

@@ -14,6 +14,8 @@ type ElementViewProps = {
   layoutScale: number
   layoutZoom?: number
   videoMode?: 'editor' | 'passive' | 'manual' | 'auto'
+  /** Text links open on click, which only presenting a frame allows. */
+  linksActive?: boolean
 }
 
 export const ElementView = memo(function ElementView({
@@ -22,13 +24,14 @@ export const ElementView = memo(function ElementView({
   selected,
   layoutScale,
   layoutZoom = 1,
-  videoMode = 'editor'
+  videoMode = 'editor',
+  linksActive = false
 }: ElementViewProps) {
   switch (element.type) {
     case 'shape':
       return <ShapeElement element={element} editing={editing} />
     case 'text':
-      return <TextElement element={element} editing={editing} />
+      return <TextElement element={element} editing={editing} linksActive={linksActive} />
     case 'image':
       return (
         <ImageElement

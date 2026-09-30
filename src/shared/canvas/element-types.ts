@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { cameraEasings, DEFAULT_CAMERA_EASING } from './camera-easing'
 import { MAX_ROTATION_DEGREES } from './element-rotation'
+import { isWebLink } from './text-links'
 import { parseVideoSource } from './video-source'
 import {
   anchorSides,
@@ -90,6 +91,8 @@ export const textElementSchema = elementBaseSchema.extend({
   text: z.string(),
   textStyle: textStyleSchema,
   rotation: rotationSchema,
+  // Why: absent means no link; with one, the whole element opens it and URLs in the text do not.
+  link: z.string().refine(isWebLink).optional(),
   // Imported frame clipping follows the text when it is moved or resized.
   clip: z
     .object({

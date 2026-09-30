@@ -88,6 +88,21 @@ export function patchElements(
   return changed ? { ...document, elements } : document
 }
 
+/** Sets or, with undefined, removes a text element's link; anything else is left unchanged. */
+export function setTextLink(
+  document: CanvasDocument,
+  id: ElementId,
+  link: string | undefined
+): CanvasDocument {
+  const current = document.elements[id]
+  if (current?.type !== 'text' || current.link === link) {
+    return document
+  }
+  const { link: _previous, ...rest } = current
+  const element = link === undefined ? rest : { ...rest, link }
+  return { ...document, elements: { ...document.elements, [id]: element } }
+}
+
 export function translateElement(element: CanvasElement, delta: Point): CanvasElement {
   if (element.type === 'connector') {
     return translateConnector(element, delta)

@@ -16,13 +16,17 @@
     'Malgun Gothic',
     sans-serif;
 }
-/* Content never intercepts pointer events; frames are the only click targets (overview). */
+/* Content never intercepts pointer events except text links; frames are the overview's targets. */
 .uc-el,
 .uc-img {
   position: absolute;
   pointer-events: none;
   /* Frames carry negative z-indices (largest at the bottom), so content always paints above. */
   z-index: 0;
+}
+.uc-link {
+  pointer-events: auto;
+  cursor: pointer;
 }
 .uc-connector svg,
 .uc-shape svg {

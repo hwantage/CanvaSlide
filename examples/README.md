@@ -234,6 +234,8 @@ that frame also counts toward the total. The player's **O** overview is a separa
   required even for horizontal or vertical lines (use at least 1 for the zero dimension).
 - **Text.** `align` is `left`, `center` or `right`. Optional `italic`, `lineHeight` (`0.1..10`) and
   `fontFamily` affect rendering. Plain strings only; no HTML/Markdown formatting inside text.
+  `http(s)://` URLs written in the text open while presenting. An optional absolute http(s) `link`
+  makes the whole element open that page instead, such as text placed on a shape as a button.
 - **Video.** `type: "video"` elements carry a supported HTTP(S) `url` and optional `autoplay`.
   They are links, not embedded resources; omit them from offline presentations.
 - **Optional camera.** Root `camera: { "x": 0, "y": 0, "zoom": 1 }` stores the editor viewport;

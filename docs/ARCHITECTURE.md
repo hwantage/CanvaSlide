@@ -124,13 +124,17 @@ slideshow share is refused, while HTML shows the board with a notice.
 Ink points stay in world coordinates in a session painter, with screen-width strokes; laser positions
 stay in viewport coordinates. Pointer movement updates DOM directly, without React renders or document
 store writes. Changing frame identity, erasing or ending the session clears ink; overview on the same
-frame and disabling the pointer preserve it. Controls and media own their gestures, and drawing disables
+frame and disabling the pointer preserve it. Controls, media and text links own their gestures, and drawing disables
 swipe navigation. The compact tool disclosure holds chrome open and restores focus when closed.
 Slide clicks, taps and drawing leave hidden controls hidden; bottom-edge movement or touch and Tab
 reveal them, keeping the tools reachable without interrupting presentation content.
 Escape closes tools, then leaves overview, then exits only when an editor exists.
 P/E/O also resolve physical letter keys with Korean/IME input on the presentation surface.
 Editable content, dialogs and media retain their keys; IME confirmation/cancellation never navigates.
+Text links ([`text-links.ts`](../src/shared/canvas/text-links.ts)) are an element's own http(s) `link` or
+the URLs in its text; they open a new browser tab, or the system browser on desktop, only while a frame
+is presented, never in the editor or the overview. They never take focus, so slide keys keep working
+after a click and focus never scrolls to a link in another frame.
 
 Shared light tokens and presentation CSS are imported by the app and inlined by the player. App theme
 and localization remain device preferences; HTML stays light and English. Exports embed the runtime at

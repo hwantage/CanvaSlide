@@ -109,6 +109,24 @@ function staticNode(element: CanvasElement, doc: CanvasDocument): HTMLElement {
   return node
 }
 
+/** Each child of a text box: its text, and for a link the attributes and styles a host sets. */
+function textRuns(root: Element | null | undefined) {
+  return [...(root?.childNodes ?? [])].map((node) =>
+    node instanceof HTMLAnchorElement
+      ? {
+          text: node.textContent,
+          ...Object.fromEntries(
+            ['class', 'href', 'target', 'rel', 'title', 'draggable'].map((name) => [
+              name,
+              node.getAttribute(name)
+            ])
+          ),
+          ...css(node, ['color', 'text-decoration', 'display'])
+        }
+      : { text: node.textContent }
+  )
+}
+
 afterEach(cleanup)
 
 describe('element rendering parity', () => {
@@ -134,6 +152,29 @@ describe('element rendering parity', () => {
     )
     const boxProperties = [...PLACE_PROPERTIES, ...TURN_PROPERTIES, 'clip-path', 'min-height']
     expect(filled(css(exported, boxProperties))).toEqual(css(box, boxProperties))
+  })
+
+  it.each([
+    ['URLs in the text', 'See https://example.com/docs. Or (http://a.b)', undefined],
+    ["the element's own link", 'Open https://inner.example', 'https://example.com/']
+  ])('links %s the same way', (_, value, link) => {
+    const text: TextModel = {
+      id: 'text',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 40,
+      text: value,
+      textStyle,
+      ...(link === undefined ? {} : { link })
+    }
+    const doc = load(text)
+    const editor = render(<TextElement element={text} editing={false} linksActive />).container
+    const box = editor.querySelector('[data-element-type="text"]')
+    const exported = textRuns(staticNode(text, doc))
+    expect(exported.filter((run) => 'href' in run)).toHaveLength(link === undefined ? 2 : 1)
+    expect(exported).toEqual(textRuns(box?.firstElementChild))
   })
 
   it.each(['rectangle', 'ellipse', 'diamond', 'triangle'] as const)(

@@ -101,6 +101,19 @@ test('bounds Retina photo surfaces after extreme-zoom frame-list navigation @web
       }
     }
     await testInfo.attach(`photo-${number}`, { body: isolated, contentType: 'image/png' })
+    if (colored / photoSamples <= 0.1) {
+      const raster = await photo.evaluate((node) => (node as HTMLCanvasElement).toDataURL())
+      await testInfo.attach(`raster-${number}`, {
+        body: Buffer.from(raster.split(',')[1]!, 'base64'),
+        contentType: 'image/png'
+      })
+      await testInfo.attach(`after-readback-${number}`, {
+        body: await photo.screenshot({
+          style: `[data-element-type="image"], [data-image-detail-id]:not([data-image-detail-id="${imageId}"]) { visibility: hidden !important; }`
+        }),
+        contentType: 'image/png'
+      })
+    }
     expect(colored / photoSamples, `${imageId} must paint its own photo pixels`).toBeGreaterThan(
       0.1
     )

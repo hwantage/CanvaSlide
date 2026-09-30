@@ -318,6 +318,8 @@ export const ko: UiStrings = {
   'font.loading': '불러오는 중…',
   'font.none': '이 환경에서는 설치된 글꼴 목록을 가져올 수 없습니다',
   'props.bold': '굵게',
+  'props.link': '링크',
+  'props.link.invalid': '웹 주소(http 또는 https)를 입력하세요.',
   'props.textAlign.left': '왼쪽 정렬',
   'props.textAlign.center': '가운데 정렬',
   'props.textAlign.right': '오른쪽 정렬',

@@ -13,6 +13,30 @@ import {
   waitForOverview
 } from './presentation-fixture'
 
+const linkedTexts = [
+  {
+    id: 'inline-link',
+    type: 'text',
+    x: 100,
+    y: 100,
+    width: 800,
+    height: 60,
+    text: 'Docs: https://example.com/docs.',
+    textStyle: { color: '#111827', fontSize: 40, align: 'left', bold: false }
+  },
+  {
+    id: 'button-link',
+    type: 'text',
+    x: 100,
+    y: 400,
+    width: 400,
+    height: 60,
+    text: 'Open demo',
+    link: 'https://example.com/button',
+    textStyle: { color: '#111827', fontSize: 40, align: 'center', bold: true }
+  }
+]
+
 for (const surface of ['app', 'html'] as const) {
   test.describe(`${surface} shared presentation contract`, () => {
     test('one frame has no out-of-range navigation and can return from overview @core-interaction', async ({
@@ -467,6 +491,62 @@ for (const surface of ['app', 'html'] as const) {
       await expect(inkStrokes(page).first()).toHaveAttribute('vector-effect', 'non-scaling-stroke')
       await revealControls(page)
       await expect(presentationControls(page).getByRole('button', { name: /^Next/ })).toBeDisabled()
+    })
+
+    test('text links open a page and leave navigation, ink and overview alone @core-interaction', async ({
+      page
+    }) => {
+      await page
+        .context()
+        .route('https://example.com/**', (route) =>
+          route.fulfill({ contentType: 'text/html', body: '<title>Linked</title>' })
+        )
+      await openPresentation(page, surface, { content: linkedTexts })
+      const inline = page.locator('.uc-link', { hasText: 'https://example.com/docs' })
+      const button = page.locator('.uc-link', { hasText: 'Open demo' })
+      await expect(page.locator('.uc-link')).toHaveCount(2)
+      await expect(inline).toHaveCSS('text-decoration-line', 'underline')
+      await expect(button).toHaveCSS('text-decoration-line', 'none')
+      await expect(button).toHaveAttribute('title', 'https://example.com/button')
+      const counter = page.getByTestId('presentation-counter')
+      const pages: string[] = []
+      page.context().on('page', (opened) => pages.push(opened.url()))
+      for (const [link, url] of [
+        [inline, 'https://example.com/docs'],
+        [button, 'https://example.com/button']
+      ] as const) {
+        await expect(link).toHaveCSS('cursor', 'pointer')
+        const opened = page.context().waitForEvent('page')
+        await link.click()
+        const popup = await opened
+        await popup.waitForURL(url)
+        await popup.close()
+        // One click opens one page; a second one would arrive in the same task.
+        await page.waitForTimeout(200)
+        expect(pages).toHaveLength(url.endsWith('docs') ? 1 : 2)
+        await expect(counter).toContainText('1 / 3')
+        // A link never takes focus, which would claim the slide keys.
+        await expect(link).not.toBeFocused()
+      }
+      await page.keyboard.press('ArrowRight')
+      await expect(counter).toContainText('2 / 3')
+      await page.keyboard.press('ArrowLeft')
+      await expect(counter).toContainText('1 / 3')
+      await page.keyboard.press('p')
+      const opened = page.context().waitForEvent('page')
+      await inline.click()
+      await (await opened).close()
+      await expect(inkStrokes(page)).toHaveCount(0)
+      await page.keyboard.press('p')
+      await page.keyboard.press('o')
+      await waitForOverview(
+        surface === 'app'
+          ? page.getByTestId('overview-frame')
+          : page.locator('.uc-overview .uc-frame'),
+        3
+      )
+      await expect(inline).toHaveCSS('pointer-events', 'none')
+      await expect(button).toHaveCSS('pointer-events', 'none')
     })
   })
 }

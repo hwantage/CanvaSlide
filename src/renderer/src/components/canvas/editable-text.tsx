@@ -4,6 +4,7 @@ import type { TextStyle } from '@shared/canvas/element-types'
 import { textCss } from '@shared/canvas/element-style'
 import { useDocumentStore } from '@/store/document-store'
 import { useToolStore } from '@/store/tool-store'
+import { LinkedText } from './linked-text'
 
 type EditableTextProps = {
   elementId: string
@@ -15,6 +16,8 @@ type EditableTextProps = {
   /** Which field receives typed text (connectors keep theirs in `label`). */
   textField?: 'text' | 'label'
   className?: string
+  /** Text elements only: their own link, and whether links open (presenting) or not (editing). */
+  links?: { link: string | undefined; active: boolean }
 }
 
 /** Shared text renderer: static div normally, contentEditable while editing. */
@@ -26,7 +29,8 @@ export function EditableText({
   placeholder,
   onHeightChange,
   textField = 'text',
-  className
+  className,
+  links
 }: EditableTextProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -51,7 +55,8 @@ export function EditableText({
     })
     observer.observe(element)
     return () => observer.disconnect()
-  }, [onHeightChange])
+    // Why: editing swaps the node (see the keys below), so the observer follows it.
+  }, [onHeightChange, editing])
 
   useEffect(() => {
     const element = ref.current
@@ -73,16 +78,25 @@ export function EditableText({
 
   const cssStyle = textCss(style)
 
+  // Why: distinct keys give each mode its own node; React would otherwise keep the text typed into
+  // the editor and add the rendered runs (a link splits them) beside it, drawing the text twice.
   if (!editing) {
     return (
-      <div ref={ref} className={className} style={cssStyle}>
-        {text === '' ? <span className="text-zinc-400">{placeholder}</span> : text}
+      <div key="text" ref={ref} className={className} style={cssStyle}>
+        {text === '' ? (
+          <span className="text-zinc-400">{placeholder}</span>
+        ) : links ? (
+          <LinkedText text={text} link={links.link} active={links.active} />
+        ) : (
+          text
+        )}
       </div>
     )
   }
 
   return (
     <div
+      key="editor"
       ref={ref}
       contentEditable
       suppressContentEditableWarning

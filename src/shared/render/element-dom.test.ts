@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { insertElement } from '../canvas/document-mutations'
 import {
   createEmptyDocument,
+  defaultShapeStyle,
+  defaultTextStyle,
   type FrameElement,
   type ImageElement,
+  type ShapeElement,
+  type TextElement,
   type VideoElement
 } from '../canvas/element-types'
 import { renderElement } from './element-dom'
@@ -74,5 +78,90 @@ describe('renderElement', () => {
     expect(node?.dataset.videoId).toBe('video')
     expect(node?.childElementCount).toBe(0)
     expect(node?.style.height).toBe('180px')
+  })
+
+  it('links the URLs written in a text, underlined in the text colour', () => {
+    const text: TextElement = {
+      id: 'text',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 40,
+      text: 'See https://example.com/docs. Or http://a.b',
+      textStyle: defaultTextStyle
+    }
+    const node = renderElement(text, insertElement(createEmptyDocument(), text))!
+    expect(node.textContent).toBe(text.text)
+    const anchors = [...node.querySelectorAll('a')]
+    expect(anchors.map((anchor) => anchor.getAttribute('href'))).toEqual([
+      'https://example.com/docs',
+      'http://a.b'
+    ])
+    for (const anchor of anchors) {
+      expect(anchor.className).toBe('uc-link')
+      expect(anchor.target).toBe('_blank')
+      expect(anchor.rel).toBe('noopener noreferrer')
+      expect(anchor.style.textDecoration).toBe('underline')
+      expect(anchor.style.color).toBe('inherit')
+      expect(anchor.title).toBe('')
+      // Links never take focus: a focused one would own the slide keys.
+      expect(anchor.tabIndex).toBe(-1)
+      expect(anchor.dispatchEvent(new MouseEvent('mousedown', { cancelable: true }))).toBe(false)
+    }
+  })
+
+  it("makes an element's own link cover its whole text, with no link inside", () => {
+    const text: TextElement = {
+      id: 'text',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 40,
+      text: 'Open https://inner.example',
+      textStyle: defaultTextStyle,
+      link: 'https://example.com/'
+    }
+    const node = renderElement(text, insertElement(createEmptyDocument(), text))!
+    const anchors = node.querySelectorAll('a')
+    expect(anchors).toHaveLength(1)
+    const [anchor] = anchors
+    expect(anchor!.getAttribute('href')).toBe('https://example.com/')
+    expect(anchor!.textContent).toBe(text.text)
+    expect(anchor!.title).toBe('https://example.com/')
+    expect(anchor!.style.display).toBe('block')
+    expect(anchor!.style.textDecoration).toBe('none')
+  })
+
+  it('keeps text without links, and shape labels, as plain text', () => {
+    const text: TextElement = {
+      id: 'text',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 40,
+      text: 'plain',
+      textStyle: defaultTextStyle
+    }
+    const node = renderElement(text, insertElement(createEmptyDocument(), text))!
+    expect(node.childNodes).toHaveLength(1)
+    expect(node.firstChild?.nodeType).toBe(Node.TEXT_NODE)
+    const shape: ShapeElement = {
+      id: 'shape',
+      type: 'shape',
+      shape: 'rectangle',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 80,
+      style: defaultShapeStyle,
+      text: 'https://example.com',
+      textStyle: defaultTextStyle
+    }
+    const label = renderElement(shape, insertElement(createEmptyDocument(), shape))!
+    expect(label.textContent).toBe('https://example.com')
+    expect(label.querySelector('a')).toBeNull()
   })
 })

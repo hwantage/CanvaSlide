@@ -52,6 +52,47 @@ function type(value: string, key?: string) {
 afterEach(cleanup)
 
 describe('TextLinkField', () => {
+  it.each(['Enter', 'blur', 'unmount'])('rejects a previous document draft on %s', (action) => {
+    load(text('t'))
+    const { unmount } = render(<Field />)
+    type('example.com/old-document')
+    act(() => load(text('t')))
+    const before = useDocumentStore.getState()
+    if (action === 'Enter') {
+      fireEvent.keyDown(field(), { key: 'Enter' })
+    } else if (action === 'blur') {
+      fireEvent.blur(field())
+    }
+    unmount()
+    const after = useDocumentStore.getState()
+    expect(after.document).toBe(before.document)
+    expect(after.dirty).toBe(false)
+    expect(after.past).toBe(before.past)
+    expect(after.future).toBe(before.future)
+  })
+
+  it('commits a pending link when selection changes within the same document', () => {
+    load(text('t'), text('other'))
+    useDocumentStore.getState().setSelection(['t'])
+    render(<PropertiesPanel />)
+    type('example.com/same-document')
+    act(() => useDocumentStore.getState().setSelection(['other']))
+    expect(linkOf('t')).toBe('https://example.com/same-document')
+    act(() => useDocumentStore.getState().undo())
+    expect(linkOf('t')).toBeUndefined()
+  })
+
+  it('does not commit an unmounted panel draft into a replacement with the same element id', () => {
+    load(text('t'))
+    useDocumentStore.getState().setSelection(['t'])
+    render(<PropertiesPanel />)
+    type('example.com/old-document')
+    act(() => load(text('t', 'https://example.com/replacement')))
+    expect(screen.queryByRole('textbox', { name: 'Link' })).toBeNull()
+    expect(linkOf('t')).toBe('https://example.com/replacement')
+    expect(useDocumentStore.getState().dirty).toBe(false)
+  })
+
   it('drops an invalid draft once undo and redo bring its link back', () => {
     load(text('t'))
     render(<Field />)

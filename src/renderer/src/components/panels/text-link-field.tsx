@@ -28,11 +28,18 @@ function committedLink(
   return next === null ? 'invalid' : { link: next }
 }
 
-const store = (id: string, link: string | undefined) =>
-  useDocumentStore.getState().applyEdit((document) => setTextLink(document, id, link))
+function store(id: string, link: string | undefined, session: number) {
+  const current = useDocumentStore.getState()
+  // Why: a replacement can reuse element ids, but must never inherit the old document's draft.
+  if (current.session !== session) {
+    return
+  }
+  current.applyEdit((document) => setTextLink(document, id, link))
+}
 
 /** A text element's own link: typed and checked when committed; clearing the field removes it. */
 export function TextLinkField({ id, link }: { id: string; link: string | undefined }) {
+  const startedSession = useRef(useDocumentStore.getState().session)
   // Why: a draft belongs to the link it was typed over; once undo or redo changes that link, the
   // draft is dropped rather than kept for when the same link comes back.
   const [state, setDraft] = useState(() => draftOf(link))
@@ -41,7 +48,7 @@ export function TextLinkField({ id, link }: { id: string; link: string | undefin
   }
   const draft = state.over === link ? state : draftOf(link)
   const apply = (next: string | undefined) => {
-    store(id, next)
+    store(id, next, startedSession.current)
     setDraft(draftOf(next))
   }
   const commit = () => {
@@ -61,7 +68,7 @@ export function TextLinkField({ id, link }: { id: string; link: string | undefin
     () => () => {
       const result = committedLink(latest.current.text, latest.current.link)
       if (typeof result === 'object') {
-        store(id, result.link)
+        store(id, result.link, startedSession.current)
       }
     },
     [id]

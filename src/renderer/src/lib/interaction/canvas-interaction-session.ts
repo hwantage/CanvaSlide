@@ -28,9 +28,8 @@ import {
 } from './canvas-connector-session'
 import { openContextMenu } from './canvas-context-menu'
 import {
-  applyMoveSession,
   beginMoveSession,
-  moveModifiers,
+  dragMoveSession,
   wantsDuplicate,
   type MoveSession
 } from './canvas-move-session'
@@ -227,18 +226,18 @@ export function createCanvasInteraction(): CanvasInteraction {
         }
         case 'press':
           if (distance(info.screen, session.start.screen) >= DRAG_THRESHOLD_PX) {
-            session = beginMoveSession(
-              session.targetId,
-              session.start,
-              wantsDuplicate(session.start)
-            )
+            // Why: ⌥ / ⇧⌘ duplicate whether held at the press or pressed while the button is down.
+            const duplicate = wantsDuplicate(session.start) || wantsDuplicate(info)
             // Why: the event that crosses the threshold is part of the drag; without applying it
             // here a short drag (threshold-sized) would end before ever moving anything.
-            applyMoveSession(session, info.world, moveModifiers(info))
+            session = dragMoveSession(
+              beginMoveSession(session.targetId, session.start, duplicate),
+              info
+            )
           }
           break
         case 'move':
-          applyMoveSession(session, info.world, moveModifiers(info))
+          session = dragMoveSession(session, info)
           break
         case 'box': {
           const box = rectFromPoints(session.startWorld, info.world)

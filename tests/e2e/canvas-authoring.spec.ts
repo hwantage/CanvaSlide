@@ -455,6 +455,42 @@ test('alt-drag and shift+mod-drag duplicate the selection', async ({ page }) => 
   await expect(shapes.nth(2)).toHaveCSS('top', '500px')
 })
 
+test('duplicate-drag modifiers pressed after the pointer goes down still copy', async ({
+  page
+}) => {
+  const mod = await primaryModifier(page)
+  await page.keyboard.press('r')
+  await dragOnCanvas(page, [300, 300], [400, 400])
+  const shapes = page.locator('[data-element-type="shape"]')
+  const box = await page.getByTestId('canvas-viewport').boundingBox()
+  if (!box) {
+    throw new Error('no canvas')
+  }
+  // Shift+mod arrives after the original has already started moving.
+  await page.mouse.move(box.x + 350, box.y + 350)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 400, box.y + 350, { steps: 4 })
+  await page.keyboard.down('Shift')
+  await page.keyboard.down(mod)
+  await page.mouse.move(box.x + 550, box.y + 350, { steps: 4 })
+  await page.mouse.up()
+  await page.keyboard.up(mod)
+  await page.keyboard.up('Shift')
+  await expect(shapes).toHaveCount(2)
+  await expect(shapes.nth(0)).toHaveCSS('left', '300px')
+  await expect(shapes.nth(1)).toHaveCSS('left', '500px')
+  // Alt arrives after the press, before the pointer moves.
+  await page.mouse.move(box.x + 550, box.y + 350)
+  await page.mouse.down()
+  await page.keyboard.down('Alt')
+  await page.mouse.move(box.x + 550, box.y + 550, { steps: 8 })
+  await page.mouse.up()
+  await page.keyboard.up('Alt')
+  await expect(shapes).toHaveCount(3)
+  await expect(shapes.nth(1)).toHaveCSS('top', '300px')
+  await expect(shapes.nth(2)).toHaveCSS('top', '500px')
+})
+
 test('aligns and distributes a multi-selection', async ({ page }) => {
   await page.keyboard.press('r')
   await dragOnCanvas(page, [100, 100], [200, 150])

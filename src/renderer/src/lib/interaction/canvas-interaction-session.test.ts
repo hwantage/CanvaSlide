@@ -90,6 +90,25 @@ describe('canvas interaction lifecycle', () => {
     expectSingleUndo(before)
   })
 
+  it.each([
+    { when: 'on the threshold-crossing sample', plainSteps: [] },
+    { when: 'after a plain drag has started', plainSteps: [pointer(60, 40)] }
+  ])('duplicates when Shift+primary is pressed after pointerDown: $when', ({ plainSteps }) => {
+    const before = loadElements([shape('a')], ['a'])
+    const interaction = createCanvasInteraction()
+    const chord = { shiftKey: true, primaryKey: true }
+    interaction.pointerDown(pointer(20, 20))
+    plainSteps.forEach((step) => interaction.pointerMove(step))
+    interaction.pointerMove(pointer(20, 120, chord))
+    expect(doc().document.order).toHaveLength(2)
+    const duplicateId = doc().selectedIds[0]!
+    expect(duplicateId).not.toBe('a')
+    expect(doc().document.elements[duplicateId]).toMatchObject({ x: 0, y: 100 })
+    expect(doc().document.elements.a).toEqual(before.elements.a)
+    interaction.pointerUp(pointer(20, 120, chord))
+    expectSingleUndo(before)
+  })
+
   it('uses Shift from each pointerMove to lock and release the drag axis', () => {
     const before = loadElements([shape('a')], ['a'])
     const interaction = createCanvasInteraction()

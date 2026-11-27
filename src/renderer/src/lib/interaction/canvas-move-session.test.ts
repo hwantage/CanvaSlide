@@ -5,6 +5,7 @@ import { useInteractionOverlayStore } from '@/store/interaction-overlay-store'
 import {
   applyMoveSession,
   beginMoveSession,
+  dragMoveSession,
   moveModifiers,
   wantsDuplicate
 } from './canvas-move-session'
@@ -19,6 +20,7 @@ import {
 
 resetSessionStores()
 const free = { disableSnap: true, constrainAxis: false }
+const keys = { shiftKey: false, altKey: false, primaryKey: false }
 const doc = () => useDocumentStore.getState()
 
 describe('canvas move session', () => {
@@ -101,6 +103,72 @@ describe('canvas move session', () => {
     expect(doc().document.elements.b).toEqual(before.elements.b)
     doc().endEdit()
     expectSingleUndo(before)
+  })
+
+  it.each([
+    { chord: 'Alt', modifiers: { altKey: true } },
+    { chord: 'Shift+primary', modifiers: { shiftKey: true, primaryKey: true } }
+  ])('switches a running move to duplication when $chord arrives mid-drag', ({ modifiers }) => {
+    const before = loadElements([shape('a'), shape('b', { x: 200 })], ['a', 'b'])
+    let session = beginMoveSession(null, { world: { x: 0, y: 0 } }, false)
+    session = dragMoveSession(session, { ...keys, world: { x: 0, y: 30 } })
+    expect(doc().document.elements.a).toMatchObject({ x: 0, y: 30 })
+    session = dragMoveSession(session, { ...keys, ...modifiers, world: { x: 0, y: 300 } })
+    expect(session.duplicating).toBe(true)
+    expect(doc().document.order).toHaveLength(4)
+    expect(doc().selectedIds).toEqual(session.ids)
+    expect(session.ids).not.toContain('a')
+    expect(session.ids).not.toContain('b')
+    expect(session.ids.map((id) => doc().document.elements[id])).toMatchObject([
+      { x: 0, y: 300 },
+      { x: 200, y: 300 }
+    ])
+    expect(doc().document.elements.a).toEqual(before.elements.a)
+    expect(doc().document.elements.b).toEqual(before.elements.b)
+    expect(doc().past).toEqual([])
+    doc().endEdit()
+    expectSingleUndo(before)
+  })
+
+  it('keeps one set of copies once duplicating, even after the modifiers are released', () => {
+    const before = loadElements([shape('a')], ['a'])
+    const chord = { ...keys, shiftKey: true, primaryKey: true }
+    let session = beginMoveSession('a', { world: { x: 0, y: 0 } }, false)
+    session = dragMoveSession(session, { ...chord, world: { x: 40, y: 10 } })
+    const copies = session.ids
+    expect(copies.map((id) => doc().document.elements[id])).toMatchObject([{ x: 40, y: 0 }])
+    // Why: letting Shift go to unlock the axis must not turn the copy back into a move.
+    session = dragMoveSession(session, { ...keys, world: { x: 40, y: 10 } })
+    session = dragMoveSession(session, { ...chord, world: { x: 40, y: 10 } })
+    session = dragMoveSession(session, { ...keys, primaryKey: true, world: { x: 70, y: 20 } })
+    expect(session.ids).toEqual(copies)
+    expect(doc().document.order).toHaveLength(2)
+    expect(copies.map((id) => doc().document.elements[id])).toMatchObject([{ x: 70, y: 20 }])
+    expect(doc().document.elements.a).toEqual(before.elements.a)
+    doc().endEdit()
+    expectSingleUndo(before)
+  })
+
+  it('snaps a mid-drag copy to the original it was made from', () => {
+    loadElements([shape('a')], ['a'])
+    let session = beginMoveSession('a', { world: { x: 0, y: 0 } }, false)
+    session = dragMoveSession(session, { ...keys, world: { x: 30, y: 200 } })
+    session = dragMoveSession(session, { ...keys, altKey: true, world: { x: 3, y: 200 } })
+    expect(session.ids.map((id) => doc().document.elements[id])).toMatchObject([{ x: 0, y: 200 }])
+    expect(useInteractionOverlayStore.getState().snapGuides.length).toBeGreaterThan(0)
+  })
+
+  it('copies a frame with its contents when the switch happens mid-drag', () => {
+    const before = loadElements([frame('f'), shape('a', { x: 50, y: 50 })], ['f'])
+    let session = beginMoveSession('f', { world: { x: 0, y: 0 } }, false)
+    session = dragMoveSession(session, { ...keys, primaryKey: true, world: { x: 20, y: 30 } })
+    session = dragMoveSession(session, { ...keys, altKey: true, world: { x: 0, y: 1000 } })
+    expect(doc().document.order).toHaveLength(4)
+    expect(doc().document.elements.f).toEqual(before.elements.f)
+    expect(doc().document.elements.a).toEqual(before.elements.a)
+    const copies = session.ids.map((id) => doc().document.elements[id])
+    expect(new Set(copies.map((element) => element?.type))).toEqual(new Set(['frame', 'shape']))
+    expect(copies.find((element) => element?.type === 'shape')).toMatchObject({ x: 50, y: 1050 })
   })
 
   it('carries frame contents and translates free connector endpoints', () => {

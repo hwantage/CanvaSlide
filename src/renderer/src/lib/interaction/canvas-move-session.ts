@@ -21,6 +21,8 @@ export type MoveSession = {
   originals: Record<ElementId, CanvasElement>
   bounds: Rect
   others: Rect[]
+  /** Copies are moving; releasing the modifiers keeps them, like the press-time ⌥ / ⇧⌘ drag. */
+  duplicating: boolean
 }
 
 /** Starts dragging the selection (or `targetId`); optionally duplicates first (⌥ / ⇧⌘ drag). */
@@ -30,19 +32,48 @@ export function beginMoveSession(
   duplicate: boolean
 ): MoveSession {
   const doc = useDocumentStore.getState()
-  let ids = targetId === null || doc.selectedIds.includes(targetId) ? doc.selectedIds : [targetId]
-  ids = withFrameContents(doc.document, ids)
+  const ids = targetId === null || doc.selectedIds.includes(targetId) ? doc.selectedIds : [targetId]
+  const moving = withFrameContents(doc.document, ids)
   doc.beginEdit()
-  if (duplicate) {
-    let copies: ElementId[] = []
-    doc.applyLive((d) => {
-      const result = duplicateElements(d, ids, newElementId, { x: 0, y: 0 })
-      copies = result.newIds
-      return result.document
-    })
-    ids = copies
-  }
-  doc.setSelection(ids)
+  return trackMove(duplicate ? duplicateInPlace(moving) : moving, start.world, duplicate)
+}
+
+/**
+ * Switches a running move to a duplicate drag when ⌥ / ⇧⌘ arrives after the press: the originals
+ * return to where they started and copies made there continue from the same press origin, inside
+ * the same edit, so the whole gesture is still one undo step.
+ */
+function duplicateMoveSession(move: MoveSession): MoveSession {
+  useDocumentStore
+    .getState()
+    .applyLive((d) => patchElements(d, move.ids, (element) => move.originals[element.id] ?? {}))
+  return trackMove(duplicateInPlace(move.ids), move.startWorld, true)
+}
+
+/** One pointer sample of a move; ⌥ / ⇧⌘ switch it to duplication whenever they first appear. */
+export function dragMoveSession(
+  move: MoveSession,
+  info: PointerModifiers & { world: Point }
+): MoveSession {
+  const current = move.duplicating || !wantsDuplicate(info) ? move : duplicateMoveSession(move)
+  applyMoveSession(current, info.world, moveModifiers(info))
+  return current
+}
+
+/** Copies `ids` where they are inside the running edit and returns the copies' IDs. */
+function duplicateInPlace(ids: readonly ElementId[]): ElementId[] {
+  let copies: ElementId[] = []
+  useDocumentStore.getState().applyLive((d) => {
+    const result = duplicateElements(d, ids, newElementId, { x: 0, y: 0 })
+    copies = result.newIds
+    return result.document
+  })
+  return copies
+}
+
+/** Selects `ids` and records their current state so each sample moves them from `startWorld`. */
+function trackMove(ids: ElementId[], startWorld: Point, duplicating: boolean): MoveSession {
+  useDocumentStore.getState().setSelection(ids)
   const document = useDocumentStore.getState().document
   const originals: Record<ElementId, CanvasElement> = {}
   const rects: Rect[] = []
@@ -63,11 +94,12 @@ export function beginMoveSession(
     })
   return {
     kind: 'move',
-    startWorld: start.world,
+    startWorld,
     ids,
     originals,
     bounds: unionRects(rects) ?? { x: 0, y: 0, width: 0, height: 0 },
-    others
+    others,
+    duplicating
   }
 }
 
